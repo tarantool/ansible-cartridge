@@ -1,0 +1,8 @@
+---
+- name: Install dependencies
+  yum:
+    name:
+      - unzip
+      - python-yaml
+    state: present
+    update_cache: true

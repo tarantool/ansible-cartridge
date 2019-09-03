@@ -1,0 +1,26 @@
+---
+- name: 'Gen config for {{ instance.name }}'
+  cartridgeconf:
+    instance: '{{ instance }}'
+    appname: '{{ cartridge_app_name }}'
+    config_defaults: '{{ cartridge_config_defaults }}'
+  register: res
+
+- name: 'Set owner and group for {{ cartridge_app_name }} default config file'
+  file:
+    path: '{{ res.meta.created_default_conf }}'
+    owner: tarantool
+    group: tarantool
+  when: res.meta.created_default_conf is not none
+
+- name: 'Set owner and group for {{ instance.name }} config file'
+  file:
+    path: '{{ res.meta.created_instance_conf }}'
+    owner: tarantool
+    group: tarantool
+  when: res.meta.created_instance_conf is not none
+
+- name: 'Start systemd service for {{ instance.name }}'
+  systemd:
+    name: '{{ cartridge_app_name }}@{{ instance.name }}'
+    state: started
