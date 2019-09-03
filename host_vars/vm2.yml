@@ -1,0 +1,9 @@
+cluster_config:
+  instances:
+  - name: 'core_2'
+    advertise_uri: '3004'
+    http_port: '8084'
+
+  - name: 'storage_1_replica'
+    advertise_uri: '3005'
+    http_port: '8085'

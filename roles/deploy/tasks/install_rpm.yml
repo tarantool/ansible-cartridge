@@ -1,0 +1,14 @@
+---
+
+- name: RPM - Copy
+  copy:
+    src: './rpms/{{ app }}-{{ version }}.rpm'
+    dest: /tmp/
+
+- name: RPM - Install
+  yum:
+    name: '/tmp/{{ app }}-{{ version }}.rpm'
+    state: present
+    update_cache: true
+  become: true
+  become_user: root

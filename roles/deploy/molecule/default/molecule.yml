@@ -1,0 +1,58 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: vagrant
+  provider:
+    name: virtualbox
+
+platforms:
+  - name: vm1
+    box: centos/7
+  - name: vm2
+    box: centos/7
+
+provisioner:
+  provisioner:
+  name: ansible
+  lint:
+    name: ansible-lint
+  inventory:
+    group_vars:
+      all:
+        app: myapp
+        version: 0.1.0-0
+
+        cluster_config_default:
+          cluster_cookie: app-default-cookie
+
+    host_vars:
+      vm1:
+        cluster_config_default:
+          cluster_cookie: this-server-default-cookie
+
+        cluster_config:
+          instances:
+            - name: 'core_1'
+              advertise_uri: '3000'
+              http_port: '8080'
+
+            - name: 'storage_1'
+              advertise_uri: '3002'
+              http_port: '8082'
+      vm2:
+        cluster_config:
+          instances:
+          - name: 'core_2'
+            advertise_uri: '3004'
+            http_port: '8084'
+
+          - name: 'storage_1_replica'
+            advertise_uri: '3005'
+            http_port: '8085'
+
+verifier:
+  name: testinfra
+  lint:
+    name: flake8

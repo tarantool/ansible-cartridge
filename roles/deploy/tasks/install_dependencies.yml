@@ -1,0 +1,10 @@
+---
+- name: Dependencies - Install
+  yum:
+    name:
+      - unzip
+      - python-yaml
+    state: present
+    update_cache: true
+  become: true
+  become_user: root

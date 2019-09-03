@@ -1,0 +1,12 @@
+cluster_config_default:
+  cluster_cookie: this-server-default-cookie
+
+cluster_config:
+  instances:
+    - name: 'core_1'
+      advertise_uri: '3000'
+      http_port: '8080'
+
+    - name: 'storage_1'
+      advertise_uri: '3002'
+      http_port: '8082'

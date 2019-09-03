@@ -1,0 +1,17 @@
+---
+
+- name: 'Start - Gen config for {{ instance.name }}'
+  confparser:
+    instance: '{{ instance }}'
+    appname: '{{ app }}'
+    config_default: '{{ config_default }}'
+  register: res
+  become: true
+  become_user: root
+
+- name: 'Start - Systemd service for {{ instance.name }}'
+  systemd:
+    name: '{{ app }}@{{ instance.name }}'
+    state: started
+  become: true
+  become_user: root

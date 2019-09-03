@@ -1,0 +1,14 @@
+---
+- name: Dependencies
+  include_tasks: install_dependencies.yml
+
+- name: RPM
+  include_tasks: install_rpm.yml
+
+- name: Start
+  include_tasks: start_instance.yml
+  vars:
+    instance: '{{ item }}'
+    config_default: '{{ cluster_config_default | default({}) }}'
+
+  with_items: '{{ cluster_config.instances }}'
