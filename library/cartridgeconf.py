@@ -17,7 +17,7 @@ class ModuleRes:
 argument_spec = {
     'instance': {'required': True, 'type': 'dict'},
     'appname': {'required': True, 'type': 'str'},
-    'config_default': {'required': True, 'type': 'dict'},
+    'config_defaults': {'required': True, 'type': 'dict'},
     'confdir': {'default': '/etc/tarantool/conf.d', 'type': 'str'}
 }
 
@@ -38,7 +38,7 @@ def generate_config_files(params):
     defaul_conf_path = os.path.join(params['confdir'], defaul_conf_name)
 
     if not os.path.exists(defaul_conf_path):
-        default_conf = params['config_default']
+        default_conf = params['config_defaults']
         if default_conf:
             default_conf = { params['appname'] : default_conf }
             with open(defaul_conf_path, 'w') as f:

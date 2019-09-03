@@ -1,39 +1,30 @@
-# Ansible Cartridge
+# Ansible Role: Cartridge
 
-Ansible scripts to easy deploy Tarantool Cartridge applications.
+An Ansible Role to easy deploy [Tarantool Cartridge](https://github.com/tarantool/cartridge-cli) applications.
 
-## When should you use it?
+## Role Variables
 
-You can use this scripts to deploy application created using [Tarantool Cartridge](https://github.com/tarantool/cartridge) framework and its [CLI](https://github.com/tarantool/cartridge-cli).
+* `cartridge_app_name` (required): cartridge application name;
+* `cartridge_app_version` (required): cartridge application version;
+* `cartridge_config` (optional, default: `{}`): configuration for deployed application (see [below](#configuration-format));
+* `cartridge_config_defaults` (optional, default: `{}`): default configuration for deployed application instances (see [below](#configuration-format));
 
-## How to deploy?
+## Configuration format
 
-This repo contains example RPM and configuration for ansible.
+Deployed application configuration (`cartridge_config`) describes parameters for instances that should be started on host. 
+Instances configurations are placed in `instances` subsection.
+Instance config must contain `name` field to be used for systemd service instance name.
+Other parameters can be cluster-specific or application-specific (see [Cartridge Argparse doc](https://github.com/tarantool/cartridge/blob/master/cartridge/argparse.lua#L12-L35)) .
 
-#### RPM
+For each instance will be created configuration file in `/etc/tarantool/conf.d/` directory. 
 
-Example RPM placed in `rpms/` folder.
+**Example**:
 
-It was created using [Cartridge CLI](https://github.com/tarantool/cartridge-cli):
-
-```bash
-tarantoolctl rocks install cartridge-cli
-.rocks/bin/cartridge create --name myapp .
-.rocks/bin/cartridge pack rpm myapp
-```
-
-#### Configuration
-
-In example next configuration is deployed:
+Let `cartridge_app_name` be `myapp`.
+For this `cartridge_config` variable
 
 ```yaml
-default:
-  cluster_cookie: app-default-cookie
-  
-vm1:
-  default:
-    cluster_cookie: this-server-default-cookie
-
+cartridge_config:
   instances:
     - name: 'core_1'
       advertise_uri: '3000'
@@ -42,90 +33,35 @@ vm1:
     - name: 'storage_1'
       advertise_uri: '3002'
       http_port: '8082'
-
-vm2:
-  instances:
-  - name: 'core_2'
-    advertise_uri: '3004'
-    http_port: '8084'
-
-  - name: 'storage_1_replica'
-    advertise_uri: '3005'
-    http_port: '8085'
 ```
 
-Configuration is passed to Ansible using var files placed in `group_vars/` and `host_vars/` dirs.
-
-In `group_vars/all.yml` we need to declare app name and version to deploy (Ansible will find `myapp-0.1.0-0.rpm` file in `rpms/` folder):
+for `core_1` instance will be created file `/etc/tarantool/conf.d/myapp.core_1.yml`:
 
 ```yaml
-app: myapp
-version: 0.1.0-0
+myapp.core_1:
+  advertise_uri: '3000'
+  http_port: '8080'
 ```
 
-In `host_vars/` directory are placed server configs:
+### Default values
 
-* `cluster_config` table declares cluster configuration for server.
+`cartridge_config_defaults` can contain some default values that must be used for all application instances (if this patameters are not specified for instance).
 
-* `cluster_config_default` table declares application- or server-specific cluster config default values.
+If default application values are specified then would be created default application config file in `/etc/tarantool/conf.d/`.
 
-#### Deploy example
+**Example**:
 
-First, you need [Vagrant](https://www.vagrantup.com/). Then, if you'll be running with VirtualBox, [install it as well](https://www.virtualbox.org/wiki/Downloads).
+Let `cartridge_app_name` be `myapp`.
+For this `cartridge_config_defaults` variable
 
-To start 2 centos:7 VMs just run this in the project root:
-
-```bash
-vagrant up
+```yaml
+cartridge_config:
+  cluster-cookie: very-big-secret
 ```
 
-This will bring up 2 virtual machines. IP addresses of those machines: 172.19.0.2 and 172.19.0.3.
+for this application will be created file `/etc/tarantool/conf.d/myapp.yml`:
 
-This machines are described in `hosts.yml` file of project root.
-
-To deploy example RPM with example configuration on this VMs run (in project root):
-
-```bash
-ansible-playbook -i hosts.yml site.yml
-```
-
-Then, you can ssh to vm1 and check if services was started correctly:
-
-```bash
-vagrant ssh vm1
-> systemctl status myapp@core_1
-> systemctl status myapp@storage_1
-```
-
-You can also check Cartridge config files that was placed in `/etc/tarantool/conf.d` folder.
-
-## Molecule
-
-To run molecule tests for `deploy` role (in `roles/deploy/` folder):
-
-```bash
-molecule test
-```
-
-Molecule test configuration (the same as example configuration) is described in `provisioner.inventory` section of `roles/deploy/molecule/default/molecule.yml` file.
-VMs are described in `platforms` section of this file.
-
-To deploy configuration using molecule:
-
-```bash
-molecule converge
-```
-
-After, you can check if it's OK:
-
-```bash
-molecule login --host vm1
-> systemctl status myapp@core_1
-> systemctl status myapp@storage_1
-```
-
-Don't forget to destroy VMs:
-
-```bash
-molecule destroy
+```yaml
+myapp:
+  cluster-cookie: very-big-secret
 ```

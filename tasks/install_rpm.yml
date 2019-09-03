@@ -1,14 +1,11 @@
 ---
-
-- name: RPM - Copy
+- name: Copy RPM
   copy:
-    src: './rpms/{{ app }}-{{ version }}.rpm'
+    src: './{{ cartridge_app_name }}-{{ cartridge_app_version }}.rpm'
     dest: /tmp/
 
-- name: RPM - Install
+- name: Install RPM
   yum:
-    name: '/tmp/{{ app }}-{{ version }}.rpm'
+    name: '/tmp/{{ cartridge_app_name }}-{{ cartridge_app_version }}.rpm'
     state: present
     update_cache: true
-  become: true
-  become_user: root
