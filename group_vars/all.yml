@@ -1,6 +1,0 @@
----
-app: myapp
-version: 0.1.0-0
-
-cluster_config_default:
-  cluster_cookie: app-default-cookie
