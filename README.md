@@ -63,7 +63,9 @@ app: myapp
 version: 0.1.0-0
 ```
 
-* `cluster_config` table is declares cluster configuration for server.
+In `host_vars/` directory are placed server configs:
+
+* `cluster_config` table declares cluster configuration for server.
 
 * `cluster_config_default` table declares application- or server-specific cluster config default values.
 
@@ -81,13 +83,13 @@ This will bring up 2 virtual machines. IP addresses of those machines: 172.19.0.
 
 This machines are described in `hosts.yml` file of project root.
 
-To deploy example RPM with example configurations on this VMs (in project root):
+To deploy example RPM with example configuration on this VMs run (in project root):
 
 ```bash
 ansible-playbook -i hosts.yml site.yml
 ```
 
-Then, you can ssh to vm1 and check if services was startde correctly:
+Then, you can ssh to vm1 and check if services was started correctly:
 
 ```bash
 vagrant ssh vm1
@@ -95,18 +97,18 @@ vagrant ssh vm1
 > systemctl status myapp@storage_1
 ```
 
-You can also check Cartridge config files placed in `/etc/tarantool/conf.d` folder.
+You can also check Cartridge config files that was placed in `/etc/tarantool/conf.d` folder.
 
 ## Molecule
 
-To run molecule tests for `delpoy` role (in `roles/deploy/` folder):
+To run molecule tests for `deploy` role (in `roles/deploy/` folder):
 
 ```bash
 molecule test
 ```
 
-Molecule test configuration (the same as example configuration) is described in `provisioner.inventory` section of `roles/deploy/molecule/default/malocule.yml` file.
-VMs config described in `platforms` section of this file.
+Molecule test configuration (the same as example configuration) is described in `provisioner.inventory` section of `roles/deploy/molecule/default/molecule.yml` file.
+VMs are described in `platforms` section of this file.
 
 To deploy configuration using molecule:
 
