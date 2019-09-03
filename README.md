@@ -93,7 +93,7 @@ Then, you can ssh to vm1 and check if services was started correctly:
 
 ```bash
 vagrant ssh vm1
-> systemctsl status myapp@core_1
+> systemctl status myapp@core_1
 > systemctl status myapp@storage_1
 ```
 
