@@ -120,7 +120,7 @@ After, you can check if it's OK:
 
 ```bash
 molecule login --host vm1
-> systemctsl status myapp@core_1
+> systemctl status myapp@core_1
 > systemctl status myapp@storage_1
 ```
 
