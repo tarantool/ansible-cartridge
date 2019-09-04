@@ -9,5 +9,4 @@
   include_tasks: start_instance.yml
   vars:
     instance: '{{ item }}'
-
   with_items: '{{ cartridge_config.instances }}'

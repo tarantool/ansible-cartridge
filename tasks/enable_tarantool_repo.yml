@@ -1,0 +1,20 @@
+---
+- name: Set tarantool version regex
+  set_fact:
+    regex: 'tarantool >= ([0-9]+).([0-9]+)'
+
+- name: Choose tarantool dependency repo
+  set_fact:
+    version: "{{ deplist.stdout | regex_search(regex, '\\1', '\\2') }}"
+
+- name: Set repo
+  set_fact:
+    tarantool_yum_repo: 'tarantool/{{ version[0] }}_{{ version[1] }}'
+
+- name: Enable Tarantool repo
+  include_role:
+    name: computology.packagecloud
+  vars:
+    repository: '{{ tarantool_yum_repo }}'
+    os: centos
+    version: 7

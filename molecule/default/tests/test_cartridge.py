@@ -39,7 +39,6 @@ def test_myapp_instances_status_and_config(request, host):
 
         check_conf_file(conf_file, conf_section, instance)
 
-
     default_conf_file_path = '/etc/tarantool/conf.d/{}.yml'.format(app_name)
     default_conf_file = host.file(default_conf_file_path)
     default_conf_file_section = app_name

@@ -1,6 +1,8 @@
 ---
 dependency:
   name: galaxy
+  options:
+    role-file: requirements.yml
 
 driver:
   name: vagrant
@@ -56,3 +58,5 @@ verifier:
   name: testinfra
   lint:
     name: flake8
+    options:
+      ignore: E501

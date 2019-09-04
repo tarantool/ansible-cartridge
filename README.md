@@ -2,6 +2,10 @@
 
 An Ansible Role to easy deploy [Tarantool Cartridge](https://github.com/tarantool/cartridge-cli) applications.
 
+## Requirements
+
+* [computology.packagecloud](https://galaxy.ansible.com/computology/packagecloud)
+
 ## Role Variables
 
 * `cartridge_app_name` (required): cartridge application name;
