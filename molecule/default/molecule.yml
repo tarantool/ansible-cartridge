@@ -23,8 +23,7 @@ provisioner:
   inventory:
     group_vars:
       all:
-        cartridge_app_name: myapp
-        cartridge_app_version: 0.1.0-0
+        cartridge_package_path: ./myapp-0.1.0-0.rpm
 
         cartridge_config_defaults:
           cluster_cookie: app-default-cookie

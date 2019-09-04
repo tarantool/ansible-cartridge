@@ -23,7 +23,8 @@ def test_myapp_instances_status_and_config(request, host):
     ansible_vars = host.ansible.get_variables()
     instances = ansible_vars['cartridge_config']['instances']
     default_conf = ansible_vars['cartridge_config_defaults']
-    app_name = ansible_vars['cartridge_app_name']
+
+    app_name = 'myapp'
 
     for instance in instances:
         inst_name = instance['name']

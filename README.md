@@ -8,10 +8,9 @@ An Ansible Role to easy deploy [Tarantool Cartridge](https://github.com/tarantoo
 
 ## Role Variables
 
-* `cartridge_app_name` (required): cartridge application name;
-* `cartridge_app_version` (required): cartridge application version;
+* `cartridge_package_path` (required): path to cartridge package (application name will be detected as package name);
 * `cartridge_config` (optional, default: `{}`): configuration for deployed application (see [below](#configuration-format));
-* `cartridge_config_defaults` (optional, default: `{}`): default configuration for deployed application instances (see [below](#configuration-format));
+* `cartridge_config_defaults` (optional, default: `{}`): default configuration for deployed application instances (see [below](#configuration-format)).
 
 ## Configuration format
 
@@ -24,7 +23,7 @@ For each instance will be created configuration file in `/etc/tarantool/conf.d/`
 
 **Example**:
 
-Let `cartridge_app_name` be `myapp`.
+Let app name be `myapp`.
 For this `cartridge_config` variable
 
 ```yaml
@@ -55,7 +54,7 @@ If default application values are specified then would be created default applic
 
 **Example**:
 
-Let `cartridge_app_name` be `myapp`.
+Let app name be `myapp`.
 For this `cartridge_config_defaults` variable
 
 ```yaml

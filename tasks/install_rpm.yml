@@ -1,25 +1,34 @@
 ---
-- name: Set RPM file name
-  set_fact:
-    rpm_filename: '{{ cartridge_app_name }}-{{ cartridge_app_version }}.rpm'
-
 - name: Copy RPM
   copy:
-    src: './{{ rpm_filename }}'
+    src: '{{ cartridge_package_path }}'
     dest: /tmp/
 
+- name: Set RPM filename
+  set_fact:
+    rpm_filename: '{{ cartridge_package_path | basename }}'
+
+- name: Get rpm info  # noqa 301 303
+  command: 'rpm -qip /tmp/{{ rpm_filename }}'
+  args:
+    warn: false
+  register: rpm_info
+  changed_when: false
+
+- name: Get app name
+  set_fact:
+    cartridge_app_name: "{{ rpm_info.stdout | regex_search('Name\\s*:\\s*(.*)\\s+', '\\1') | first }}"
+
 - name: Get RPM deplist
-  command: 'yum deplist /tmp/{{ rpm_filename }}'  # noqa 301 303
+  command: 'rpm -qpR /tmp/{{ rpm_filename }}'  # noqa 301 303
+  args:
+    warn: false
   register: deplist
   changed_when: false
 
-- name: Debug
-  debug:
-    msg: '{{ deplist.stdout }}'
-
 - name: Enable Tarantool repo
   include_tasks: enable_tarantool_repo.yml
-  when: '"dependency: tarantool" in deplist.stdout'
+  when: '"tarantool" in deplist.stdout'
 
 - name: Install RPM
   yum:

@@ -2,8 +2,14 @@
 - name: Dependencies
   include_tasks: install_dependencies.yml
 
-- name: RPM
+- name: Install RPM for CentOS
   include_tasks: install_rpm.yml
+  when: ansible_distribution == 'CentOS'
+
+- name: Fail for other distributions
+  fail:
+    msg: 'Deploy to {{ ansible_distribution }} is not supported yet'
+  when: ansible_distribution != 'CentOS'
 
 - name: Start
   include_tasks: start_instance.yml
