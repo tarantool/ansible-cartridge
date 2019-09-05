@@ -4,7 +4,7 @@ ARG TARANTOOL_VERSION
 
 RUN curl -s https://packagecloud.io/install/repositories/tarantool/${TARANTOOL_VERSION}/script.rpm.sh | bash
 
-RUN yum -y install tarantool git gcc make cmake unzip
+RUN yum -y install tarantool tarantool-devel git gcc make cmake unzip
 
 ENV PATH=$PWD:$PATH
 
