@@ -12,13 +12,14 @@ test-enterprise:
   tags:
     - docker
   before_script:
+    - apk update && apk add --no-cache docker
+      python3-dev py3-pip docker gcc git curl build-base
+      autoconf automake py3-cryptography linux-headers
+      musl-dev libffi-dev openssl-dev openssh
     - docker info
-    # - curl -sL https://rpm.nodesource.com/setup_8.x | bash -
-    # - yum -y install git gcc make cmake unzip
-    # - yum -y install epel-release
-    # - yum -y install nodejs python-pip python-devel openssl-devel libselinux-python
-    # - pip install --upgrade --user setuptools
-    # - pip install ansible molecule docker awscli
+    - python3 --version
+    - pip3 install ansible molecule docker
+    - ansible --version
 
     # - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
     #   aws --endpoint-url https://hb.bizmrg.com s3 cp \
@@ -29,4 +30,4 @@ test-enterprise:
     # - tarantool -V
 
   script:
-    - ':'
+    - molecule test
