@@ -11,6 +11,7 @@ test-enterprise:
   stage: test
   tags:
     - docker
+    - dind
   before_script:
     - docker info
     - curl -sL https://rpm.nodesource.com/setup_8.x | bash -
