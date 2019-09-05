@@ -3,15 +3,25 @@ dependency:
   name: galaxy
 
 driver:
-  name: vagrant
-  provider:
-    name: virtualbox
+  name: docker
 
 platforms:
   - name: vm1
-    box: centos/7
+    image: centos:7
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
   - name: vm2
-    box: centos/7
+    image: centos:7
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
 
 provisioner:
   provisioner:
