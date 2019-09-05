@@ -30,4 +30,5 @@ test-enterprise:
     # - tarantool -V
 
   script:
+    - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
     - molecule test
