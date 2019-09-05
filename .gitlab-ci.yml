@@ -1,4 +1,7 @@
 ---
+variables:
+  BUNDLE_VERSION: 1.10.3-93-g580699f
+
 stages:
   - test
 
@@ -7,28 +10,30 @@ default:
   services:
     - docker:dind
 
+before_script:
+  - apk update && apk add --no-cache docker
+    python3-dev py3-pip docker gcc git curl build-base
+    autoconf automake py3-cryptography linux-headers
+    musl-dev libffi-dev openssl-dev openssh
+  - docker info
+  - python3 --version
+  - pip3 install ansible molecule docker
+  - ansible --version
+
 test-enterprise:
   stage: test
   tags:
     - docker
-  before_script:
-    - apk update && apk add --no-cache docker
-      python3-dev py3-pip docker gcc git curl build-base
-      autoconf automake py3-cryptography linux-headers
-      musl-dev libffi-dev openssl-dev openssh
-    - docker info
-    - python3 --version
-    - pip3 install ansible molecule docker
-    - ansible --version
-
-    # - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
-    #   aws --endpoint-url https://hb.bizmrg.com s3 cp \
-    #   s3://packages/enterprise/tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz .
-    # - tar -xzf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
-    # - rm -rf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
-    # - source ./tarantool-enterprise/env.sh
-    # - tarantool -V
 
   script:
+    - pip3 install awscli
+    - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      aws --endpoint-url https://hb.bizmrg.com s3 cp
+      s3://packages/enterprise/tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz .
+    - tar -xzf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
+    - rm -rf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
+    - source ./tarantool-enterprise/env.sh
+    - tarantool -V
+
     - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
     - molecule test
