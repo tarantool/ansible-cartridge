@@ -26,14 +26,20 @@ test-enterprise:
     - docker
 
   script:
-    - pip3 install awscli
-    - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
-      aws --endpoint-url https://hb.bizmrg.com s3 cp
-      s3://packages/enterprise/tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz .
-    - tar -xzf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
-    - rm -rf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
-    - source ./tarantool-enterprise/env.sh
-    - tarantool -V
+    - >
+      docker build
+      --build-arg BUNDLE_VERSION=${BUNDLE_VERSION}
+      --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      -t rpm-builder
+      -f Dockerfile.enterprise
+      .
+
+    - docker create --name rpm-builder rpm-builder usr/bin/true
+    - docker cp rpm-builder:/opt/myapp/ .
+    - docker rm rpm-builder
+
+    - cp myapp/myapp-*.rpm molecule/default
 
     - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
     - molecule test
