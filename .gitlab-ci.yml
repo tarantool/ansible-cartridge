@@ -3,16 +3,30 @@ stages:
   - test
 
 default:
-  image: quay.io/ansible/molecule:latest
+  image: centos:7
   services:
     - docker:dind
 
 test-enterprise:
   stage: test
+  tags:
+    - docker
   before_script:
-    - docker -v
-    - python -V
-    - ansible --version
-    - molecule --version
+    - docker info
+    - curl -sL https://rpm.nodesource.com/setup_8.x | bash -
+    - yum -y install git gcc make cmake unzip
+    - yum -y install epel-release
+    - yum -y install nodejs python-pip python-devel openssl-devel libselinux-python
+    - pip install --upgrade --user setuptools
+    - pip install ansible molecule docker awscli
+
+    # - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID} AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY} \
+    #   aws --endpoint-url https://hb.bizmrg.com s3 cp \
+    #   s3://packages/enterprise/tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz .
+    # - tar -xzf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
+    # - rm -rf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
+    # - source ./tarantool-enterprise/env.sh
+    # - tarantool -V
+
   script:
     - molecule test
