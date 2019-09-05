@@ -1,15 +1,16 @@
 ---
+# Works only on RedHat
+- name: Fail for other distributions
+  fail:
+    msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
+  when: ansible_os_family != "RedHat"
+
 - name: Dependencies
   include_tasks: install_dependencies.yml
 
-- name: Install RPM for CentOS
+- name: Install RPM for RedHat
   include_tasks: install_rpm.yml
-  when: ansible_distribution == 'CentOS'
-
-- name: Fail for other distributions
-  fail:
-    msg: 'Deploy to {{ ansible_distribution }} is not supported yet'
-  when: ansible_distribution != 'CentOS'
+  when: ansible_os_family == 'RedHat'
 
 - name: Start
   include_tasks: start_instance.yml

@@ -4,7 +4,7 @@ An Ansible Role to easy deploy [Tarantool Cartridge](https://github.com/tarantoo
 
 ## Requirements
 
-* [computology.packagecloud](https://galaxy.ansible.com/computology/packagecloud)
+None.
 
 ## Role Variables
 

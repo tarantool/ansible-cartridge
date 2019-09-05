@@ -1,20 +1,31 @@
 ---
-- name: Set tarantool version regex
+# Get tarantool dependency <major>.<minor> version
+- name: Get tarantool dependency version
   set_fact:
-    regex: 'tarantool >= ([0-9]+).([0-9]+)'
+    tnt_version: "{{ deplist.stdout | regex_search('tarantool >= ([0-9]+).([0-9]+)', '\\1', '\\2') }}"
 
-- name: Choose tarantool dependency repo
+# Set repository to tarantool/<major>_<minor>
+- name: Set repository
   set_fact:
-    version: "{{ deplist.stdout | regex_search(regex, '\\1', '\\2') }}"
+    repository: 'tarantool/{{ tnt_version[0] }}_{{ tnt_version[1] }}'
+    dist: '{{ ansible_distribution_major_version }}'
+    os: '{{ ansible_distribution }}'
 
 - name: Set repo
   set_fact:
-    tarantool_yum_repo: 'tarantool/{{ version[0] }}_{{ version[1] }}'
+    redhat_config_file_url: https://packagecloud.io/install/repositories/{{ repository }}/config_file.repo
+    redhat_config_query: '?os={{ os }}&dist={{ dist }}&name={{ ansible_nodename }}'
+    redhat_config_file_location: /etc/yum.repos.d/{{ repository | replace("/", "_") }}.repo
 
-- name: Enable Tarantool repo
-  include_role:
-    name: computology.packagecloud
-  vars:
-    repository: '{{ tarantool_yum_repo }}'
-    os: centos
-    version: 7
+- name: 'Adding packagecloud.io repository: {{ repository }}'
+  get_url:
+    url: '{{ redhat_config_file_url }}{{ redhat_config_query }}'
+    dest: '{{ redhat_config_file_location }}'
+  register: add_repository
+
+- name: Update yum package cache  # noqa 503
+  yum:
+    name: '*'
+    update_cache: true
+    enablerepo: '{{ repository | replace("/", "_") }}'
+  when: add_repository.changed

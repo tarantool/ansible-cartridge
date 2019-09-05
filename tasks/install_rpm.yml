@@ -8,7 +8,7 @@
   set_fact:
     rpm_filename: '{{ cartridge_package_path | basename }}'
 
-- name: Get rpm info  # noqa 301 303
+- name: Get rpm info
   command: 'rpm -qip /tmp/{{ rpm_filename }}'
   args:
     warn: false
@@ -20,7 +20,7 @@
     cartridge_app_name: "{{ rpm_info.stdout | regex_search('Name\\s*:\\s*(.*)\\s+', '\\1') | first }}"
 
 - name: Get RPM deplist
-  command: 'rpm -qpR /tmp/{{ rpm_filename }}'  # noqa 301 303
+  command: 'rpm -qpR /tmp/{{ rpm_filename }}'
   args:
     warn: false
   register: deplist
