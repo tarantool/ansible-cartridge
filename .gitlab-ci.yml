@@ -1,0 +1,17 @@
+stages:
+  - test
+
+default:
+  image: quay.io/ansible/molecule:latest
+  services:
+    - docker:dind
+
+test-enterprise:
+  stage: test
+  before_script:
+    - docker -v
+    - python -V
+    - ansible --version
+    - molecule --version
+  script:
+    - ':'
