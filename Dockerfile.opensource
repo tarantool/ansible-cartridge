@@ -1,0 +1,20 @@
+FROM centos:7
+
+ARG TARANTOOL_VERSION
+
+RUN curl -s https://packagecloud.io/install/repositories/tarantool/${TARANTOOL_VERSION}/script.rpm.sh | bash
+
+RUN yum -y install tarantool git gcc make cmake unzip
+
+ENV PATH=$PWD:$PATH
+
+RUN git config --global user.email "test@tarantool.io"
+RUN git config --global user.name "Tar Antool"
+
+RUN tarantoolctl rocks install cartridge-cli
+
+RUN .rocks/bin/cartridge create --name myapp .
+RUN .rocks/bin/cartridge pack rpm --version 1.0.0 myapp
+
+RUN mkdir /opt/myapp && cp myapp-1.0.0-0.rpm /opt/myapp
+

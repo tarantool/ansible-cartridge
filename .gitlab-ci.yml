@@ -24,7 +24,6 @@ test-enterprise:
   stage: test
   tags:
     - docker
-
   script:
     - >
       docker build
@@ -33,6 +32,25 @@ test-enterprise:
       --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
       -t rpm-builder
       -f Dockerfile.enterprise
+      .
+
+    - docker create --name rpm-builder rpm-builder usr/bin/true
+    - docker cp rpm-builder:/opt/myapp/myapp-1.0.0-0.rpm molecule/default
+    - docker rm rpm-builder
+
+    - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
+    - molecule test
+
+test-opensource-1.10:
+  stage: test
+  tags:
+    - docker
+  script:
+    - >
+      docker build
+      --build-arg TARANTOOL_VERSION=1_10
+      -t rpm-builder
+      -f Dockerfile.opensource
       .
 
     - docker create --name rpm-builder rpm-builder usr/bin/true
