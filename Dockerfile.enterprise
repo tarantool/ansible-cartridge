@@ -24,5 +24,5 @@ ENV PATH="/tarantool-enterprise:${PATH}"
 RUN cartridge create --name myapp .
 RUN cartridge pack rpm --version 1.0.0 myapp
 
-RUN mkdir /opt/myapp && cp myapp-*.rpm /opt/myapp
+RUN mkdir /opt/myapp && cp myapp-1.0.0-0.rpm /opt/myapp
 

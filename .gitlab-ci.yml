@@ -36,10 +36,8 @@ test-enterprise:
       .
 
     - docker create --name rpm-builder rpm-builder usr/bin/true
-    - docker cp rpm-builder:/opt/myapp/ .
+    - docker cp rpm-builder:/opt/myapp/myapp-1.0.0-0.rpm molecule/default
     - docker rm rpm-builder
-
-    - cp myapp/myapp-*.rpm molecule/default
 
     - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
     - molecule test
