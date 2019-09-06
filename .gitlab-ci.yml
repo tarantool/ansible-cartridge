@@ -59,3 +59,22 @@ test-opensource-1.10:
 
     - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
     - molecule test
+
+test-opensource-2.2:
+  stage: test
+  tags:
+    - docker
+  script:
+    - >
+      docker build
+      --build-arg TARANTOOL_VERSION=2_2
+      -t rpm-builder
+      -f Dockerfile.opensource
+      .
+
+    - docker create --name rpm-builder rpm-builder usr/bin/true
+    - docker cp rpm-builder:/opt/myapp/myapp-1.0.0-0.rpm molecule/default
+    - docker rm rpm-builder
+
+    - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
+    - molecule test
