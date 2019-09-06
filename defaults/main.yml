@@ -1,3 +1,4 @@
 ---
-cartridge_config: {}
+cartridge_config:
+  instances: {}
 cartridge_config_defaults: {}
