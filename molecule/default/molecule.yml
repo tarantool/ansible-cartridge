@@ -48,7 +48,7 @@ provisioner:
               http_port: '8080'
 
             - name: 'storage_1'
-              advertise_uri: '3002'
+              advertise_uri: 'localhost:3002'
               http_port: '8082'
       vm2:
         cartridge_config:
