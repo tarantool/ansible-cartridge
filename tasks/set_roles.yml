@@ -1,76 +1,30 @@
 ---
-- name: 'Set instance roles'
-  block:
-  - name: Get started instance info
-    set_fact:
-      started_instance: '{{ started_instances[instance.name] }}'
-
-  - name: 'Set {{ instance.name }} role'
-    uri:
-      url: 'http://{{ started_instance.address }}:{{ instance.http_port }}/admin/api'
-      method: POST
-      body_format: json
-      status_code: 200
-      return_content: true
-      body:
-        query: |-
-          mutation {
-            join_server(
-              uri: "{{ started_instance.uri }}",
-              roles: [{% for role in instance.roles %} "{{ role }}",{%endfor%}]
-            )
-          }
-    register: response
-    failed_when: |-
-      not(
-        response.status == 200
-        and 'json' in response
-        and 'data' in response.json
-        and 'join_server' in response.json.data
-        and response.json.data.join_server
-      )
-
-  - name: 'Get {{ instance.name }} uuid'
-    uri:
-      url: 'http://{{ started_instance.address }}:{{ instance.http_port }}/admin/api'
-      method: POST
-      body_format: json
-      status_code: 200
-      return_content: true
-      body:
-        query: |-
-          query {
-            cluster {
-              self {
-                uuid
-              }
-            }
-          }
-    retries: 5
-    delay: 5
-    register: response
-    until: |-
-      response.status == 200
-        and 'json' in response
-        and 'data' in response.json
-        and 'cluster' in response.json.data
-        and 'self' in response.json.data.cluster
-        and 'uuid' in response.json.data.cluster.self
-
-  - name: 'Save {{ instance.name }} uuid'
-    set_fact:
-      started_instance: >
-        {{ started_instance | combine(
-            { "uuid": response.json.data.cluster.self.uuid }
+- name: 'Set {{ instance.name }} role'
+  uri:
+    url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
+    method: POST
+    body_format: json
+    status_code: 200
+    return_content: true
+    body:
+      query: |-
+        mutation {
+          join_server(
+            uri: "{{ running_instances[instance.name].uri }}",
+            roles: [{% for role in instance.roles %} "{{ role }}",{%endfor%}]
           )
-        }}
+        }
+  register: response
+  failed_when: |-
+    not(
+      response.status == 200
+      and 'json' in response
+      and 'data' in response.json
+      and 'join_server' in response.json.data
+      and response.json.data.join_server
+    )
 
-  - name: Debug started_instance
-    debug:
-      msg: '{{ started_instance }}'
-
-  - name: 'Update {{ instance.name }} info in global started instances info dict'
-    set_fact:
-      started_instances: '{{ started_instances | combine({ instance.name: started_instance }) }}'
-
-  when: instance.name in started_instances and instance.roles is defined
+  when: |-
+    instance.roles is defined
+    and instance.name in running_instances
+    and running_instances[instance.name].status == 'unconfigured'

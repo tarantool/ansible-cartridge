@@ -1,8 +1,4 @@
 ---
-- name: Save started instance info
-  set_fact:
-    started_instance: {}
-
 - name: 'Gen config for {{ instance.name }}'
   cartridgeconf:
     instance: '{{ instance }}'
@@ -30,19 +26,11 @@
     state: started
   register: start_instance
 
-- name: Save started server info and probe it
+- name: Probe started server
   block:
-  - name: Set started instance address
-    set_fact:
-      started_instance: >
-        {{ started_instance | combine(
-            { "address": ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }
-          )
-        }}
-
   - name: 'Get {{ instance.name }} instance URI'
     uri:
-      url: 'http://{{ started_instance.address }}:{{ instance.http_port }}/admin/api'
+      url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
       method: POST
       body_format: json
       status_code: 200
@@ -69,11 +57,11 @@
 
   - name: Save instanse URI
     set_fact:
-      started_instance: '{{ started_instance | combine({ "uri": response.json.data.cluster.self.uri }) }}'
+      instance_uri: '{{ response.json.data.cluster.self.uri }}'
 
   - name: 'Probe {{ instance.name }} instance'
     uri:
-      url: 'http://{{ started_instance.address }}:{{ instance.http_port }}/admin/api'
+      url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
       method: POST
       body_format: json
       status_code: 200
@@ -82,7 +70,7 @@
         query: |-
           mutation {
             probe_instance:
-              probe_server(uri: "{{ started_instance.uri }}")
+              probe_server(uri: "{{ instance_uri }}")
           }
     retries: 5
     delay: 5
@@ -93,9 +81,5 @@
         and 'data' in response.json
         and 'probe_instance' in response.json.data
         and response.json.data.probe_instance
-
-  - name: 'Append {{ instance.name }} info to global started instances info dict'
-    set_fact:
-      started_instances: '{{ started_instances | combine({ instance.name: started_instance }) }}'
 
   when: start_instance.changed

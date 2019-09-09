@@ -5,6 +5,11 @@
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
   when: ansible_os_family != "RedHat"
 
+- name: Global variables for running services info and server address
+  set_fact:
+    running_instances: {}
+    server_address: '{{ ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}'
+
 - name: Dependencies
   include_tasks: install_dependencies.yml
 
@@ -12,18 +17,29 @@
   include_tasks: install_rpm.yml
   when: ansible_os_family == 'RedHat'
 
-- name: Collect started instances info into variable
-  set_fact:
-    started_instances: {}
-
 - name: Start instances
   include_tasks: start_instance.yml
   vars:
     instance: '{{ item }}'
   with_items: '{{ cartridge_config.instances }}'
 
-- name: Set up topology
+- name: Get all running instances info
+  include_tasks: inspect_running_instance.yml
+  vars:
+    instance: '{{ item }}'
+  with_items: '{{ cartridge_config.instances }}'
+
+- name: Set roles
   include_tasks: set_roles.yml
   vars:
     instance: '{{ item }}'
   with_items: '{{ cartridge_config.instances }}'
+
+- name: Update all running instances info
+  include_tasks: inspect_running_instance.yml
+  vars:
+    instance: '{{ item }}'
+  with_items: '{{ cartridge_config.instances }}'
+
+- name: Debug running_instances
+  debug: var=running_instances
