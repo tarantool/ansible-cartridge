@@ -17,4 +17,3 @@ RUN .rocks/bin/cartridge create --name myapp .
 RUN .rocks/bin/cartridge pack rpm --version 1.0.0 myapp
 
 RUN mkdir /opt/myapp && cp myapp-1.0.0-0.rpm /opt/myapp
-

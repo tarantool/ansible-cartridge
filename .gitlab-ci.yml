@@ -28,8 +28,7 @@ test-enterprise:
     - >
       docker build
       --build-arg BUNDLE_VERSION=${BUNDLE_VERSION}
-      --build-arg AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      --build-arg AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      --build-arg TARANTOOL_DOWNLOAD_TOKEN=${TARANTOOL_DOWNLOAD_TOKEN}
       -t rpm-builder
       -f Dockerfile.enterprise
       .
