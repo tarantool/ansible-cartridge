@@ -3,15 +3,25 @@ dependency:
   name: galaxy
 
 driver:
-  name: vagrant
-  provider:
-    name: virtualbox
+  name: docker
 
 platforms:
   - name: vm1
-    box: centos/7
+    image: centos:7
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
   - name: vm2
-    box: centos/7
+    image: centos:7
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
 
 provisioner:
   provisioner:
@@ -21,7 +31,7 @@ provisioner:
   inventory:
     group_vars:
       all:
-        cartridge_package_path: ./myapp-0.1.0-0.rpm
+        cartridge_package_path: ./myapp-1.0.0-0.rpm
 
         cartridge_config_defaults:
           cluster_cookie: app-default-cookie

@@ -1,0 +1,79 @@
+---
+variables:
+  BUNDLE_VERSION: 1.10.3-93-g580699f
+
+stages:
+  - test
+
+default:
+  image: docker:git
+  services:
+    - docker:dind
+
+before_script:
+  - apk update && apk add --no-cache docker
+    python3-dev py3-pip docker gcc git curl build-base
+    autoconf automake py3-cryptography linux-headers
+    musl-dev libffi-dev openssl-dev openssh
+  - docker info
+  - python3 --version
+  - pip3 install ansible molecule docker
+  - ansible --version
+
+test-enterprise:
+  stage: test
+  tags:
+    - docker
+  script:
+    - >
+      docker build
+      --build-arg BUNDLE_VERSION=${BUNDLE_VERSION}
+      --build-arg TARANTOOL_DOWNLOAD_TOKEN=${TARANTOOL_DOWNLOAD_TOKEN}
+      -t rpm-builder
+      -f Dockerfile.enterprise
+      .
+
+    - docker create --name rpm-builder rpm-builder usr/bin/true
+    - docker cp rpm-builder:/opt/myapp/myapp-1.0.0-0.rpm molecule/default
+    - docker rm rpm-builder
+
+    - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
+    - molecule test
+
+test-opensource-1.10:
+  stage: test
+  tags:
+    - docker
+  script:
+    - >
+      docker build
+      --build-arg TARANTOOL_VERSION=1_10
+      -t rpm-builder
+      -f Dockerfile.opensource
+      .
+
+    - docker create --name rpm-builder rpm-builder usr/bin/true
+    - docker cp rpm-builder:/opt/myapp/myapp-1.0.0-0.rpm molecule/default
+    - docker rm rpm-builder
+
+    - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
+    - molecule test
+
+test-opensource-2.2:
+  stage: test
+  tags:
+    - docker
+  script:
+    - >
+      docker build
+      --build-arg TARANTOOL_VERSION=2_2
+      -t rpm-builder
+      -f Dockerfile.opensource
+      .
+
+    - docker create --name rpm-builder rpm-builder usr/bin/true
+    - docker cp rpm-builder:/opt/myapp/myapp-1.0.0-0.rpm molecule/default
+    - docker rm rpm-builder
+
+    - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
+    - molecule test
