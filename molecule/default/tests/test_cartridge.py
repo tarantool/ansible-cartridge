@@ -19,7 +19,7 @@ def check_conf_file(conf_file, conf_section, conf):
     assert conf_file_dict[conf_section] == conf
 
 
-def test_myapp_instances_status_and_config(request, host):
+def test_myapp_instances_status_and_config(host):
     ansible_vars = host.ansible.get_variables()
     instances = ansible_vars['cartridge_config']['instances']
     default_conf = ansible_vars['cartridge_config_defaults']

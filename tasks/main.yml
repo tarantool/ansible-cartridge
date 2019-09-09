@@ -12,8 +12,18 @@
   include_tasks: install_rpm.yml
   when: ansible_os_family == 'RedHat'
 
-- name: Start
+- name: Collect started instances info into variable
+  set_fact:
+    started_instances: {}
+
+- name: Start instances
   include_tasks: start_instance.yml
+  vars:
+    instance: '{{ item }}'
+  with_items: '{{ cartridge_config.instances }}'
+
+- name: Set up topology
+  include_tasks: set_roles.yml
   vars:
     instance: '{{ item }}'
   with_items: '{{ cartridge_config.instances }}'
