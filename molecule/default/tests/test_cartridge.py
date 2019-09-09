@@ -29,14 +29,18 @@ def test_myapp_instances_status_and_config(request, host):
     for instance in instances:
         inst_name = instance['name']
 
+        # Remove deploy params from instance conf
+        deploy_params = ['name', 'roles', 'replica_for']
+        for p in deploy_params:
+            if p in instance:
+                del instance[p]
+
         service = host.service('{}@{}'.format(app_name, inst_name))
         assert service.is_running
 
         conf_file_path = '/etc/tarantool/conf.d/{}.{}.yml'.format(app_name, inst_name)
         conf_file = host.file(conf_file_path)
         conf_section = '{}.{}'.format(app_name, inst_name)
-
-        del instance['name']
 
         check_conf_file(conf_file, conf_section, instance)
 

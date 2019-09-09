@@ -49,11 +49,12 @@ def generate_config_files(params):
 
     # Create instance config file
     ## First - change config format
+    deploy_params = ['name', 'roles', 'replica_for']
     section_name = '{}.{}'.format(params['appname'], params['instance']['name'])
     instance_conf = {
         section_name:
             {k: params['instance'][k]
-                for k in params['instance'] if k != 'name' }
+                for k in params['instance'] if k not in deploy_params }
     }
 
     ## Dump in file

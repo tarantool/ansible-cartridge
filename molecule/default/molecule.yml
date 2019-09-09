@@ -46,20 +46,24 @@ provisioner:
             - name: 'core_1'
               advertise_uri: '3000'
               http_port: '8080'
+              roles: ['app.roles.custom']
 
             - name: 'storage_1'
               advertise_uri: 'localhost:3002'
               http_port: '8082'
+              roles: ['vshard-storage']
       vm2:
         cartridge_config:
           instances:
             - name: 'core_2'
               advertise_uri: '3004'
               http_port: '8084'
+              roles: ['app.roles.custom']
 
             - name: 'storage_1_replica'
               advertise_uri: '3005'
               http_port: '8085'
+              replica_for: 'storage_1'
 
 verifier:
   name: testinfra

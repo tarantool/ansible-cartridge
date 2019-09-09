@@ -24,41 +24,69 @@
   systemd:
     name: '{{ cartridge_app_name }}@{{ instance.name }}'
     state: started
+  register: start_service
 
-# XXX: instance_address and instance_probe_uri detection isn't correct now
-# If instance has more than one non-local IP address,
-#   advertise host will be set to `localhost` (and `instance_address` wouldn' be correct)
-# Also, case of `<host>:` format of `advertise_uri` is ignored now
-- name: Set instance address and binary port
-  set_fact:
-    instance_address: '{{ ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}'
+- name: Probe server and set roles
+  block:
+  # XXX: instance_address and instance_uri detection isn't correct now
+  # If instance has more than one non-local IP address,
+  #   advertise host will be set to `localhost` (and `instance_address` wouldn' be correct)
+  # Also, case of `<host>:` format of `advertise_uri` is ignored now
+  - name: Set instance address
+    set_fact:
+      instance_address: '{{ ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}'
 
-- name: Set instance probe uri
-  set_fact:
-    instance_probe_uri: >-
-      {{ instance.advertise_uri
-        if ":" in instance.advertise_uri
-          else instance_address + ":" + instance.advertise_uri }}
+  - name: Set instance probe uri
+    set_fact:
+      instance_uri: >-
+        {{ instance.advertise_uri
+          if ":" in instance.advertise_uri
+            else instance_address + ":" + instance.advertise_uri }}
 
-- name: 'Probe {{ instance.name }} instance'
-  uri:
-    url: 'http://{{ instance_address }}:{{ instance.http_port }}/admin/api'
-    method: POST
-    body_format: json
-    status_code: 200
-    return_content: true
-    body:
-      query: |-
-        mutation {
-          probe_instance:
-            probe_server(uri: "{{ instance_probe_uri }}")
-        }
-  retries: 5
-  delay: 5
-  register: result
-  until: |
-    result.status == 200
-      and 'json' in result
-      and 'data' in result.json
-      and 'probe_instance' in result.json['data']
-      and result.json['data']['probe_instance']
+  - name: 'Probe {{ instance.name }} instance'
+    uri:
+      url: 'http://{{ instance_address }}:{{ instance.http_port }}/admin/api'
+      method: POST
+      body_format: json
+      status_code: 200
+      return_content: true
+      body:
+        query: |-
+          mutation {
+            probe_instance:
+              probe_server(uri: "{{ instance_uri }}")
+          }
+    retries: 5
+    delay: 5
+    register: response
+    until: |-
+      response.status == 200
+        and 'json' in response
+        and 'data' in response.json
+        and 'probe_instance' in response.json['data']
+        and response.json['data']['probe_instance']
+
+
+  - name: 'Set {{ instance.name }} role'
+    uri:
+      url: 'http://{{ instance_address }}:{{ instance.http_port }}/admin/api'
+      method: POST
+      body_format: json
+      status_code: 200
+      return_content: true
+      body:
+        query: |-
+          mutation {
+            join_server(uri: "{{ instance_uri }}",  roles: [{% for role in instance.roles %} "{{ role }}",{%endfor%}])
+          }
+    when: instance.roles is defined
+    register: response
+    failed_when: |-
+      not(
+        response.status == 200
+        and 'json' in response
+        and 'data' in response.json
+        and 'join_server' in response.json.data
+        and response.json.data.join_server
+      )
+  when: start_service.changed
