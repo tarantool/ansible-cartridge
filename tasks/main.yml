@@ -22,8 +22,8 @@
     instance: '{{ item }}'
   with_items: '{{ cartridge_config.instances }}'
 
-- name: Set roles
-  include_tasks: set_roles.yml
-  vars:
-    instance: '{{ item }}'
-  with_items: '{{ cartridge_config.instances }}'
+# - name: Set roles
+#   include_tasks: set_roles.yml
+#   vars:
+#     instance: '{{ item }}'
+#   with_items: '{{ cartridge_config.instances }}'

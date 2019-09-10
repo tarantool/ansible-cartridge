@@ -1,77 +1,21 @@
 ---
+# To be replaced with jinja templates
 - name: 'Gen config for {{ instance.name }}'
-  cartridgeconf:
+  cartridge_gen_conf:
     instance: '{{ instance }}'
     appname: '{{ cartridge_app_name }}'
     config_defaults: '{{ cartridge_config_defaults }}'
-  register: res
-
-- name: 'Set owner and group for {{ cartridge_app_name }} default config file'
-  file:
-    path: '{{ res.meta.created_default_conf }}'
-    owner: tarantool
-    group: tarantool
-  when: res.meta.created_default_conf is not none
-
-- name: 'Set owner and group for {{ instance.name }} config file'
-  file:
-    path: '{{ res.meta.created_instance_conf }}'
-    owner: tarantool
-    group: tarantool
-  when: res.meta.created_instance_conf is not none
 
 - name: 'Start systemd service for {{ instance.name }}'
   systemd:
     name: '{{ cartridge_app_name }}@{{ instance.name }}'
     state: started
-  register: start_instance
-
-- name: 'Get {{ instance.name }} instance URI'
-  uri:
-    url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
-    method: POST
-    body_format: json
-    status_code: 200
-    return_content: true
-    body:
-      query: |-
-        query {
-          cluster {
-            self {
-              uri
-            }
-          }
-        }
-  retries: 5
-  delay: 5
-  register: response
-  until: |-
-    response.status == 200
-      and 'json' in response
-      and 'data' in response.json
-      and 'cluster' in response.json.data
-      and 'self' in response.json.data.cluster
-      and 'uri' in response.json.data.cluster.self
 
 - name: 'Probe {{ instance.name }} instance'
-  uri:
-    url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
-    method: POST
-    body_format: json
-    status_code: 200
-    return_content: true
-    body:
-      query: |-
-        mutation {
-          probe_instance:
-            probe_server(uri: "{{ response.json.data.cluster.self.uri }}")
-        }
+  cartridge_probe_server:
+    instance: '{{ instance }}'
+    server_address: '{{ server_address }}'
+  register: probe_result
+  until: not probe_result.failed
   retries: 5
   delay: 5
-  register: response
-  until: |-
-    response.status == 200
-      and 'json' in response
-      and 'data' in response.json
-      and 'probe_instance' in response.json.data
-      and response.json.data.probe_instance
