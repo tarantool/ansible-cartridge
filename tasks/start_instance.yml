@@ -26,60 +26,52 @@
     state: started
   register: start_instance
 
-- name: Probe started server
-  block:
-  - name: 'Get {{ instance.name }} instance URI'
-    uri:
-      url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
-      method: POST
-      body_format: json
-      status_code: 200
-      return_content: true
-      body:
-        query: |-
-          query {
-            cluster {
-              self {
-                uri
-              }
+- name: 'Get {{ instance.name }} instance URI'
+  uri:
+    url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
+    method: POST
+    body_format: json
+    status_code: 200
+    return_content: true
+    body:
+      query: |-
+        query {
+          cluster {
+            self {
+              uri
             }
           }
-    retries: 5
-    delay: 5
-    register: response
-    until: |-
-      response.status == 200
-        and 'json' in response
-        and 'data' in response.json
-        and 'cluster' in response.json.data
-        and 'self' in response.json.data.cluster
-        and 'uri' in response.json.data.cluster.self
+        }
+  retries: 5
+  delay: 5
+  register: response
+  until: |-
+    response.status == 200
+      and 'json' in response
+      and 'data' in response.json
+      and 'cluster' in response.json.data
+      and 'self' in response.json.data.cluster
+      and 'uri' in response.json.data.cluster.self
 
-  - name: Save instanse URI
-    set_fact:
-      instance_uri: '{{ response.json.data.cluster.self.uri }}'
-
-  - name: 'Probe {{ instance.name }} instance'
-    uri:
-      url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
-      method: POST
-      body_format: json
-      status_code: 200
-      return_content: true
-      body:
-        query: |-
-          mutation {
-            probe_instance:
-              probe_server(uri: "{{ instance_uri }}")
-          }
-    retries: 5
-    delay: 5
-    register: response
-    until: |-
-      response.status == 200
-        and 'json' in response
-        and 'data' in response.json
-        and 'probe_instance' in response.json.data
-        and response.json.data.probe_instance
-
-  when: start_instance.changed
+- name: 'Probe {{ instance.name }} instance'
+  uri:
+    url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
+    method: POST
+    body_format: json
+    status_code: 200
+    return_content: true
+    body:
+      query: |-
+        mutation {
+          probe_instance:
+            probe_server(uri: "{{ response.json.data.cluster.self.uri }}")
+        }
+  retries: 5
+  delay: 5
+  register: response
+  until: |-
+    response.status == 200
+      and 'json' in response
+      and 'data' in response.json
+      and 'probe_instance' in response.json.data
+      and response.json.data.probe_instance
