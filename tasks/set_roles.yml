@@ -1,4 +1,30 @@
 ---
+- name: 'Get {{ instance.name }} instance URI'
+  uri:
+    url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
+    method: POST
+    body_format: json
+    status_code: 200
+    return_content: true
+    body:
+      query: |-
+        query {
+          cluster {
+            self {
+              uri
+              uuid
+            }
+          }
+        }
+  retries: 5
+  delay: 5
+  register: response
+  until: |-
+    response.status == 200
+      and 'json' in response
+      and 'data' in response.json
+      and 'cluster' in response.json.data
+
 - name: 'Set {{ instance.name }} role'
   uri:
     url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
@@ -10,7 +36,7 @@
       query: |-
         mutation {
           join_server(
-            uri: "{{ running_instances[instance.name].uri }}",
+            uri: "{{ response.json.data.cluster.self.uri }}",
             roles: [{% for role in instance.roles %} "{{ role }}",{%endfor%}]
           )
         }
@@ -23,8 +49,6 @@
       and 'join_server' in response.json.data
       and response.json.data.join_server
     )
-
   when: |-
     instance.roles is defined
-    and instance.name in running_instances
-    and running_instances[instance.name].status == 'unconfigured'
+    and response.json.data.cluster.self.uuid is none
