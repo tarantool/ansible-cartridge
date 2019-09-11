@@ -17,60 +17,73 @@ argument_spec = {
     'control_instance_port': {'required': True, 'type': 'str'},
 }
 
-def probe_server(params):
-    if 'http_port' not in params['instance']:
-       params['instance']['http_port'] = '8080'
+def set_roles(params):
+    if 'roles' not in params['instance']:
+        return ModuleRes(success=True, changed=False)
 
-    changed = False
+    if not params['instance']['roles']:
+        return ModuleRes(success=False, msg='Instance roles list must be non-empty')
 
-    # Get instance URI
     admin_api_url = 'http://{}:{}/admin/api'.format(params['server_address'], params['instance']['http_port'])
-    print('admin_api_url')
 
+    # Get instance URI and UUID
     query = '''
         query {
           cluster {
             self {
               uri
+              uuid
             }
           }
         }
     '''
-
     response = requests.post(admin_api_url, json={'query': query})
     if response.status_code != 200:
         return ModuleRes(success=False,
                          msg="Query failed to run by returning code of {}. {}".format(response.status_code, query))
+
     if 'errors' in response.json():
         return ModuleRes(success=False,
                           msg="Query failed to run with error {}. {}".format(response.json()['errors'][0]['message'], query))
+
 
     instance_uri = response.json()['data']['cluster']['self']['uri']
+    instance_uuid = response.json()['data']['cluster']['self']['uuid']
 
-    # Probe instance
+    # Set roles
     ## NOTE: control instance is used here
     admin_api_url = 'http://{}:{}/admin/api'.format(params['control_instance_address'], params['control_instance_port'])
-    query = '''
-        mutation {{
-          probe_instance:
-            probe_server(uri: "{}")
-        }}
-    '''.format(instance_uri)
-    response = requests.post(admin_api_url, json={'query': query})
-    if response.status_code != 200:
-        return ModuleRes(success=False,
-                         msg="Query failed to run by returning code of {}. {}".format(response.status_code, query))
-    if 'errors' in response.json():
-        return ModuleRes(success=False,
-                          msg="Query failed to run with error {}. {}".format(response.json()['errors'][0]['message'], query))
 
-    probe_success = response.json()['data']['probe_instance']
-    return ModuleRes(success=probe_success, changed=changed)
+    if not instance_uuid:
+        # Join instance with specified roles
+        roles_str =  '[{}]'.format(', '.join(['"{}"'.format(role) for role in params['instance']['roles']]))
+        query = '''
+            mutation {{
+                join_server(
+                    uri: "{}",
+                    roles: {}
+                )
+            }}
+        '''.format(instance_uri, roles_str)
+        response = requests.post(admin_api_url, json={'query': query})
+        if response.status_code != 200:
+            return ModuleRes(success=False,
+                             msg="Query failed to run by returning code of {}. {}".format(response.status_code, query))
+
+        if 'errors' in response.json():
+            return ModuleRes(success=False,
+                      msg="Query failed to run with error {}. {}".format(response.json()['errors'][0]['message'], query))
+
+        join_success = response.json()['data']['join_server']
+        return ModuleRes(success=join_success, changed=join_success)
+
+    # Edit replicaset
+    return ModuleRes(success=True, changed=False)
 
 
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
-    res = probe_server(module.params)
+    res = set_roles(module.params)
 
     if res.success == True:
         module.exit_json(changed=res.changed)

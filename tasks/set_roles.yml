@@ -1,57 +1,7 @@
-# ---
-# - name: 'Get {{ instance.name }} instance URI and UUID'
-#   uri:
-#     url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
-#     method: POST
-#     body_format: json
-#     status_code: 200
-#     return_content: true
-#     body:
-#       query: |-
-#         query {
-#           cluster {
-#             self {
-#               uri
-#               uuid
-#             }
-#           }
-#         }
-#   register: response
-#   failed_when: |-
-#     not(
-#       response.status == 200
-#       and 'json' in response
-#       and 'data' in response.json
-#       and 'cluster' in response.json.data
-#     )
-
-# - name: 'Save {{ instance.name }} instance URI and UUID'
-#   set_fact:
-#     instance_uuid: '{{ response.json.data.cluster.self.uuid }}'
-#     instance_uri: '{{ response.json.data.cluster.self.uri }}'
-
-# - name: 'Join {{ instance.name }} with role'
-#   uri:
-#     url: 'http://{{ server_address }}:{{ instance.http_port }}/admin/api'
-#     method: POST
-#     body_format: json
-#     status_code: 200
-#     return_content: true
-#     body:
-#       query: |-
-#         mutation {
-#           join_server(
-#             uri: "{{ instance_uri }}",
-#             roles: [{% for role in instance.roles %} "{{ role }}",{%endfor%}]
-#           )
-#         }
-#   register: response
-#   failed_when: |-
-#     not(
-#       response.status == 200
-#       and 'json' in response
-#       and 'data' in response.json
-#       and 'join_server' in response.json.data
-#       and response.json.data.join_server
-#     )
-#   when: instance.roles is defined and (instance_uuid == '')
+---
+- name: 'Set {{ instance.name }} roles'
+  cartridge_set_roles:
+    instance: '{{ instance }}'
+    server_address: '{{ server_address }}'
+    control_instance_address: '{{ control_instance_address }}'
+    control_instance_port: '{{ control_instance_port }}'

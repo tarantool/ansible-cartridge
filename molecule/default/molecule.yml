@@ -5,6 +5,8 @@ dependency:
 driver:
   name: docker
 
+create:
+
 platforms:
   - name: vm1
     image: centos:7
@@ -14,6 +16,12 @@ platforms:
       - /tmp
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    published_ports:
+      - 127.0.0.1:8081:8081/tcp
+      - 127.0.0.1:8082:8082/tcp
+    networks:
+      - name: cartridge-network
+    purge_networks: true
   - name: vm2
     image: centos:7
     command: /sbin/init
@@ -22,9 +30,14 @@ platforms:
       - /tmp
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    published_ports:
+      - 127.0.0.1:8083:8083/tcp
+      - 127.0.0.1:8084:8084/tcp
+    networks:
+      - name: cartridge-network
+    purge_networks: true
 
 provisioner:
-  provisioner:
   name: ansible
   lint:
     name: ansible-lint
@@ -38,31 +51,28 @@ provisioner:
 
     host_vars:
       vm1:
-        cartridge_config_defaults:
-          cluster_cookie: this-server-default-cookie
-
         cartridge_config:
           instances:
             - name: 'core_1'
-              advertise_uri: '3000'
-              http_port: '8080'
+              advertise_uri: '3301'
+              http_port: '8081'
               roles: ['app.roles.custom']
 
             - name: 'storage_1'
-              advertise_uri: 'localhost:3002'
+              advertise_uri: '3302'
               http_port: '8082'
               roles: ['vshard-storage']
       vm2:
         cartridge_config:
           instances:
             - name: 'core_2'
-              advertise_uri: '3004'
-              http_port: '8084'
+              advertise_uri: '3303'
+              http_port: '8083'
               roles: ['app.roles.custom']
 
             - name: 'storage_1_replica'
-              advertise_uri: '3005'
-              http_port: '8085'
+              advertise_uri: '3304'
+              http_port: '8084'
               replica_for: 'storage_1'
 
 verifier:
