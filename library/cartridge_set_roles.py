@@ -14,6 +14,10 @@ argument_spec = {
 }
 
 
+def list_to_graphql_string(l):
+    return '[{}]'.format(', '.join(['"{}"'.format(i) for i in l]))
+
+
 def set_roles(params):
     if 'roles' not in params['instance']:
         return ModuleRes(success=True, changed=False)
@@ -48,7 +52,6 @@ def set_roles(params):
 
     if not instance_uuid:
         # Join instance with specified roles
-        roles_str =  '[{}]'.format(', '.join(['"{}"'.format(role) for role in params['instance']['roles']]))
         query = '''
             mutation {{
                 join_server(
@@ -56,7 +59,7 @@ def set_roles(params):
                     roles: {}
                 )
             }}
-        '''.format(instance_uri, roles_str)
+        '''.format(instance_uri, list_to_graphql_string(params['instance']['roles']))
         response = requests.post(admin_api_url, json={'query': query})
         err = check_query_error(query, response)
         if err is not None:
@@ -66,7 +69,62 @@ def set_roles(params):
         return ModuleRes(success=join_success, changed=join_success)
 
     # Edit replicaset
-    return ModuleRes(success=True, changed=False)
+    query = '''
+        query {
+          cluster {
+            self {
+              uuid
+            }
+          }
+        }
+    '''
+
+    admin_api_url = 'http://{}:{}/admin/api'.format(params['server_address'], params['instance']['http_port'])
+    response = requests.post(admin_api_url, json={'query': query})
+    err = check_query_error(query, response)
+    if err is not None:
+        return err
+
+    instance_uuid = response.json()['data']['cluster']['self']['uuid']
+
+    # Get replicaset roles
+    query = '''
+        query {{
+          servers(uuid: "{}") {{
+            replicaset {{
+                uuid
+                roles
+            }}
+          }}
+        }}
+    '''.format(instance_uuid)
+
+    admin_api_url = 'http://{}:{}/admin/api'.format(params['control_instance_address'], params['control_instance_port'])
+    response = requests.post(admin_api_url, json={'query': query})
+    err = check_query_error(query, response)
+    if err is not None:
+        return err
+
+    roles = response.json()['data']['servers'][0]['replicaset']['roles']
+    if roles == params['instance']['roles']:
+        return ModuleRes(success=True, changed=False)
+
+    replicaset_uuid = response.json()['data']['servers'][0]['replicaset']['uuid']
+
+    query = '''
+        mutation {{
+          edit_replicaset:
+            edit_replicaset(uuid: "{}", roles: {})
+        }}
+    '''.format(replicaset_uuid, list_to_graphql_string(params['instance']['roles']))
+
+    admin_api_url = 'http://{}:{}/admin/api'.format(params['control_instance_address'], params['control_instance_port'])
+    response = requests.post(admin_api_url, json={'query': query})
+    err = check_query_error(query, response)
+    if err is not None:
+        return err
+
+    return ModuleRes(success=True, changed=True)
 
 
 def main():

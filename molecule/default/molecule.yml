@@ -65,10 +65,10 @@ provisioner:
       vm2:
         cartridge_config:
           instances:
-            - name: 'core_2'
+            - name: 'router_1'
               advertise_uri: '3303'
               http_port: '8083'
-              roles: ['app.roles.custom']
+              roles: ['vshard-router']
 
             - name: 'storage_1_replica'
               advertise_uri: '3304'
