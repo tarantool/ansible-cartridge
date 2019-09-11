@@ -6,17 +6,11 @@ import grp
 import yaml
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.helpers import ModuleRes
 
 
 TARANTOOL_UID = pwd.getpwnam("tarantool").pw_uid
 TARANTOOL_GID = grp.getgrnam("tarantool").gr_gid
-
-class ModuleRes:
-    def __init__(self, success, msg=None, changed=False):
-        self.success = success
-        self.msg = msg
-        self.changed = changed
-
 
 argument_spec = {
     'instance': {'required': True, 'type': 'dict'},

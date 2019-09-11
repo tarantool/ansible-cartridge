@@ -3,12 +3,8 @@
 import requests
 
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.helpers import ModuleRes, check_query_error
 
-class ModuleRes:
-    def __init__(self, success, msg=None, changed=False):
-        self.success = success
-        self.msg = msg
-        self.changed = changed
 
 argument_spec = {
     'instance': {'required': True, 'type': 'dict'},
@@ -16,6 +12,7 @@ argument_spec = {
     'control_instance_address': {'required': True, 'type': 'str'},
     'control_instance_port': {'required': True, 'type': 'str'},
 }
+
 
 def set_roles(params):
     if 'roles' not in params['instance']:
@@ -38,14 +35,9 @@ def set_roles(params):
         }
     '''
     response = requests.post(admin_api_url, json={'query': query})
-    if response.status_code != 200:
-        return ModuleRes(success=False,
-                         msg="Query failed to run by returning code of {}. {}".format(response.status_code, query))
-
-    if 'errors' in response.json():
-        return ModuleRes(success=False,
-                          msg="Query failed to run with error {}. {}".format(response.json()['errors'][0]['message'], query))
-
+    err = check_query_error(query, response)
+    if err is not None:
+        return err
 
     instance_uri = response.json()['data']['cluster']['self']['uri']
     instance_uuid = response.json()['data']['cluster']['self']['uuid']
@@ -66,13 +58,9 @@ def set_roles(params):
             }}
         '''.format(instance_uri, roles_str)
         response = requests.post(admin_api_url, json={'query': query})
-        if response.status_code != 200:
-            return ModuleRes(success=False,
-                             msg="Query failed to run by returning code of {}. {}".format(response.status_code, query))
-
-        if 'errors' in response.json():
-            return ModuleRes(success=False,
-                      msg="Query failed to run with error {}. {}".format(response.json()['errors'][0]['message'], query))
+        err = check_query_error(query, response)
+        if err is not None:
+            return err
 
         join_success = response.json()['data']['join_server']
         return ModuleRes(success=join_success, changed=join_success)

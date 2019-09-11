@@ -3,18 +3,13 @@
 import requests
 
 from ansible.module_utils.basic import AnsibleModule
-
-class ModuleRes:
-    def __init__(self, success, msg=None, changed=False, meta=None):
-        self.success = success
-        self.msg = msg
-        self.changed = changed
-        self.meta = meta
+from ansible.module_utils.helpers import ModuleRes
 
 argument_spec = {
     'hosts': {'required': True, 'type': 'list'},
     'hostvars': {'required': True, 'type': 'dict'}
 }
+
 
 def get_control_instance(params):
     meta = {
