@@ -35,3 +35,11 @@
   vars:
     instance: '{{ item }}'
   with_items: '{{ cartridge_config.instances }}'
+  when: item.roles is defined
+
+- name: Join replicas
+  include_tasks: join_replicas.yml
+  vars:
+    instance: '{{ item }}'
+  with_items: '{{ cartridge_config.instances }}'
+  when: item.replica_for is defined
