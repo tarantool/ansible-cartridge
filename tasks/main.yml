@@ -20,7 +20,7 @@
 
 - name: Global variables for server and control_server address
   set_fact:
-    server_address: '{{ ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}'
+    instance_address: '{{ ansible_default_ipv4.address | default(ansible_all_ipv4_addresses[0]) }}'
     control_instance_address: '{{ control_instance.meta.control_instance_address }}'
     control_instance_port: '{{ control_instance.meta.control_instance_port }}'
 

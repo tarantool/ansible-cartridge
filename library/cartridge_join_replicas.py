@@ -3,12 +3,13 @@
 import requests
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes, check_query_error
+from ansible.module_utils.helpers import ModuleRes, check_query
+from ansible.module_utils.helpers import get_all_instances_info, get_instance_info
 
 
 argument_spec = {
     'instance': {'required': True, 'type': 'dict'},
-    'server_address': {'required': True, 'type': 'str'},
+    'instance_address': {'required': True, 'type': 'str'},
     'control_instance_address': {'required': True, 'type': 'str'},
     'control_instance_port': {'required': True, 'type': 'str'},
 }
@@ -19,31 +20,16 @@ def join_replicas(params):
         return ModuleRes(success=True, changed=False)
 
     leader_name = params['instance']['replica_for']
-
-    # Get all instances list
-    query = '''
-        query {
-          servers {
-            alias
-            replicaset {
-              uuid
-            }
-          }
-        }
-    '''
-
-    admin_api_url = 'http://{}:{}/admin/api'.format(params['control_instance_address'], params['control_instance_port'])
-    response = requests.post(admin_api_url, json={'query': query})
-    err = check_query_error(query, response)
-    if err is not None:
-        return err
-
-    instances = response.json()['data']['servers']
+    ok, instances_info = get_all_instances_info(
+        params['control_instance_address'], params['control_instance_port']
+    )
+    if not ok:
+        return instances_info
 
     # Find target replicaset
     target_replicaset = None
     errmsg = None
-    for i in instances:
+    for i in instances_info:
         if i['alias'] == leader_name:
             if i['replicaset']['uuid'] is None:
                 errmsg = 'Error joining {0} to {1}: {1} is not configured.'.format(
@@ -62,58 +48,34 @@ def join_replicas(params):
         )
         return ModuleRes(success=False, msg=errmsg)
 
-    # Get instance UUID and URI (to check if it is already joined)
-    query = '''
-        query {
-          cluster {
-            self {
-              uuid
-              uri
-            }
-          }
-        }
-    '''
+    # Get instance info
+    ok, instance_info = get_instance_info(
+        params['instance_address'], params['instance']['http_port'],
+        params['control_instance_address'], params['control_instance_port']
+    )
+    if not ok:
+        return instance_info
 
-    admin_api_url = 'http://{}:{}/admin/api'.format(params['server_address'], params['instance']['http_port'])
-    response = requests.post(admin_api_url, json={'query': query})
-    err = check_query_error(query, response)
-    if err is not None:
-        return err
+    if instance_info['uuid'] is not None:
+        # Already joined
+        if instance_info['replicaset']['uuid'] == target_replicaset['uuid']:
+            # Already joined to this replicaset
+            return ModuleRes(success=True, changed=False)
 
-    instance_uuid = response.json()['data']['cluster']['self']['uuid']
-    instance_uri = response.json()['data']['cluster']['self']['uri']
-
-    if instance_uuid is not None:
-        # Get instance replicaset UUID to check if it already joined to target server
-        query = '''
-            query {{
-                servers(uuid: "{}") {{
-                    replicaset {{
-                        uuid
-                    }}
-                }}
-            }}
-        '''.format(instance_uuid)
-
-        admin_api_url = 'http://{}:{}/admin/api'.format(params['control_instance_address'], params['control_instance_port'])
-        response = requests.post(admin_api_url, json={'query': query})
-        err = check_query_error(query, response)
-        if err is not None:
-            return err
-
-        instance_replicaset = response.json()['data']['servers'][0]['replicaset']
-        if instance_replicaset['uuid'] is not None:
-            if instance_replicaset['uuid'] == target_replicaset['uuid']:
-                # Already joined to this replicaset
-                return ModuleRes(success=True, changed=False)
-
-            errmsg = 'Error joining {0} to {1}: {0} is already joined.'.format(
-                params['instance']['name'],
-                leader_name,
-            )
-            return ModuleRes(success=False, msg=errmsg)
+        # Joined to other replicaset
+        errmsg = 'Error joining {0} to {1}: {0} is already joined.'.format(
+            params['instance']['name'],
+            leader_name,
+        )
+        return ModuleRes(success=False, msg=errmsg)
 
     # Join replica
+    ## NOTE: control instance is used here
+    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
+        params['control_instance_address'],
+        params['control_instance_port']
+    )
+
     query = '''
         mutation {{
             join_replica:
@@ -122,17 +84,16 @@ def join_replicas(params):
                     replicaset_uuid: "{}"
                 )
         }}
-    '''.format(instance_uri, target_replicaset['uuid'])
+    '''.format(instance_info['uri'], target_replicaset['uuid'])
 
-    admin_api_url = 'http://{}:{}/admin/api'.format(params['control_instance_address'], params['control_instance_port'])
-    response = requests.post(admin_api_url, json={'query': query})
-    err = check_query_error(query, response)
-    if err is not None:
+    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
         return err
 
     join_success = response.json()['data']['join_replica']
 
-    return ModuleRes(success=join_success, changed=False, meta=instances)
+    return ModuleRes(success=join_success, changed=False)
 
 
 def main():

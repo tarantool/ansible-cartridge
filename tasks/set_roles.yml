@@ -2,6 +2,6 @@
 - name: 'Set {{ instance.name }} roles'
   cartridge_set_roles:
     instance: '{{ instance }}'
-    server_address: '{{ server_address }}'
+    instance_address: '{{ instance_address }}'
     control_instance_address: '{{ control_instance_address }}'
     control_instance_port: '{{ control_instance_port }}'

@@ -3,12 +3,13 @@
 import requests
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes, check_query_error
+from ansible.module_utils.helpers import ModuleRes, check_query
+from ansible.module_utils.helpers import get_instance_info
 
 
 argument_spec = {
     'instance': {'required': True, 'type': 'dict'},
-    'server_address': {'required': True, 'type': 'str'},
+    'instance_address': {'required': True, 'type': 'str'},
     'control_instance_address': {'required': True, 'type': 'str'},
     'control_instance_port': {'required': True, 'type': 'str'},
 }
@@ -25,33 +26,20 @@ def set_roles(params):
     if not params['instance']['roles']:
         return ModuleRes(success=False, msg='Instance roles list must be non-empty')
 
-    admin_api_url = 'http://{}:{}/admin/api'.format(params['server_address'], params['instance']['http_port'])
+    ok, instance_info = get_instance_info(
+        params['instance_address'], params['instance']['http_port'],
+        params['control_instance_address'], params['control_instance_port']
+    )
+    if not ok:
+        return instance_info
 
-    # Get instance URI and UUID
-    query = '''
-        query {
-          cluster {
-            self {
-              uri
-              uuid
-            }
-          }
-        }
-    '''
-    response = requests.post(admin_api_url, json={'query': query})
-    err = check_query_error(query, response)
-    if err is not None:
-        return err
-
-    instance_uri = response.json()['data']['cluster']['self']['uri']
-    instance_uuid = response.json()['data']['cluster']['self']['uuid']
-
-    # Set roles
-    ## NOTE: control instance is used here
-    admin_api_url = 'http://{}:{}/admin/api'.format(params['control_instance_address'], params['control_instance_port'])
-
-    if not instance_uuid:
-        # Join instance with specified roles
+    if instance_info['uuid'] is None:
+        # Not joined yet
+        ## NOTE: control instance is used here
+        control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
+            params['control_instance_address'],
+            params['control_instance_port']
+        )
         query = '''
             mutation {{
                 join_server(
@@ -59,69 +47,31 @@ def set_roles(params):
                     roles: {}
                 )
             }}
-        '''.format(instance_uri, list_to_graphql_string(params['instance']['roles']))
-        response = requests.post(admin_api_url, json={'query': query})
-        err = check_query_error(query, response)
-        if err is not None:
+        '''.format(instance_info['uri'], list_to_graphql_string(params['instance']['roles']))
+
+        response = requests.post(control_instance_admin_api_url, json={'query': query})
+        ok, err = check_query(query, response)
+        if not ok:
             return err
 
         join_success = response.json()['data']['join_server']
         return ModuleRes(success=join_success, changed=join_success)
 
-    # Edit replicaset
-    query = '''
-        query {
-          cluster {
-            self {
-              uuid
-            }
-          }
-        }
-    '''
-
-    admin_api_url = 'http://{}:{}/admin/api'.format(params['server_address'], params['instance']['http_port'])
-    response = requests.post(admin_api_url, json={'query': query})
-    err = check_query_error(query, response)
-    if err is not None:
-        return err
-
-    instance_uuid = response.json()['data']['cluster']['self']['uuid']
-
-    # Get replicaset roles
-    query = '''
-        query {{
-          servers(uuid: "{}") {{
-            replicaset {{
-                uuid
-                roles
-            }}
-          }}
-        }}
-    '''.format(instance_uuid)
-
-    admin_api_url = 'http://{}:{}/admin/api'.format(params['control_instance_address'], params['control_instance_port'])
-    response = requests.post(admin_api_url, json={'query': query})
-    err = check_query_error(query, response)
-    if err is not None:
-        return err
-
-    roles = response.json()['data']['servers'][0]['replicaset']['roles']
-    if roles == params['instance']['roles']:
+    # Instance is already joined
+    if instance_info['replicaset']['roles'] == params['instance']['roles']:
+        # Roles was not change
         return ModuleRes(success=True, changed=False)
-
-    replicaset_uuid = response.json()['data']['servers'][0]['replicaset']['uuid']
 
     query = '''
         mutation {{
           edit_replicaset:
             edit_replicaset(uuid: "{}", roles: {})
         }}
-    '''.format(replicaset_uuid, list_to_graphql_string(params['instance']['roles']))
+    '''.format(instance_info['replicaset']['uuid'], list_to_graphql_string(params['instance']['roles']))
 
-    admin_api_url = 'http://{}:{}/admin/api'.format(params['control_instance_address'], params['control_instance_port'])
-    response = requests.post(admin_api_url, json={'query': query})
-    err = check_query_error(query, response)
-    if err is not None:
+    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
         return err
 
     return ModuleRes(success=True, changed=True)

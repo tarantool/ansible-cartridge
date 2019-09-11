@@ -3,12 +3,13 @@
 import requests
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes, check_query_error
+from ansible.module_utils.helpers import ModuleRes, check_query
+from ansible.module_utils.helpers import get_instance_info
 
 
 argument_spec = {
     'instance': {'required': True, 'type': 'dict'},
-    'server_address': {'required': True, 'type': 'str'},
+    'instance_address': {'required': True, 'type': 'str'},
     'control_instance_address': {'required': True, 'type': 'str'},
     'control_instance_port': {'required': True, 'type': 'str'},
 }
@@ -20,45 +21,31 @@ def probe_server(params):
 
     changed = False
 
-    # Get instance URI
-    admin_api_url = 'http://{}:{}/admin/api'.format(
-        params['server_address'],
-        params['instance']['http_port']
+    # Get instance info
+    ok, instance_info = get_instance_info(
+        params['instance_address'], params['instance']['http_port'],
+        params['control_instance_address'], params['control_instance_port']
     )
-
-    query = '''
-        query {
-          cluster {
-            self {
-              uri
-            }
-          }
-        }
-    '''
-
-    response = requests.post(admin_api_url, json={'query': query})
-    err = check_query_error(query, response)
-    if err is not None:
-        return err
-
-    instance_uri = response.json()['data']['cluster']['self']['uri']
+    if not ok:
+        return instance_info
 
     # Probe instance
     ## NOTE: control instance is used here
-    admin_api_url = 'http://{}:{}/admin/api'.format(
+    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
         params['control_instance_address'],
         params['control_instance_port']
     )
+
     query = '''
         mutation {{
           probe_instance:
             probe_server(uri: "{}")
         }}
-    '''.format(instance_uri)
+    '''.format(instance_info['uri'])
 
-    response = requests.post(admin_api_url, json={'query': query})
-    err = check_query_error(query, response)
-    if err is not None:
+    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
         return err
 
     probe_success = response.json()['data']['probe_instance']
