@@ -17,7 +17,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     published_ports:
-      - 127.0.0.1:8081-8090:8081-8090/tcp
+      - 8081-8090:8081-8090/tcp
     networks:
       - name: cartridge-network
     purge_networks: true
@@ -30,7 +30,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     published_ports:
-      - 127.0.0.1:8091-8099:8091-8099/tcp
+      - 8091-8099:8091-8099/tcp
     networks:
       - name: cartridge-network
     purge_networks: true
