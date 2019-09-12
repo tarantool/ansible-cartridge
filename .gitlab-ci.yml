@@ -8,7 +8,9 @@ stages:
 default:
   image: docker:git
   services:
-    - docker:dind
+    - name: docker:dind
+      alias: localhost
+
 
 before_script:
   - apk update && apk add --no-cache docker
