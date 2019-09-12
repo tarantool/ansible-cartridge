@@ -17,8 +17,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     published_ports:
-      - 127.0.0.1:8081:8081/tcp
-      - 127.0.0.1:8082:8082/tcp
+      - 127.0.0.1:8081-8090:8081-8090/tcp
     networks:
       - name: cartridge-network
     purge_networks: true
@@ -31,8 +30,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     published_ports:
-      - 127.0.0.1:8083:8083/tcp
-      - 127.0.0.1:8084:8084/tcp
+      - 127.0.0.1:8091-8099:8091-8099/tcp
     networks:
       - name: cartridge-network
     purge_networks: true
@@ -62,18 +60,33 @@ provisioner:
               advertise_uri: '3302'
               http_port: '8082'
               roles: ['vshard-storage']
+
+            - name: 'storage_2_replica'
+              advertise_uri: '3303'
+              http_port: '8083'
+              replica_for: 'storage_2_alias'
       vm2:
         cartridge_config:
           instances:
             - name: 'router_1'
-              advertise_uri: '3303'
-              http_port: '8083'
+              advertise_uri: '3311'
+              http_port: '8091'
               roles: ['vshard-router']
 
             - name: 'storage_1_replica'
-              advertise_uri: '3304'
-              http_port: '8084'
+              advertise_uri: '3312'
+              http_port: '8092'
               replica_for: 'storage_1'
+
+            - name: 'core_2'
+              advertise_uri: '3313'
+              http_port: '8093'
+
+            - name: 'storage_2'
+              advertise_uri: '3314'
+              http_port: '8094'
+              alias: 'storage_2_alias'
+              roles: ['vshard-storage']
 
 verifier:
   name: testinfra
