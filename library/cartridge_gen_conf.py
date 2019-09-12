@@ -1,18 +1,16 @@
 #!/usr/bin/python
 
 import os
+import pwd
+import grp
 import yaml
 
-
 from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.helpers import ModuleRes
 
-class ModuleRes:
-    def __init__(self, success, msg=None, changed=False, meta=None):
-        self.success = success
-        self.msg = msg
-        self.changed = changed
-        self.meta = meta
 
+TARANTOOL_UID = pwd.getpwnam("tarantool").pw_uid
+TARANTOOL_GID = grp.getgrnam("tarantool").gr_gid
 
 argument_spec = {
     'instance': {'required': True, 'type': 'dict'},
@@ -26,11 +24,6 @@ def generate_config_files(params):
     if 'name' not in params['instance']:
         return ModuleRes(success=False, msg='Instance name must be specified')
 
-    meta = {
-        'instance_name': params['instance']['name'],
-        'created_default_conf': None,
-        'created_instance_conf': None,
-    }
     changed = False
 
     # Create default app config file if neccessary
@@ -43,17 +36,18 @@ def generate_config_files(params):
             default_conf = { params['appname'] : default_conf }
             with open(defaul_conf_path, 'w') as f:
                 f.write(yaml.dump(default_conf, default_flow_style=False))
+            os.chown(defaul_conf_path, TARANTOOL_UID, TARANTOOL_GID)
 
-        meta['created_default_conf'] = defaul_conf_path
         changed = True
 
     # Create instance config file
     ## First - change config format
+    deploy_params = ['name', 'roles', 'replica_for']
     section_name = '{}.{}'.format(params['appname'], params['instance']['name'])
     instance_conf = {
         section_name:
             {k: params['instance'][k]
-                for k in params['instance'] if k != 'name' }
+                for k in params['instance'] if k not in deploy_params }
     }
 
     ## Dump in file
@@ -63,11 +57,10 @@ def generate_config_files(params):
     if not os.path.exists(conf_path):
         with open(conf_path, 'w') as f:
             f.write(yaml.dump(instance_conf, default_flow_style=False))
-
-        meta['created_instance_conf'] = conf_path
+        os.chown(conf_path, TARANTOOL_UID, TARANTOOL_GID)
         changed = True
 
-    return ModuleRes(success=True, changed=changed, meta=meta)
+    return ModuleRes(success=True, changed=changed)
 
 
 def main():
@@ -75,9 +68,9 @@ def main():
     res = generate_config_files(module.params)
 
     if res.success == True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed)
     else:
-        module.fail_json(msg=res.msg, meta=res.meta)
+        module.fail_json(msg=res.msg)
 
 
 if __name__ == '__main__':

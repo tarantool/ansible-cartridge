@@ -22,6 +22,8 @@
     url: '{{ redhat_config_file_url }}{{ redhat_config_query }}'
     dest: '{{ redhat_config_file_location }}'
   register: add_repository
+  retries: 5
+  delay: 5
 
 - name: Update yum package cache  # noqa 503
   yum:

@@ -1,0 +1,8 @@
+---
+- name: 'Join {{ instance.name }} to a replicaset'
+  cartridge_join_replicas:
+    instance: '{{ instance }}'
+    instance_address: '{{ instance_address }}'
+    control_instance_address: '{{ control_instance_address }}'
+    control_instance_port: '{{ control_instance_port }}'
+  register: reg

@@ -9,7 +9,7 @@ None.
 ## Role Variables
 
 * `cartridge_package_path` (required): path to cartridge package (application name will be detected as package name);
-* `cartridge_config` (optional, default: `{}`): configuration for deployed application (see [below](#configuration-format));
+* `cartridge_config` (optional, default: `{ instances={} }`): configuration for deployed application (see [below](#configuration-format));
 * `cartridge_config_defaults` (optional, default: `{}`): default configuration for deployed application instances (see [below](#configuration-format)).
 
 ## Configuration format

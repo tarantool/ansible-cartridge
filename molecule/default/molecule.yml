@@ -5,6 +5,8 @@ dependency:
 driver:
   name: docker
 
+create:
+
 platforms:
   - name: vm1
     image: centos:7
@@ -14,6 +16,11 @@ platforms:
       - /tmp
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    published_ports:
+      - 8081-8090:8081-8090/tcp
+    networks:
+      - name: cartridge-network
+    purge_networks: true
   - name: vm2
     image: centos:7
     command: /sbin/init
@@ -22,9 +29,13 @@ platforms:
       - /tmp
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    published_ports:
+      - 8091-8099:8091-8099/tcp
+    networks:
+      - name: cartridge-network
+    purge_networks: true
 
 provisioner:
-  provisioner:
   name: ansible
   lint:
     name: ansible-lint
@@ -38,28 +49,44 @@ provisioner:
 
     host_vars:
       vm1:
-        cartridge_config_defaults:
-          cluster_cookie: this-server-default-cookie
-
         cartridge_config:
           instances:
             - name: 'core_1'
-              advertise_uri: '3000'
-              http_port: '8080'
+              advertise_uri: '3301'
+              http_port: '8081'
+              roles: ['app.roles.custom']
 
             - name: 'storage_1'
-              advertise_uri: '3002'
+              advertise_uri: '3302'
               http_port: '8082'
+              roles: ['vshard-storage']
+
+            - name: 'storage_2_replica'
+              advertise_uri: '3303'
+              http_port: '8083'
+              replica_for: 'storage_2_alias'
       vm2:
         cartridge_config:
           instances:
-            - name: 'core_2'
-              advertise_uri: '3004'
-              http_port: '8084'
+            - name: 'router_1'
+              advertise_uri: '3311'
+              http_port: '8091'
+              roles: ['vshard-router']
 
             - name: 'storage_1_replica'
-              advertise_uri: '3005'
-              http_port: '8085'
+              advertise_uri: '3312'
+              http_port: '8092'
+              replica_for: 'storage_1'
+
+            - name: 'core_2'
+              advertise_uri: '3313'
+              http_port: '8093'
+
+            - name: 'storage_2'
+              advertise_uri: '3314'
+              http_port: '8094'
+              alias: 'storage_2_alias'
+              roles: ['vshard-storage']
 
 verifier:
   name: testinfra
