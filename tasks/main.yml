@@ -22,6 +22,10 @@
   set_fact:
     control_instance_address: '{{ control_instance.meta.control_instance_address }}'
     control_instance_port: '{{ control_instance.meta.control_instance_port }}'
+    control_instance_host: '{{ control_instance.meta.control_instance_host }}'
+
+- name: Debug
+  debug: var=control_instance
 
 - name: Set host_address
   set_fact:
@@ -31,18 +35,17 @@
   include_tasks: start_instance.yml
   vars:
     instance: '{{ item }}'
-  with_items: '{{ cartridge_config.instances }}'
+  with_items: '{{ cartridge_instances }}'
 
-- name: Set roles
-  include_tasks: set_roles.yml
+- name: Probe instances
+  include_tasks: probe_instance.yml
   vars:
     instance: '{{ item }}'
-  with_items: '{{ cartridge_config.instances }}'
-  when: item.roles is defined
+  with_items: '{{ cartridge_instances }}'
 
-- name: Join replicas
-  include_tasks: join_replicas.yml
+- name: Setup replicasets
+  include_tasks: setup_replicaset.yml
   vars:
-    instance: '{{ item }}'
-  with_items: '{{ cartridge_config.instances }}'
-  when: item.replica_for is defined
+    replicaset: '{{ item }}'
+  with_items: '{{ cartridge_replicasets }}'
+  when: ansible_host == control_instance_host

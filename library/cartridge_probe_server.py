@@ -19,8 +19,6 @@ def probe_server(params):
     if 'http_port' not in params['instance']:
        params['instance']['http_port'] = '8080'
 
-    changed = False
-
     # Get instance info
     ok, instance_info = get_instance_info(
         params['instance_address'], params['instance']['http_port'],
@@ -49,7 +47,7 @@ def probe_server(params):
         return err
 
     probe_success = response.json()['data']['probe_instance']
-    return ModuleRes(success=probe_success, changed=changed)
+    return ModuleRes(success=probe_success, changed=False)
 
 
 def main():
@@ -57,7 +55,7 @@ def main():
     res = probe_server(module.params)
 
     if res.success == True:
-        module.exit_json(changed=res.changed)
+        module.exit_json(changed=res.changed, meta=res.meta)
     else:
         module.fail_json(msg=res.msg)
 

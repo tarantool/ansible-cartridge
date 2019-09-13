@@ -42,49 +42,74 @@ provisioner:
       all:
         cartridge_package_path: ./myapp-1.0.0-0.rpm
 
-        cartridge_config_defaults:
+        cartridge_defaults:
           cluster_cookie: app-default-cookie
+
+        cartridge_bootstrap_vshard: true
+        cartridge_failover: true
+
+        cartridge_replicasets:
+          - name: 'replicaset-1'
+            instances:
+              - 'storage_1'
+              - 'storage_1_replica'
+            leader: 'storage_1'
+            roles: ['vshard-storage']
+
+          - name: 'replicaset-2'
+            instances:
+              - 'storage_2'
+              - 'storage_2_replica'
+              - 'storage_2_replica_2'
+            leader: 'storage_2'
+            roles: ['vshard-storage']
+
+          - name: 'core-1'
+            instances:
+              - core_1
+            roles: ['app.roles.custom']
+
+          - name: 'router-1'
+            instances:
+              - router
+            roles: ['vshard-router']
 
     host_vars:
       vm1:
-        cartridge_config:
-          instances:
-            - name: 'core_1'
-              advertise_uri: '3301'
-              http_port: '8081'
-              roles: ['app.roles.custom']
+        cartridge_instances:
+          - name: 'core_1'
+            advertise_uri: '3301'
+            http_port: '8081'
 
-            - name: 'storage_1'
-              advertise_uri: '3302'
-              http_port: '8082'
-              roles: ['vshard-storage']
+          - name: 'storage_1'
+            advertise_uri: '3302'
+            http_port: '8082'
 
-            - name: 'storage_2_replica'
-              advertise_uri: '3303'
-              http_port: '8083'
-              replica_for: 'storage_2_alias'
+          - name: 'storage_2_replica'
+            advertise_uri: '3303'
+            http_port: '8083'
+
       vm2:
-        cartridge_config:
-          instances:
-            - name: 'router_1'
-              advertise_uri: '3311'
-              http_port: '8091'
-              roles: ['vshard-router']
+        cartridge_instances:
+          - name: 'router'
+            advertise_uri: '3311'
+            http_port: '8091'
 
-            - name: 'storage_1_replica'
-              advertise_uri: '3312'
-              http_port: '8092'
-              replica_for: 'storage_1'
+          - name: 'storage_1_replica'
+            advertise_uri: '3312'
+            http_port: '8092'
 
-            - name: 'core_2'
-              advertise_uri: '3313'
-              http_port: '8093'
+          - name: 'core_2'
+            advertise_uri: '3313'
+            http_port: '8093'
 
-            - name: 'storage_2'
-              advertise_uri: '3314'
-              http_port: '8094'
-              alias: 'storage_2_alias'
-              roles: ['vshard-storage']
+          - name: 'storage_2'
+            advertise_uri: '3314'
+            http_port: '8094'
+
+          - name: 'storage_2_replica_2'
+            advertise_uri: '3315'
+            http_port: '8095'
 
 verifier:
   name: testinfra

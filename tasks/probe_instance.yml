@@ -1,6 +1,6 @@
 ---
-- name: 'Join {{ instance.name }} to a replicaset'
-  cartridge_join_replicas:
+- name: 'Probe {{ instance.name }} instance'
+  cartridge_probe_server:
     instance: '{{ instance }}'
     instance_address: '{{ host_address }}'
     control_instance_address: '{{ control_instance_address }}'

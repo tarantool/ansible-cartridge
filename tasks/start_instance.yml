@@ -4,20 +4,9 @@
   cartridge_gen_conf:
     instance: '{{ instance }}'
     appname: '{{ cartridge_app_name }}'
-    config_defaults: '{{ cartridge_config_defaults }}'
+    config_defaults: '{{ cartridge_defaults }}'
 
 - name: 'Start systemd service for {{ instance.name }}'
   systemd:
     name: '{{ cartridge_app_name }}@{{ instance.name }}'
     state: started
-
-- name: 'Probe {{ instance.name }} instance'
-  cartridge_probe_server:
-    instance: '{{ instance }}'
-    instance_address: '{{ host_address }}'
-    control_instance_address: '{{ control_instance_address }}'
-    control_instance_port: '{{ control_instance_port }}'
-  register: res
-  until: not res.failed
-  retries: 5
-  delay: 5
