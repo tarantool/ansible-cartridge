@@ -21,10 +21,10 @@ def get_control_instance(params):
         instances = params['hostvars'][host]['cartridge_config']['instances']
         if len(instances) > 0:
             control_instance = instances[0]
-
-            meta['control_instance_address'] = \
-                params['hostvars'][host]['ansible_default_ipv4']['address'] \
-                or params['hostvars'][host]['ansible_all_ipv4_addresses'][0]
+            if 'ansible_host' in params['hostvars'][host]:
+                meta['control_instance_address'] = params['hostvars'][host]['ansible_host']
+            else:
+                meta['control_instance_address'] = host
             meta['control_instance_port'] = control_instance['http_port']
 
             break

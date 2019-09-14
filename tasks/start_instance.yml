@@ -14,10 +14,10 @@
 - name: 'Probe {{ instance.name }} instance'
   cartridge_probe_server:
     instance: '{{ instance }}'
-    instance_address: '{{ instance_address }}'
+    instance_address: '{{ host_address }}'
     control_instance_address: '{{ control_instance_address }}'
     control_instance_port: '{{ control_instance_port }}'
-  register: probe_result
-  until: not probe_result.failed
+  register: res
+  until: not res.failed
   retries: 5
   delay: 5
