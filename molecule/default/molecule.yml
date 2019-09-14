@@ -5,8 +5,6 @@ dependency:
 driver:
   name: docker
 
-create:
-
 platforms:
   - name: vm1
     image: centos:7
