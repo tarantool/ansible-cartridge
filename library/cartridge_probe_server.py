@@ -19,21 +19,22 @@ def probe_server(params):
     if 'http_port' not in params['instance']:
        params['instance']['http_port'] = '8080'
 
-    # Get instance info
-    ok, instance_info = get_instance_info(
-        params['instance_address'], params['instance']['http_port'],
-        params['control_instance_address'], params['control_instance_port']
+    instance_admin_api_url = 'http://{}:{}/admin/api'.format(
+        params['instance_address'],
+        params['instance']['http_port'],
     )
-    if not ok:
-        return instance_info
-
-    # Probe instance
-    ## NOTE: control instance is used here
     control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
         params['control_instance_address'],
         params['control_instance_port']
     )
 
+    # Get instance info
+    ok, instance_info = get_instance_info(instance_admin_api_url, control_instance_admin_api_url)
+    if not ok:
+        return instance_info
+
+    # Probe instance
+    ## NOTE: control instance is used here
     query = '''
         mutation {{
           probe_instance:

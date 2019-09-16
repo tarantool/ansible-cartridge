@@ -26,12 +26,7 @@ def check_query(query, response):
     return True, None
 
 
-def get_all_instances_info(control_instance_address, control_instance_port):
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        control_instance_address,
-        control_instance_port
-    )
-
+def get_all_instances_info(control_instance_admin_api_url):
     # Get all instances info from control server
     query = '''
         query {
@@ -55,16 +50,7 @@ def get_all_instances_info(control_instance_address, control_instance_port):
     return True, instances
 
 
-def get_instance_info(instance_address, instance_port, control_instance_address, control_instance_port):
-    instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        instance_address,
-        instance_port
-    )
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        control_instance_address,
-        control_instance_port
-    )
-
+def get_instance_info(instance_admin_api_url, control_instance_admin_api_url):
     # Get instance UUID
     query = '''
         query {
@@ -113,12 +99,7 @@ def get_instance_info(instance_address, instance_port, control_instance_address,
     return True, instance
 
 
-def get_replicaset_info(name, control_instance_address, control_instance_port):
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        control_instance_address,
-        control_instance_port
-    )
-
+def get_replicaset_info(name, control_instance_admin_api_url):
     # Get all replicasets
     query = '''
         query {
@@ -152,7 +133,7 @@ def get_replicaset_info(name, control_instance_address, control_instance_port):
     return True, None
 
 
-def wait_for_replicaset_is_healthy(replicaset_name, control_instance_address, control_instance_port):
+def wait_for_replicaset_is_healthy(replicaset_name, control_instance_admin_api_url):
     delay = 0.5
     timeout = 5
     while True:
@@ -163,7 +144,7 @@ def wait_for_replicaset_is_healthy(replicaset_name, control_instance_address, co
 
         ok, replicaset_info = get_replicaset_info(
             replicaset_name,
-            control_instance_address, control_instance_port
+            control_instance_admin_api_url
         )
         if ok and replicaset_info['status'] == 'healthy':
             return True
