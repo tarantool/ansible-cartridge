@@ -2,6 +2,6 @@
 - name: Converge
   hosts: all
   roles:
-    - role: cartridge
+    - role: tarantool-cartridge
   become: true
   become_user: root

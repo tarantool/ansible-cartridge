@@ -1,4 +1,4 @@
-# Ansible Role: Cartridge
+# Ansible Role: Tarantool Cartridge
 
 An Ansible Role to easy deploy [Tarantool Cartridge](https://github.com/tarantool/cartridge-cli) applications.
 
