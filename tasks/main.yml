@@ -22,7 +22,6 @@
   set_fact:
     control_instance_address: '{{ control_instance.meta.control_instance_address }}'
     control_instance_port: '{{ control_instance.meta.control_instance_port }}'
-    control_instance_host: '{{ control_instance.meta.control_instance_host }}'
 
 - name: Set host_address
   set_fact:
@@ -45,12 +44,12 @@
   vars:
     replicaset: '{{ item }}'
   with_items: '{{ cartridge_replicasets }}'
-  when: ansible_host == control_instance_host
+  when: ansible_host == control_instance_address
 
 - name: Bootstrap vshard
   include_tasks: bootstrap_vshard.yml
-  when: cartridge_bootstrap_vshard and ansible_host == control_instance_host
+  when: cartridge_bootstrap_vshard and ansible_host == control_instance_address
 
 - name: Manage failover
   include_tasks: manage_failover.yml
-  when: ansible_host == control_instance_host
+  when: ansible_host == control_instance_address
