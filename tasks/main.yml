@@ -50,3 +50,7 @@
 - name: Bootstrap vshard
   include_tasks: bootstrap_vshard.yml
   when: cartridge_bootstrap_vshard and ansible_host == control_instance_host
+
+- name: Manage failover
+  include_tasks: manage_failover.yml
+  when: ansible_host == control_instance_host

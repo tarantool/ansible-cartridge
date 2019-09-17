@@ -154,3 +154,38 @@ def test_replicasets(host):
 
         started_replicaset_instances = [i['alias'] for i in started_replicaset['servers']]
         assert set(started_replicaset_instances) == set(configured_replicaset['instances'])
+
+
+def test_failover(host):
+    # Get configured failover status
+    configured_failover = host.ansible.get_variables()['cartridge_failover']
+
+    # Get all configured instances
+    configured_instances = []
+
+    for testinfra_host in testinfra_hosts:
+        configured_instances += ansible_runner.get_variables(testinfra_host)['cartridge_instances']
+
+    if not configured_instances:
+        return
+
+    # Select one instance to be control
+    control_instance = configured_instances[0]
+    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
+        'localhost',
+        control_instance['http_port']
+    )
+
+    # Get cluster failover status
+    query = '''
+        query {
+          cluster {
+            failover
+          }
+        }
+    '''
+    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    print(response.json())
+    failover = response.json()['data']['cluster']['failover']
+
+    assert failover == configured_failover
