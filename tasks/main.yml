@@ -24,9 +24,6 @@
     control_instance_port: '{{ control_instance.meta.control_instance_port }}'
     control_instance_host: '{{ control_instance.meta.control_instance_host }}'
 
-- name: Debug
-  debug: var=control_instance
-
 - name: Set host_address
   set_fact:
     host_address: '{{ ansible_host }}'
@@ -49,3 +46,7 @@
     replicaset: '{{ item }}'
   with_items: '{{ cartridge_replicasets }}'
   when: ansible_host == control_instance_host
+
+- name: Bootstrap vshard
+  include_tasks: bootstrap_vshard.yml
+  when: cartridge_bootstrap_vshard and ansible_host == control_instance_host
