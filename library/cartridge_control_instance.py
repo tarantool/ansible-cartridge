@@ -26,7 +26,8 @@ def get_control_instance(params):
     replicasets = params['hostvars'][host]['cartridge_replicasets']
     if replicasets:
         replicaset = replicasets[0]
-        control_instance_name = replicaset['leader']
+        leader_name = replicaset['leader'] if 'leader' in replicaset else replicaset['instances'][0]
+        control_instance_name = leader_name
 
     # Get instance and host
     for host in params['hosts']:
