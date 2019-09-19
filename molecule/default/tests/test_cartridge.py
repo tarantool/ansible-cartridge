@@ -44,6 +44,7 @@ def test_services_status_and_config(host):
 
         service = host.service('{}@{}'.format(APP_NAME, inst_name))
         assert service.is_running
+        assert service.is_enabled
 
         conf_file_path = '/etc/tarantool/conf.d/{}.{}.yml'.format(APP_NAME, inst_name)
         conf_file = host.file(conf_file_path)

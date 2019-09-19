@@ -6,7 +6,8 @@
     appname: '{{ cartridge_app_name }}'
     config_defaults: '{{ cartridge_defaults }}'
 
-- name: 'Start systemd service for {{ instance.name }}'
+- name: 'Start systemd service {{ cartridge_app_name }}@{{ instance.name }}'
   systemd:
     name: '{{ cartridge_app_name }}@{{ instance.name }}'
     state: started
+    enabled: true
