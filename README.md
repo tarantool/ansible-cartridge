@@ -115,6 +115,8 @@ Configuration format is described in detail in the [configuration format](#confi
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean flag that indicates if vshard should be bootstrapped;
 * `cartridge_failover` (`boolean`, optional, default: `false`): boolean flag that indicates if failover should be enabled.
 
+**Note**: If instance is menitioned in `cartridge_replicasets` section, it should be configured in `cartridge_instances`.
+
 ## Configuration format
 
 Instances and replicasets are identified by names, so you must use unique names to aviod collisions.
@@ -146,6 +148,8 @@ Cluster topology can be configured using `cartridge_replicasets` variable (must 
 * `roles` (`list-of-strings`, required) - roles to be enabled on the replicaset.
 
 **Note**: Replicaset would be set up **only** if replicaset with the same name is not set up yet.
+
+**Note**: If instance is menitioned in `cartridge_replicasets` section, it should be configured in `cartridge_instances`.
 
 ### Vshard bootstrapping
 
