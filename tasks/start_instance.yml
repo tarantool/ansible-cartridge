@@ -1,10 +1,11 @@
 ---
-# To be replaced with jinja templates
-- name: 'Gen config for {{ instance.name }}'
-  cartridge_gen_conf:
-    instance: '{{ instance }}'
-    appname: '{{ cartridge_app_name }}'
-    config_defaults: '{{ cartridge_defaults }}'
+- name: Place {{ instance.name }} config
+  copy:
+    content: '{{ { cartridge_app_name + "." + instance.name: instance | delete_by_key("name") } | to_nice_yaml }}'
+    dest: '{{ cartridge_confdir }}/{{ cartridge_app_name }}.{{ instance.name }}.yml'
+    owner: tarantool
+    group: tarantool
+    mode: '644'
 
 - name: 'Start systemd service {{ cartridge_app_name }}@{{ instance.name }}'
   systemd:

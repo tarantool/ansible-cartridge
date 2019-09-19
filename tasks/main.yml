@@ -5,9 +5,15 @@
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
   when: ansible_os_family != "RedHat"
 
+- name: Set host address and cartridge confdir
+  set_fact:
+    host_address: '{{ ansible_host }}'
+    cartridge_confdir: /etc/tarantool/conf.d
+
 - name: Dependencies
   include_tasks: install_dependencies.yml
 
+# Set up cartridge_app_name from package info
 - name: Install RPM for RedHat
   include_tasks: install_rpm.yml
   when: ansible_os_family == 'RedHat'
@@ -18,14 +24,18 @@
     hostvars: '{{ hostvars }}'
   register: control_instance
 
-- name: Global variables for control server address and host
+- name: Global variables for control server address and port
   set_fact:
     control_instance_address: '{{ control_instance.meta.control_instance_address }}'
     control_instance_port: '{{ control_instance.meta.control_instance_port }}'
 
-- name: Set host_address
-  set_fact:
-    host_address: '{{ ansible_host }}'
+- name: Place default application config
+  copy:
+    content: '{{ { cartridge_app_name: cartridge_defaults } | to_nice_yaml }}'
+    dest: '{{ cartridge_confdir }}/{{ cartridge_app_name }}.yml'
+    owner: tarantool
+    group: tarantool
+    mode: '644'
 
 - name: Start instances
   include_tasks: start_instance.yml

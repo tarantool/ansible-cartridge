@@ -36,11 +36,7 @@ def test_services_status_and_config(host):
     for instance in instances:
         inst_name = instance['name']
 
-        # Remove deploy params from instance conf
-        deploy_params = ['name', 'roles', 'replica_for']
-        for p in deploy_params:
-            if p in instance:
-                del instance[p]
+        instance_conf = {k: v for k, v in instance.items() if k != 'name'}
 
         service = host.service('{}@{}'.format(APP_NAME, inst_name))
         assert service.is_running
@@ -50,7 +46,7 @@ def test_services_status_and_config(host):
         conf_file = host.file(conf_file_path)
         conf_section = '{}.{}'.format(APP_NAME, inst_name)
 
-        check_conf_file(conf_file, conf_section, instance)
+        check_conf_file(conf_file, conf_section, instance_conf)
 
     default_conf_file_path = '/etc/tarantool/conf.d/{}.yml'.format(APP_NAME)
     default_conf_file = host.file(default_conf_file_path)
