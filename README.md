@@ -1,20 +1,176 @@
 # Ansible Role: Tarantool Cartridge
 
-An Ansible Role to easy deploy [Tarantool Cartridge](https://github.com/tarantool/cartridge-cli) applications.
+An Ansible Role to easy deploy [Tarantool Cartridge](https://github.com/tarantool/cartridge) applications.
 
 This role can deploy applications packed in RPM using [`Cartridge CLI`](https://github.com/tarantool/cartridge-cli).
 
-If application instances are [configured](#instances-configuration), this role would start systemd services for this instances.
+## Table of contents
 
-If cluster replicasets are [configured](#replicasets-configuration), replicasets will be set up according to configuration.
-
-**Note:** Topology management is not supported yet, so this role can be used for initial deployment and package updating.
+* [Requirements](#requirements)
+* [Getting started](#getting-started)
+* [Role variables](#role-variables)
+* [Configuration format](#configuration-format)
+  * [Instances configuration](#instances-configuration)
+  * [Replicasets configuration](#replicasets-configuration)
+  * [Vshard bootstrapping](#vshard-bootstrapping)
+  * [Failover](#failover)
 
 ## Requirements
 
 None.
 
-## Role Variables
+## Getting started
+
+After you have learn how to [create](https://github.com/tarantool/cartridge-cli/tree/master/examples/getting-started-app) Tarantool Cartridge applications and [pack them to RPM](https://github.com/tarantool/cartridge-cli), you probably want to deploy your new application on server.
+
+### Target configuration
+
+For example, you packed your application to `myapp-1.0.0-0.rpm`.
+
+Now, you want to start 4 instances on 2 different servers, join them to 2 replicasets, bootstrap vshard and enable automatic failover.
+
+You can use [vagrant](https://www.vagrantup.com/intro/index.html) to start two virtual machines on `172.19.0.2` and `172.19.0.3`.
+
+`Vagrantfile`:
+
+```
+$ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
+
+$script = <<-SCRIPT
+set -e
+sudo bash -c "echo #{$ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys"
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+  end
+
+  config.vm.define "vm1" do |cfg|
+    cfg.vm.box = "centos/7"
+    cfg.vm.network "private_network", ip: "172.19.0.2"
+    cfg.vm.network "forwarded_port", guest: 8181, host: 8181
+    cfg.vm.hostname = 'vm1'
+  end
+
+  config.vm.define "vm2" do |cfg|
+    cfg.vm.box = "centos/7"
+    cfg.vm.network "private_network", ip: "172.19.0.3"
+    cfg.vm.hostname = 'vm2'
+  end
+
+  config.vm.provision :shell, inline: $script
+end
+```
+
+First, you need to clone Tarantool Cartridge role into `tarantool-cartridge` directory.
+
+```bash
+$ git clone https://github.com/tarantool/ansible-cartridge.git tarantool-cartridge
+```
+
+Next, create [ansible playbook](https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html) and import Tarantool Cartridge role.
+
+`playbook.yml`:
+
+```yaml
+---
+- name: Deploy my Tarantool Cartridge app
+  hosts: all
+  become: true
+  become_user: root
+  tasks:
+  - name: Import Tarantool Cartridge role
+    import_role:
+      name: tarantool-cartridge
+```
+
+Then, you need to create [inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) file.
+
+`hosts.yml`:
+
+```yaml
+---
+all:
+  hosts:
+    vm1:
+      ansible_host: 172.19.0.2  # First host
+      ansible_user: vagrant
+
+      cartridge_instances:  # Instances to be started on this host
+        - name: 'core_1'
+          advertise_uri: '172.19.0.2:3301'
+          http_port: '8181'
+
+        - name: 'storage_1'
+          advertise_uri: '172.19.0.2:3302'
+          http_port: '8182'
+
+    vm2:
+      ansible_host: 172.19.0.3  # Second host
+      ansible_user: vagrant
+
+      cartridge_instances:  # Instances to be started on this host
+        - name: 'router'
+          advertise_uri: '172.19.0.3:3303'
+          http_port: '8183'
+
+        - name: 'storage_1_replica'
+          advertise_uri: '172.19.0.3:3304'
+          http_port: '8184'
+
+
+  vars:  # Cluster configuration
+    cartridge_package_path: ./myapp-1.0.0-0.rpm  # Path to package to deploy
+
+    cartridge_failover: true  # Enable automatic failover
+    cartridge_bootstrap_vshard: true  # Bootstrap vshard
+
+    cartridge_defaults:  # Default configuration parameters for all instances
+      cluster_cookie: app-default-cookie
+
+    cartridge_replicasets:  # Replicasets to be set up
+      - name: 'replicaset-1'
+        instances:
+          - 'storage_1'
+          - 'storage_1_replica'
+        leader: 'storage_1'
+        roles: ['vshard-storage']
+
+      - name: 'core-1'
+        instances:
+          - core_1
+        roles: ['app.roles.custom']
+
+      - name: 'router-1'
+        instances:
+          - router
+        roles: ['vshard-router']
+```
+
+Directory structure:
+
+```
+.
+├── Vagrantfile
+├── hosts.yml
+├── myapp-1.0.0-0.rpm
+├── playbook.yml
+├── tarantool-cartridge
+```
+
+Now, you need to up your virtual machines and run the playbook:
+
+```bash
+$ vagrant up
+$ ansible-playbook -i hosts.yml playbook.yml
+```
+
+Then, go to http://localhost:8181/admin/cluster/dashboard and check if your topology was set up:
+
+![image](https://user-images.githubusercontent.com/32142520/65237544-837dc580-dae3-11e9-97c6-db8676357eb5.png)
+
+## Role variables
 
 Role variables are used to configure started instances, cluster topology, vhsard bootstrapping and failover.
 
@@ -94,7 +250,7 @@ cartridge_replicasets:
     roles: ['app.roles.custom']
 ```
 
-### Bootstrap vshard
+### Vshard bootstrapping
 
 Flag `cartridge_bootstrap_vshard` indicates if vshard must be bootstrapped on cluster.
 
