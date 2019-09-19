@@ -39,7 +39,7 @@ test-enterprise:
     - docker cp rpm-builder:/opt/myapp/myapp-1.0.0-0.rpm molecule/default
     - docker rm rpm-builder
 
-    - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
+    - cd .. && cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
     - molecule test
 
 test-opensource-1.10:
@@ -58,7 +58,7 @@ test-opensource-1.10:
     - docker cp rpm-builder:/opt/myapp/myapp-1.0.0-0.rpm molecule/default
     - docker rm rpm-builder
 
-    - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
+    - cd .. && cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
     - molecule test
 
 test-opensource-2.2:
@@ -77,5 +77,5 @@ test-opensource-2.2:
     - docker cp rpm-builder:/opt/myapp/myapp-1.0.0-0.rpm molecule/default
     - docker rm rpm-builder
 
-    - cd .. && cp -R ansible-cartridge cartridge && cd cartridge
+    - cd .. && cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
     - molecule test

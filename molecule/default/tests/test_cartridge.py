@@ -28,10 +28,10 @@ def get_instance_alias(instance):
     return instance['alias'] if 'alias' in instance else instance['name']
 
 
-def test_instances_status_and_config(host):
+def test_services_status_and_config(host):
     ansible_vars = host.ansible.get_variables()
-    instances = copy.deepcopy(ansible_vars['cartridge_config']['instances'])
-    default_conf = ansible_vars['cartridge_config_defaults']
+    instances = copy.deepcopy(ansible_vars['cartridge_instances'])
+    default_conf = ansible_vars['cartridge_defaults']
 
     for instance in instances:
         inst_name = instance['name']
@@ -58,12 +58,12 @@ def test_instances_status_and_config(host):
     check_conf_file(default_conf_file, default_conf_file_section, default_conf)
 
 
-def test_replicasets(host):
+def test_instances(host):
     # Get all configured instances
     configured_instances = []
 
-    for host in testinfra_hosts:
-        configured_instances += ansible_runner.get_variables(host)['cartridge_config']['instances']
+    for testinfra_host in testinfra_hosts:
+        configured_instances += ansible_runner.get_variables(testinfra_host)['cartridge_instances']
 
     if not configured_instances:
         return
@@ -71,7 +71,7 @@ def test_replicasets(host):
     # Select one instance to be control
     control_instance = configured_instances[0]
     control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        'localhost',  # Works while docker ports are exposed
+        'localhost',
         control_instance['http_port']
     )
 
@@ -99,25 +99,28 @@ def test_replicasets(host):
     for configured_instance in configured_instances:
         assert get_instance_alias(configured_instance) in started_instances
 
-    # Collect configured replicasets
-    configured_replicasets = {
-        get_instance_alias(configured_instance): {
-            'replicas': [],
-            'roles': configured_instance['roles']
-        }
-        for configured_instance in configured_instances if 'roles' in configured_instance
-    }
 
-    for configured_instance in configured_instances:
-        if 'replica_for' in configured_instance:
-            instance_alias = get_instance_alias(configured_instance)
-            configured_replicasets[configured_instance['replica_for']]['replicas'].append(instance_alias)
+def test_replicasets(host):
+    # Get all configured instances
+    configured_instances = []
 
+    for testinfra_host in testinfra_hosts:
+        configured_instances += ansible_runner.get_variables(testinfra_host)['cartridge_instances']
+
+    if not configured_instances:
+        return
+
+    # Select one instance to be control
+    control_instance = configured_instances[0]
+    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
+        'localhost',
+        control_instance['http_port']
+    )
     # Get started replicasets
     query = '''
         query {
           replicasets {
-            uuid
+            alias
             roles
             servers {
               alias
@@ -130,14 +133,59 @@ def test_replicasets(host):
     '''
     response = requests.post(control_instance_admin_api_url, json={'query': query})
     started_replicasets = response.json()['data']['replicasets']
+    started_replicasets = {r['alias']: r for r in started_replicasets}
+
+    # Configured replicasets
+    configured_replicasets = host.ansible.get_variables()['cartridge_replicasets']
+    configured_replicasets = {r['name']: r for r in configured_replicasets}
 
     # Check if started replicasets are equal to configured
-    for started_replicaset in started_replicasets:
-        master_alias = started_replicaset['master']['alias']
+    assert set(started_replicasets.keys()) == set(configured_replicasets.keys())
+    for name in started_replicasets.keys():
+        started_replicaset = started_replicasets[name]
+        configured_replicaset = configured_replicasets[name]
 
-        assert master_alias in configured_replicasets
-        configured_replicaset = configured_replicasets[master_alias]
+        assert started_replicaset['roles'] == configured_replicaset['roles']
 
-        started_replicaset_servers = [s['alias'] for s in started_replicaset['servers']]
-        assert set(started_replicaset_servers) == set(configured_replicaset['replicas'] + [master_alias])
-        assert set(started_replicaset['roles']) == set(configured_replicaset['roles'])
+        if 'leader' not in configured_replicaset:
+            configured_replicaset['leader'] = configured_replicaset['instances'][0]
+
+        assert started_replicaset['master']['alias'] == configured_replicaset['leader']
+
+        started_replicaset_instances = [i['alias'] for i in started_replicaset['servers']]
+        assert set(started_replicaset_instances) == set(configured_replicaset['instances'])
+
+
+def test_failover(host):
+    # Get configured failover status
+    configured_failover = host.ansible.get_variables()['cartridge_failover']
+
+    # Get all configured instances
+    configured_instances = []
+
+    for testinfra_host in testinfra_hosts:
+        configured_instances += ansible_runner.get_variables(testinfra_host)['cartridge_instances']
+
+    if not configured_instances:
+        return
+
+    # Select one instance to be control
+    control_instance = configured_instances[0]
+    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
+        'localhost',
+        control_instance['http_port']
+    )
+
+    # Get cluster failover status
+    query = '''
+        query {
+          cluster {
+            failover
+          }
+        }
+    '''
+    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    print(response.json())
+    failover = response.json()['data']['cluster']['failover']
+
+    assert failover == configured_failover

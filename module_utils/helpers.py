@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import requests
+import time
 
 class ModuleRes:
     def __init__(self, success, msg=None, changed=False, meta=None):
@@ -8,6 +9,10 @@ class ModuleRes:
         self.msg = msg
         self.changed = changed
         self.meta = meta
+
+
+def list_to_graphql_string(l):
+    return '[{}]'.format(', '.join(['"{}"'.format(i) for i in l]))
 
 
 def check_query(query, response):
@@ -21,12 +26,7 @@ def check_query(query, response):
     return True, None
 
 
-def get_all_instances_info(control_instance_address, control_instance_port):
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        control_instance_address,
-        control_instance_port
-    )
-
+def get_all_instances_info(control_instance_admin_api_url):
     # Get all instances info from control server
     query = '''
         query {
@@ -50,16 +50,7 @@ def get_all_instances_info(control_instance_address, control_instance_port):
     return True, instances
 
 
-def get_instance_info(instance_address, instance_port, control_instance_address, control_instance_port):
-    instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        instance_address,
-        instance_port
-    )
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        control_instance_address,
-        control_instance_port
-    )
-
+def get_instance_info(instance_admin_api_url, control_instance_admin_api_url):
     # Get instance UUID
     query = '''
         query {
@@ -92,6 +83,7 @@ def get_instance_info(instance_address, instance_port, control_instance_address,
             status
             replicaset {{
               uuid
+              alias
               roles
             }}
           }}
@@ -105,3 +97,56 @@ def get_instance_info(instance_address, instance_port, control_instance_address,
 
     instance = response.json()['data']['servers'][0]
     return True, instance
+
+
+def get_replicaset_info(name, control_instance_admin_api_url):
+    # Get all replicasets
+    query = '''
+        query {
+          replicasets {
+            uuid
+            alias
+            status
+            roles
+            master {
+              alias
+            }
+            servers {
+              alias
+            }
+          }
+        }
+    '''
+
+    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
+        return False, err
+
+    replicasets = response.json()['data']['replicasets']
+
+    # Find by name
+    for replicaset in replicasets:
+        if replicaset['alias'] == name:
+            return True, replicaset
+
+    return True, None
+
+
+def wait_for_replicaset_is_healthy(replicaset_name, control_instance_admin_api_url):
+    delay = 0.5
+    timeout = 5
+    while True:
+        time_start = time.time()
+        now = time.time()
+        if now > time_start + timeout:
+            return False
+
+        ok, replicaset_info = get_replicaset_info(
+            replicaset_name,
+            control_instance_admin_api_url
+        )
+        if ok and replicaset_info['status'] == 'healthy':
+            return True
+
+        time.sleep(delay)

@@ -31,18 +31,25 @@
   include_tasks: start_instance.yml
   vars:
     instance: '{{ item }}'
-  with_items: '{{ cartridge_config.instances }}'
+  with_items: '{{ cartridge_instances }}'
 
-- name: Set roles
-  include_tasks: set_roles.yml
+- name: Probe instances
+  include_tasks: probe_instance.yml
   vars:
     instance: '{{ item }}'
-  with_items: '{{ cartridge_config.instances }}'
-  when: item.roles is defined
+  with_items: '{{ cartridge_instances }}'
 
-- name: Join replicas
-  include_tasks: join_replicas.yml
+- name: Setup replicasets
+  include_tasks: setup_replicaset.yml
   vars:
-    instance: '{{ item }}'
-  with_items: '{{ cartridge_config.instances }}'
-  when: item.replica_for is defined
+    replicaset: '{{ item }}'
+  with_items: '{{ cartridge_replicasets }}'
+  when: ansible_host == control_instance_address
+
+- name: Bootstrap vshard
+  include_tasks: bootstrap_vshard.yml
+  when: cartridge_bootstrap_vshard and ansible_host == control_instance_address
+
+- name: Manage failover
+  include_tasks: manage_failover.yml
+  when: ansible_host == control_instance_address
