@@ -13,7 +13,14 @@
 - name: Dependencies
   include_tasks: install_dependencies.yml
 
-# Set up cartridge_app_name from package info
+- name: Validate config
+  cartridge_validate_config:
+    hosts: '{{ play_hosts }}'
+    hostvars: '{{ hostvars }}'
+  run_once: true
+  register: validate
+
+# Rewrites cartridge_app_name from package info
 - name: Install RPM for RedHat
   include_tasks: install_rpm.yml
   when: ansible_os_family == 'RedHat'
@@ -31,11 +38,16 @@
 
 - name: Place default application config
   copy:
-    content: '{{ { cartridge_app_name: cartridge_defaults } | to_nice_yaml }}'
+    content: >-
+      {{
+        { cartridge_app_name: cartridge_defaults | combine({"cluster_cookie": cartridge_cluster_cookie}) }
+        | to_nice_yaml
+      }}
     dest: '{{ cartridge_confdir }}/{{ cartridge_app_name }}.yml'
     owner: tarantool
     group: tarantool
     mode: '644'
+  when: cartridge_instances is defined
 
 - name: Start instances
   include_tasks: start_instance.yml

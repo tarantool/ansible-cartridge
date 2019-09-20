@@ -28,10 +28,26 @@ def get_instance_alias(instance):
     return instance['alias'] if 'alias' in instance else instance['name']
 
 
+def get_configured_instances():
+    configured_instances = []
+
+    for testinfra_host in testinfra_hosts:
+        host_vars = ansible_runner.get_variables(testinfra_host)
+        if 'cartridge_instances' in host_vars:
+            configured_instances += host_vars['cartridge_instances']
+
+    return configured_instances
+
+
 def test_services_status_and_config(host):
     ansible_vars = host.ansible.get_variables()
-    instances = copy.deepcopy(ansible_vars['cartridge_instances'])
-    default_conf = ansible_vars['cartridge_defaults']
+    instances = copy.deepcopy(
+        ansible_vars['cartridge_instances'] if 'cartridge_instances' in ansible_vars else []
+    )
+    default_conf = \
+        ansible_vars['cartridge_defaults'] if 'cartridge_defaults' in ansible_vars else {}
+
+    default_conf.update(cluster_cookie=ansible_vars['cartridge_cluster_cookie'])
 
     for instance in instances:
         inst_name = instance['name']
@@ -57,10 +73,7 @@ def test_services_status_and_config(host):
 
 def test_instances(host):
     # Get all configured instances
-    configured_instances = []
-
-    for testinfra_host in testinfra_hosts:
-        configured_instances += ansible_runner.get_variables(testinfra_host)['cartridge_instances']
+    configured_instances = get_configured_instances()
 
     if not configured_instances:
         return
@@ -99,10 +112,7 @@ def test_instances(host):
 
 def test_replicasets(host):
     # Get all configured instances
-    configured_instances = []
-
-    for testinfra_host in testinfra_hosts:
-        configured_instances += ansible_runner.get_variables(testinfra_host)['cartridge_instances']
+    configured_instances = get_configured_instances()
 
     if not configured_instances:
         return
@@ -142,7 +152,7 @@ def test_replicasets(host):
         started_replicaset = started_replicasets[name]
         configured_replicaset = configured_replicasets[name]
 
-        assert started_replicaset['roles'] == configured_replicaset['roles']
+        assert set(started_replicaset['roles']) == set(configured_replicaset['roles'])
 
         if 'leader' not in configured_replicaset:
             configured_replicaset['leader'] = configured_replicaset['instances'][0]
@@ -158,10 +168,7 @@ def test_failover(host):
     configured_failover = host.ansible.get_variables()['cartridge_failover']
 
     # Get all configured instances
-    configured_instances = []
-
-    for testinfra_host in testinfra_hosts:
-        configured_instances += ansible_runner.get_variables(testinfra_host)['cartridge_instances']
+    configured_instances = get_configured_instances()
 
     if not configured_instances:
         return
