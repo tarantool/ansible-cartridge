@@ -80,8 +80,9 @@ all:
     cartridge_failover: true  # Enable automatic failover
     cartridge_bootstrap_vshard: true  # Bootstrap vshard
 
+    cartridge_cluster_cookie: super-secret-cookie  # Cartridge cookie must be specified here
     cartridge_defaults:  # Default configuration parameters for all instances
-      cluster_cookie: app-default-cookie
+      log_level: 5
 
     cartridge_replicasets:  # Replicasets to be set up
       - name: 'replicaset-1'
@@ -108,8 +109,10 @@ The role variables are used to configure started instances, cluster topology, vh
 
 Configuration format is described in detail in the [configuration format](#configuration-format) section.
 
-* `cartridge_package_path` (`string`, required): path to Cartridge RPM package (application name will be detected as package name);
+* `cartridge_package_path` (`string`, optional): path to Cartridge RPM package (application name will be detected as package name);
+* `cartridge_app_name` (`string`): application name, required if `cartridge_package_path` is not specified;
 * `cartridge_instances` (`list`, optional, default: `[]`): configuration for deployed instances;
+* `cartridge_cluster_cookie` (`string`, required): cluster cookie for all cluster instances;
 * `cartridge_defaults` (`dict`, optional, default: `{}`): default configuration parameters values for instances;
 * `cartridge_replicasets` (`list`, optional, default: `[]`) - replicasets configuration;
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean flag that indicates if vshard should be bootstrapped;
@@ -121,22 +124,29 @@ Configuration format is described in detail in the [configuration format](#confi
 
 Instances and replicasets are identified by names, so you must use unique names to aviod collisions.
 
-### Instances configuration
+### Application
+
+You can specify path to rpm package to be installed using `cartridge_package_path`. In this case `cartridge_app_name` will be rewrited by package name from rpm info.
+
+But if you don't specify rpm package path (for example, you have already installed rpm, and now you just want to start instances or configure replicasets), you should specify `cartridge_app_name`.
+
+### Instances
 
 Each instance of application is started as `<app_name>@<instance_name>` systemd service.
 
 It can be configured using the `cartridge_instances` variable. 
 This variable describes all instances that should be deployed on the host.
 
-`cartridge_instances` is a list of dicts, each dict should have field `name`.
-Other parameters can specify [cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse) module).
+`cartridge_instances` is a list of dicts that contains  [cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse) module).
+
+**Required instance parameters**: `name`, `advertise_uri`, `http_port`.
 
 **Note:** It's recommended to specify both host and port for the `advertise_uri` parameter.
 If your deploy host has more than one non-local IP address, advertise host will be set to `localhost`.
 
-**Note:** Instance would be started **only** if instance with the same names is not started yet on this host.
+**Note:** If instance with the same name is already started on the host, it will be restarted with new configuration. 
 
-### Replicasets configuration
+### Replicasets
 
 Cluster topology can be configured using `cartridge_replicasets` variable (must be placed in `all` group).
 
