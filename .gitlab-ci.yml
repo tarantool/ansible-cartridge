@@ -1,6 +1,8 @@
 ---
 variables:
   BUNDLE_VERSION: 1.10.3-93-g580699f
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
 
 stages:
   - test
@@ -25,7 +27,7 @@ before_script:
 test-enterprise:
   stage: test
   tags:
-    - docker
+    - molecule-dind
   script:
     - >
       docker build
@@ -45,7 +47,7 @@ test-enterprise:
 test-opensource-1.10:
   stage: test
   tags:
-    - docker
+    - molecule-dind
   script:
     - >
       docker build
@@ -64,7 +66,7 @@ test-opensource-1.10:
 test-opensource-2.2:
   stage: test
   tags:
-    - docker
+    - molecule-dind
   script:
     - >
       docker build
