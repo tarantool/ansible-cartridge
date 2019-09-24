@@ -1,6 +1,8 @@
 ---
 variables:
   BUNDLE_VERSION: 1.10.3-93-g580699f
+  DOCKER_DRIVER: overlay2
+  DOCKER_TLS_CERTDIR: ""
 
 stages:
   - test
