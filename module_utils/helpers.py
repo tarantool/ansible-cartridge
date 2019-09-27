@@ -26,7 +26,18 @@ def check_query(query, response):
     return True, None
 
 
-def get_all_instances_info(control_instance_admin_api_url):
+__authorized_session = None
+
+def get_authorized_session(cluster_cookie):
+  global __authorized_session
+  if __authorized_session is None:
+    __authorized_session = requests.Session()
+    __authorized_session.auth = ('admin', cluster_cookie)
+
+  return __authorized_session
+
+
+def get_all_instances_info(control_instance_admin_api_url, session):
     # Get all instances info from control server
     query = '''
         query {
@@ -41,7 +52,7 @@ def get_all_instances_info(control_instance_admin_api_url):
         }
     '''
 
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    response = session.post(control_instance_admin_api_url, json={'query': query})
     ok, err = check_query(query, response)
     if not ok:
         return False, err
@@ -50,7 +61,7 @@ def get_all_instances_info(control_instance_admin_api_url):
     return True, instances
 
 
-def get_instance_info(instance_admin_api_url, control_instance_admin_api_url):
+def get_instance_info(instance_admin_api_url, control_instance_admin_api_url, session):
     # Get instance UUID
     query = '''
         query {
@@ -63,7 +74,7 @@ def get_instance_info(instance_admin_api_url, control_instance_admin_api_url):
         }
     '''
 
-    response = requests.post(instance_admin_api_url, json={'query': query})
+    response = session.post(instance_admin_api_url, json={'query': query})
     ok, err = check_query(query, response)
     if not ok:
         return False, err
@@ -90,7 +101,7 @@ def get_instance_info(instance_admin_api_url, control_instance_admin_api_url):
         }}
     '''.format(instance_uuid)
 
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    response = session.post(control_instance_admin_api_url, json={'query': query})
     ok, err = check_query(query, response)
     if not ok:
         return False, err
@@ -99,7 +110,7 @@ def get_instance_info(instance_admin_api_url, control_instance_admin_api_url):
     return True, instance
 
 
-def get_replicaset_info(name, control_instance_admin_api_url):
+def get_replicaset_info(control_instance_admin_api_url, session, name):
     # Get all replicasets
     query = '''
         query {
@@ -118,7 +129,7 @@ def get_replicaset_info(name, control_instance_admin_api_url):
         }
     '''
 
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    response = session.post(control_instance_admin_api_url, json={'query': query})
     ok, err = check_query(query, response)
     if not ok:
         return False, err
@@ -133,7 +144,7 @@ def get_replicaset_info(name, control_instance_admin_api_url):
     return True, None
 
 
-def wait_for_replicaset_is_healthy(replicaset_name, control_instance_admin_api_url):
+def wait_for_replicaset_is_healthy(control_instance_admin_api_url, session, replicaset_name):
     delay = 0.5
     timeout = 5
     while True:
@@ -143,8 +154,9 @@ def wait_for_replicaset_is_healthy(replicaset_name, control_instance_admin_api_u
             return False
 
         ok, replicaset_info = get_replicaset_info(
-            replicaset_name,
-            control_instance_admin_api_url
+            control_instance_admin_api_url,
+            session,
+            replicaset_name
         )
         if ok and replicaset_info['status'] == 'healthy':
             return True

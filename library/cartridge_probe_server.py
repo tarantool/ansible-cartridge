@@ -4,7 +4,7 @@ import requests
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, check_query
-from ansible.module_utils.helpers import get_instance_info
+from ansible.module_utils.helpers import get_instance_info, get_authorized_session
 
 
 argument_spec = {
@@ -12,6 +12,7 @@ argument_spec = {
     'instance_address': {'required': True, 'type': 'str'},
     'control_instance_address': {'required': True, 'type': 'str'},
     'control_instance_port': {'required': True, 'type': 'str'},
+    'cluster_cookie': {'required':True, 'type': 'str'},
 }
 
 
@@ -27,9 +28,10 @@ def probe_server(params):
         params['control_instance_address'],
         params['control_instance_port']
     )
+    session = get_authorized_session(params['cluster_cookie'])
 
     # Get instance info
-    ok, instance_info = get_instance_info(instance_admin_api_url, control_instance_admin_api_url)
+    ok, instance_info = get_instance_info(instance_admin_api_url, control_instance_admin_api_url, session)
     if not ok:
         return instance_info
 
@@ -42,7 +44,7 @@ def probe_server(params):
         }}
     '''.format(instance_info['uri'])
 
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    response = session.post(control_instance_admin_api_url, json={'query': query})
     ok, err = check_query(query, response)
     if not ok:
         return err

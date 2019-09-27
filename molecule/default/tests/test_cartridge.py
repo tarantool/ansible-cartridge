@@ -13,6 +13,20 @@ testinfra_hosts = ansible_runner.get_hosts('all')
 APP_NAME = 'myapp'
 
 
+__authorized_session = None
+
+
+def get_authorized_session(host):
+    cluster_cookie = host.ansible.get_variables()['cartridge_cluster_cookie']
+
+    global __authorized_session
+    if __authorized_session is None:
+        __authorized_session = requests.Session()
+        __authorized_session.auth = ('admin', cluster_cookie)
+
+    return __authorized_session
+
+
 def check_conf_file(conf_file, conf_section, conf):
     assert conf_file.exists
     assert conf_file.user == 'tarantool'
@@ -99,7 +113,8 @@ def test_instances(host):
           }
         }
     '''
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    session = get_authorized_session(host)
+    response = session.post(control_instance_admin_api_url, json={'query': query})
 
     started_instances = response.json()['data']['servers']
     started_instances = {i['alias']: i for i in started_instances}
@@ -138,7 +153,9 @@ def test_replicasets(host):
           }
         }
     '''
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    session = get_authorized_session(host)
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+
     started_replicasets = response.json()['data']['replicasets']
     started_replicasets = {r['alias']: r for r in started_replicasets}
 
@@ -188,8 +205,9 @@ def test_failover(host):
           }
         }
     '''
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
-    print(response.json())
+    session = get_authorized_session(host)
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+
     failover = response.json()['data']['cluster']['failover']
 
     assert failover == configured_failover
