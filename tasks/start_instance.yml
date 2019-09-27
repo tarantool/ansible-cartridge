@@ -10,9 +10,14 @@
     owner: tarantool
     group: tarantool
     mode: '644'
+  register: instance_config
 
-- name: 'Start systemd service {{ cartridge_app_name }}@{{ instance.name }}'
+- name: 'Start systemd service {{ cartridge_app_name }}@{{ instance.name }}'  # noqa 503
   systemd:
     name: '{{ cartridge_app_name }}@{{ instance.name }}'
-    state: started
+    state: restarted
     enabled: true
+  when: |
+    package_updated
+    or instance_config.changed
+    or default_config.changed

@@ -35,3 +35,8 @@
     name: '/tmp/{{ rpm_filename }}'
     state: present
     update_cache: true
+  register: install_rpm
+
+- name: Set package_updated to true
+  set_fact:
+    package_updated: '{{ install_rpm.changed }}'
