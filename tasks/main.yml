@@ -5,10 +5,11 @@
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
   when: ansible_os_family != "RedHat"
 
-- name: Set host address and cartridge confdir
+- name: Set host_address, cartridge_confdir and package_updated variables
   set_fact:
     host_address: '{{ ansible_host }}'
     cartridge_confdir: /etc/tarantool/conf.d
+    package_updated: false
 
 - name: Dependencies
   include_tasks: install_dependencies.yml
@@ -48,6 +49,7 @@
     group: tarantool
     mode: '644'
   when: cartridge_instances is defined
+  register: default_config
 
 - name: Start instances
   include_tasks: start_instance.yml
