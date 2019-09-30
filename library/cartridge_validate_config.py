@@ -13,6 +13,76 @@ INSTANCE_REQUIRED_PARAMS = ['name', 'advertise_uri', 'http_port']
 REPLICASET_REQUIRED_PARAMS = ['name', 'instances', 'roles']
 
 
+def check_schema(schema, conf, path=''):
+    if isinstance(schema, dict):
+        for k in schema:
+            if k in conf:
+                subpath = '{}.{}'.format(path, k)
+                ok, err = check_schema(schema[k], conf[k], subpath)
+                if not ok:
+                    return False, err
+        return True, None
+    elif isinstance(schema, list):
+        for i, c in enumerate(conf):
+            subpath = '{}[{}]'.format(path, i)
+            ok, err = check_schema(schema[0], c, subpath)
+            if not ok:
+                return False, err
+        return True, None
+    elif isinstance(schema, type):
+        if schema in [float, int]:
+            if not (isinstance(conf, float) or isinstance(conf, int)):
+                return False, '{} must be {}'.format(path, schema)
+        else:
+            if not isinstance(conf, schema):
+                return False, '{} must be {}'.format(path, schema)
+        return True, None
+    else:
+        return False, 'Wrong type'
+
+
+def validate_types(vars):
+    schema = {
+        'cartridge_package_path': str,
+        'cartridge_app_name': str,
+        'cartridge_cluster_cookie': str,
+        'cartridge_defaults': dict,
+        'cartridge_failover': bool,
+        'cartridge_auth': {
+            'enabled': bool,
+            'cookie_max_age': int,
+            'cookie_renew_age': int,
+            'users': [
+                {
+                    'username': str,
+                    'password': str,
+                    'fullname': str,
+                    'email': str,
+                    'deleted': bool,
+                }
+            ]
+        },
+        'cartridge_instances': [
+            {
+                'name': str,
+                'advertise_uri': str,
+                'http_port': str,
+            }
+        ],
+        'cartridge_replicasets': [
+            {
+                'name': str,
+                'roles': [str],
+                'instances': [str],
+                'weight': float,
+                'all_rw': bool,
+            }
+        ]
+    }
+
+    return check_schema(schema, vars)
+
+
 def validate_config(params):
     all_instances = {}
     all_replicasets = {}
@@ -21,9 +91,14 @@ def validate_config(params):
     app_name = None
     package_path = None
     cluster_cookie = None
+    cartridge_auth = None
 
     for host in params['hosts']:
         host_vars = params['hostvars'][host]
+
+        ok, errmsg = validate_types(host_vars)
+        if not ok:
+            return ModuleRes(success=False, msg=errmsg)
 
         # Check if at least one of app_name and package_path specified
         if 'cartridge_app_name' not in host_vars and 'cartridge_package_path' not in host_vars:
@@ -37,6 +112,14 @@ def validate_config(params):
                 return ModuleRes(success=False, msg=errmsg)
         elif 'cartridge_app_name' in host_vars:
             app_name = host_vars['cartridge_app_name']
+
+        # Check cluster auth
+        if cartridge_auth is not None:
+            if 'cartridge_auth' in host_vars and host_vars['cartridge_auth'] != cartridge_auth:
+                errmsg = '`cartridge_auth` name must be the same for all hosts'
+                return ModuleRes(success=False, msg=errmsg)
+        elif 'cartridge_auth' in host_vars:
+            cartridge_auth = host_vars['cartridge_auth']
 
         if 'cartridge_instances' in host_vars:
             # Check cluster cookie
@@ -129,6 +212,14 @@ def validate_config(params):
                     replicaset_instance, rname, all_instances[replicaset_instance]['belongs_to']
                 )
                 return ModuleRes(success=False, msg=errmsg)
+
+    # Check cartridge_auth
+    if cartridge_auth is not None:
+        if 'users' in cartridge_auth:
+            for user in cartridge_auth['users']:
+                if 'username' not in user:
+                    errmsg = 'Field "username" is required for `cartridge_auth.users`'
+                    return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=False, meta={'all_instances': all_instances})
 

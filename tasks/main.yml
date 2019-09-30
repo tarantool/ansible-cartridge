@@ -19,7 +19,6 @@
     hosts: '{{ play_hosts }}'
     hostvars: '{{ hostvars }}'
   run_once: true
-  register: validate
 
 # Rewrites cartridge_app_name from package info
 - name: Install RPM for RedHat
