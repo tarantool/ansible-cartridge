@@ -15,6 +15,10 @@ def list_to_graphql_string(l):
     return '[{}]'.format(', '.join(['"{}"'.format(i) for i in l]))
 
 
+def boolean_to_graphql_string(p):
+    return 'true' if p else 'false'
+
+
 def check_query(query, response):
     if response.status_code != 200:
         return False, ModuleRes(success=False,
@@ -26,7 +30,18 @@ def check_query(query, response):
     return True, None
 
 
-def get_all_instances_info(control_instance_admin_api_url):
+__authorized_session = None
+
+def get_authorized_session(cluster_cookie):
+  global __authorized_session
+  if __authorized_session is None:
+    __authorized_session = requests.Session()
+    __authorized_session.auth = ('admin', cluster_cookie)
+
+  return __authorized_session
+
+
+def get_all_instances_info(control_instance_admin_api_url, session):
     # Get all instances info from control server
     query = '''
         query {
@@ -41,7 +56,7 @@ def get_all_instances_info(control_instance_admin_api_url):
         }
     '''
 
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    response = session.post(control_instance_admin_api_url, json={'query': query})
     ok, err = check_query(query, response)
     if not ok:
         return False, err
@@ -50,7 +65,7 @@ def get_all_instances_info(control_instance_admin_api_url):
     return True, instances
 
 
-def get_instance_info(instance_admin_api_url, control_instance_admin_api_url):
+def get_instance_info(instance_admin_api_url, control_instance_admin_api_url, session):
     # Get instance UUID
     query = '''
         query {
@@ -63,7 +78,7 @@ def get_instance_info(instance_admin_api_url, control_instance_admin_api_url):
         }
     '''
 
-    response = requests.post(instance_admin_api_url, json={'query': query})
+    response = session.post(instance_admin_api_url, json={'query': query})
     ok, err = check_query(query, response)
     if not ok:
         return False, err
@@ -90,7 +105,7 @@ def get_instance_info(instance_admin_api_url, control_instance_admin_api_url):
         }}
     '''.format(instance_uuid)
 
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    response = session.post(control_instance_admin_api_url, json={'query': query})
     ok, err = check_query(query, response)
     if not ok:
         return False, err
@@ -99,7 +114,7 @@ def get_instance_info(instance_admin_api_url, control_instance_admin_api_url):
     return True, instance
 
 
-def get_replicaset_info(name, control_instance_admin_api_url):
+def get_replicaset_info(control_instance_admin_api_url, session, name):
     # Get all replicasets
     query = '''
         query {
@@ -118,7 +133,7 @@ def get_replicaset_info(name, control_instance_admin_api_url):
         }
     '''
 
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    response = session.post(control_instance_admin_api_url, json={'query': query})
     ok, err = check_query(query, response)
     if not ok:
         return False, err
@@ -133,7 +148,7 @@ def get_replicaset_info(name, control_instance_admin_api_url):
     return True, None
 
 
-def wait_for_replicaset_is_healthy(replicaset_name, control_instance_admin_api_url):
+def wait_for_replicaset_is_healthy(control_instance_admin_api_url, session, replicaset_name):
     delay = 0.5
     timeout = 5
     while True:
@@ -143,10 +158,204 @@ def wait_for_replicaset_is_healthy(replicaset_name, control_instance_admin_api_u
             return False
 
         ok, replicaset_info = get_replicaset_info(
-            replicaset_name,
-            control_instance_admin_api_url
+            control_instance_admin_api_url,
+            session,
+            replicaset_name
         )
         if ok and replicaset_info['status'] == 'healthy':
             return True
 
         time.sleep(delay)
+
+
+def get_cluster_auth_params(control_instance_admin_api_url, session):
+    query = '''
+        query {
+            cluster {
+                auth_params {
+                    enabled
+                    cookie_max_age
+                    cookie_renew_age
+                }
+            }
+        }
+    '''
+
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
+        return False, err
+
+    cluster_auth_params = response.json()['data']['cluster']['auth_params']
+    return True, cluster_auth_params
+
+
+def edit_cluster_auth_params(control_instance_admin_api_url, session,
+                             enabled=None, cookie_max_age=None, cookie_renew_age=None):
+    auth_query_params = []
+
+    if enabled is not None:
+        auth_query_params.append('enabled: {}'.format(boolean_to_graphql_string(enabled)))
+
+    if cookie_max_age is not None:
+        auth_query_params.append('cookie_max_age: {}'.format(cookie_max_age))
+
+    if cookie_renew_age is not None:
+        auth_query_params.append('cookie_renew_age: {}'.format(cookie_renew_age))
+
+    query = '''
+        mutation {{
+            cluster {{
+                auth_params({}) {{
+                    enabled
+                    cookie_max_age
+                    cookie_renew_age
+                }}
+            }}
+        }}
+    '''.format(', '.join(auth_query_params))
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
+        return False, err
+
+    new_cluster_auth_params = response.json()['data']['cluster']['auth_params']
+    return True, new_cluster_auth_params
+
+
+def check_cluster_auth_implements_all(control_instance_admin_api_url, session):
+    query = '''
+        query {
+            cluster {
+                auth_params {
+                    implements_list_users
+                    implements_remove_user
+                    implements_add_user
+                    implements_edit_user
+                    implements_get_user
+                    implements_check_password
+                }
+            }
+        }
+    '''
+
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
+        return False, err
+
+    cluster_implements = response.json()['data']['cluster']['auth_params']
+    not_implemented_list = [k for k, v in cluster_implements.items() if not v]
+
+    if not_implemented_list:
+        errmsg = 'Cluster auth backend must implement this operations to allow users management: {}'.format(
+            ', '.join([i.replace('implements_', '') for i in not_implemented_list])
+        )
+        return False, ModuleRes(success=False, msg=errmsg)
+
+    return True, None
+
+
+def get_cluster_users(control_instance_admin_api_url, session):
+    query = '''
+        query {
+            cluster {
+                users {
+                    username
+                    fullname
+                    email
+                }
+            }
+        }
+    '''
+
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
+        return False, err
+
+    users = response.json()['data']['cluster']['users']
+    return True, users
+
+
+def add_cluster_user(control_instance_admin_api_url, session, user):
+    add_user_params = [
+        'username: "{}"'.format(user['username']),
+    ]
+
+    if 'password' in user:
+        add_user_params.append('password: "{}"'.format(user['password']))
+
+    if 'email' in user:
+        add_user_params.append('email: "{}"'.format(user['email']))
+
+    if 'fullname' in user:
+        add_user_params.append('fullname: "{}"'.format(user['fullname']))
+
+    query = '''
+        mutation {{
+            cluster {{
+                add_user({}) {{}}
+            }}
+        }}
+    '''.format(', '.join(add_user_params))
+
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
+        return False, err
+
+    return True, None
+
+
+def delete_cluster_user(control_instance_admin_api_url, session, user):
+    query = '''
+        mutation {{
+            cluster {{
+                remove_user(username: "{}") {{}}
+            }}
+        }}
+    '''.format(user['username'])
+
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
+        return False, err
+
+    return True, None
+
+
+def edit_cluster_user(control_instance_admin_api_url, session, user):
+    add_user_params = [
+        'username: "{}"'.format(user['username']),
+    ]
+
+    if 'password' in user:
+        add_user_params.append('password: "{}"'.format(user['password']))
+
+    if 'email' in user:
+        add_user_params.append('email: "{}"'.format(user['email']))
+
+    if 'fullname' in user:
+        add_user_params.append('fullname: "{}"'.format(user['fullname']))
+
+    query = '''
+        mutation {{
+            cluster {{
+                edit_user({}) {{
+                    username
+                    fullname
+                    email
+                }}
+            }}
+        }}
+    '''.format(', '.join(add_user_params))
+
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
+        return False, err
+
+    edited_user = response.json()['data']['cluster']['edit_user']
+
+    return True, edited_user

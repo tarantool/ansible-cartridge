@@ -14,6 +14,7 @@ This role can deploy and configure applications packed in RPM using [`Cartridge 
   * [Replicasets configuration](#replicasets-configuration)
   * [Vshard bootstrapping](#vshard-bootstrapping)
   * [Failover](#failover)
+  * [Cartridge auth](#cartridge-auth)
 
 ## Requirements
 
@@ -48,10 +49,10 @@ To deploy application and set up this topology:
 all:
   hosts:
     vm1:
-      ansible_host: 172.19.0.2  # First host
+      ansible_host: 172.19.0.2  # first host
       ansible_user: vagrant
 
-      cartridge_instances:  # Instances to be started on this host
+      cartridge_instances:  # instances to be started on this host
         - name: 'core_1'
           advertise_uri: '172.19.0.2:3301'
           http_port: '8181'
@@ -61,10 +62,10 @@ all:
           http_port: '8182'
 
     vm2:
-      ansible_host: 172.19.0.3  # Second host
+      ansible_host: 172.19.0.3  # second host
       ansible_user: vagrant
 
-      cartridge_instances:  # Instances to be started on this host
+      cartridge_instances:  # instances to be started on this host
         - name: 'router'
           advertise_uri: '172.19.0.3:3303'
           http_port: '8183'
@@ -74,17 +75,17 @@ all:
           http_port: '8184'
 
 
-  vars:  # Cluster configuration
-    cartridge_package_path: ./myapp-1.0.0-0.rpm  # Path to package to deploy
+  vars:  # cluster configuration
+    cartridge_package_path: ./myapp-1.0.0-0.rpm  # path to package to deploy
 
-    cartridge_failover: true  # Enable automatic failover
-    cartridge_bootstrap_vshard: true  # Bootstrap vshard
+    cartridge_failover: true  # enable automatic failover
+    cartridge_bootstrap_vshard: true  # bootstrap vshard
 
-    cartridge_cluster_cookie: super-secret-cookie  # Cartridge cookie must be specified here
-    cartridge_defaults:  # Default configuration parameters for all instances
+    cartridge_cluster_cookie: super-secret-cookie  # cartridge cookie must be specified here
+    cartridge_defaults:  # default configuration parameters for all instances
       log_level: 5
 
-    cartridge_replicasets:  # Replicasets to be set up
+    cartridge_replicasets:  # replicasets to be set up
       - name: 'replicaset-1'
         instances:
           - 'storage_1'
@@ -150,10 +151,10 @@ If your deploy host has more than one non-local IP address, advertise host will 
 
 Cluster topology can be configured using `cartridge_replicasets` variable (must be placed in `all` group).
 
-`cartridge_replicasets` is a list of `replicaset` dicts:
+`cartridge_replicasets` is a list of replicaset configurations:
 
-* `replicaset.name` (`string`, required) - name of replicaset, will be displayed in Web UI;
-* `replicaset.instances` (`list-of-strings`, required) - names of instances, which must be joined to replicaset;
+* `name` (`string`, required) - name of replicaset, will be displayed in Web UI;
+* `instances` (`list-of-strings`, required) - names of instances, which must be joined to replicaset;
 * `leader` (`string`) - name of leader instance. Optional if replicaset contains only one instance, required for replicaset with more than one instances;
 * `roles` (`list-of-strings`, required) - roles to be enabled on the replicaset.
 
@@ -171,3 +172,41 @@ If it is, VShard will be bootstrapped.
 ### Failover
 
 If `cartridge_bootstrap_vshard` is `true`, then failover will be enabled.
+
+### Cartridge auth
+
+`cartridge_auth` parameter is used to specify authorization parameters:
+
+- `enabled`(`boolean`, optional) - indicates if authentication must be enabled;
+- `cookie_max_age`(`int`, optional) - number of seconds until the authentication cookie expires;
+- `cookie_renew_age`(`int`, optional) - update provided cookie if it's older then this age.
+- `users`(`list-of-dicts`, optional) - list of users to be configured on cluster (described below).
+
+**Users configuration:**
+
+- `username`(`string`, required);
+- `password`(`string`, optional) - is required for new users;
+- `fullname`(`string`, optional);
+- `email`(`string`, optional);
+- `deleted`(`boolean`, optional) - indicates if user must be removed.
+
+**Note:** Default user `admin` can't be managed here.
+
+*Example:*
+
+```yaml
+cartridge_auth:
+  enabled: true   # enable authorization
+
+  cookie_max_age: 1000
+  cookie_renew_age: 100
+
+  users:  # cartridge users to be set up
+    - username: tarantool
+      password: tarantool-the-best
+      fullname: Tarantool The Best
+      email: tarantool@tarantool.org
+
+    - username: bad-guy
+      deleted: true  # marked to be deleted
+```

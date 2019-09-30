@@ -13,6 +13,20 @@ testinfra_hosts = ansible_runner.get_hosts('all')
 APP_NAME = 'myapp'
 
 
+__authorized_session = None
+
+
+def get_authorized_session(host):
+    cluster_cookie = host.ansible.get_variables()['cartridge_cluster_cookie']
+
+    global __authorized_session
+    if __authorized_session is None:
+        __authorized_session = requests.Session()
+        __authorized_session.auth = ('admin', cluster_cookie)
+
+    return __authorized_session
+
+
 def check_conf_file(conf_file, conf_section, conf):
     assert conf_file.exists
     assert conf_file.user == 'tarantool'
@@ -37,6 +51,16 @@ def get_configured_instances():
             configured_instances += host_vars['cartridge_instances']
 
     return configured_instances
+
+
+def get_control_instance_admin_api_url(configured_instances):
+    control_instance = configured_instances[0]
+    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
+        'localhost',
+        control_instance['http_port']
+    )
+
+    return control_instance_admin_api_url
 
 
 def test_services_status_and_config(host):
@@ -79,11 +103,7 @@ def test_instances(host):
         return
 
     # Select one instance to be control
-    control_instance = configured_instances[0]
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        'localhost',
-        control_instance['http_port']
-    )
+    control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
 
     # Get all started instances
     query = '''
@@ -99,7 +119,8 @@ def test_instances(host):
           }
         }
     '''
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    session = get_authorized_session(host)
+    response = session.post(control_instance_admin_api_url, json={'query': query})
 
     started_instances = response.json()['data']['servers']
     started_instances = {i['alias']: i for i in started_instances}
@@ -118,11 +139,8 @@ def test_replicasets(host):
         return
 
     # Select one instance to be control
-    control_instance = configured_instances[0]
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        'localhost',
-        control_instance['http_port']
-    )
+    control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
+
     # Get started replicasets
     query = '''
         query {
@@ -138,7 +156,9 @@ def test_replicasets(host):
           }
         }
     '''
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
+    session = get_authorized_session(host)
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+
     started_replicasets = response.json()['data']['replicasets']
     started_replicasets = {r['alias']: r for r in started_replicasets}
 
@@ -174,11 +194,7 @@ def test_failover(host):
         return
 
     # Select one instance to be control
-    control_instance = configured_instances[0]
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        'localhost',
-        control_instance['http_port']
-    )
+    control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
 
     # Get cluster failover status
     query = '''
@@ -188,8 +204,94 @@ def test_failover(host):
           }
         }
     '''
-    response = requests.post(control_instance_admin_api_url, json={'query': query})
-    print(response.json())
+    session = get_authorized_session(host)
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+
     failover = response.json()['data']['cluster']['failover']
 
     assert failover == configured_failover
+
+
+def test_auth_params(host):
+    # Get configured auth params
+    configured_auth = host.ansible.get_variables()['cartridge_auth']
+
+    # Get all configured instances
+    configured_instances = get_configured_instances()
+
+    if not configured_instances:
+        return
+
+    # Select one instance to be control
+    control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
+
+    # Get cluster auth params
+    query = '''
+        query {
+            cluster {
+                auth_params {
+                    enabled
+                    cookie_max_age
+                    cookie_renew_age
+                }
+            }
+        }
+    '''
+
+    session = get_authorized_session(host)
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+
+    auth = response.json()['data']['cluster']['auth_params']
+
+    for key in ['enabled', 'cookie_max_age', 'cookie_renew_age']:
+        if key in configured_auth:
+            assert auth[key] == configured_auth[key]
+
+
+def test_auth_users(host):
+    # Get configured auth params
+    configured_auth = host.ansible.get_variables()['cartridge_auth']
+
+    if 'users' not in configured_auth:
+        return
+
+    # Get all configured instances
+    configured_instances = get_configured_instances()
+
+    if not configured_instances:
+        return
+
+    # Select one instance to be control
+    control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
+
+    # Get cluster auth params
+    query = '''
+        query {
+            cluster {
+                users {
+                    username
+                    fullname
+                    email
+                }
+            }
+        }
+    '''
+
+    session = get_authorized_session(host)
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+
+    auth_users = response.json()['data']['cluster']['users']
+    auth_users = {
+        u['username']: u for u in auth_users
+        if u['username'] != 'admin' and ('deleted' not in u or u['deleted'] is False)
+    }
+    configured_users = {u['username']: u for u in configured_auth['users']}
+
+    assert auth_users.keys() == configured_users.keys()
+    for k in auth_users.keys():
+        conf_user = configured_users[k]
+        user = auth_users[k]
+
+        for p in ['fullname', 'email']:
+            if p in conf_user:
+                assert user[p] == conf_user[p]

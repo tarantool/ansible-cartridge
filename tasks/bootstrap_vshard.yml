@@ -6,6 +6,9 @@
     body_format: json
     status_code: 200
     return_content: true
+    url_username: admin
+    url_password: '{{ cartridge_cluster_cookie }}'
+    force_basic_auth: true
     body:
       query: |-
         query {
@@ -28,6 +31,9 @@
     body_format: json
     status_code: 200
     return_content: true
+    url_username: admin
+    url_password: '{{ cartridge_cluster_cookie }}'
+    force_basic_auth: true
     body:
       query: |-
         mutation {

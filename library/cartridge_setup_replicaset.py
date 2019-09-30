@@ -7,17 +7,18 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, check_query
 from ansible.module_utils.helpers import get_all_instances_info
 from ansible.module_utils.helpers import get_replicaset_info, wait_for_replicaset_is_healthy
-from ansible.module_utils.helpers import list_to_graphql_string
+from ansible.module_utils.helpers import list_to_graphql_string, get_authorized_session
 
 
 argument_spec = {
     'replicaset': {'required': True, 'type': 'dict'},
     'control_instance_address': {'required': True, 'type': 'str'},
     'control_instance_port': {'required': True, 'type': 'str'},
+    'cluster_cookie': {'required': True, 'type': 'str'},
 }
 
 
-def create_replicaset(params, control_instance_admin_api_url):
+def create_replicaset(control_instance_admin_api_url, session, params):
     replicaset = params['replicaset']
     # sanity checks
     if len(replicaset['instances']) == 1 and 'leader' not in replicaset:
@@ -30,7 +31,7 @@ def create_replicaset(params, control_instance_admin_api_url):
         return ModuleRes(success=False, msg='Replicaset leader must be one of replicaset instances')
 
     # Check if all instances are started and not configured
-    ok, instances_info = get_all_instances_info(control_instance_admin_api_url)
+    ok, instances_info = get_all_instances_info(control_instance_admin_api_url, session)
     if not ok:
         return instances_info
     instances_info = {i['alias']: i for i in instances_info}  # make it dict
@@ -60,13 +61,13 @@ def create_replicaset(params, control_instance_admin_api_url):
         return ModuleRes(success=False, msg='Failed to create replicaset')
 
     # Wait for replicaset is healthy
-    ok = wait_for_replicaset_is_healthy(replicaset['name'], control_instance_admin_api_url)
+    ok = wait_for_replicaset_is_healthy(control_instance_admin_api_url, session, replicaset['name'])
     if not ok:
         errmsg = 'Replicaset "{}" is not healthy'.format(replicaset['name'])
         return ModuleRes(success=False, msg=errmsg)
 
     # Get replicaset UUID
-    ok, replicaset_info = get_replicaset_info(params['replicaset']['name'], control_instance_admin_api_url)
+    ok, replicaset_info = get_replicaset_info(control_instance_admin_api_url, session, params['replicaset']['name'])
     if not ok:
         return replicaset_info
 
@@ -99,7 +100,7 @@ def create_replicaset(params, control_instance_admin_api_url):
             return ModuleRes(success=False, msg=errmsg)
 
         # Wait for replicaset is healthy
-        ok = wait_for_replicaset_is_healthy(replicaset['name'], control_instance_admin_api_url)
+        ok = wait_for_replicaset_is_healthy(control_instance_admin_api_url, session, replicaset['name'])
         if not ok:
             errmsg = 'Replicaset "{}" is not healthy'.format(replicaset['name'])
             return ModuleRes(success=False, msg=errmsg)
@@ -126,16 +127,19 @@ def setup_replicaset(params):
         params['control_instance_port']
     )
 
+    session = get_authorized_session(params['cluster_cookie'])
+
     # Check if replicaset is already created
     ok, replicaset_info = get_replicaset_info(
-        params['replicaset']['name'],
         control_instance_admin_api_url,
+        session,
+        params['replicaset']['name']
     )
     if not ok:
         return replicaset_info
 
     if replicaset_info is None:
-        return create_replicaset(params, control_instance_admin_api_url)
+        return create_replicaset(control_instance_admin_api_url, session, params)
 
     return ModuleRes(success=True, changed=False)
 
