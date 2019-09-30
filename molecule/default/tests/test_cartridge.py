@@ -53,6 +53,16 @@ def get_configured_instances():
     return configured_instances
 
 
+def get_control_instance_admin_api_url(configured_instances):
+    control_instance = configured_instances[0]
+    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
+        'localhost',
+        control_instance['http_port']
+    )
+
+    return control_instance_admin_api_url
+
+
 def test_services_status_and_config(host):
     ansible_vars = host.ansible.get_variables()
     instances = copy.deepcopy(
@@ -93,11 +103,7 @@ def test_instances(host):
         return
 
     # Select one instance to be control
-    control_instance = configured_instances[0]
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        'localhost',
-        control_instance['http_port']
-    )
+    control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
 
     # Get all started instances
     query = '''
@@ -133,11 +139,7 @@ def test_replicasets(host):
         return
 
     # Select one instance to be control
-    control_instance = configured_instances[0]
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        'localhost',
-        control_instance['http_port']
-    )
+    control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
     # Get started replicasets
     query = '''
         query {
@@ -191,11 +193,7 @@ def test_failover(host):
         return
 
     # Select one instance to be control
-    control_instance = configured_instances[0]
-    control_instance_admin_api_url = 'http://{}:{}/admin/api'.format(
-        'localhost',
-        control_instance['http_port']
-    )
+    control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
 
     # Get cluster failover status
     query = '''
@@ -211,3 +209,39 @@ def test_failover(host):
     failover = response.json()['data']['cluster']['failover']
 
     assert failover == configured_failover
+
+
+def test_auth_params(host):
+    # Get configured auth params
+    configured_auth = host.ansible.get_variables()['cartridge_auth']
+
+    # Get all configured instances
+    configured_instances = get_configured_instances()
+
+    if not configured_instances:
+        return
+
+    # Select one instance to be control
+    control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
+
+    # Get cluster auth params
+    query = '''
+        query {
+            cluster {
+                auth_params {
+                    enabled
+                    cookie_max_age
+                    cookie_renew_age
+                }
+            }
+        }
+    '''
+
+    session = get_authorized_session(host)
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+
+    auth = response.json()['data']['cluster']['auth_params']
+
+    for key in ['enabled', 'cookie_max_age', 'cookie_renew_age']:
+        if key in configured_auth:
+            assert auth[key] == configured_auth[key]

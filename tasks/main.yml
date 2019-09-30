@@ -70,9 +70,13 @@
   with_items: '{{ cartridge_replicasets }}'
   when: ansible_host == control_instance_address
 
+- name: Cartridge authorization
+  include_tasks: manage_auth.yml
+  when: ansible_host == control_instance_address
+
 - name: Bootstrap vshard
   include_tasks: bootstrap_vshard.yml
-  when: cartridge_bootstrap_vshard and ansible_host == control_instance_address
+  when: ansible_host == control_instance_address and cartridge_bootstrap_vshard
 
 - name: Manage failover
   include_tasks: manage_failover.yml

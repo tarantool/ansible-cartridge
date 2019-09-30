@@ -4,3 +4,4 @@ cartridge_instances: []
 cartridge_defaults: {}
 cartridge_bootstrap_vshard: false
 cartridge_failover: false
+cartridge_auth: {}

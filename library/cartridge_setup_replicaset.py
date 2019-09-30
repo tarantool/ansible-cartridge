@@ -31,7 +31,7 @@ def create_replicaset(control_instance_admin_api_url, session, params):
         return ModuleRes(success=False, msg='Replicaset leader must be one of replicaset instances')
 
     # Check if all instances are started and not configured
-    ok, instances_info = get_all_instances_info(control_instance_admin_api_url)
+    ok, instances_info = get_all_instances_info(control_instance_admin_api_url, session)
     if not ok:
         return instances_info
     instances_info = {i['alias']: i for i in instances_info}  # make it dict

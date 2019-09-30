@@ -162,3 +162,58 @@ def wait_for_replicaset_is_healthy(control_instance_admin_api_url, session, repl
             return True
 
         time.sleep(delay)
+
+
+def get_cluster_auth_params(control_instance_admin_api_url, session):
+    query = '''
+        query {
+            cluster {
+                auth_params {
+                    enabled
+                    cookie_max_age
+                    cookie_renew_age
+                }
+            }
+        }
+    '''
+
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
+        return False, err
+
+    cluster_auth_params = response.json()['data']['cluster']['auth_params']
+    return True, cluster_auth_params
+
+
+def edit_cluster_auth_params(control_instance_admin_api_url, session,
+                             enabled=None, cookie_max_age=None, cookie_renew_age=None):
+    auth_query_params = []
+
+    if enabled is not None:
+        auth_query_params.append('enabled: {}'.format(boolean_to_graphql_string(enabled)))
+
+    if cookie_max_age is not None:
+        auth_query_params.append('cookie_max_age: {}'.format(cookie_max_age))
+
+    if cookie_renew_age is not None:
+        auth_query_params.append('cookie_renew_age: {}'.format(cookie_renew_age))
+
+    query = '''
+        mutation {{
+            cluster {{
+                auth_params({}) {{
+                    enabled
+                    cookie_max_age
+                    cookie_renew_age
+                }}
+            }}
+        }}
+    '''.format(', '.join(auth_query_params))
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+    ok, err = check_query(query, response)
+    if not ok:
+        return False, err
+
+    new_cluster_auth_params = response.json()['data']['cluster']['auth_params']
+    return True, new_cluster_auth_params
