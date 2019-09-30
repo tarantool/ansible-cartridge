@@ -140,6 +140,7 @@ def test_replicasets(host):
 
     # Select one instance to be control
     control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
+
     # Get started replicasets
     query = '''
         query {
@@ -280,7 +281,10 @@ def test_auth_users(host):
     response = session.post(control_instance_admin_api_url, json={'query': query})
 
     auth_users = response.json()['data']['cluster']['users']
-    auth_users = {u['username']: u for u in auth_users if u['username'] != 'admin'}
+    auth_users = {
+        u['username']: u for u in auth_users
+        if u['username'] != 'admin' and ('deleted' not in u or u['deleted'] is False)
+    }
     configured_users = {u['username']: u for u in configured_auth['users']}
 
     assert auth_users.keys() == configured_users.keys()
