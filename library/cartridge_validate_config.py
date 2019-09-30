@@ -77,7 +77,8 @@ def validate_types(vars):
                 'weight': float,
                 'all_rw': bool,
             }
-        ]
+        ],
+        'cartridge_app_config': dict
     }
 
     return check_schema(schema, vars)
@@ -89,9 +90,9 @@ def validate_config(params):
 
     # To check if this params are equal for all hosts
     app_name = None
-    package_path = None
     cluster_cookie = None
     cartridge_auth = None
+    app_config = None
 
     for host in params['hosts']:
         host_vars = params['hostvars'][host]
@@ -121,6 +122,14 @@ def validate_config(params):
         elif 'cartridge_auth' in host_vars:
             cartridge_auth = host_vars['cartridge_auth']
 
+        # Check app config
+        if app_config is not None:
+            if 'cartridge_app_config' in host_vars and host_vars['cartridge_app_config'] != app_config:
+                errmsg = '`cartridge_app_config` name must be the same for all hosts'
+                return ModuleRes(success=False, msg=errmsg)
+        elif 'cartridge_app_config' in host_vars:
+            app_config = host_vars['cartridge_app_config']
+
         if 'cartridge_instances' in host_vars:
             # Check cluster cookie
             if 'cartridge_cluster_cookie' not in host_vars:
@@ -139,14 +148,6 @@ def validate_config(params):
             if 'cluster_cookie' in host_vars['cartridge_defaults']:
                 errmsg = 'Cluster cookie must be specified in `cartridge_cluster_cookie`, not in `cartridge_defaults`'
                 return ModuleRes(success=False, msg=errmsg)
-
-        # Check package_path
-        if package_path is not None:
-            if 'cartridge_package_path' in host_vars and host_vars['cartridge_package_path'] != package_path:
-                errmsg = '`cartridge_package_path` name must be the same for all hosts'
-                return ModuleRes(success=False, msg=errmsg)
-        elif 'cartridge_package_path' in host_vars:
-            package_path = host_vars['cartridge_package_path']
 
         # Check instances
         if 'cartridge_instances' in host_vars:
@@ -219,6 +220,34 @@ def validate_config(params):
             for user in cartridge_auth['users']:
                 if 'username' not in user:
                     errmsg = 'Field "username" is required for `cartridge_auth.users`'
+                    return ModuleRes(success=False, msg=errmsg)
+
+    # Check app_config
+    if app_config is not None:
+        for section_name, section in app_config.items():
+            if not isinstance(section, dict):
+                errmsg = '`cartridge_app_config.{}` must be dict, found {}'.format(
+                    section_name, type(section)
+                )
+                return ModuleRes(success=False, msg=errmsg)
+
+            if not section:
+                errmsg = '`cartridge_app_config.{}` must have `body` or `deleted` subsection'.format(section_name)
+                return ModuleRes(success=False, msg=errmsg)
+
+            allowed_keys = ['body', 'deleted']
+            for key in section:
+                if key not in allowed_keys:
+                    errmsg = '`cartridge_app_config.{}` can contain only `body` or `deleted` subsections'.format(
+                        section_name
+                    )
+                    return ModuleRes(success=False, msg=errmsg)
+
+            if 'deleted' in section:
+                if not isinstance(section['deleted'], bool):
+                    errmsg = '`cartridge_app_config.{}.deleted` must be bool, found {}'.format(
+                        section_name, type(section['deleted'])
+                    )
                     return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=False, meta={'all_instances': all_instances})

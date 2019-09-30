@@ -1,0 +1,7 @@
+---
+- name: Patch app config
+  cartridge_app_config:
+    app_config: '{{ cartridge_app_config }}'
+    control_instance_address: '{{ control_instance_address }}'
+    control_instance_port: '{{ control_instance_port }}'
+    cluster_cookie: '{{ cartridge_cluster_cookie }}'
