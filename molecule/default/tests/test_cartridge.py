@@ -245,3 +245,49 @@ def test_auth_params(host):
     for key in ['enabled', 'cookie_max_age', 'cookie_renew_age']:
         if key in configured_auth:
             assert auth[key] == configured_auth[key]
+
+
+def test_auth_users(host):
+    # Get configured auth params
+    configured_auth = host.ansible.get_variables()['cartridge_auth']
+
+    if 'users' not in configured_auth:
+        return
+
+    # Get all configured instances
+    configured_instances = get_configured_instances()
+
+    if not configured_instances:
+        return
+
+    # Select one instance to be control
+    control_instance_admin_api_url = get_control_instance_admin_api_url(configured_instances)
+
+    # Get cluster auth params
+    query = '''
+        query {
+            cluster {
+                users {
+                    username
+                    fullname
+                    email
+                }
+            }
+        }
+    '''
+
+    session = get_authorized_session(host)
+    response = session.post(control_instance_admin_api_url, json={'query': query})
+
+    auth_users = response.json()['data']['cluster']['users']
+    auth_users = {u['username']: u for u in auth_users if u['username'] != 'admin'}
+    configured_users = {u['username']: u for u in configured_auth['users']}
+
+    assert auth_users.keys() == configured_users.keys()
+    for k in auth_users.keys():
+        conf_user = configured_users[k]
+        user = auth_users[k]
+
+        for p in ['fullname', 'email']:
+            if p in conf_user:
+                assert user[p] == conf_user[p]

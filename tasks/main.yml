@@ -70,7 +70,7 @@
   with_items: '{{ cartridge_replicasets }}'
   when: ansible_host == control_instance_address
 
-- name: Cartridge authorization
+- name: Cartridge auth
   include_tasks: manage_auth.yml
   when: ansible_host == control_instance_address
 

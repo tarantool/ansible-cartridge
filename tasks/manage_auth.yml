@@ -5,4 +5,3 @@
     control_instance_address: '{{ control_instance_address }}'
     control_instance_port: '{{ control_instance_port }}'
     cluster_cookie: '{{ cartridge_cluster_cookie }}'
-  register: cluster_auth_params
