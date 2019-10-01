@@ -63,6 +63,10 @@ def get_control_instance_admin_api_url(configured_instances):
     return control_instance_admin_api_url
 
 
+def user_is_deleted(user):
+    return 'deleted' in user and user['deleted'] is True
+
+
 def test_services_status_and_config(host):
     ansible_vars = host.ansible.get_variables()
     instances = copy.deepcopy(
@@ -283,7 +287,7 @@ def test_auth_users(host):
     auth_users = response.json()['data']['cluster']['users']
     auth_users = {
         u['username']: u for u in auth_users
-        if u['username'] != 'admin' and ('deleted' not in u or u['deleted'] is False)
+        if u['username'] != 'admin' and not user_is_deleted(u)
     }
     configured_users = {u['username']: u for u in configured_auth['users']}
 
@@ -295,3 +299,16 @@ def test_auth_users(host):
         for p in ['fullname', 'email']:
             if p in conf_user:
                 assert user[p] == conf_user[p]
+
+    # Check if all users can log in
+    login_url = 'http://{}:{}/login'.format(
+        'localhost',
+        configured_instances[0]['http_port']
+    )
+
+    for username, user in configured_users.items():
+        if 'password' not in user:
+            continue
+
+        response = requests.post(login_url, json={'username': username, 'password': user['password']})
+        assert response.status_code == 200
