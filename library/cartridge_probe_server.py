@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-import requests
-
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, check_query
 from ansible.module_utils.helpers import get_instance_info, get_authorized_session
@@ -12,14 +10,11 @@ argument_spec = {
     'instance_address': {'required': True, 'type': 'str'},
     'control_instance_address': {'required': True, 'type': 'str'},
     'control_instance_port': {'required': True, 'type': 'str'},
-    'cluster_cookie': {'required':True, 'type': 'str'},
+    'cluster_cookie': {'required': True, 'type': 'str'},
 }
 
 
 def probe_server(params):
-    if 'http_port' not in params['instance']:
-       params['instance']['http_port'] = '8080'
-
     instance_admin_api_url = 'http://{}:{}/admin/api'.format(
         params['instance_address'],
         params['instance']['http_port'],
@@ -36,7 +31,6 @@ def probe_server(params):
         return instance_info
 
     # Probe instance
-    ## NOTE: control instance is used here
     query = '''
         mutation {{
           probe_instance:
@@ -57,7 +51,7 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
     res = probe_server(module.params)
 
-    if res.success == True:
+    if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)
     else:
         module.fail_json(msg=res.msg)
