@@ -15,6 +15,7 @@ This role can deploy and configure applications packed in RPM using [`Cartridge 
   * [Vshard bootstrapping](#vshard-bootstrapping)
   * [Failover](#failover)
   * [Cartridge auth](#cartridge-auth)
+  * [Application config](#applicaction-config)
 
 ## Requirements
 
@@ -117,7 +118,8 @@ Configuration format is described in detail in the [configuration format](#confi
 * `cartridge_defaults` (`dict`, optional, default: `{}`): default configuration parameters values for instances;
 * `cartridge_replicasets` (`list`, optional, default: `[]`) - replicasets configuration;
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean flag that indicates if vshard should be bootstrapped;
-* `cartridge_failover` (`boolean`, optional, default: `false`): boolean flag that indicates if failover should be enabled.
+* `cartridge_failover` (`boolean`, optional, default: `false`): boolean flag that indicates if failover should be enabled;
+* `cartridge_app_config` (`dict`, optional): application config sections to patch.
 
 **Note**: If instance is menitioned in `cartridge_replicasets` section, it should be configured in `cartridge_instances`.
 
@@ -209,4 +211,57 @@ cartridge_auth:
 
     - username: bad-guy
       deleted: true  # marked to be deleted
+```
+
+### Applicaction config
+
+`cartridge_app_config` variable is used to edit cluster configuration.
+It allows to configure config sections in special format:
+
+```yaml
+cartridge_app_config:
+  <section_name>:
+    body: <section body>
+    deleted: <boolean>
+```
+
+
+- sections with `deleted` flag set up would be deleted;
+- sections not mentioned here wouldn't be changed;
+- other sections value would be replaced with section `body` value.
+
+*Example*
+
+If your cluster config looks like:
+
+```yaml
+section-1: value-1  # section body is a string
+
+section-2:  # section body is a table
+  key-21: value-21
+  key-22: value-22
+
+section-3:
+  key-31: value-31
+```
+
+... after running role with this `cartridge_app_config`:
+
+```yaml
+cartridge_app_config:
+  section-2:
+    body:
+      key-21: value-21-new
+
+  section-3:
+    deleted: true
+```
+
+... it would be
+
+```yaml
+section-1: value-1  # hasn't been changed
+
+section-2:
+  key-21: value-21-new  # body was replaced
 ```
