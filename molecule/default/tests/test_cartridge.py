@@ -67,6 +67,10 @@ def user_is_deleted(user):
     return 'deleted' in user and user['deleted'] is True
 
 
+def section_is_deleted(section):
+    return 'deleted' in section and section['deleted'] is True
+
+
 def test_services_status_and_config(host):
     ansible_vars = host.ansible.get_variables()
     instances = copy.deepcopy(
@@ -254,7 +258,11 @@ def test_auth_params(host):
 
 def test_auth_users(host):
     # Get configured auth params
-    configured_auth = host.ansible.get_variables()['cartridge_auth']
+    ansible_vars = host.ansible.get_variables()
+    if 'cartridge_auth' not in ansible_vars:
+        return
+
+    configured_auth = ansible_vars['cartridge_auth']
 
     if 'users' not in configured_auth:
         return
@@ -312,3 +320,38 @@ def test_auth_users(host):
 
         response = requests.post(login_url, json={'username': username, 'password': user['password']})
         assert response.status_code == 200
+
+
+def test_app_config(host):
+    # Get configured auth params
+    ansible_vars = host.ansible.get_variables()
+    if 'cartridge_app_config' not in ansible_vars:
+        return
+
+    specified_app_config = ansible_vars['cartridge_app_config']
+
+    # Get all configured instances
+    configured_instances = get_configured_instances()
+
+    if not configured_instances:
+        return
+
+    # Get cartridge app config
+    config_url = 'http://{}:{}/admin/config'.format(
+        'localhost',
+        configured_instances[0]['http_port']
+    )
+
+    session = get_authorized_session(host)
+
+    response = session.get(config_url)
+    assert response.status_code == 200
+    app_config = yaml.safe_load(response.content)
+
+    # Check if app config is equal to configured one
+    for section_name, section in specified_app_config.items():
+        if section_is_deleted(section):
+            assert section_name not in app_config
+        else:
+            assert section_name in app_config
+            assert app_config[section_name] == section['body']

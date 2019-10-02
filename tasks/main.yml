@@ -73,6 +73,10 @@
   include_tasks: manage_auth.yml
   when: ansible_host == control_instance_address
 
+- name: Application config
+  include_tasks: app_config.yml
+  when: ansible_host == control_instance_address and cartridge_app_config is defined
+
 - name: Bootstrap vshard
   include_tasks: bootstrap_vshard.yml
   when: ansible_host == control_instance_address and cartridge_bootstrap_vshard

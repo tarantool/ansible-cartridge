@@ -62,6 +62,18 @@ provisioner:
               fullname: Tarantool The Best
               email: tarantool@tarantool.org
 
+        cartridge_app_config:
+          section-1:
+            body:
+              key-1: value-1
+              key-2: value-2
+
+          section-2:
+            body: section-2-value
+
+          section-3:
+            deleted: true
+
         cartridge_replicasets:
           - name: storage-1
             instances:
