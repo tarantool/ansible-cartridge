@@ -115,4 +115,4 @@ verifier:
   lint:
     name: flake8
     options:
-      ignore: E501
+      max-line-length: 120

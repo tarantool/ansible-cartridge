@@ -41,6 +41,8 @@ test-enterprise:
     - docker cp rpm-builder:/opt/myapp/myapp-1.0.0-0.rpm molecule/default
     - docker rm rpm-builder
 
+    - ./linter.sh
+
     - cd .. && cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
     - molecule test
 

@@ -3,6 +3,7 @@
 import requests
 import time
 
+
 class ModuleRes:
     def __init__(self, success, msg=None, changed=False, meta=None):
         self.success = success
@@ -21,24 +22,29 @@ def boolean_to_graphql_string(p):
 
 def check_query(query, response):
     if response.status_code != 200:
-        return False, ModuleRes(success=False,
-                         msg="Query failed to run by returning code of {}. {}".format(response.status_code, query))
+        return False, ModuleRes(
+            success=False,
+            msg="Query failed to run by returning code of {}. {}".format(response.status_code, query)
+        )
     if 'errors' in response.json():
-        return False, ModuleRes(success=False,
-                          msg="Query failed to run with error {}. {}".format(response.json()['errors'][0]['message'], query))
+        return False, ModuleRes(
+            success=False,
+            msg="Query failed to run with error {}. {}".format(response.json()['errors'][0]['message'], query)
+        )
 
     return True, None
 
 
 __authorized_session = None
 
-def get_authorized_session(cluster_cookie):
-  global __authorized_session
-  if __authorized_session is None:
-    __authorized_session = requests.Session()
-    __authorized_session.auth = ('admin', cluster_cookie)
 
-  return __authorized_session
+def get_authorized_session(cluster_cookie):
+    global __authorized_session
+    if __authorized_session is None:
+        __authorized_session = requests.Session()
+        __authorized_session.auth = ('admin', cluster_cookie)
+
+    return __authorized_session
 
 
 def get_all_instances_info(control_instance_admin_api_url, session):

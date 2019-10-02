@@ -190,7 +190,10 @@ def validate_config(params):
 
                 if 'leader' not in replicaset:
                     if len(replicaset['instances']) > 1:
-                        errmsg = 'Leader must be specified for replicaset with more than one instance ("{}")'.format(replicaset['name'])
+                        errmsg = 'Leader must be specified for replicaset with more than one instance ("{}")'.format(
+                            replicaset['name']
+                        )
+
                         return ModuleRes(success=False, msg=errmsg)
 
                 # Save replicaset info
@@ -257,7 +260,7 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
     res = validate_config(module.params)
 
-    if res.success == True:
+    if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)
     else:
         module.fail_json(msg=res.msg)

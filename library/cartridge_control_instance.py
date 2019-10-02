@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-import requests
-
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes
 
@@ -34,7 +32,7 @@ def get_control_instance(params):
     # If not found - get first instance
     if control_instance_name is None:
         for host in params['hosts']:
-            if 'cartridge_instances' in  params['hostvars'][host]:
+            if 'cartridge_instances' in params['hostvars'][host]:
                 instances = params['hostvars'][host]['cartridge_instances']
 
                 if instances:
@@ -68,11 +66,12 @@ def get_control_instance(params):
 
     return ModuleRes(success=True, meta=meta)
 
+
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
     res = get_control_instance(module.params)
 
-    if res.success == True:
+    if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)
     else:
         module.fail_json(msg=res.msg)

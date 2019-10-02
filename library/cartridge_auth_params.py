@@ -1,9 +1,7 @@
 #!/usr/bin/python
 
-import requests
-
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes, check_query
+from ansible.module_utils.helpers import ModuleRes
 from ansible.module_utils.helpers import get_authorized_session
 from ansible.module_utils.helpers import get_cluster_auth_params, edit_cluster_auth_params
 from ansible.module_utils.helpers import get_cluster_users, check_cluster_auth_implements_all
@@ -67,23 +65,20 @@ def manage_auth_params(params):
         return cluster_users
 
     users_to_add = [
-        user for user in users
-        if user['username'] in set(u['username'] for u in users) - set(u['username'] for u in cluster_users)
-        and not user_is_deleted(user)
+        user for user in users if user['username'] in
+        set(u['username']for u in users) - set(u['username'] for u in cluster_users) and not user_is_deleted(user)
     ]
 
     users_to_edit = [
         user
         for user in users
         if user['username'] in
-            set(u['username'] for u in cluster_users)
-            & set(u['username'] for u in users if not user_is_deleted(user))
+        set(u['username'] for u in cluster_users) & set(u['username'] for u in users if not user_is_deleted(user))
     ]
 
     users_to_delete = [
         user for user in users
-        if user_is_deleted(user)
-        and len([u for u in cluster_users if u['username'] == user['username']]) > 0
+        if user_is_deleted(user) and len([u for u in cluster_users if u['username'] == user['username']]) > 0
     ]
 
     users_changed = False
@@ -118,7 +113,7 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
     res = manage_auth_params(module.params)
 
-    if res.success == True:
+    if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)
     else:
         module.fail_json(msg=res.msg)

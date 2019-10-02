@@ -1,7 +1,6 @@
 #!/usr/bin/python
 
 import requests
-import time
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, check_query
@@ -148,7 +147,7 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
     res = setup_replicaset(module.params)
 
-    if res.success == True:
+    if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)
     else:
         module.fail_json(msg=res.msg)
