@@ -18,23 +18,26 @@
   cartridge_validate_config:
     hosts: '{{ play_hosts }}'
     hostvars: '{{ hostvars }}'
+  delegate_to: localhost
+  become: false
   run_once: true
 
 # Rewrites cartridge_app_name from package info
 - name: Install RPM for RedHat
   include_tasks: install_rpm.yml
-  when: ansible_os_family == 'RedHat'
+  when: ansible_os_family == 'RedHat' and cartridge_package_path is defined
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
     hosts: '{{ play_hosts }}'
     hostvars: '{{ hostvars }}'
+    appname: '{{ cartridge_app_name }}'
   register: control_instance
 
-- name: Global variables for control server address and port
+- name: Save control server host and sock
   set_fact:
-    control_instance_address: '{{ control_instance.meta.control_instance_address }}'
-    control_instance_port: '{{ control_instance.meta.control_instance_port }}'
+    control_host: '{{ control_instance.meta.control_host }}'
+    control_sock: '{{ control_instance.meta.control_sock }}'
 
 - name: Place default application config
   copy:
@@ -67,20 +70,31 @@
   vars:
     replicaset: '{{ item }}'
   with_items: '{{ cartridge_replicasets }}'
-  when: ansible_host == control_instance_address
 
 - name: Cartridge auth
-  include_tasks: manage_auth.yml
-  when: ansible_host == control_instance_address
+  cartridge_auth_params:
+    auth_params: '{{ cartridge_auth }}'
+    control_sock: '{{ control_sock }}'
+  delegate_to: '{{ control_host }}'
+  run_once: true
 
 - name: Application config
-  include_tasks: app_config.yml
-  when: ansible_host == control_instance_address and cartridge_app_config is defined
+  cartridge_app_config:
+    app_config: '{{ cartridge_app_config }}'
+    control_sock: '{{ control_sock }}'
+  delegate_to: '{{ control_host }}'
+  run_once: true
 
 - name: Bootstrap vshard
-  include_tasks: bootstrap_vshard.yml
-  when: ansible_host == control_instance_address and cartridge_bootstrap_vshard
+  cartridge_bootstrap_vshard:
+    control_sock: '{{ control_sock }}'
+  when: cartridge_bootstrap_vshard is defined and cartridge_bootstrap_vshard
+  delegate_to: '{{ control_host }}'
+  run_once: true
 
 - name: Manage failover
-  include_tasks: manage_failover.yml
-  when: ansible_host == control_instance_address
+  cartridge_manage_failover:
+    control_sock: '{{ control_sock }}'
+    failover: '{{ cartridge_failover }}'
+  delegate_to: '{{ control_host }}'
+  run_once: true

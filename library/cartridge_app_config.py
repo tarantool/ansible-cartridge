@@ -1,17 +1,15 @@
 #!/usr/bin/python
 
-import yaml
+import json
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes
-from ansible.module_utils.helpers import get_authorized_session
+from ansible.module_utils.helpers import get_control_console
 
 
 argument_spec = {
     'app_config': {'required': True, 'type': 'dict'},
-    'control_instance_address': {'required': True, 'type': 'str'},
-    'control_instance_port': {'required': True, 'type': 'str'},
-    'cluster_cookie': {'required': True, 'type': 'str'},
+    'control_sock': {'required': True, 'type': 'str'},
 }
 
 
@@ -20,42 +18,67 @@ def section_is_deleted(section):
 
 
 def config_app(params):
-    config_url = 'http://{}:{}/admin/config'.format(
-        params['control_instance_address'],
-        params['control_instance_port']
-    )
-
-    session = get_authorized_session(params['cluster_cookie'])
-
-    # Get current config
-    response = session.get(config_url)
-    if response.status_code != 200:
-        return ModuleRes(success=False, msg='Failed to get current config')
-
-    current_config = yaml.safe_load(response.content)
-    if not current_config:
-        current_config = {}  # be sure it's dict, not list
+    control_console = get_control_console(params['control_sock'])
     config = params['app_config']
 
+    system_sections = {
+        'topology': True,
+        'vshard': True,
+        'vshard_groups': True,
+        'auth': True,
+        'users_acl': True,
+    }
+
+    # Get current config
+    res = control_console.eval('''
+        local cartridge = require('cartridge')
+        local config = cartridge.config_get_readonly()
+        return {
+            ok = config ~= nil,
+            config = config ~= nil and config or "Cluster isn't bootstrapped yet",
+        }
+    ''')
+    if not res['ok']:
+        errmsg = 'Config upload failed: {}'.format(res['config'])
+        return ModuleRes(success=False, msg=errmsg)
+
+    current_config = res['config']
+
     # Patch it
+    patch = {}
     changed = False
 
     for section_name, section in config.items():
+        if section_name in system_sections:
+            return ModuleRes('Unable to patch config system section: "{}"'.format(section_name))
+
         if section_is_deleted(section):
             if section_name in current_config:
-                del current_config[section_name]
+                patch[section_name] = None
                 changed = True
         else:
             if section_name not in current_config or current_config[section_name] != section['body']:
-                current_config[section_name] = section['body']
+                patch[section_name] = section['body']
                 changed = True
 
-    # Put it to cluster
-    response = session.put(config_url, data=yaml.safe_dump(current_config))
-    if response.status_code != 200:
-        return ModuleRes(success=False, msg='Failed to put config')
+    if not changed:
+        return ModuleRes(success=True, changed=False)
 
-    return ModuleRes(success=True, changed=changed)
+    res = control_console.eval('''
+        local cartridge = require('cartridge')
+        local patch = require('json').decode('{}')
+        local ok, err = cartridge.config_patch_clusterwide(patch)
+        return {{
+            ok = ok == true,
+            err = err and err.err or require('json').NULL
+        }}
+    '''.format(json.dumps(patch)))
+
+    if not res['ok']:
+        errmsg = 'Config upload failed: {}'.format(res['err'])
+        return ModuleRes(success=False, msg=errmsg)
+
+    return ModuleRes(success=True, changed=True)
 
 
 def main():

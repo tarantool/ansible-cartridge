@@ -1,7 +1,7 @@
 ---
 - name: Get current failover status
   uri:
-    url: "http://{{ control_instance_address }}:{{ control_instance_port  }}/admin/api"
+    url: "{{ cartridge_admin_url }}/admin/api"
     method: POST
     body_format: json
     status_code: 200
@@ -23,10 +23,13 @@
     failover.status == 200
     and 'json' in failover
     and 'errors' not in failover.json
+  delegate_to: localhost
+  become: false
+  run_once: true
 
 - name: Change failover status if it's required
   uri:
-    url: "http://{{ control_instance_address }}:{{ control_instance_port  }}/admin/api"
+    url: "{{ cartridge_admin_url }}/admin/api"
     method: POST
     body_format: json
     status_code: 200
@@ -50,3 +53,6 @@
     and 'errors' not in enable_failover.json
   changed_when: true
   when: failover.json.data.cluster.failover != cartridge_failover
+  delegate_to: localhost
+  become: false
+  run_once: true

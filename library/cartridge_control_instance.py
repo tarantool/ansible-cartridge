@@ -5,15 +5,15 @@ from ansible.module_utils.helpers import ModuleRes
 
 argument_spec = {
     'hosts': {'required': True, 'type': 'list'},
-    'hostvars': {'required': True, 'type': 'dict'}
+    'hostvars': {'required': True, 'type': 'dict'},
+    'appname': {'requires': True, 'type': 'str'},
 }
 
 
 def get_control_instance(params):
     meta = {
-        'control_instance_address': None,
-        'control_instance_port': None,
-        'control_instance_host': None
+        'control_sock': None,
+        'control_host': None
     }
 
     control_instance_name = None
@@ -57,12 +57,12 @@ def get_control_instance(params):
         return ModuleRes(success=False, msg=errmsg)
 
     if 'ansible_host' in params['hostvars'][host]:
-        meta['control_instance_address'] = params['hostvars'][control_host]['ansible_host']
+        meta['control_host'] = params['hostvars'][control_host]['ansible_host']
     else:
-        meta['control_instance_address'] = control_host
+        meta['control_host'] = control_host
 
-    meta['control_instance_port'] = control_instance['http_port']
-    meta['control_instance_host'] = control_host
+    # Set control socket
+    meta['control_sock'] = '/var/run/tarantool/{}.{}.control'.format(params['appname'], control_instance_name)
 
     return ModuleRes(success=True, meta=meta)
 

@@ -2,6 +2,6 @@
 - name: 'Set {{ replicaset.name }} replicaset'
   cartridge_setup_replicaset:
     replicaset: '{{ replicaset }}'
-    control_instance_address: '{{ control_instance_address }}'
-    control_instance_port: '{{ control_instance_port }}'
-    cluster_cookie: '{{ cartridge_cluster_cookie }}'
+    control_sock: '{{ control_sock }}'
+  delegate_to: '{{ control_host }}'
+  run_once: true
