@@ -26,6 +26,7 @@ def probe_server(params):
 
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
+
     res = probe_server(module.params)
 
     if res.success is True:

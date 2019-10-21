@@ -83,7 +83,10 @@ def config_app(params):
 
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
-    res = config_app(module.params)
+    try:
+        res = config_app(module.params)
+    except Exception as e:
+        module.fail_json(msg=str(e))
 
     if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)

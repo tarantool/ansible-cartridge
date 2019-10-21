@@ -41,7 +41,10 @@ def manage_failover(params):
 
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
-    res = manage_failover(module.params)
+    try:
+        res = manage_failover(module.params)
+    except Exception as e:
+        module.fail_json(msg=str(e))
 
     if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)

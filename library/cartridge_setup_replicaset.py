@@ -208,7 +208,10 @@ def setup_replicaset(params):
 
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
-    res = setup_replicaset(module.params)
+    try:
+        res = setup_replicaset(module.params)
+    except Exception as e:
+        module.fail_json(msg=str(e))
 
     if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)

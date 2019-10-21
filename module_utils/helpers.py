@@ -35,12 +35,18 @@ class Console:
                     break
             return ''.join(data)
         cmd = '''
-            function f()
-                require('fiber').self().storage.console = nil
-                {}
-            end
-            local res = require("json").encode(f()):gsub([[\n]], [[\n!]])
-            return res
+            local ok, ret = pcall(function()
+                local function f()
+                    require('fiber').self().storage.console = nil
+                    {}
+                end
+                return f()
+            end)
+            ret = require("json").encode({{
+                ok = ok,
+                ret = ret,
+            }}):gsub([[\n]], [[\n!]])
+            return ret
         '''.format(func_body)
 
         lines = [l.strip() for l in cmd.split('\n') if l.strip()]
@@ -51,7 +57,11 @@ class Console:
         output = re.sub("^---\n- '", '', raw_output)
         output = re.sub("'\n...\n$", '', output)
 
-        return json.loads(output.replace('\n ', '').replace('\n!', '\n'))  # XXX: fix it
+        ret = json.loads(output.replace('\n ', '').replace('\n!', '\n'))
+        if not ret['ok']:
+            raise Exception('Error while running function: {}. (Function: {})'.format(ret['ret'], func_body))
+
+        return ret['ret']
 
 
 def get_control_console(socket_path):

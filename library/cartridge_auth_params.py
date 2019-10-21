@@ -241,7 +241,10 @@ def manage_auth_params(params):
 
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
-    res = manage_auth_params(module.params)
+    try:
+        res = manage_auth_params(module.params)
+    except Exception as e:
+        module.fail_json(msg=str(e))
 
     if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)
