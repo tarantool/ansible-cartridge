@@ -36,6 +36,7 @@ class Console:
             return ''.join(data)
         cmd = '''
             function f()
+                require('fiber').self().storage.console = nil
                 {}
             end
             local res = require("json").encode(f()):gsub([[\n]], [[\n!]])

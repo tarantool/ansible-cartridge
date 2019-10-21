@@ -4,3 +4,7 @@
     instance: '{{ instance }}'
     control_sock: '{{ control_sock }}'
   delegate_to: '{{ control_host }}'
+  register: probe
+  until: not probe.failed
+  retries: 5
+  delay: 5

@@ -11,9 +11,6 @@
     cartridge_confdir: /etc/tarantool/conf.d
     package_updated: false
 
-- name: Dependencies
-  include_tasks: install_dependencies.yml
-
 - name: Validate config
   cartridge_validate_config:
     hosts: '{{ play_hosts }}'
@@ -77,6 +74,7 @@
     control_sock: '{{ control_sock }}'
   delegate_to: '{{ control_host }}'
   run_once: true
+  when: cartridge_auth is defined
 
 - name: Application config
   cartridge_app_config:
@@ -84,13 +82,14 @@
     control_sock: '{{ control_sock }}'
   delegate_to: '{{ control_host }}'
   run_once: true
+  when: cartridge_app_config is defined
 
 - name: Bootstrap vshard
   cartridge_bootstrap_vshard:
     control_sock: '{{ control_sock }}'
-  when: cartridge_bootstrap_vshard is defined and cartridge_bootstrap_vshard
   delegate_to: '{{ control_host }}'
   run_once: true
+  when: cartridge_bootstrap_vshard
 
 - name: Manage failover
   cartridge_manage_failover:
@@ -98,3 +97,4 @@
     failover: '{{ cartridge_failover }}'
   delegate_to: '{{ control_host }}'
   run_once: true
+  when: cartridge_failover is defined

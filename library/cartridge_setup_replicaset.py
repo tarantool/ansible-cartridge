@@ -83,6 +83,11 @@ def wait_for_replicaset_is_healthy(control_console, replicaset_name):
             control_console,
             replicaset_name
         )
+
+        if replicaset_info is None:
+            errmsg = '"{}" replicaset was not found in cluster'.format(replicaset_name)
+            return ModuleRes(success=False, msg=errmsg)
+
         if replicaset_info['status'] == 'healthy':
             return True
 
@@ -122,6 +127,9 @@ def create_replicaset(control_console, params):
         ', '.join(['"{}"'.format(role) for role in params['replicaset']['roles']]),
         replicaset['name']
     ))
+    if not res['ok']:
+        errmsg = 'Failed to create "{}" replicaset: {}'.format(replicaset['name'], res['err'])
+        return ModuleRes(success=False, msg=errmsg)
 
     # Wait for replicaset is healthy
     if not wait_for_replicaset_is_healthy(control_console, replicaset['name']):
@@ -139,6 +147,10 @@ def create_replicaset(control_console, params):
 
     # Join other instances
     for replicaset_instance in replicaset_instances:
+        if replicaset_instance not in instances_info:
+            errmsg = '"{}" instance was not found in cluster'.format(replicaset_instance)
+            return ModuleRes(success=False, msg=errmsg)
+
         replicaset_instance_info = instances_info[replicaset_instance]
         res = control_console.eval('''
             local ok, err = require('cartridge').admin_join_server({{
@@ -155,7 +167,7 @@ def create_replicaset(control_console, params):
         ))
 
         if not res['ok']:
-            errmsg = 'Failed to join "{}": {}'.format(replicaset_instance_info['name'], res['err'])
+            errmsg = 'Failed to join "{}": {}'.format(replicaset_instance, res['err'])
             return ModuleRes(success=False, msg=errmsg)
 
         # Wait for replicaset is healthy
