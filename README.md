@@ -118,7 +118,7 @@ Configuration format is described in detail in the [configuration format](#confi
 * `cartridge_defaults` (`dict`, optional, default: `{}`): default configuration parameters values for instances;
 * `cartridge_replicasets` (`list`, optional, default: `[]`) - replicasets configuration;
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean flag that indicates if vshard should be bootstrapped;
-* `cartridge_failover` (`boolean`, optional, default: `false`): boolean flag that indicates if failover should be enabled;
+* `cartridge_failover` (`boolean`, optional): boolean flag that indicates if failover should be enabled or disabled;
 * `cartridge_app_config` (`dict`, optional): application config sections to patch.
 
 **Note**: If instance is menitioned in `cartridge_replicasets` section, it should be configured in `cartridge_instances`.

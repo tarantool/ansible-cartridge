@@ -11,6 +11,11 @@
     cartridge_confdir: /etc/tarantool/conf.d
     package_updated: false
 
+- name: Set remote_user for delegated tasks
+  set_fact:
+    remote_user: '{{ ansible_user }}'
+  when: remote_user is not defined and ansible_user is defined
+
 - name: Validate config
   cartridge_validate_config:
     hosts: '{{ play_hosts }}'
