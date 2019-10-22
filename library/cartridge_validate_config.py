@@ -1,5 +1,7 @@
 #!/usr/bin/python
 
+import re
+
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes
 
@@ -9,8 +11,13 @@ argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'}
 }
 
-INSTANCE_REQUIRED_PARAMS = ['name', 'advertise_uri', 'http_port']
+INSTANCE_REQUIRED_PARAMS = ['name', 'advertise_uri']
 REPLICASET_REQUIRED_PARAMS = ['name', 'instances', 'roles']
+
+
+def is_valid_advertise_uri(uri):
+    rgx = re.compile(r'\S+:\d+')
+    return re.match(rgx, uri) is not None
 
 
 def check_schema(schema, conf, path=''):
@@ -152,6 +159,10 @@ def validate_config(params):
         # Check instances
         if 'cartridge_instances' in host_vars:
             for instance in host_vars['cartridge_instances']:
+                # Check if instance name is unique
+                if instance['name'] in all_instances:
+                    errmsg = 'Duplicate instance name: "{}"'.format(instance['name'])
+                    return ModuleRes(success=False, msg=errmsg)
 
                 # Check if all required params are specified
                 for p in INSTANCE_REQUIRED_PARAMS:
@@ -165,10 +176,12 @@ def validate_config(params):
                         'It must be specified ONLY in `cartridge_cluster_cookie` variable.'
                     return ModuleRes(success=False, msg=errmsg)
 
-                # Check if instance name is unique
-                if instance['name'] in all_instances:
-                    errmsg = 'Duplicate instance name: "{}"'.format(instance['name'])
-                    return ModuleRes(success=False, msg=errmsg)
+                if 'advertise_uri' in instance:
+                    if not is_valid_advertise_uri(instance['advertise_uri']):
+                        errmsg = 'Instance advertise_uri must be specified as `<host>:<port>` ("{}")'.format(
+                            instance['name']
+                        )
+                        return ModuleRes(success=False, msg=errmsg)
 
                 # Save instance info
                 all_instances[instance['name']] = instance

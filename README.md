@@ -118,7 +118,7 @@ Configuration format is described in detail in the [configuration format](#confi
 * `cartridge_defaults` (`dict`, optional, default: `{}`): default configuration parameters values for instances;
 * `cartridge_replicasets` (`list`, optional, default: `[]`) - replicasets configuration;
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean flag that indicates if vshard should be bootstrapped;
-* `cartridge_failover` (`boolean`, optional, default: `false`): boolean flag that indicates if failover should be enabled;
+* `cartridge_failover` (`boolean`, optional): boolean flag that indicates if failover should be enabled or disabled;
 * `cartridge_app_config` (`dict`, optional): application config sections to patch.
 
 **Note**: If instance is menitioned in `cartridge_replicasets` section, it should be configured in `cartridge_instances`.
@@ -142,10 +142,9 @@ This variable describes all instances that should be deployed on the host.
 
 `cartridge_instances` is a list of dicts that contains  [cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse) module).
 
-**Required instance parameters**: `name`, `advertise_uri`, `http_port`.
+**Required instance parameters**: `name`, `advertise_uri`.
 
-**Note:** It's recommended to specify both host and port for the `advertise_uri` parameter.
-If your deploy host has more than one non-local IP address, advertise host will be set to `localhost`.
+**Note:** `advertise_uri` parameter must be specified in `<host>:<port>` format.
 
 **Note:** If instance with the same name is already started on the host, it will be restarted with new configuration. 
 

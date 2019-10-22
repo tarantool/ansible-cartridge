@@ -22,6 +22,7 @@
     url: '{{ redhat_config_file_url }}{{ redhat_config_query }}'
     dest: '{{ redhat_config_file_location }}'
   register: add_repository
+  until: not add_repository.failed
   retries: 5
   delay: 5
 

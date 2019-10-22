@@ -1,0 +1,13 @@
+---
+- name: Place default config
+  copy:
+    content: >-
+      {{
+        { cartridge_app_name: cartridge_defaults | combine({"cluster_cookie": cartridge_cluster_cookie}) }
+        | to_nice_yaml
+      }}
+    dest: '{{ cartridge_confdir }}/{{ cartridge_app_name }}.yml'
+    owner: tarantool
+    group: tarantool
+    mode: '644'
+  register: default_config

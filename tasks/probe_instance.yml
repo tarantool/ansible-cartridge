@@ -2,11 +2,9 @@
 - name: 'Probe {{ instance.name }} instance'
   cartridge_probe_server:
     instance: '{{ instance }}'
-    instance_address: '{{ host_address }}'
-    control_instance_address: '{{ control_instance_address }}'
-    control_instance_port: '{{ control_instance_port }}'
-    cluster_cookie: '{{ cartridge_cluster_cookie }}'
-  register: res
-  until: not res.failed
+    control_sock: '{{ control_sock }}'
+  delegate_to: '{{ control_host }}'
+  register: probe
+  until: not probe.failed
   retries: 5
   delay: 5

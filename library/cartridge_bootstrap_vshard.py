@@ -6,28 +6,40 @@ from ansible.module_utils.helpers import get_control_console
 
 
 argument_spec = {
-    'instance': {'required': True, 'type': 'dict'},
     'control_sock': {'required': True, 'type': 'str'},
 }
 
 
-def probe_server(params):
+def bootstrap_vshard(params):
     control_console = get_control_console(params['control_sock'])
-    res = control_console.eval('''
-        local ok, err = require('cartridge').admin_probe_server('{}')
-        return {{
-            ok = ok and true or false,
-            err = err and err.err or require('json').NULL
-        }}
-    '''.format(params['instance']['advertise_uri']))
+    can_bootstrap = control_console.eval('''
+        return require('cartridge.vshard-utils').can_bootstrap()
+    ''')
 
-    return ModuleRes(success=res['ok'], msg=res['err'])
+    if not can_bootstrap:
+        return ModuleRes(success=True, changed=False)
+
+    res = control_console.eval('''
+        local ok, err = require('cartridge.admin').bootstrap_vshard()
+        return {
+            ok = ok,
+            err = err and err.err or require('json').NULL
+        }
+    ''')
+
+    if not res['ok']:
+        errmsg = 'Bootstrap vshard failed: {}'.format(res['err'])
+        return ModuleRes(success=False, msg=errmsg)
+
+    return ModuleRes(success=True, changed=True)
 
 
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
-
-    res = probe_server(module.params)
+    try:
+        res = bootstrap_vshard(module.params)
+    except Exception as e:
+        module.fail_json(msg=str(e))
 
     if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)

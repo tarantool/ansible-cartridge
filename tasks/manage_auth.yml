@@ -1,7 +1,0 @@
----
-- name: Manage auth parameters
-  cartridge_auth_params:
-    auth_params: '{{ cartridge_auth }}'
-    control_instance_address: '{{ control_instance_address }}'
-    control_instance_port: '{{ control_instance_port }}'
-    cluster_cookie: '{{ cartridge_cluster_cookie }}'
