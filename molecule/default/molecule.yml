@@ -20,8 +20,8 @@ platforms:
       - name: cartridge-network
     purge_networks: true
   - name: vm2
-    image: centos:7
-    command: /sbin/init
+    image: jrei/systemd-ubuntu
+    command: /lib/systemd/systemd
     tmpfs:
       - /run
       - /tmp
@@ -32,6 +32,7 @@ platforms:
     networks:
       - name: cartridge-network
     purge_networks: true
+    privileged: true
 
 provisioner:
   name: ansible
@@ -41,16 +42,12 @@ provisioner:
   inventory:
     group_vars:
       all:
-        cartridge_package_path: ./myapp-1.0.0-0.rpm
-
         cartridge_cluster_cookie: app-default-cookie
         cartridge_defaults:
           log_level: 5
 
         cartridge_bootstrap_vshard: true
         cartridge_failover: true
-
-        cartridge_admin_url: http://localhost:8081
 
         cartridge_auth:
           enabled: true
@@ -92,6 +89,7 @@ provisioner:
 
     host_vars:
       vm1:
+        cartridge_package_path: ./myapp-0.1.0-0.rpm
         cartridge_instances:
           - name: 'storage_1'
             advertise_uri: 'vm1:3301'
@@ -102,6 +100,7 @@ provisioner:
             http_port: '8082'
 
       vm2:
+        cartridge_package_path: ./myapp-0.1.0-0.deb
         cartridge_instances:
           - name: 'core_1'
             advertise_uri: 'vm2:3311'
