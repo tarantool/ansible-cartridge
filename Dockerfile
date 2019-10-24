@@ -22,6 +22,7 @@ ENV PATH="/tarantool-enterprise:${PATH}"
 
 RUN tarantoolctl rocks install cartridge-cli \
     &&  .rocks/bin/cartridge create --name myapp . \
+    && sed -i 's/cartridge == 1.0.0-1/cartridge == 1.2.0/g' myapp/myapp-scm-1.rockspec \
     && .rocks/bin/cartridge pack rpm --version 1.0.0 myapp \
     && .rocks/bin/cartridge pack deb --version 1.0.0 myapp
 
@@ -38,6 +39,7 @@ ENV PATH=$PWD:$PATH
 
 RUN tarantoolctl rocks install cartridge-cli \
     &&  .rocks/bin/cartridge create --name myapp . \
+    && sed -i 's/cartridge == 1.0.0-1/cartridge == 1.2.0/g' myapp/myapp-scm-1.rockspec \
     && .rocks/bin/cartridge pack rpm --version 1.0.0 myapp \
     && .rocks/bin/cartridge pack deb --version 1.0.0 myapp
 
@@ -54,6 +56,7 @@ ENV PATH=$PWD:$PATH
 
 RUN tarantoolctl rocks install cartridge-cli \
     &&  .rocks/bin/cartridge create --name myapp . \
+    && sed -i 's/cartridge == 1.0.0-1/cartridge == 1.2.0/g' myapp/myapp-scm-1.rockspec \
     && .rocks/bin/cartridge pack rpm --version 1.0.0 myapp \
     && .rocks/bin/cartridge pack deb --version 1.0.0 myapp
 

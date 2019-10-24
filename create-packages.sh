@@ -10,7 +10,7 @@ do
     IMAGE=${TARANTOOL_VERSION}-packages-builder
     CONTAINER=${IMAGE}-container
 
-    echo "Build ${PKG} for ${TARANTOOL_VERSION}"
+    echo "Build packages for ${TARANTOOL_VERSION}"
 
     docker rm ${CONTAINER} || true
 
