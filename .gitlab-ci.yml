@@ -5,7 +5,6 @@ variables:
   DOCKER_TLS_CERTDIR: ""
 
 stages:
-  - build
   - test
 
 default:
@@ -18,28 +17,11 @@ default:
     - apk update && apk add --no-cache docker
       python3-dev py3-pip docker gcc git curl build-base
       autoconf automake py3-cryptography linux-headers
-      musl-dev libffi-dev openssl-dev openssh
+      musl-dev libffi-dev openssl-dev openssh bash
     - docker info
     - python3 --version
     - pip3 install ansible molecule docker
     - ansible --version
-
-
-build:
-  stage: build
-  tags:
-    - molecule-dind
-
-  before_script:
-    - apk update && apk add --no-cache docker bash
-    - docker info
-
-  script:
-    - ./create-packages.sh
-  artifacts:
-    paths:
-      - packages/
-    expire_in: 1 day
 
 test-enterprise:
   stage: test
@@ -48,8 +30,7 @@ test-enterprise:
   script:
     - ./linter.sh
 
-    - cp packages/myapp-1.0.0-0.enterprise.rpm myapp-1.0.0-0.rpm
-    - cp packages/myapp-1.0.0-0.enterprise.deb myapp-1.0.0-0.deb
+    - TARANTOOL_VERSION=enterprise ./create-packages.sh
 
     - cd .. && cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
     - molecule test
@@ -61,8 +42,7 @@ test-opensource-1.10:
   script:
     - ./linter.sh
 
-    - cp packages/myapp-1.0.0-0.opensource-1.10.rpm myapp-1.0.0-0.rpm
-    - cp packages/myapp-1.0.0-0.opensource-1.10.deb myapp-1.0.0-0.deb
+    - TARANTOOL_VERSION=opensource-1.10 ./create-packages.sh
 
     - cd .. && cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
     - molecule test
@@ -74,8 +54,7 @@ test-opensource-2.2:
   script:
     - ./linter.sh
 
-    - cp packages/myapp-1.0.0-0.opensource-2.2.rpm myapp-1.0.0-0.rpm
-    - cp packages/myapp-1.0.0-0.opensource-2.2.deb myapp-1.0.0-0.deb
+    - TARANTOOL_VERSION=opensource-2.2 ./create-packages.sh
 
     - cd .. && cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
     - molecule test

@@ -5,21 +5,20 @@ set -e
 mkdir packages || true
 rm packages/* || true
 
-for TARANTOOL_VERSION in enterprise opensource-1.10 opensource-2.2
-do
-    IMAGE=${TARANTOOL_VERSION}-packages-builder
-    CONTAINER=${IMAGE}-container
+tarantool_version=${TARANTOOL_VERSION:-opensource-1.10}
 
-    echo "Build packages for ${TARANTOOL_VERSION}"
+IMAGE=${tarantool_version}-packages-builder
+CONTAINER=${IMAGE}-container
 
-    docker rm ${CONTAINER} || true
+echo "Build packages for ${tarantool_version}"
 
-    docker build --build-arg TARANTOOL_DOWNLOAD_TOKEN=${TARANTOOL_DOWNLOAD_TOKEN} \
-                 --build-arg BUNDLE_VERSION=${BUNDLE_VERSION} \
-                 -t ${IMAGE}\
-                 --target ${IMAGE} .
-    docker create --name ${CONTAINER} ${IMAGE} usr/bin/true
-    docker cp ${CONTAINER}:/opt/myapp/myapp-1.0.0-0.rpm packages/myapp-1.0.0-0.${TARANTOOL_VERSION}.rpm
-    docker cp ${CONTAINER}:/opt/myapp/myapp-1.0.0-0.deb packages/myapp-1.0.0-0.${TARANTOOL_VERSION}.deb
-    docker rm ${CONTAINER}
-done
+docker rm ${CONTAINER} || true
+
+docker build --build-arg TARANTOOL_DOWNLOAD_TOKEN=${TARANTOOL_DOWNLOAD_TOKEN} \
+                --build-arg BUNDLE_VERSION=${BUNDLE_VERSION} \
+                -t ${IMAGE}\
+                --target ${IMAGE} .
+docker create --name ${CONTAINER} ${IMAGE} usr/bin/true
+docker cp ${CONTAINER}:/opt/myapp/myapp-1.0.0-0.rpm .
+docker cp ${CONTAINER}:/opt/myapp/myapp-1.0.0-0.deb .
+docker rm ${CONTAINER}
