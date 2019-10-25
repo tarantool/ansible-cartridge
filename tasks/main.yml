@@ -5,9 +5,8 @@
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
   when: ansible_os_family not in ["RedHat", "Debian"]
 
-- name: Set host_address, cartridge_confdir and package_updated variables
+- name: Set cartridge_confdir and package_updated variables
   set_fact:
-    host_address: '{{ ansible_host }}'
     cartridge_confdir: /etc/tarantool/conf.d
     package_updated: false
 
