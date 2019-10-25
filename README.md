@@ -120,7 +120,7 @@ Configuration format is described in detail in the [configuration format](#confi
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean flag that indicates if vshard should be bootstrapped;
 * `cartridge_failover` (`boolean`, optional): boolean flag that indicates if failover should be enabled or disabled;
 * `cartridge_app_config` (`dict`, optional): application config sections to patch;
-* `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`): indicates if tarantool repository must be enabled (for packages with opensource Tarantool dependency).
+* `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`): indicates if tarantool repository should be enabled (for packages with opensource Tarantool dependency).
 
 **Note**: If instance is menitioned in `cartridge_replicasets` section, it should be configured in `cartridge_instances`.
 

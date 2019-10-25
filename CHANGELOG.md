@@ -9,11 +9,17 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Changed
 
 * Configure cluster using tarantool console socket instead of HTTP
+* Improved Gitlab CI test packages creation
+* Use both deb and rpm packages in molecule tests
 
 ### Fixed
 
 * Removed `cartridge_failover` default value
 * Removed useless unzip installation
+
+### Added
+
+* DEB packages deployment
 
 ## [0.1.0] - 2019-10-01
 
