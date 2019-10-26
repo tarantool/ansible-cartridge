@@ -25,10 +25,20 @@
     warn: false
   register: deplist
   changed_when: false
+  when: cartridge_enable_tarantool_repo
+
+# Get tarantool dependency <major>.<minor> version
+- name: Get tarantool dependency version
+  set_fact:
+    tnt_version: "{{ deplist.stdout | regex_search('tarantool >= ([0-9]+).([0-9]+)', '\\1', '\\2') }}"
+  when: cartridge_enable_tarantool_repo
 
 - name: Enable Tarantool repo
   include_tasks: enable_tarantool_repo.yml
-  when: '"tarantool" in deplist.stdout'
+  vars:
+    repository: 'tarantool/{{ tnt_version[0] }}_{{ tnt_version[1] }}'
+    package_type: rpm
+  when: '"tarantool" in deplist.stdout and cartridge_enable_tarantool_repo'
 
 - name: Install RPM
   yum:

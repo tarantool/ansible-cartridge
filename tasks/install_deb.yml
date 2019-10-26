@@ -1,0 +1,44 @@
+---
+- name: Copy DEB
+  copy:
+    src: '{{ cartridge_package_path }}'
+    dest: /tmp/
+
+- name: Set DEB filename
+  set_fact:
+    deb_filename: '{{ cartridge_package_path | basename }}'
+
+- name: Get deb info
+  command: 'dpkg -I /tmp/{{ deb_filename }}'
+  args:
+    warn: false
+  register: deb_info
+  changed_when: false
+
+- name: Get app name and deplist
+  set_fact:
+    cartridge_app_name: "{{ deb_info.stdout | regex_search('Package\\s*:\\s*(.*)\\s+', '\\1') | first }}"
+    deplist: "{{ deb_info.stdout | regex_search('Depends\\s*:\\s*(.*)', '\\1') | first }}"
+
+# Get tarantool dependency <major>.<minor> version
+- name: Get tarantool dependency version
+  set_fact:
+    tnt_version: "{{ deplist | regex_search('tarantool\\s+\\(\\s*>=\\s*([0-9]+).([0-9]+)', '\\1', '\\2') }}"
+  when: cartridge_enable_tarantool_repo
+
+- name: Enable Tarantool repo
+  include_tasks: enable_tarantool_repo.yml
+  vars:
+    repository: 'tarantool/{{ tnt_version[0] }}_{{ tnt_version[1] }}'
+    package_type: deb
+  when: '"tarantool" in deplist and cartridge_enable_tarantool_repo'
+
+- name: Install DEB
+  apt:
+    deb: /tmp/{{ deb_filename }}
+    update_cache: true
+  register: install_deb
+
+- name: Set package_updated
+  set_fact:
+    package_updated: '{{ install_deb.changed }}'

@@ -1,0 +1,8 @@
+---
+- name: Install RPM
+  include_tasks: install_rpm.yml
+  when: ansible_os_family == 'RedHat'
+
+- name: Install DEB
+  include_tasks: install_deb.yml
+  when: ansible_os_family == 'Debian'

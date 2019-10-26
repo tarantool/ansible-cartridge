@@ -3,11 +3,10 @@
 - name: Fail for other distributions
   fail:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
-  when: ansible_os_family != "RedHat"
+  when: ansible_os_family not in ["RedHat", "Debian"]
 
-- name: Set host_address, cartridge_confdir and package_updated variables
+- name: Set cartridge_confdir and package_updated variables
   set_fact:
-    host_address: '{{ ansible_host }}'
     cartridge_confdir: /etc/tarantool/conf.d
     package_updated: false
 
@@ -25,9 +24,9 @@
   run_once: true
 
 # Rewrites cartridge_app_name from package info
-- name: Install RPM for RedHat
-  include_tasks: install_rpm.yml
-  when: ansible_os_family == 'RedHat' and cartridge_package_path is defined
+- name: Install package
+  include_tasks: install_package.yml
+  when: cartridge_package_path is defined
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
@@ -43,7 +42,7 @@
 
 - name: Place default application config
   include_tasks: default_config.yml
-  when: cartridge_instances is defined
+  when: cartridge_instances | length > 0
 
 - name: Start instances
   include_tasks: start_instance.yml

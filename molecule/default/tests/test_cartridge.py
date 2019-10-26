@@ -53,7 +53,8 @@ def get_configured_instances():
     return configured_instances
 
 
-def get_admin_api_url(admin_url):
+def get_admin_api_url(configured_instances):
+    admin_url = 'http://localhost:{}'.format(configured_instances[0]['http_port'])
     admin_api_url = '{}/admin/api'.format(
         admin_url
     )
@@ -109,7 +110,7 @@ def test_instances(host):
         return
 
     # Select one instance to be control
-    admin_api_url = get_admin_api_url(host.ansible.get_variables()['cartridge_admin_url'])
+    admin_api_url = get_admin_api_url(configured_instances)
 
     # Get all started instances
     query = '''
@@ -145,7 +146,7 @@ def test_replicasets(host):
         return
 
     # Select one instance to be control
-    admin_api_url = get_admin_api_url(host.ansible.get_variables()['cartridge_admin_url'])
+    admin_api_url = get_admin_api_url(configured_instances)
 
     # Get started replicasets
     query = '''
@@ -200,7 +201,7 @@ def test_failover(host):
         return
 
     # Select one instance to be control
-    admin_api_url = get_admin_api_url(host.ansible.get_variables()['cartridge_admin_url'])
+    admin_api_url = get_admin_api_url(configured_instances)
 
     # Get cluster failover status
     query = '''
@@ -229,7 +230,7 @@ def test_auth_params(host):
         return
 
     # Select one instance to be control
-    admin_api_url = get_admin_api_url(host.ansible.get_variables()['cartridge_admin_url'])
+    admin_api_url = get_admin_api_url(configured_instances)
 
     # Get cluster auth params
     query = '''
@@ -272,7 +273,7 @@ def test_auth_users(host):
         return
 
     # Select one instance to be control
-    admin_api_url = get_admin_api_url(host.ansible.get_variables()['cartridge_admin_url'])
+    admin_api_url = get_admin_api_url(configured_instances)
 
     # Get cluster auth params
     query = '''
