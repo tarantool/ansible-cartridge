@@ -73,8 +73,9 @@ def get_replicaset_info(control_console, name):
 def wait_for_replicaset_is_healthy(control_console, replicaset_name):
     delay = 0.5
     timeout = 5
+    time_start = time.time()
+
     while True:
-        time_start = time.time()
         now = time.time()
         if now > time_start + timeout:
             return False

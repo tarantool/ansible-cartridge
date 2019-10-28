@@ -27,13 +27,14 @@ class Console:
             return self.sock.sendall(msg.encode())
 
         def recvall():
-            data = []
+            data = ''
             while True:
                 chunk = self.sock.recv(1024).decode()
-                data.append(chunk)
-                if chunk.endswith('\n...\n'):
+                data = data + chunk
+                if data.endswith('\n...\n'):
                     break
-            return ''.join(data)
+            return data
+
         cmd = '''
             local ok, ret = pcall(function()
                 local function f()
