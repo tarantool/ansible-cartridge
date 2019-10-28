@@ -72,7 +72,7 @@ def get_replicaset_info(control_console, name):
 
 def wait_for_replicaset_is_healthy(control_console, replicaset_name):
     delay = 0.5
-    timeout = 5
+    timeout = 10
     time_start = time.time()
 
     while True:

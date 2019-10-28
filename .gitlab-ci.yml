@@ -29,12 +29,10 @@ test-enterprise:
     - molecule-dind
   script:
     - ./linter.sh
-    - ls
 
     - cd .. && (rm -rf tarantool-cartridge || true)
     - cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
 
-    - ls
     - TARANTOOL_VERSION=enterprise ./create-packages.sh
     - molecule test
 
