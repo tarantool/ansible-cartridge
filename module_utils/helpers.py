@@ -46,19 +46,24 @@ class Console:
             ret = require("json").encode({{
                 ok = ok,
                 ret = ret,
-            }}):gsub([[\n]], [[\n!]])
-            return ret
+            }})
+            return string.hex(ret)
         '''.format(func_body)
 
         lines = [l.strip() for l in cmd.split('\n') if l.strip()]
         cmd = ' '.join(lines) + '\n'
+
         sendall(cmd)
 
         raw_output = recvall()
-        output = re.sub("^---\n- '", '', raw_output)
-        output = re.sub("'\n...\n$", '', output)
 
-        ret = json.loads(output.replace('\n ', '').replace('\n!', '\n'))
+        hex_output = re.sub(r"^---\n-\s+?", '', raw_output)
+        hex_output = re.sub(r"'?\n...\n$", '', hex_output)
+        hex_output = re.sub(r"\n\s*", '', hex_output)
+
+        output = bytearray.fromhex(hex_output).decode('utf-8')
+
+        ret = json.loads(output)
         if not ret['ok']:
             raise Exception('Error while running function: {}. (Function: {})'.format(ret['ret'], func_body))
 

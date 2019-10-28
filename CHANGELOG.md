@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 * Removed `cartridge_failover` default value
 * Removed useless unzip installation
+* Console eval fixed to find end of output using full ouput data
 
 ### Added
 
