@@ -12,6 +12,7 @@ argument_spec = {
 }
 
 INSTANCE_REQUIRED_PARAMS = ['name', 'advertise_uri']
+INSTANCE_FORBIDDEN_PARAMS = ['alias']
 REPLICASET_REQUIRED_PARAMS = ['name', 'instances', 'roles']
 
 
@@ -168,6 +169,12 @@ def validate_config(params):
                 for p in INSTANCE_REQUIRED_PARAMS:
                     if p not in instance:
                         errmsg = 'Parameter "{}" is required for all instances in `cartridge_instances`'.format(p)
+                        return ModuleRes(success=False, msg=errmsg)
+
+                # Check if no forbidden params specified
+                for p in INSTANCE_FORBIDDEN_PARAMS:
+                    if p in instance:
+                        errmsg = 'Parameter "{}" is forbidden for instance config'.format(p)
                         return ModuleRes(success=False, msg=errmsg)
 
                 # Check if cluster_cookie is not specified

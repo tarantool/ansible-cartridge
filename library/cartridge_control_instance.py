@@ -62,7 +62,10 @@ def get_control_instance(params):
         meta['control_host'] = control_host
 
     # Set control socket
-    meta['control_sock'] = '/var/run/tarantool/{}.{}.control'.format(params['appname'], control_instance_name)
+    if 'console_sock' not in control_instance:
+        meta['control_sock'] = '/var/run/tarantool/{}.{}.control'.format(params['appname'], control_instance_name)
+    else:
+        meta['control_sock'] = control_instance['console_sock']
 
     return ModuleRes(success=True, meta=meta)
 

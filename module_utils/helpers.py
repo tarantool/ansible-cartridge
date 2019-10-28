@@ -3,6 +3,7 @@
 import socket
 import json
 import re
+import os
 
 
 class ModuleRes:
@@ -13,10 +14,25 @@ class ModuleRes:
         self.meta = meta
 
 
+class CartridgeException(Exception):
+    pass
+
+
 class Console:
     def __init__(self, socket_path):
+        if not os.path.exists(socket_path):
+            errmsg = 'Instance socket not found: "{}". '.format(socket_path) + \
+                'Make sure instance was started correctly'
+            raise CartridgeException(errmsg)
+
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
-        self.sock.connect(socket_path)
+
+        try:
+            self.sock.connect(socket_path)
+        except socket.error as socket_err:
+            errmsg = 'Failed to connect to socket "{}": {}'.format(socket_path, socket_err)
+            raise CartridgeException(errmsg)
+
         self.sock.recv(1024)
 
     def close(self):
@@ -65,7 +81,7 @@ class Console:
 
         ret = json.loads(output)
         if not ret['ok']:
-            raise Exception('Error while running function: {}. (Function: {})'.format(ret['ret'], func_body))
+            raise CartridgeException('Error while running function: {}. (Function: {})'.format(ret['ret'], func_body))
 
         return ret['ret']
 
