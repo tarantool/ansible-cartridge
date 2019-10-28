@@ -29,10 +29,12 @@ test-enterprise:
     - molecule-dind
   script:
     - ./linter.sh
+    - ls
 
-    - rm -rf tarantool-cartridge || true
-    - cd .. && cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
+    - cd .. && (rm -rf tarantool-cartridge || true)
+    - cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
 
+    - ls
     - TARANTOOL_VERSION=enterprise ./create-packages.sh
     - molecule test
 
@@ -43,8 +45,8 @@ test-opensource-1.10:
   script:
     - ./linter.sh
 
-    - rm -rf tarantool-cartridge || true
-    - cd .. && cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
+    - cd .. && (rm -rf tarantool-cartridge || true)
+    - cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
 
     - TARANTOOL_VERSION=opensource-1.10 ./create-packages.sh
     - molecule test
@@ -56,8 +58,8 @@ test-opensource-2.2:
   script:
     - ./linter.sh
 
-    - rm -rf tarantool-cartridge || true
-    - cd .. && cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
+    - cd .. && (rm -rf tarantool-cartridge || true)
+    - cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
 
     - TARANTOOL_VERSION=opensource-2.2 ./create-packages.sh
     - molecule test
