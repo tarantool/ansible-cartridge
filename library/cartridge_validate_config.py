@@ -12,7 +12,7 @@ argument_spec = {
 }
 
 INSTANCE_REQUIRED_PARAMS = ['name', 'advertise_uri']
-INSTANCE_FORBIDDEN_PARAMS = ['alias']
+INSTANCE_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir']
 REPLICASET_REQUIRED_PARAMS = ['name', 'instances', 'roles']
 
 

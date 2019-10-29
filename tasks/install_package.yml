@@ -6,3 +6,8 @@
 - name: Install DEB
   include_tasks: install_deb.yml
   when: ansible_os_family == 'Debian'
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true
+  when: package_updated
