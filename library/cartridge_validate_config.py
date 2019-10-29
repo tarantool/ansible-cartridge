@@ -168,13 +168,15 @@ def validate_config(params):
                 # Check if all required params are specified
                 for p in INSTANCE_REQUIRED_PARAMS:
                     if p not in instance:
-                        errmsg = 'Parameter "{}" is required for all instances in `cartridge_instances`'.format(p)
+                        errmsg = 'Parameter "{}" is required for all instances in `cartridge_instances` ("{}")'.format(
+                            p, instance['name']
+                        )
                         return ModuleRes(success=False, msg=errmsg)
 
                 # Check if no forbidden params specified
                 for p in INSTANCE_FORBIDDEN_PARAMS:
                     if p in instance:
-                        errmsg = 'Parameter "{}" is forbidden for instance config'.format(p)
+                        errmsg = 'Parameter "{}" is forbidden for instance config ("{}")'.format(p, instance['name'])
                         return ModuleRes(success=False, msg=errmsg)
 
                 # Check if cluster_cookie is not specified
