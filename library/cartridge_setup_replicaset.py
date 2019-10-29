@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes
+from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
 
 import time
@@ -72,9 +72,10 @@ def get_replicaset_info(control_console, name):
 
 def wait_for_replicaset_is_healthy(control_console, replicaset_name):
     delay = 0.5
-    timeout = 5
+    timeout = 10
+    time_start = time.time()
+
     while True:
-        time_start = time.time()
         now = time.time()
         if now > time_start + timeout:
             return False
@@ -210,7 +211,7 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
     try:
         res = setup_replicaset(module.params)
-    except Exception as e:
+    except CartridgeException as e:
         module.fail_json(msg=str(e))
 
     if res.success is True:

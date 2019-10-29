@@ -47,6 +47,6 @@
     update_cache: true
   register: install_rpm
 
-- name: Set package_updated to true
+- name: Set package_updated variable
   set_fact:
     package_updated: '{{ install_rpm.changed }}'

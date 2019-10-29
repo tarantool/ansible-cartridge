@@ -10,8 +10,8 @@ This role can deploy and configure applications packed in RPM using [`Cartridge 
 * [Usage example](#usage-example)
 * [Role variables](#role-variables)
 * [Configuration format](#configuration-format)
-  * [Instances configuration](#instances-configuration)
-  * [Replicasets configuration](#replicasets-configuration)
+  * [Instances](#instances)
+  * [Replicasets](#replicasets)
   * [Vshard bootstrapping](#vshard-bootstrapping)
   * [Failover](#failover)
   * [Cartridge auth](#cartridge-auth)
@@ -143,11 +143,29 @@ This variable describes all instances that should be deployed on the host.
 
 `cartridge_instances` is a list of dicts that contains  [cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse) module).
 
-**Required instance parameters**: `name`, `advertise_uri`.
+#### Required parameters
+
+`name` and `advertise_uri` is required parameters for instance.
+
+**Note:** `name` will be used for systemd service name and instance alias.
 
 **Note:** `advertise_uri` parameter must be specified in `<host>:<port>` format.
 
 **Note:** If instance with the same name is already started on the host, it will be restarted with new configuration. 
+
+#### Forbidden parameters
+
+`alias`, `console_sock`, `pid_file` and `workdir` parameters are forbidden for instance.
+Instance alias would be set equal to instance name.
+
+**Note:** in default systemd unit file for Tarantool Cartridge applications some instance parameters are set:
+
+```
+Environment=TARANTOOL_WORKDIR=/var/lib/tarantool/{app_name}.{instance_name}
+Environment=TARANTOOL_CFG=/etc/tarantool/conf.d/
+Environment=TARANTOOL_PID_FILE=/var/run/tarantool/${app_name}.{instance_name}.pid
+Environment=TARANTOOL_CONSOLE_SOCK=/var/run/tarantool/${app_name}.{instance_name}.control
+```
 
 ### Replicasets
 

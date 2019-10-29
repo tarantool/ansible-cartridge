@@ -3,7 +3,7 @@
 import json
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes
+from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
 
 
@@ -85,7 +85,7 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
     try:
         res = config_app(module.params)
-    except Exception as e:
+    except CartridgeException as e:
         module.fail_json(msg=str(e))
 
     if res.success is True:
