@@ -2,15 +2,64 @@
 
 Here we will show you how to easily deploy your Tarantool Cartridge application, set up topology and configure cluster.
 
-**TODO** table of contents
+## Table of contents
+
+* [Setting up the environment](#setting-up-the-environment)
+* [Hints](#hints)
+* [Pack test application](#pack-test-application)
+* [Pack test application on OS X](#pack-test-application-on-os-x)
+* [Steps to deploy manually](#steps-to-deploy-manually)
+* [Steps to deploy using Ansible](#steps-to-deploy-using-ansible)
+  * [Ansible](#ansible)
+  * [Example topology](#example-topology)
+  * [Prepare to deploy](#prepare-to-deploy)
+  * [Start virtual machines](#start-virtual-machines)
+  * [Install package](#install-package)
+  * [Start instances](#start-instances)
+  * [Set up replicasets](#set-up-replicasets)
+  * [Bootstrap Vshard](#bootstrap-vshard)
+  * [Manage failover](#manage-failover)
+  * [Manage auth](#manage-auth)
+  * [Application config](#application-config)
+* [Final checks](#final-checks)
+* [Afterword](#afterword)
+* [Full inventory](#full-inventory)
 
 ## Setting up the environment
 
-**TODO**
+To work with Tarantool Cartridge you need to install this tools:
 
-## Create test application
+* `git` - version control system (see details [here](https://git-scm.com/))
+* `npm`- package manager for `node.js` (see details [here](https://www.npmjs.com/))
+* `cmake` version 2.8 or higher
+* `tarantool-devel` - developer package for `tarantool`
+* `gcc` - `C` compiler (see details [here](https://gcc.gnu.org/))
+* `unzip`
 
-We will use [`getting-started-app`](https://github.com/tarantool/cartridge-cli/tree/master/examples/getting-started-app) to show how to deploy Tarantool Cartridge application in right way.
+To run this guide example you need:
+
+* `ansible` version 2.8 or higher - tool allows to automate deploy (see details [here](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html))
+* `vagrant` - virtual machines managemet tool (see details [here](https://www.vagrantup.com/))
+
+## Hints
+
+If you see smth like `Failed to connect to the host via ssh:` on playbook running, read this hints.
+
+After vagrant machines start:
+
+* delete from `~/.ssh/known_hosts` keys for `172.19.0.2` and `172.19.0.3`;
+* run this commands and type `yes` to add new keys for this machines:
+
+```bash
+$ ssh vagrant@172.19.0.2
+$ ssh vagrant@172.19.0.3
+```
+
+## Pack test application
+
+We will use [`getting-started-app`](https://github.com/tarantool/cartridge-cli/tree/master/examples/getting-started-app) to show how to deploy Tarantool Cartridge application in the right way.
+
+(If you use OS X, go to the [next section](#pack-test-application-on-os-x))
 
 The easiest way to get the final version of `getting-started-app` is to clone it:
 
@@ -38,7 +87,49 @@ Then, just call
 Now, we have `getting-started-app-1.0.0-0.rpm` file in current directory.
 The next step is to deploy this package on server and set up cluster.
 
-**TODO** explain problems with OS X.
+## Pack test application on OS X
+
+Unfortunately, if you use OS X to develop application, you can't pack application on your local machine and then deploy it on RHEL or Debian.
+The problem is that package would contain rocks (and `tarantool` binaries for Tarantool Enterprise) specific for OS X. 
+
+The workaround is to pack application in Vagrant VM:
+
+Create `Vagrantfile` from [this](#prepare-to-deploy) section.
+Run:
+
+```bash
+$ vagrant up vm1
+$ vagrant ssh vm1
+[vagrant@vm1 ~]$ curl -s https://packagecloud.io/install/repositories/tarantool/1_10/script.rpm.sh | sudo bash
+[vagrant@vm1 ~]$ curl -sL https://rpm.nodesource.com/setup_8.x | sudo bash -
+[vagrant@vm1 ~]$ sudo yum -y install unzip git gcc cmake nodejs tarantool tarantool-devel
+```
+
+It would install Tarantool 1.10 and all tools required for Tarantool Cartridge.
+
+Next:
+
+```bash
+[vagrant@vm1 ~]$ git clone https://github.com/tarantool/cartridge-cli
+[vagrant@vm1 ~]$ cp -R cartridge-cli/examples/getting-started-app .
+[vagrant@vm1 ~]$ rm -rf cartridge-cli
+[vagrant@vm1 ~]$ tarantoolctl rocks install cartridge-cli
+[vagrant@vm1 ~]$ .rocks/bin/cartridge pack rpm --version 1.0.0 ./getting-started-app
+[vagrant@vm1 ~]$ sudo yum -y remove tarantool
+[vagrant@vm1 ~]$ exit
+$ vagrant scp vm1:~/getting-started-app-1.0.0-0.rpm .
+```
+
+The last command copies RPM from VM on your local machine.
+
+Now, you can stop VM:
+
+```bash
+$ vagrant halt vm1
+```
+
+Now, we have `getting-started-app-1.0.0-0.rpm` file in current directory.
+The next step is to deploy this package on server and set up cluster.
 
 ## Steps to deploy manually
 
@@ -49,7 +140,7 @@ This is a description of deploy steps, just to understand the way Tarantool Cart
 The first step is to install application package on deploy server.
 It would create user `tarantool` with group `tarantool` and some directories for our app:
 
-* `/etc/tarantool/conf.d/` - directory for instances config (described below);
+* `/etc/tarantool/conf.d/` - directory for instances config;
 * `/var/lib/tarantool/` - directory to store instances snapshots;
 * `/var/run/tarantool/` - directory to store PID-files and console sockets.
 
@@ -81,17 +172,21 @@ tarantool> require('cartridge').is_healthy()
 
 ### Ansible
 
-**TODO:** short description, links to manuals (hope they exist), maybe hightlight some things (like host_vars, group_vars, become, remote_user etc)
+We will use [Ansible](https://www.ansible.com/use-cases/application-deployment) to deploy and configure our application.
+You can read the [docs](https://docs.ansible.com/ansible/latest/index.html) to figure out how to work with this framework.
+You can also find some [russian](https://habr.com/ru/post/305400/) ([or not](https://scotch.io/tutorials/getting-started-with-ansible)) getting-started guides for this framework.
 
 ### Example topology
 
-**TODO:** come up with an example topology (probably steal it from getting-started-app), describe it.
+We will set up this topology for our application:
+
+![Topology](./images/topology.png)
 
 ### Prepare to deploy
 
 We packed our application in `getting-started-app-1.0.0-0.rpm`.
 
-Now, we will start 4 instances on 2 different servers, join them in 2 replicasets, bootstrap vshard, enable automatic failover, set up authorization and application config.
+Now, we will start 3 instances on 2 different servers, join them in 2 replicasets, bootstrap vshard, enable automatic failover, set up authorization and application config.
 
 First, use [vagrant](https://www.vagrantup.com/intro/index.html) to start two virtual machines on `172.19.0.2` and `172.19.0.3`.
 
@@ -120,6 +215,8 @@ Vagrant.configure("2") do |config|
   config.vm.define "vm2" do |cfg|
     cfg.vm.box = "centos/7"
     cfg.vm.network "private_network", ip: "172.19.0.3"
+    cfg.vm.network "forwarded_port", guest: 8182, host: 8182
+    cfg.vm.network "forwarded_port", guest: 8183, host: 8183
     cfg.vm.hostname = 'vm2'
   end
 
@@ -158,11 +255,11 @@ Finally, create [inventory](https://docs.ansible.com/ansible/latest/user_guide/i
 all:
   hosts:
     vm1:
-      ansible_host: 172.19.0.2  # First host
+      ansible_host: 172.19.0.2  # first host
       ansible_user: vagrant
 
     vm2:
-      ansible_host: 172.19.0.3  # Second host
+      ansible_host: 172.19.0.3  # second host
       ansible_user: vagrant
 ```
 
@@ -171,19 +268,19 @@ Directory structure:
 ```
 .
 ├── Vagrantfile
-├── getting-started-app
+├── getting-started-app  # this dir is not required
 ├── getting-started-app-1.0.0-0.rpm
 ├── hosts.yml
 ├── playbook.yml
 ├── tarantool-cartridge
 ```
 
-### Deploy itself
+### Start virtual machines
 
 First, start virtual machines:
 
 ```bash
-vagrant up
+$ vagrant up
 ```
 
 Now we will gradually upgrade our `hosts.yml` file to deploy and configure our application step-by-step.
@@ -191,16 +288,17 @@ Now we will gradually upgrade our `hosts.yml` file to deploy and configure our a
 The final version of `hosts.yml` is [here](#full-inventory).
 In next steps only new sections of inventory are showed, but you always can look at the full inventory.
 
-### Deploy package
+### Install package
 
 To specify path to package to be deployed we need to add `cartridge_package_path` variable to our inventory file.
 
 ```yaml
 ---
 all:
-  ...
+  hosts:
+    ...
   vars:
-    cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # Path to package to deploy
+    cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
 ```
 
 Now, run playbook:
@@ -218,19 +316,21 @@ getting-started-app.x86_64          1.0.0-0                     installed
 [vagrant@vm1 ~]$ exit
 ```
 
-You can check that application files were placed in `/usr/share/tarantool/getting-started-app/`.
+You can check that application files were placed in `/usr/share/tarantool/getting-started-app/` dir on virtual machines.
 
 The same for `vm2`.
 
-Note, that if you used opensource Tarantool, your package has Tarantool dependency.
+Note, that if your app uses opensource Tarantool, your package has Tarantool dependency.
 Tarantool Cartridge role would enable Tarantool package repo to let Tarantool to be automatically installed with your application.
 If you want to install Tarantool by yourself (e.g. from package), you can set `cartridge_enable_tarantool_repo` variable to `false`.
 
-### Instances
+### Start instances
 
 Next, configure and start instances.
 
 Add `cartridge_instances`, `cartridge_cluster_cookie` and `cartridge_defaults` sections:
+
+(You always can go [here](#full-inventory) to understand where to put new sections)
 
 ```yaml
 ---
@@ -248,11 +348,11 @@ all:
       cartridge_instances:  # instances to be started on this host
         - name: 'app-1'
           advertise_uri: '172.19.0.3:3301'
-          http_port: '8181'
+          http_port: '8182'
 
         - name: 'storage-1-replica'
           advertise_uri: '172.19.0.3:3302'
-          http_port: '8182'
+          http_port: '8183'
 
   vars:
     cartridge_app_name: getting-started-app  # application name
@@ -265,6 +365,12 @@ all:
 Note, that we use `cartridge_app_name` (we don't deploy new package) instead of `cartridge_package_path`.
 You can use both options, but it's required to specify at least one of them.
 If `cartridge_app_name` isn't set, it would be discovered from package info.
+
+Run the playbook again:
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml
+```
 
 Connect to machines and check if all instances was started:
 
@@ -291,9 +397,9 @@ You can check instances configuration files in `/etc/tarantool/conf.d/`:
 
 ```bash
 $ vagrant ssh vm1
-[vagrant@vm1 ~]$ sudo ls /etc/tarantool/conf.d/
+[vagrant@vm1 ~]$ ls /etc/tarantool/conf.d/
 getting-started-app.storage-1.yml  getting-started-app.yml
-[vagrant@vm1 ~]$ sudo cat /etc/tarantool/conf.d/*
+[vagrant@vm1 ~]$ cat /etc/tarantool/conf.d/*
 getting-started-app.storage-1:
     advertise_uri: 172.19.0.2:3301
     http_port: '8181'
@@ -309,13 +415,13 @@ Go to http://localhost:8181/admin/cluster/dashboard to see our instances in Web 
 ![Unconfigured instances](./images/unconfiured-instances.png)
 
 If you change instance configuration in `cartridge_instances` and run playbook, this instance configuration file in `/etc/tarantool/conf.d/` would be changed and systemd service would be restarted.
-You can experiment with adding new instances and changing   `cartridge_instances`, `cartridge_cluster_cookie` and `cartridge_defaults` sections.
+You can experiment with adding new instances and changing `cartridge_instances`, `cartridge_cluster_cookie` and `cartridge_defaults` sections.
 Note, that playbook would affect only instances mentioned in config.
-Instances expelling is described in [TODO] section.
 
-### Replicasets
+Instances expelling is not supported in current version, but it's coming soon.
+Now, you can use Web UI to expell instances.
 
-TODO: merge edit-topology and rewrite this section
+### Set up replicasets
 
 Now we have instances running on two hosts.
 It's time to join them to replicaset.
@@ -349,12 +455,12 @@ Run playbook and then go to http://localhost:8181/admin/cluster/dashboard.
 
 Note, that `storage-1` replicaset has two roles: `storage` and it's dependency `vshard-storage`, `app-1` has roles: `api` and `vshard-router`.
 
-### Vshard
+Now you can't edit replicaset using Ansible, but we already have PR with this feature!
+
+### Bootstrap Vshard
 
 Now, when we have both `vshard-storage` and `vshard-router` replicasets, we can bootstrap vshard.
 Just set `cartridge_bootstrap_vshard` flag and run the playbook again.
-
-TODO: when edit-topology would be merged, explain how to edit replicasets.
 
 ```yaml
 ---
@@ -368,7 +474,7 @@ all:
 
 Now you can check that `Bootstrap vshard` button disappeared from the Web UI and `storage-1` replicaset `Buckets` value has been changed.
 
-### Failover
+### Manage failover
 
 If you want to manage automatic failover, use `cartridge_failover` variable:
 
@@ -386,11 +492,11 @@ Run the playbook and check failover switcher in Web UI.
 You can experiment with `cartridge_failover` value.
 If this value isn't set, failover status wouldn't be affected.
 
-### Auth
+### Manage auth
 
 Our app is already configured and run, but what about security?
 
-Let's create a new user, set up auth parameters and enable Cartridge auth:
+Let's set up auth parameters, enable Cartridge auth and create a new user:
 
 ```yaml
 ---
@@ -399,23 +505,23 @@ all:
   vars:
     ...
     cartridge_auth:
-        enabled: true
+      enabled: true
 
-        cookie_max_age: 1000
-        cookie_renew_age: 100
+      cookie_max_age: 1000
+      cookie_renew_age: 100
 
-        users:
-          - username: first-user
-            password: first-user-password
-            fullname: First Cartridge User
-            email: user@cartridge.org
+      users:
+        - username: first-user
+          password: first-user-password
+          fullname: First Cartridge User
+          email: user@cartridge.org
     ...
 ```
 
 After running playbook go to http://localhost:8181/admin/cluster/dashboard and you will see the authorization form. 
-Default user is `admin`, it's password is `cartridge_cluster_cookie` value.
-You can log in using new user credentials.
-Then, go to the `Users` tab and check if user was added.
+Default user is `admin`, it's password is `cartridge_cluster_cookie` value (we set `app-default-cookie`).
+You also can log in using new user credentials.
+Then, go to the **Users** tab and check if user was added.
 
 To delete user just set `deleted` flag for it:
 
@@ -426,23 +532,24 @@ all:
   vars:
     ...
     cartridge_auth:
-        ...
-        users:
-          - username: first-user
-            password: first-user-password
-            fullname: First Cartridge User
-            email: user@cartridge.org
-            deleted: true
+      ...
+      users:
+        - username: first-user
+          password: first-user-password
+          fullname: First Cartridge User
+          email: user@cartridge.org
+          deleted: true  # delete user
     ...
 ```
 
 You can change authorization parameters and users configuration.
 Note, that only mentioned users would be affected.
 
-### Application config
+## Application config
 
 You can configure your roles using [cluster-wide configuration](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_dev/#configuring-custom-roles).
-To download current config go to the `Configuration files` tab in Web UI.
+To download current config go to the **Configuration files** tab in Web UI.
+Most likely it's empty now.
 You can patch clusterwide config sections using Ansible.
 
 ```yaml
@@ -462,7 +569,9 @@ all:
           max-balance: 10000000
     ...
 ```
-Run playbook and check config again - it would contain new sections.
+
+Run playbook and download config again - it would contain new sections.
+You can experiment with changing section bodies.
 
 To delete section you have to set `deleted` flag:
 
@@ -483,11 +592,83 @@ all:
 
 Note, that only mentioned sections would be affected.
 
-### Instances expelling
+### Final checks
 
-**TODO** first merge edit-topology
+Let's check if our application is working (see [this getting-started](https://github.com/tarantool/cartridge-cli/tree/master/examples/getting-started-app#application-example-based-on-tarantool-cartridge) for details).
 
-(find the Cartridge doc for all this things)
+Note, that we will use `8182` port (we specified `http_port: '8182'` for instance `app-1` running `api` role).
+
+Create new customer:
+
+```bash
+curl -X POST -v -H "Content-Type: application/json" -d '{"customer_id":1, "name": "Elizaveta"}' http://localhost:8182/storage/customers/create
+Note: Unnecessary use of -X or --request, POST is already inferred.
+*   Trying ::1...
+* TCP_NODELAY set
+* Connection failed
+* connect to ::1 port 8182 failed: Connection refused
+*   Trying 127.0.0.1...
+* TCP_NODELAY set
+* Connected to localhost (127.0.0.1) port 8182 (#0)
+> POST /storage/customers/create HTTP/1.1
+> Host: localhost:8182
+> User-Agent: curl/7.54.0
+> Accept: */*
+> Content-Type: application/json
+> Content-Length: 38
+>
+* upload completely sent off: 38 out of 38 bytes
+< HTTP/1.1 201 Created
+< Content-length: 31
+< Server: Tarantool http (tarantool v1.10.4-18-g0c10066)
+< Content-type: application/json; charset=utf-8
+< Connection: keep-alive
+<
+* Connection #0 to host localhost left intact
+{"info":"Successfully created"}
+```
+
+And get it:
+
+```bash
+curl -X GET -v -H "Content-Type: application/json" http://localhost:8182/storage/customers/1
+Note: Unnecessary use of -X or --request, GET is already inferred.
+*   Trying ::1...
+* TCP_NODELAY set
+* Connection failed
+* connect to ::1 port 8182 failed: Connection refused
+*   Trying 127.0.0.1...
+* TCP_NODELAY set
+* Connected to localhost (127.0.0.1) port 8182 (#0)
+> GET /storage/customers/1 HTTP/1.1
+> Host: localhost:8182
+> User-Agent: curl/7.54.0
+> Accept: */*
+> Content-Type: application/json
+>
+< HTTP/1.1 200 Ok
+< Content-length: 50
+< Server: Tarantool http (tarantool v1.10.4-18-g0c10066)
+< Content-type: application/json; charset=utf-8
+< Connection: keep-alive
+<
+* Connection #0 to host localhost left intact
+{"accounts":[],"customer_id":1,"name":"Elizaveta"}
+```
+
+Don't forget to stop your VMs:
+
+```bash
+$ vagrant halt
+```
+
+### Afterword
+
+For full explanation of config format read the repository README.
+
+If you have any problems with this guide or role itself, please [create a ticket](https://github.com/tarantool/ansible-cartridge/issues/new), we will help you ASAP.
+
+Don't hesitate to experiment with configuration, find and report some bugs.
 
 ### Full inventory
 
@@ -511,11 +692,11 @@ all:
       cartridge_instances:  # instances to be started on this host
         - name: 'app-1'
           advertise_uri: '172.19.0.3:3301'
-          http_port: '8181'
+          http_port: '8182'
 
         - name: 'storage-1-replica'
           advertise_uri: '172.19.0.3:3302'
-          http_port: '8182'
+          http_port: '8183'
 
   vars:
     cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
@@ -526,19 +707,7 @@ all:
       log_level: 5
 
     cartridge_bootstrap_vshard: true  # bootstrap vshard
-
-    cartridge_auth:
-      enabled: true
-
-      cookie_max_age: 1000
-      cookie_renew_age: 100
-
-      users:
-        - username: first-user
-          password: first-user-password
-          fullname: First Cartridge User
-          email: user@cartridge.org
-          # deleted: true  # delete user
+    cartridge_failover: true  # enable failover
 
     cartridge_replicasets:  # replicasets to be set up
       - name: 'app-1'
@@ -553,7 +722,20 @@ all:
         leader: 'storage-1'
         roles: ['storage']
 
-    cartridge_app_config:
+    cartridge_auth:  # authorization parameters
+      enabled: true
+
+      cookie_max_age: 1000
+      cookie_renew_age: 100
+
+      users:
+        - username: first-user
+          password: first-user-password
+          fullname: First Cartridge User
+          email: user@cartridge.org
+          # deleted: true  # delete user
+
+    cartridge_app_config:  # application config sections
       customers:
         body:
           max-age: 100
