@@ -49,6 +49,15 @@
     "tarantool" in deplist.stdout and cartridge_enable_tarantool_repo
     and tnt_version[0] + "." + tnt_version[1] == "1.10"
 
+- name: Install working Tarantool 2.2
+  yum:
+    name:
+      - tarantool-devel-2.2.1.102-1.el7.x86_64
+      - tarantool-2.2.1.102-1.el7.x86_64
+  when: >-
+    "tarantool" in deplist.stdout and cartridge_enable_tarantool_repo
+    and tnt_version[0] + "." + tnt_version[1] == "2.2"
+
 - name: Install RPM
   yum:
     name: '/tmp/{{ rpm_filename }}'
