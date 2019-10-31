@@ -20,8 +20,11 @@ platforms:
       - name: cartridge-network
     purge_networks: true
   - name: vm2
-    image: jrei/systemd-ubuntu
-    command: /lib/systemd/systemd
+    # XXX: wait for Tarantool fix
+    # image: jrei/systemd-ubuntu
+    # command: /lib/systemd/systemd
+    image: centos:7
+    command: /sbin/init
     tmpfs:
       - /run
       - /tmp
@@ -100,7 +103,9 @@ provisioner:
             http_port: '8082'
 
       vm2:
-        cartridge_package_path: ./myapp-1.0.0-0.deb
+        # XXX
+        # cartridge_package_path: ./myapp-1.0.0-0.deb
+        cartridge_package_path: ./myapp-1.0.0-0.rpm
         cartridge_instances:
           - name: 'core_1'
             advertise_uri: 'vm2:3311'
