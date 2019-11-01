@@ -56,8 +56,8 @@ def get_control_instance(params):
         errmsg = 'All instances mentioned in cartridge_replicasets must be configured in cartridge_instances'
         return ModuleRes(success=False, msg=errmsg)
 
-    if 'ansible_host' in params['hostvars'][host]:
-        meta['control_host'] = params['hostvars'][control_host]['ansible_host']
+    if 'inventory_hostname' in params['hostvars'][control_host]:
+        meta['control_host'] = params['hostvars'][control_host]['inventory_hostname']
     else:
         meta['control_host'] = control_host
 
