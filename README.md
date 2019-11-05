@@ -8,6 +8,7 @@ This role can deploy and configure applications packed in RPM using [`Cartridge 
 
 * [Requirements](#requirements)
 * [Usage example](#usage-example)
+* [Getting started](#getting-started)
 * [Role variables](#role-variables)
 * [Configuration format](#configuration-format)
   * [Instances](#instances)
@@ -19,7 +20,8 @@ This role can deploy and configure applications packed in RPM using [`Cartridge 
 
 ## Requirements
 
-None.
+* Tarantool Cartridge 1.2.0 or higher;
+* Ansible 2.8.4 or higher.
 
 ## Usage example
 
@@ -104,6 +106,10 @@ all:
           - router
         roles: ['vshard-router']
 ```
+
+## Getting started
+
+You can use [getting started guide](./examples/getting-started-app/README.md) to learn how to set up topology using this role.
 
 ## Role variables
 
