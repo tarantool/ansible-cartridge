@@ -44,9 +44,72 @@ To deploy application and set up this topology:
       name: tarantool-cartridge
 ```
 
+`hosts.yml`:
+
+```yaml
+---
+all:
+  hosts:
+    vm1:
+      ansible_host: 172.19.0.2  # first host
+      ansible_user: vagrant
+
+      cartridge_instances:  # instances to be started on this host
+        - name: 'core_1'
+          advertise_uri: '172.19.0.2:3301'
+          http_port: '8181'
+
+        - name: 'storage_1'
+          advertise_uri: '172.19.0.2:3302'
+          http_port: '8182'
+
+    vm2:
+      ansible_host: 172.19.0.3  # second host
+      ansible_user: vagrant
+
+      cartridge_instances:  # instances to be started on this host
+        - name: 'router'
+          advertise_uri: '172.19.0.3:3303'
+          http_port: '8183'
+
+        - name: 'storage_1_replica'
+          advertise_uri: '172.19.0.3:3304'
+          http_port: '8184'
+
+
+  vars:  # cluster configuration
+    cartridge_package_path: ./myapp-1.0.0-0.rpm  # path to package to deploy
+
+    cartridge_failover: true  # enable automatic failover
+    cartridge_bootstrap_vshard: true  # bootstrap vshard
+
+    cartridge_cluster_cookie: super-secret-cookie  # cartridge cookie must be specified here
+    cartridge_defaults:  # default configuration parameters for all instances
+      log_level: 5
+
+    cartridge_replicasets:  # replicasets to be set up
+      - name: 'replicaset-1'
+        instances:
+          - 'storage_1'
+          - 'storage_1_replica'
+        leader: 'storage_1'
+        roles: ['vshard-storage']
+
+      - name: 'core-1'
+        instances:
+          - core_1
+        roles: ['app.roles.custom']
+
+      - name: 'router-1'
+        instances:
+          - router
+        roles: ['vshard-router']
+```
+
+
 ## Getting started
 
-You can use our [getting started guide](./examples/getting-started-app/README.md) to learn how to set up topology using our role.
+You can use [getting started guide](./examples/getting-started-app/README.md) to learn how to set up topology using this role.
 
 ## Role variables
 

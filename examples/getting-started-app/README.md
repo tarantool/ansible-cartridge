@@ -4,11 +4,12 @@ Here we will show you how to easily deploy your Tarantool Cartridge application,
 
 ## Table of contents
 
+* [What we will do?](#what-we-will-do)
 * [Setting up the environment](#setting-up-the-environment)
 * [Hints](#hints)
 * [Pack test application](#pack-test-application)
 * [Pack test application on OS X](#pack-test-application-on-os-x)
-* [Steps to deploy manually](#steps-to-deploy-manually)
+* [What does Tarantool Cartridge role do?](#what-does-tarantool-cartridge-role-do)
 * [Steps to deploy using Ansible](#steps-to-deploy-using-ansible)
   * [Ansible](#ansible)
   * [Example topology](#example-topology)
@@ -25,21 +26,53 @@ Here we will show you how to easily deploy your Tarantool Cartridge application,
 * [Afterword](#afterword)
 * [Full inventory](#full-inventory)
 
+## What we will do?
+
+We have [getting started guide](https://github.com/tarantool/cartridge-cli/tree/master/examples/getting-started-app) for developing Tarantool Cartridge applications.
+Now we will learn how to deploy this application on servers and set up topology using Ansible.
+
+Example application implements two roles: `api` (with `vshard-router` dependency) and `storage` (with `vshard-router` dependency).
+We will set up simple topology on 2 virtual machines: `vm1` and `vm2`:
+
+* replicaset `app-1`:
+  * roles: `api` (+ `vshard-router`)
+  * instances:
+    * `app-1` (`vm2`)
+
+* replicaset `storage-1`
+  * roles: `storage` (+ `vshard-storage`)
+  * instances:
+    * `storage-1` (`vm1`)
+    * `storage-1-replica` (`vm2`)
+
+In cluster Web UI it will look like this:
+
+![Topology](./images/topology.png)
+
 ## Setting up the environment
 
 To work with Tarantool Cartridge you need to install this tools:
 
-* `git` - version control system (see details [here](https://git-scm.com/))
-* `npm`- package manager for `node.js` (see details [here](https://www.npmjs.com/))
-* `cmake` version 2.8 or higher
-* `tarantool-devel` - developer package for `tarantool`
-* `gcc` - `C` compiler (see details [here](https://gcc.gnu.org/))
-* `unzip`
+* `git` - version control system (see details [here](https://git-scm.com/));
+* `npm`- package manager for `node.js` (see details [here](https://www.npmjs.com/));
+* `cmake` version 2.8 or higher;
+* `tarantool`;
+* `tarantool-devel` - developer package for `tarantool`;
+* `gcc` - `C` compiler (see details [here](https://gcc.gnu.org/));
+* `unzip`.
+
+Note, that minimal Tarantool Cartridge version for using this role is `1.2.0`.
 
 To run this guide example you need:
 
 * `ansible` version 2.8 or higher - tool allows to automate deploy (see details [here](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html))
 * `vagrant` - virtual machines managemet tool (see details [here](https://www.vagrantup.com/))
+
+You also need to install `vagrant-hosts`, `vagrant-vbguest` and `vagrant-scp` plugins:
+
+```bash
+$ vagrant plugin install vagrant-hosts vagrant-vbguest vagrant-scp
+```
 
 ## Hints
 
@@ -129,11 +162,12 @@ $ vagrant halt vm1
 ```
 
 Now, we have `getting-started-app-1.0.0-0.rpm` file in current directory.
-The next step is to deploy this package on server and set up cluster.
+The next step is to deploy this package on servers and set up cluster.
 
-## Steps to deploy manually
+## What does Tarantool Cartridge role do?
 
 This is a description of deploy steps, just to understand the way Tarantool Cartridge applications have to be deployed.
+You can skip this section if you are not interested in understanding how it works.
 
 ### Deploy package
 
@@ -146,7 +180,7 @@ It would create user `tarantool` with group `tarantool` and some directories for
 
 Application code would be placed in `/usr/share/tarantool/${app-name}` directory.
 If you use Tarantool Enterprise, `tarantool` and `tarantoolctl` binaries would be delivered with package and placed there too.
-Otherwise, you need to install Tarantool package manually.
+Otherwise, your RPM package has Tarantool dependency and `yum` (RPM packages manager) would install opensource Tarantool.
 
 Package also contains `/etc/systemd/system/${app-name}.service` and `/etc/systemd/system/{app-name}@.service` [systemd unit files](https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files).
 
@@ -157,7 +191,7 @@ This instance would look for it's configuration across all `/etc/tarantool/conf.
 
 See [documentation](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_dev/#configuring-instances) for instances configuration details.
 
-### Cluster configuration
+### Setting up topology
 
 After instances was started you need to set up cluster topology, manage auth parameters, browse application config, enable automatic failover and bootstrap vshard.
 All of this actions can be performed using cluster WebUI or `cartridge` module.
@@ -175,12 +209,6 @@ tarantool> require('cartridge').is_healthy()
 We will use [Ansible](https://www.ansible.com/use-cases/application-deployment) to deploy and configure our application.
 You can read the [docs](https://docs.ansible.com/ansible/latest/index.html) to figure out how to work with this framework.
 You can also find some [russian](https://habr.com/ru/post/305400/) ([or not](https://scotch.io/tutorials/getting-started-with-ansible)) getting-started guides for this framework.
-
-### Example topology
-
-We will set up this topology for our application:
-
-![Topology](./images/topology.png)
 
 ### Prepare to deploy
 
@@ -209,7 +237,6 @@ Vagrant.configure("2") do |config|
     cfg.vm.box = "centos/7"
     cfg.vm.network "private_network", ip: "172.19.0.2"
     cfg.vm.network "forwarded_port", guest: 8181, host: 8181
-    cfg.vm.hostname = 'vm1'
   end
 
   config.vm.define "vm2" do |cfg|
@@ -217,7 +244,6 @@ Vagrant.configure("2") do |config|
     cfg.vm.network "private_network", ip: "172.19.0.3"
     cfg.vm.network "forwarded_port", guest: 8182, host: 8182
     cfg.vm.network "forwarded_port", guest: 8183, host: 8183
-    cfg.vm.hostname = 'vm2'
   end
 
   config.vm.provision :shell, inline: $script
@@ -301,7 +327,7 @@ all:
     cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
 ```
 
-Now, run playbook:
+Now, run playbook (if something went wrong, [hints](#hints) section could be helpful):
 
 ```bash
 $ ansible-playbook -i hosts.yml playbook.yml
@@ -449,7 +475,13 @@ all:
         roles: ['storage']
 ```
 
-Run playbook and then go to http://localhost:8181/admin/cluster/dashboard.
+Run playbook:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml
+```
+
+Then, go to http://localhost:8181/admin/cluster/dashboard.
 
 ![Replicasets](./images/replicasets.png)
 
@@ -472,6 +504,13 @@ all:
     ...
 ```
 
+
+Run playbook:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml
+```
+
 Now you can check that `Bootstrap vshard` button disappeared from the Web UI and `storage-1` replicaset `Buckets` value has been changed.
 
 ### Manage failover
@@ -488,7 +527,13 @@ all:
     ...
 ```
 
-Run the playbook and check failover switcher in Web UI.
+Run playbook:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml
+```
+
+Check failover switcher in Web UI.
 You can experiment with `cartridge_failover` value.
 If this value isn't set, failover status wouldn't be affected.
 
@@ -518,8 +563,14 @@ all:
     ...
 ```
 
+Run playbook:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml
+```
+
 After running playbook go to http://localhost:8181/admin/cluster/dashboard and you will see the authorization form. 
-Default user is `admin`, it's password is `cartridge_cluster_cookie` value (we set `app-default-cookie`).
+Default user is `admin`, it's password is defined in `cartridge_cluster_cookie` parameter (we set `app-default-cookie`).
 You also can log in using new user credentials.
 Then, go to the **Users** tab and check if user was added.
 
@@ -540,6 +591,12 @@ all:
           email: user@cartridge.org
           deleted: true  # delete user
     ...
+```
+
+Run playbook:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml
 ```
 
 You can change authorization parameters and users configuration.
@@ -570,7 +627,13 @@ all:
     ...
 ```
 
-Run playbook and download config again - it would contain new sections.
+Run playbook:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml
+```
+
+Now download config again - it would contain new sections.
 You can experiment with changing section bodies.
 
 To delete section you have to set `deleted` flag:
@@ -590,6 +653,12 @@ all:
     ...
 ```
 
+Run playbook:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml
+```
+
 Note, that only mentioned sections would be affected.
 
 ### Final checks
@@ -601,7 +670,7 @@ Note, that we will use `8182` port (we specified `http_port: '8182'` for instanc
 Create new customer:
 
 ```bash
-curl -X POST -v -H "Content-Type: application/json" -d '{"customer_id":1, "name": "Elizaveta"}' http://localhost:8182/storage/customers/create
+$ curl -X POST -v -H "Content-Type: application/json" -d '{"customer_id":1, "name": "Elizaveta"}' http://localhost:8182/storage/customers/create
 Note: Unnecessary use of -X or --request, POST is already inferred.
 *   Trying ::1...
 * TCP_NODELAY set
@@ -631,7 +700,7 @@ Note: Unnecessary use of -X or --request, POST is already inferred.
 And get it:
 
 ```bash
-curl -X GET -v -H "Content-Type: application/json" http://localhost:8182/storage/customers/1
+$ curl -X GET -v -H "Content-Type: application/json" http://localhost:8182/storage/customers/1
 Note: Unnecessary use of -X or --request, GET is already inferred.
 *   Trying ::1...
 * TCP_NODELAY set
