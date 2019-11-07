@@ -5,90 +5,81 @@
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
   when: ansible_os_family not in ["RedHat", "Debian"]
 
-- name: Set cartridge_confdir and package_updated variables
-  set_fact:
-    cartridge_confdir: /etc/tarantool/conf.d
-    package_updated: false
-
 - name: Set remote_user for delegated tasks
   set_fact:
     remote_user: '{{ ansible_user }}'
   when: remote_user is not defined and ansible_user is defined
 
-- name: Validate config
-  cartridge_validate_config:
-    hosts: '{{ play_hosts }}'
-    hostvars: '{{ hostvars }}'
-  delegate_to: localhost
-  become: false
-  run_once: true
+# - name: Validate config
+#   cartridge_validate_config:
+#     hosts: '{{ play_hosts }}'
+#     hostvars: '{{ hostvars }}'
+#   delegate_to: localhost
+#   become: false
+#   run_once: true
 
 # Rewrites cartridge_app_name from package info
 - name: Install package
   include_tasks: install_package.yml
   when: cartridge_package_path is defined
 
-- name: Set one control instance to rule them all
-  cartridge_control_instance:
-    hosts: '{{ play_hosts }}'
-    hostvars: '{{ hostvars }}'
-    appname: '{{ cartridge_app_name }}'
-  register: control_instance
+# - name: Set one control instance to rule them all
+#   cartridge_control_instance:
+#     hosts: '{{ play_hosts }}'
+#     hostvars: '{{ hostvars }}'
+#     appname: '{{ cartridge_app_name }}'
+#   register: control_instance
 
-- name: Save control server host and sock
-  set_fact:
-    control_host: '{{ control_instance.meta.control_host }}'
-    control_sock: '{{ control_instance.meta.control_sock }}'
-
-- name: Place default application config
-  include_tasks: default_config.yml
-  when: cartridge_instances | length > 0
+# - name: Save control server host and sock
+#   set_fact:
+#     control_host: '{{ control_instance.meta.control_host }}'
+#     control_sock: '{{ control_instance.meta.control_sock }}'
 
 - name: Start instances
   include_tasks: start_instance.yml
-  vars:
-    instance: '{{ item }}'
-  with_items: '{{ cartridge_instances }}'
 
-- name: Probe instances
-  include_tasks: probe_instance.yml
-  vars:
-    instance: '{{ item }}'
-  with_items: '{{ cartridge_instances }}'
+# Restart instances and reload systemd-daemon if required
+- meta: flush_handlers
 
-- name: Setup replicasets
-  include_tasks: setup_replicaset.yml
-  vars:
-    replicaset: '{{ item }}'
-  with_items: '{{ cartridge_replicasets }}'
+# - name: Probe instances
+#   include_tasks: probe_instance.yml
+#   vars:
+#     instance: '{{ item }}'
+#   with_items: '{{ cartridge_instances }}'
 
-- name: Cartridge auth
-  cartridge_auth_params:
-    auth_params: '{{ cartridge_auth }}'
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
-  run_once: true
-  when: cartridge_auth is defined
+# - name: Setup replicasets
+#   include_tasks: setup_replicaset.yml
+#   vars:
+#     replicaset: '{{ item }}'
+#   with_items: '{{ cartridge_replicasets }}'
 
-- name: Application config
-  cartridge_app_config:
-    app_config: '{{ cartridge_app_config }}'
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
-  run_once: true
-  when: cartridge_app_config is defined
+# - name: Cartridge auth
+#   cartridge_auth_params:
+#     auth_params: '{{ cartridge_auth }}'
+#     control_sock: '{{ control_sock }}'
+#   delegate_to: '{{ control_host }}'
+#   run_once: true
+#   when: cartridge_auth is defined
 
-- name: Bootstrap vshard
-  cartridge_bootstrap_vshard:
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
-  run_once: true
-  when: cartridge_bootstrap_vshard
+# - name: Application config
+#   cartridge_app_config:
+#     app_config: '{{ cartridge_app_config }}'
+#     control_sock: '{{ control_sock }}'
+#   delegate_to: '{{ control_host }}'
+#   run_once: true
+#   when: cartridge_app_config is defined
 
-- name: Manage failover
-  cartridge_manage_failover:
-    control_sock: '{{ control_sock }}'
-    failover: '{{ cartridge_failover }}'
-  delegate_to: '{{ control_host }}'
-  run_once: true
-  when: cartridge_failover is defined
+# - name: Bootstrap vshard
+#   cartridge_bootstrap_vshard:
+#     control_sock: '{{ control_sock }}'
+#   delegate_to: '{{ control_host }}'
+#   run_once: true
+#   when: cartridge_bootstrap_vshard
+
+# - name: Manage failover
+#   cartridge_manage_failover:
+#     control_sock: '{{ control_sock }}'
+#     failover: '{{ cartridge_failover }}'
+#   delegate_to: '{{ control_host }}'
+#   run_once: true
+#   when: cartridge_failover is defined

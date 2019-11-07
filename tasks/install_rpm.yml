@@ -46,7 +46,7 @@
     state: present
     update_cache: true
   register: install_rpm
-
-- name: Set package_updated variable
-  set_fact:
-    package_updated: '{{ install_rpm.changed }}'
+  failed_when: install_rpm.rc != 0 and "does not update installed package" not in install_rpm.results[0]
+  notify:
+    - restart-instance
+    - reload-systemd-daemon
