@@ -6,6 +6,7 @@ import testinfra.utils.ansible_runner
 import requests
 
 from ansible.inventory.manager import InventoryManager
+from ansible.vars.manager import VariableManager
 from ansible.parsing.dataloader import DataLoader
 
 ansible_runner = testinfra.utils.ansible_runner.AnsibleRunner(
@@ -39,19 +40,53 @@ def check_conf_file(conf_file, conf_section, conf):
     assert conf_file_dict[conf_section] == conf
 
 
-def get_instance_alias(instance):
-    return instance['alias'] if 'alias' in instance else instance['name']
+def get_cluster_cookie():
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    return inventory.groups['cluster'].get_vars()['cartridge_cluster_cookie']
 
 
 def get_configured_instances():
-    configured_instances = []
-
-    for testinfra_host in testinfra_hosts:
-        host_vars = ansible_runner.get_variables(testinfra_host)
-        if 'cartridge_instances' in host_vars:
-            configured_instances += host_vars['cartridge_instances']
-
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    configured_instances = {
+        inventory.hosts[i].get_vars()['inventory_hostname']: inventory.hosts[i].get_vars()['config']
+        for i in inventory.hosts
+    }
     return configured_instances
+
+
+def get_instance_vars(instance):
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    return inventory.hosts[instance].get_vars()
+
+
+def get_cartridge_defaults():
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    all_group_vars = inventory.groups['cluster'].get_vars()
+    return all_group_vars['cartridge_defaults'] if 'cartridge_defaults' in all_group_vars else {}
+
+
+def get_configured_replicasets():
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    variable_manager = VariableManager(loader=DataLoader(), inventory=inventory)
+
+    replicasets = {}
+
+    for instance in inventory.hosts:
+        host_vars = variable_manager.get_vars(host=inventory.hosts[instance])
+        if 'replicaset_name' not in host_vars:
+            continue
+
+        replicaset_name = host_vars['replicaset_name']
+        if replicaset_name not in replicasets:
+            replicasets[replicaset_name] = {
+                'instances': [],
+                'leader': host_vars['leader'],
+                'roles': host_vars['roles'],
+            }
+
+        replicasets[replicaset_name]['instances'].append(instance)
+
+    return replicasets
 
 
 def get_admin_api_url(instances):
@@ -74,19 +109,17 @@ def section_is_deleted(section):
 def test_services_status_and_config(host):
     hostname = host.check_output('hostname -s')
     inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
-    instances = inventory.hosts
+
     host_instances = [
-        i for i in instances if hostname in list(map(lambda x:  x.name, instances[i].get_groups()))
+        i for i in inventory.hosts
+        if hostname in list(map(lambda x:  x.name, inventory.hosts[i].get_groups()))
     ]
 
-    all_group_vars = inventory.groups['cluster'].get_vars()
-    default_conf = \
-        all_group_vars['cartridge_defaults'] if 'cartridge_defaults' in all_group_vars else {}
-
-    default_conf.update(cluster_cookie=all_group_vars['cartridge_cluster_cookie'])
+    default_conf = get_cartridge_defaults()
+    default_conf.update(cluster_cookie=get_cluster_cookie())
 
     for instance in host_instances:
-        instance_vars = inventory.hosts[instance].get_vars()
+        instance_vars = get_instance_vars(instance)
 
         instance_conf = instance_vars['config']
         instance_name = instance_vars['inventory_hostname']
@@ -109,13 +142,8 @@ def test_services_status_and_config(host):
 
 
 def test_instances():
-    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
-    cluster_cookie = inventory.groups['cluster'].get_vars()['cartridge_cluster_cookie']
-
-    configured_instances = {
-        inventory.hosts[i].get_vars()['inventory_hostname']: inventory.hosts[i].get_vars()['config']
-        for i in inventory.hosts
-    }
+    cluster_cookie = get_cluster_cookie()
+    configured_instances = get_configured_instances()
 
     # Select one instance to be control
     admin_api_url = get_admin_api_url(configured_instances)
@@ -144,56 +172,54 @@ def test_instances():
     ])
 
 
-# def test_replicasets(host):
-#     # Get all configured instances
-#     configured_instances = get_configured_instances()
+def test_replicasets(host):
+    # Get all configured instances
+    configured_instances = get_configured_instances()
 
-#     if not configured_instances:
-#         return
+    if not configured_instances:
+        return
 
-#     # Select one instance to be control
-#     admin_api_url = get_admin_api_url(configured_instances)
+    # Select one instance to be control
+    admin_api_url = get_admin_api_url(configured_instances)
 
-#     # Get started replicasets
-#     query = '''
-#         query {
-#           replicasets {
-#             alias
-#             roles
-#             servers {
-#               alias
-#             }
-#             master {
-#               alias
-#             }
-#           }
-#         }
-#     '''
-#     session = get_authorized_session(host)
-#     response = session.post(admin_api_url, json={'query': query})
+    # Get started replicasets
+    query = '''
+        query {
+          replicasets {
+            alias
+            roles
+            servers {
+              alias
+            }
+            master {
+              alias
+            }
+          }
+        }
+    '''
+    session = get_authorized_session(get_cluster_cookie())
+    response = session.post(admin_api_url, json={'query': query})
 
-#     started_replicasets = response.json()['data']['replicasets']
-#     started_replicasets = {r['alias']: r for r in started_replicasets}
+    started_replicasets = response.json()['data']['replicasets']
+    started_replicasets = {r['alias']: r for r in started_replicasets}
 
-#     # Configured replicasets
-#     configured_replicasets = host.ansible.get_variables()['cartridge_replicasets']
-#     configured_replicasets = {r['name']: r for r in configured_replicasets}
+    print(started_replicasets)
+    configured_replicasets = get_configured_replicasets()
+    print(configured_replicasets)
 
-#     # Check if started replicasets are equal to configured
-#     assert set(started_replicasets.keys()) == set(configured_replicasets.keys())
-#     for name in started_replicasets.keys():
-#         started_replicaset = started_replicasets[name]
-#         configured_replicaset = configured_replicasets[name]
+    # Check if started replicasets are equal to configured
+    assert len(started_replicasets) == len(configured_replicasets)
+    assert set(started_replicasets.keys()) == set(configured_replicasets.keys())
+    for name in started_replicasets.keys():
+        started_replicaset = started_replicasets[name]
+        configured_replicaset = configured_replicasets[name]
 
-#         assert set(started_replicaset['roles']) == set(configured_replicaset['roles'])
+        assert set(started_replicaset['roles']) == set(configured_replicaset['roles'])
 
-#         if 'leader' not in configured_replicaset:
-#             configured_replicaset['leader'] = configured_replicaset['instances'][0]
+        assert started_replicaset['master']['alias'] == configured_replicaset['leader']
 
-#         assert started_replicaset['master']['alias'] == configured_replicaset['leader']
-
-#         started_replicaset_instances = [i['alias'] for i in started_replicaset['servers']]
-#         assert set(started_replicaset_instances) == set(configured_replicaset['instances'])
+        started_replicaset_instances = [i['alias'] for i in started_replicaset['servers']]
+        assert set(started_replicaset_instances) == set(configured_replicaset['instances'])
 
 
 # def test_failover(host):

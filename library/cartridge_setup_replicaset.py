@@ -7,7 +7,10 @@ from ansible.module_utils.helpers import get_control_console
 import time
 
 argument_spec = {
-    'replicaset': {'required': True, 'type': 'dict'},
+    'replicaset_name': {'required': True, 'type': 'str'},
+    'leader': {'required': True, 'type': 'str'},
+    'roles': {'required': True, 'type': 'list'},
+    'instances': {'required': True, 'type': 'list'},
     'control_sock': {'required': True, 'type': 'str'},
 }
 
@@ -96,23 +99,17 @@ def wait_for_replicaset_is_healthy(control_console, replicaset_name):
 
 
 def create_replicaset(control_console, params):
-    replicaset = params['replicaset']
-    # sanity checks
-    if len(replicaset['instances']) == 1 and 'leader' not in replicaset:
-        replicaset['leader'] = replicaset['instances'][0]
-
-    if 'leader' not in replicaset:
-        return ModuleRes(success=False, msg='Replicaset leader must be specified')
-
-    if replicaset['leader'] not in replicaset['instances']:
-        return ModuleRes(success=False, msg='Replicaset leader must be one of replicaset instances')
+    replicaset_name = params['replicaset_name']
+    replicaset_leader = params['leader']
+    replicaset_roles = params['roles']
+    replicaset_instances = params['instances']
 
     # Check if all instances are started and not configured
     instances_info = get_all_instances_info(control_console)
     instances_info = {i['alias']: i for i in instances_info}  # make it dict
 
     # Cerate replicaset (join leader)
-    leader_instance_info = instances_info[replicaset['leader']]
+    leader_instance_info = instances_info[replicaset_leader]
     res = control_console.eval('''
         local ok, err = require('cartridge').admin_join_server({{
             uri = '{}',
@@ -125,26 +122,24 @@ def create_replicaset(control_console, params):
         }}
     '''.format(
         leader_instance_info['uri'],
-        ', '.join(['"{}"'.format(role) for role in params['replicaset']['roles']]),
-        replicaset['name']
+        ', '.join(['"{}"'.format(role) for role in replicaset_roles]),
+        replicaset_name
     ))
     if not res['ok']:
-        errmsg = 'Failed to create "{}" replicaset: {}'.format(replicaset['name'], res['err'])
+        errmsg = 'Failed to create "{}" replicaset: {}'.format(replicaset_name, res['err'])
         return ModuleRes(success=False, msg=errmsg)
 
     # Wait for replicaset is healthy
-    if not wait_for_replicaset_is_healthy(control_console, replicaset['name']):
-        errmsg = 'Replicaset "{}" is not healthy'.format(replicaset['name'])
+    if not wait_for_replicaset_is_healthy(control_console, replicaset_name):
+        errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_name)
         return ModuleRes(success=False, msg=errmsg)
 
     # Get replicaset UUID
-    replicaset_info = get_replicaset_info(control_console, params['replicaset']['name'])
-
+    replicaset_info = get_replicaset_info(control_console, replicaset_name)
     replicaset_uuid = replicaset_info['uuid']
 
     # Remove leader from instances list
-    replicaset_instances = replicaset['instances']
-    replicaset_instances.remove(replicaset['leader'])
+    replicaset_instances.remove(replicaset_leader)
 
     # Join other instances
     for replicaset_instance in replicaset_instances:
@@ -172,33 +167,33 @@ def create_replicaset(control_console, params):
             return ModuleRes(success=False, msg=errmsg)
 
         # Wait for replicaset is healthy
-        if not wait_for_replicaset_is_healthy(control_console, replicaset['name']):
-            errmsg = 'Replicaset "{}" is not healthy'.format(replicaset['name'])
+        if not wait_for_replicaset_is_healthy(control_console, replicaset_name):
+            errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_name)
             return ModuleRes(success=False, msg=errmsg)
 
-    return ModuleRes(success=True, changed=True, meta={'instances': instances_info, 'join_res': res})
+    return ModuleRes(success=True, changed=True)
 
 
 def setup_replicaset(params):
-    # Sanity checks
-    if 'name' not in params['replicaset']:
-        return ModuleRes(success=False, msg='Replicaset name must be specified')
+    # # Sanity checks
+    # if 'name' not in params['replicaset']:
+    #     return ModuleRes(success=False, msg='Replicaset name must be specified')
 
-    if 'instances' not in params['replicaset']:
-        return ModuleRes(success=False, msg='Replicaset instances must be specified')
+    # if 'instances' not in params['replicaset']:
+    #     return ModuleRes(success=False, msg='Replicaset instances must be specified')
 
-    if 'roles' not in params['replicaset']:
-        return ModuleRes(success=False, msg='Replicaset roles must be specified')
+    # if 'roles' not in params['replicaset']:
+    #     return ModuleRes(success=False, msg='Replicaset roles must be specified')
 
-    if not params['replicaset']['roles']:
-        return ModuleRes(success=False, msg='Replicaset must have at least one role')
+    # if not params['replicaset']['roles']:
+    #     return ModuleRes(success=False, msg='Replicaset must have at least one role')
 
     control_console = get_control_console(params['control_sock'])
 
     # Check if replicaset is already created
     replicaset_info = get_replicaset_info(
         control_console,
-        params['replicaset']['name']
+        params['replicaset_name']
     )
 
     if replicaset_info is None:

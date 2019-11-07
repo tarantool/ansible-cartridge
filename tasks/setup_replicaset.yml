@@ -1,7 +1,10 @@
 ---
-- name: 'Set {{ replicaset.name }} replicaset'
+- name: 'Set replicaset'
   cartridge_setup_replicaset:
-    replicaset: '{{ replicaset }}'
+    replicaset_name: '{{ replicaset_name }}'
+    leader: '{{ leader }}'
+    roles: '{{ roles }}'
+    instances: '{{ hostvars | filter_by_replicaset_name(replicaset_name) | json_query("*.inventory_hostname") }}'
     control_sock: '{{ control_sock }}'
   delegate_to: '{{ control_host }}'
-  run_once: true
+  when: leader == inventory_hostname

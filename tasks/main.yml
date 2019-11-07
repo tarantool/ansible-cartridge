@@ -55,12 +55,9 @@
   import_tasks: probe_instance.yml
   tags: cartridge-instances
 
-# - name: Setup replicasets
-#   import_tasks: setup_replicaset.yml
-#   vars:
-#     replicaset: '{{ item }}'
-#   with_items: '{{ cartridge_replicasets }}'
-#   tags: cartridge-replicasets
+- name: Setup replicaset
+  import_tasks: setup_replicaset.yml
+  tags: cartridge-replicasets
 
 # - name: Cartridge auth
 #   cartridge_auth_params:
