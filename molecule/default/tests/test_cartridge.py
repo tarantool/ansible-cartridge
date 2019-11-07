@@ -19,9 +19,7 @@ APP_NAME = 'myapp'
 __authorized_session = None
 
 
-def get_authorized_session(host):
-    cluster_cookie = host.ansible.get_variables()['cartridge_cluster_cookie']
-
+def get_authorized_session(cluster_cookie):
     global __authorized_session
     if __authorized_session is None:
         __authorized_session = requests.Session()
@@ -56,8 +54,8 @@ def get_configured_instances():
     return configured_instances
 
 
-def get_admin_api_url(configured_instances):
-    admin_url = 'http://localhost:{}'.format(configured_instances[0]['http_port'])
+def get_admin_api_url(instances):
+    admin_url = 'http://localhost:{}'.format(instances[instances.keys()[0]]['http_port'])
     admin_api_url = '{}/admin/api'.format(
         admin_url
     )
@@ -104,40 +102,41 @@ def test_services_status_and_config(host):
 
         check_conf_file(conf_file, conf_section, instance_conf)
 
-# def test_instances(host):
-#     # Get all configured instances
-#     configured_instances = get_configured_instances()
 
-#     if not configured_instances:
-#         return
+def test_instances():
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    cluster_cookie = inventory.groups['all'].get_vars()['cartridge_cluster_cookie']
 
-#     # Select one instance to be control
-#     admin_api_url = get_admin_api_url(configured_instances)
+    configured_instances = {
+        inventory.hosts[i].get_vars()['inventory_hostname']: inventory.hosts[i].get_vars()['config']
+        for i in inventory.hosts
+    }
 
-#     # Get all started instances
-#     query = '''
-#         query {
-#           servers {
-#             uuid
-#             uri
-#             alias
-#             status
-#             replicaset {
-#               uuid
-#             }
-#           }
-#         }
-#     '''
-#     session = get_authorized_session(host)
-#     response = session.post(admin_api_url, json={'query': query})
+    # Select one instance to be control
+    admin_api_url = get_admin_api_url(configured_instances)
 
-#     started_instances = response.json()['data']['servers']
-#     started_instances = {i['alias']: i for i in started_instances}
+    # Get all started instances
+    query = '''
+        query {
+          servers {
+            uri
+            alias
+          }
+        }
+    '''
+    session = get_authorized_session(cluster_cookie)
+    response = session.post(admin_api_url, json={'query': query})
 
-#     # Check if all configured instances are started and avaliable
-#     assert len(configured_instances) == len(started_instances)
-#     for configured_instance in configured_instances:
-#         assert get_instance_alias(configured_instance) in started_instances
+    started_instances = response.json()['data']['servers']
+    started_instances = {i['alias']: i for i in started_instances}
+
+    # Check if all configured instances are started and avaliable
+    assert len(configured_instances) == len(started_instances)
+    assert set(configured_instances.keys()) == set(started_instances.keys())
+    assert all([
+        configured_instances[i]['advertise_uri'] == started_instances[i]['uri']
+        for i in configured_instances
+    ])
 
 
 # def test_replicasets(host):

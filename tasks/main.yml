@@ -23,17 +23,26 @@
   include_tasks: install_package.yml
   when: cartridge_package_path is defined
 
-# - name: Set one control instance to rule them all
-#   cartridge_control_instance:
-#     hosts: '{{ play_hosts }}'
-#     hostvars: '{{ hostvars }}'
-#     appname: '{{ cartridge_app_name }}'
-#   register: control_instance
+- name: Debug play_hosts
+  debug: var=play_hosts
 
-# - name: Save control server host and sock
-#   set_fact:
-#     control_host: '{{ control_instance.meta.control_host }}'
-#     control_sock: '{{ control_instance.meta.control_sock }}'
+- name: Set one control instance to rule them all
+  cartridge_control_instance:
+    hosts: '{{ play_hosts }}'
+    hostvars: '{{ hostvars }}'
+    appname: '{{ cartridge_app_name }}'
+  register: control_instance
+
+- name: Save control server host and sock
+  set_fact:
+    control_host: '{{ control_instance.meta.control_host }}'
+    control_sock: '{{ control_instance.meta.control_sock }}'
+
+- name: Debug control_host
+  debug: var=control_host
+
+- name: Debug control_sock
+  debug: var=control_sock
 
 - name: Start instances
   include_tasks: start_instance.yml
@@ -41,11 +50,8 @@
 # Restart instances and reload systemd-daemon if required
 - meta: flush_handlers
 
-# - name: Probe instances
-#   include_tasks: probe_instance.yml
-#   vars:
-#     instance: '{{ item }}'
-#   with_items: '{{ cartridge_instances }}'
+- name: Probe instances
+  include_tasks: probe_instance.yml
 
 # - name: Setup replicasets
 #   include_tasks: setup_replicaset.yml

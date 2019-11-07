@@ -16,53 +16,42 @@ def get_control_instance(params):
         'control_host': None
     }
 
-    control_instance_name = None
-    control_instance = None
-    control_host = None
+    # # Find leader of first replicaset
+    # for host in params['hosts']:
+    #     if 'cartridge_replicasets' in params['hostvars'][host]:
+    #         replicasets = params['hostvars'][host]['cartridge_replicasets']
+    #         replicaset = replicasets[0]
+    #         leader_name = replicaset['leader'] if 'leader' in replicaset else replicaset['instances'][0]
+    #         control_instance_name = leader_name
+    #         break
 
-    # Find leader of first replicaset
-    for host in params['hosts']:
-        if 'cartridge_replicasets' in params['hostvars'][host]:
-            replicasets = params['hostvars'][host]['cartridge_replicasets']
-            replicaset = replicasets[0]
-            leader_name = replicaset['leader'] if 'leader' in replicaset else replicaset['instances'][0]
-            control_instance_name = leader_name
-            break
+    # # If not found - get first instance
+    # if control_instance_name is None:
+    #     for host in params['hosts']:
+    #         if 'cartridge_instances' in params['hostvars'][host]:
+    #             instances = params['hostvars'][host]['cartridge_instances']
 
-    # If not found - get first instance
-    if control_instance_name is None:
-        for host in params['hosts']:
-            if 'cartridge_instances' in params['hostvars'][host]:
-                instances = params['hostvars'][host]['cartridge_instances']
+    #             if instances:
+    #                 control_instance_name = instances[0]['name']
+    #                 break
 
-                if instances:
-                    control_instance_name = instances[0]['name']
-                    break
+    # # Get instance and host
+    # for host in params['hosts']:
+    #     if 'cartridge_instances' in params['hostvars'][host]:
+    #         instances = params['hostvars'][host]['cartridge_instances']
+    #         for i in instances:
+    #             if i['name'] == control_instance_name:
+    #                 control_instance = i
+    #                 control_host = host
+    #                 break
 
-    if control_instance_name is None:
-        return ModuleRes(success=True, meta=meta)
+    # if not control_instance:
+    #     errmsg = 'All instances mentioned in cartridge_replicasets must be configured in cartridge_instances'
+    #     return ModuleRes(success=False, msg=errmsg)
 
-    # Get instance and host
-    for host in params['hosts']:
-        if 'cartridge_instances' in params['hostvars'][host]:
-            instances = params['hostvars'][host]['cartridge_instances']
-            for i in instances:
-                if i['name'] == control_instance_name:
-                    control_instance = i
-                    control_host = host
-                    break
-
-    if not control_instance:
-        errmsg = 'All instances mentioned in cartridge_replicasets must be configured in cartridge_instances'
-        return ModuleRes(success=False, msg=errmsg)
-
-    if 'inventory_hostname' in params['hostvars'][control_host]:
-        meta['control_host'] = params['hostvars'][control_host]['inventory_hostname']
-    else:
-        meta['control_host'] = control_host
-
-    # Set control socket
-    meta['control_sock'] = '/var/run/tarantool/{}.{}.control'.format(params['appname'], control_instance_name)
+    control_host = params['hosts'][0]
+    meta['control_host'] = control_host
+    meta['control_sock'] = '/var/run/tarantool/{}.{}.control'.format(params['appname'], control_host)
 
     return ModuleRes(success=True, meta=meta)
 

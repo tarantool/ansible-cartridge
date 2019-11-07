@@ -7,7 +7,6 @@ driver:
 
 platforms:
   - name: vm1
-    hostname: host1
     image: centos:7
     command: /sbin/init
     tmpfs:
@@ -21,7 +20,6 @@ platforms:
       - name: cartridge-network
     purge_networks: true
   - name: vm2
-    hostname: host2
     # XXX: wait for Tarantool fix
     # image: jrei/systemd-ubuntu
     # command: /lib/systemd/systemd
