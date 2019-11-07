@@ -1,0 +1,14 @@
+---
+- name: Restart instance systemd service
+  systemd:
+    name: '{{ cartridge_app_name }}@{{ inventory_hostname }}'
+    state: restarted
+    enabled: true
+  listen: restart-instance
+  tags: cartridge-instances
+
+- name: Reload systemd daemon
+  systemd:
+    daemon_reload: true
+  listen: reload-systemd-daemon
+  tags: cartridge-instances
