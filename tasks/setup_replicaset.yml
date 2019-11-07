@@ -4,7 +4,7 @@
     replicaset_name: '{{ replicaset_name }}'
     leader: '{{ leader }}'
     roles: '{{ roles }}'
-    instances: '{{ hostvars | filter_by_replicaset_name(replicaset_name) | json_query("*.inventory_hostname") }}'
+    instances: '{{ hostvars | instances_by_replicaset_name(replicaset_name) }}'
     control_sock: '{{ control_sock }}'
   delegate_to: '{{ control_host }}'
   when: leader == inventory_hostname

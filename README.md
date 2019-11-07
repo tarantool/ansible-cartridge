@@ -6,8 +6,9 @@ An Ansible role to easily deploy
 This role can deploy and configure applications packed in RPM using
 [`Cartridge CLI`](https://github.com/tarantool/cartridge-cli).
 
-## Table of contents
+<!-- ## Table of contents
 
+* [Usage](#usage)
 * [Requirements](#requirements)
 * [Usage example](#usage-example)
 * [Getting started](#getting-started)
@@ -18,20 +19,21 @@ This role can deploy and configure applications packed in RPM using
   * [Vshard bootstrapping](#vshard-bootstrapping)
   * [Failover](#failover)
   * [Cartridge authorization](#cartridge-authorization)
-  * [Application configuration](#application-configuration)
+  * [Application configuration](#application-configuration) -->
 
-## Requirements
+
+<!-- ## Requirements
 
 * Tarantool Cartridge 1.2.0 or higher;
-* Ansible 2.8.4 or higher.
+* Ansible 2.8.4 or higher. -->
 
 ## Usage example
 
-Example cluster topology:
+<!-- Example cluster topology:
 
 ![image](https://user-images.githubusercontent.com/32142520/65237544-837dc580-dae3-11e9-97c6-db8676357eb5.png)
 
-To deploy an application and set up this topology:
+To deploy an application and set up this topology: -->
 
 `playbook.yml`:
 
@@ -52,63 +54,135 @@ To deploy an application and set up this topology:
 ```yaml
 ---
 all:
-  hosts:
-    vm1:
-      ansible_host: 172.19.0.2  # first host
-      ansible_user: vagrant
+  children:
+    cluster:  # cluster configuration
+      vars:
+        cartridge_package_path: ./myapp-1.0.0-0.rpm
+        cartridge_cluster_cookie: secret-cookie
+        cartridge_defaults:
+          log_level: 1
 
-      cartridge_instances:  # instances to be started on this host
-        - name: 'core_1'
-          advertise_uri: '172.19.0.2:3301'
-          http_port: '8181'
+      children:
+        # group instances by machines
+        host1:
+          vars:
+            # vm1 machine addres and connection opts
+            ansible_host: vm1
+            ansible_user: root
+            ansible_connection: docker
+            become: true
+            become_user: root
 
-        - name: 'storage_1'
-          advertise_uri: '172.19.0.2:3302'
-          http_port: '8182'
+          hosts:  # instances to be started on this host
+            storage-1:
+              config:
+                advertise_uri: 'vm1:3301'
+                http_port: 8081
 
-    vm2:
-      ansible_host: 172.19.0.3  # second host
-      ansible_user: vagrant
+            storage-1-replica:
+              config:
+                advertise_uri: 'vm1:3302'
+                http_port: 8082
 
-      cartridge_instances:  # instances to be started on this host
-        - name: 'router'
-          advertise_uri: '172.19.0.3:3303'
-          http_port: '8183'
+        host2:
+          vars:
+            # vm2 machine addres and connection opts
+            ansible_host: vm2
+            ansible_user: root
+            ansible_connection: docker
+            become: true
+            become_user: root
 
-        - name: 'storage_1_replica'
-          advertise_uri: '172.19.0.3:3304'
-          http_port: '8184'
+          hosts:  # instances to be started on this host
+            core-1:
+              config:
+                advertise_uri: 'vm2:3311'
+                http_port: 8091
 
+            storage-1-replica-2:
+              config:
+                advertise_uri: 'vm2:3312'
+                http_port: 8092
 
-  vars:  # cluster configuration
-    cartridge_package_path: ./myapp-1.0.0-0.rpm  # path to package to deploy
+        # group instances by replicasets
+        storage_1_replicaset:  # replicaset storage-1
+          hosts:  # instances
+            storage-1:
+            storage-1-replica:
+            storage-1-replica-2:
+          vars:
+            # replicaset configuration
+            replicaset_name: storage-1
+            leader: storage-1
+            roles:
+              - 'vshard-storage'
 
-    cartridge_failover: true  # enable automatic failover
-    cartridge_bootstrap_vshard: true  # bootstrap vshard
+        core_1_replicaset:  # replicaset core-1
+          hosts:  # instances
+            core-1:
 
-    cartridge_cluster_cookie: super-secret-cookie  # cartridge cookie must be specified here
-    cartridge_defaults:  # default configuration parameters for all instances
-      log_level: 5
-
-    cartridge_replicasets:  # replica sets to set up
-      - name: 'replicaset-1'
-        instances:
-          - 'storage_1'
-          - 'storage_1_replica'
-        leader: 'storage_1'
-        roles: ['vshard-storage']
-
-      - name: 'core-1'
-        instances:
-          - core_1
-        roles: ['app.roles.custom']
-
-      - name: 'router-1'
-        instances:
-          - router
-        roles: ['vshard-router']
+          vars:
+            # replicaset configuration
+            replicaset_name: core-1
+            leader: core-1
+            roles:
+              - 'app.roles.custom'
+              - 'vshard-router'
 ```
 
+### Tags
+
+* `cartridge-instances` - install package, update instances config and restart instances;
+* `cartridge-replicasets` - configure replicasets.
+
+### Run all tasks for all hosts
+
+```bash
+ansible-paymook -i hosts.yml playbook.yml
+```
+
+### Run tasks only for two instances
+
+Could be useful for restarting a few instances.
+
+Set up replicasets after instances restart:
+
+```bash
+ansible-paymook -i hosts.yml playbook.yml \
+                --limit core-1,storage-1
+```
+
+Restart only two instances and don't configure replicasets:
+
+```bash
+ansible-paymook -i hosts.yml playbook.yml \
+                --limit core-1,storage-1 \
+                --tags cartridge-instances
+```
+
+### Run tasks only for instances on one host
+
+```bash
+ansible-paymook -i hosts.yml playbook.yml \
+                --limit host1
+```
+
+### Run tasks only for instances from one replicaset
+
+```bash
+ansible-paymook -i hosts.yml playbook.yml \
+                --limit storage_1_replicaset
+```
+
+### Join one replicaset, don't configure instances
+
+```bash
+ansible-paymook -i hosts.yml playbook.yml \
+                --limit storage_1_replicaset \
+                --tags cartridge-replicasets
+```
+
+<!-- 
 ## Getting started
 
 See the [getting started guide](./examples/getting-started-app/README.md)
@@ -328,4 +402,4 @@ section-1: value-1  # hasn't been changed
 
 section-2:
   key-21: value-21-new  # body was replaced
-```
+``` -->
