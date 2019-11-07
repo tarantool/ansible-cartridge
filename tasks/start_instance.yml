@@ -1,15 +1,24 @@
 ---
+- name: Place default config
+  copy:
+    content: >-
+      {{
+        { cartridge_app_name: cartridge_defaults | combine({"cluster_cookie": cartridge_cluster_cookie}) }
+        | to_nice_yaml
+      }}
+    dest: /etc/tarantool/conf.d/{{ cartridge_app_name }}.yml
+    owner: tarantool
+    group: tarantool
+    mode: '644'
+
 - name: Place instance config
   copy:
     content: >-
       {{
-        { cartridge_app_name + "." + inventory_hostname:
-          cartridge_defaults
-          | combine({"cluster_cookie": cartridge_cluster_cookie})
-          | combine(config) }
+        { cartridge_app_name + "." + inventory_hostname: config }
           | to_nice_yaml
       }}
-    dest: '/etc/tarantool/conf.d/{{ cartridge_app_name }}.{{ inventory_hostname }}.yml'
+    dest: /etc/tarantool/conf.d/{{ cartridge_app_name }}.{{ inventory_hostname }}.yml
     owner: tarantool
     group: tarantool
     mode: '644'
@@ -21,6 +30,12 @@
     get_attributes: true
   register: package_st
 
+- name: Get default config update time
+  stat:
+    path: /etc/tarantool/conf.d/{{ cartridge_app_name }}.yml
+    get_attributes: true
+  register: default_conf_st
+
 - name: Get service restart time
   stat:
     path: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
@@ -30,4 +45,7 @@
 - name: Check if instance restart is required
   command: /bin/true
   notify: restart-instance
-  changed_when: not socket_st.stat.exists or socket_st.stat.mtime < package_st.stat.mtime
+  changed_when: >-
+    not socket_st.stat.exists
+    or socket_st.stat.mtime < package_st.stat.mtime
+    or socket_st.stat.mtime < default_conf_st.stat.mtime

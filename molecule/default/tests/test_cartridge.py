@@ -79,7 +79,7 @@ def test_services_status_and_config(host):
         i for i in instances if hostname in list(map(lambda x:  x.name, instances[i].get_groups()))
     ]
 
-    all_group_vars = inventory.groups['all'].get_vars()
+    all_group_vars = inventory.groups['cluster'].get_vars()
     default_conf = \
         all_group_vars['cartridge_defaults'] if 'cartridge_defaults' in all_group_vars else {}
 
@@ -88,8 +88,7 @@ def test_services_status_and_config(host):
     for instance in host_instances:
         instance_vars = inventory.hosts[instance].get_vars()
 
-        instance_conf = default_conf.copy()
-        instance_conf.update(instance_vars['config'])
+        instance_conf = instance_vars['config']
         instance_name = instance_vars['inventory_hostname']
 
         service = host.service('{}@{}'.format(APP_NAME, instance_name))
@@ -102,10 +101,16 @@ def test_services_status_and_config(host):
 
         check_conf_file(conf_file, conf_section, instance_conf)
 
+    default_conf_file_path = '/etc/tarantool/conf.d/{}.yml'.format(APP_NAME)
+    default_conf_file = host.file(default_conf_file_path)
+    default_conf_file_section = APP_NAME
+
+    check_conf_file(default_conf_file, default_conf_file_section, default_conf)
+
 
 def test_instances():
     inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
-    cluster_cookie = inventory.groups['all'].get_vars()['cartridge_cluster_cookie']
+    cluster_cookie = inventory.groups['cluster'].get_vars()['cartridge_cluster_cookie']
 
     configured_instances = {
         inventory.hosts[i].get_vars()['inventory_hostname']: inventory.hosts[i].get_vars()['config']

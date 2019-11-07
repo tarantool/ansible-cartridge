@@ -4,11 +4,13 @@
   fail:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
   when: ansible_os_family not in ["RedHat", "Debian"]
+  tags: always
 
 - name: Set remote_user for delegated tasks
   set_fact:
     remote_user: '{{ ansible_user }}'
   when: remote_user is not defined and ansible_user is defined
+  tags: always
 
 # - name: Validate config
 #   cartridge_validate_config:
@@ -17,14 +19,16 @@
 #   delegate_to: localhost
 #   become: false
 #   run_once: true
+#   tags: always
 
 # Rewrites cartridge_app_name from package info
 - name: Install package
-  include_tasks: install_package.yml
+  import_tasks: install_package.yml
   when: cartridge_package_path is defined
+  tags:
+    - cartridge-instances
+    - cartridge-package
 
-- name: Debug play_hosts
-  debug: var=play_hosts
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
@@ -32,32 +36,31 @@
     hostvars: '{{ hostvars }}'
     appname: '{{ cartridge_app_name }}'
   register: control_instance
+  tags: always
 
 - name: Save control server host and sock
   set_fact:
     control_host: '{{ control_instance.meta.control_host }}'
     control_sock: '{{ control_instance.meta.control_sock }}'
-
-- name: Debug control_host
-  debug: var=control_host
-
-- name: Debug control_sock
-  debug: var=control_sock
+  tags: always
 
 - name: Start instances
-  include_tasks: start_instance.yml
+  import_tasks: start_instance.yml
+  tags: cartridge-instances
 
 # Restart instances and reload systemd-daemon if required
 - meta: flush_handlers
 
 - name: Probe instances
-  include_tasks: probe_instance.yml
+  import_tasks: probe_instance.yml
+  tags: cartridge-instances
 
 # - name: Setup replicasets
-#   include_tasks: setup_replicaset.yml
+#   import_tasks: setup_replicaset.yml
 #   vars:
 #     replicaset: '{{ item }}'
 #   with_items: '{{ cartridge_replicasets }}'
+#   tags: cartridge-replicasets
 
 # - name: Cartridge auth
 #   cartridge_auth_params:
@@ -66,6 +69,7 @@
 #   delegate_to: '{{ control_host }}'
 #   run_once: true
 #   when: cartridge_auth is defined
+#   tags: cartridge-auth
 
 # - name: Application config
 #   cartridge_app_config:
@@ -74,6 +78,7 @@
 #   delegate_to: '{{ control_host }}'
 #   run_once: true
 #   when: cartridge_app_config is defined
+#   tags: cartridge-app-config
 
 # - name: Bootstrap vshard
 #   cartridge_bootstrap_vshard:
@@ -81,6 +86,7 @@
 #   delegate_to: '{{ control_host }}'
 #   run_once: true
 #   when: cartridge_bootstrap_vshard
+#   tags: cartridge-vshard
 
 # - name: Manage failover
 #   cartridge_manage_failover:
@@ -89,3 +95,4 @@
 #   delegate_to: '{{ control_host }}'
 #   run_once: true
 #   when: cartridge_failover is defined
+#   tags: cartridge-failover
