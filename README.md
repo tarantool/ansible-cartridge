@@ -112,7 +112,7 @@ all:
             storage-1-replica-2:
           vars:
             # replicaset configuration
-            replicaset_name: storage-1
+            replicaset_alias: storage-1
             leader: storage-1
             roles:
               - 'vshard-storage'
@@ -123,7 +123,7 @@ all:
 
           vars:
             # replicaset configuration
-            replicaset_name: core-1
+            replicaset_alias: core-1
             leader: core-1
             roles:
               - 'app.roles.custom'

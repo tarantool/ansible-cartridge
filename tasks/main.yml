@@ -55,8 +55,20 @@
   import_tasks: probe_instance.yml
   tags: cartridge-instances
 
-- name: Setup replicaset
-  import_tasks: setup_replicaset.yml
+- name: Get replicasets
+  cartridge_get_replicasets:
+    hostvars: '{{ hostvars }}'
+  register: replicasets
+  run_once: true
+  tags: cartridge-replicasets
+
+- name: Setup replicasets
+  include_tasks: setup_replicaset.yml
+  vars:
+    replicaset: '{{ item }}'
+    join_host: '{{ replicasets.meta.join_host }}'
+  loop: '{{ replicasets.meta.replicasets }}'
+  run_once: true
   tags: cartridge-replicasets
 
 # - name: Cartridge auth

@@ -73,18 +73,18 @@ def get_configured_replicasets():
 
     for instance in inventory.hosts:
         host_vars = variable_manager.get_vars(host=inventory.hosts[instance])
-        if 'replicaset_name' not in host_vars:
+        if 'replicaset_alias' not in host_vars:
             continue
 
-        replicaset_name = host_vars['replicaset_name']
-        if replicaset_name not in replicasets:
-            replicasets[replicaset_name] = {
+        replicaset_alias = host_vars['replicaset_alias']
+        if replicaset_alias not in replicasets:
+            replicasets[replicaset_alias] = {
                 'instances': [],
                 'leader': host_vars['leader'],
                 'roles': host_vars['roles'],
             }
 
-        replicasets[replicaset_name]['instances'].append(instance)
+        replicasets[replicaset_alias]['instances'].append(instance)
 
     return replicasets
 
