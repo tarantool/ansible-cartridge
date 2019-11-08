@@ -71,37 +71,37 @@
   run_once: true
   tags: cartridge-replicasets
 
-# - name: Cartridge auth
-#   cartridge_auth_params:
-#     auth_params: '{{ cartridge_auth }}'
-#     control_sock: '{{ control_sock }}'
-#   delegate_to: '{{ control_host }}'
-#   run_once: true
-#   when: cartridge_auth is defined
-#   tags: cartridge-auth
+- name: Cartridge auth
+  cartridge_auth_params:
+    auth_params: '{{ cartridge_auth }}'
+    control_sock: '{{ control_sock }}'
+  delegate_to: '{{ control_host }}'
+  run_once: true
+  when: cartridge_auth is defined
+  tags: cartridge-auth
 
-# - name: Application config
-#   cartridge_app_config:
-#     app_config: '{{ cartridge_app_config }}'
-#     control_sock: '{{ control_sock }}'
-#   delegate_to: '{{ control_host }}'
-#   run_once: true
-#   when: cartridge_app_config is defined
-#   tags: cartridge-app-config
+- name: Application config
+  cartridge_app_config:
+    app_config: '{{ cartridge_app_config }}'
+    control_sock: '{{ control_sock }}'
+  delegate_to: '{{ control_host }}'
+  run_once: true
+  when: cartridge_app_config is defined
+  tags: cartridge-app-config
 
-# - name: Bootstrap vshard
-#   cartridge_bootstrap_vshard:
-#     control_sock: '{{ control_sock }}'
-#   delegate_to: '{{ control_host }}'
-#   run_once: true
-#   when: cartridge_bootstrap_vshard
-#   tags: cartridge-vshard
+- name: Bootstrap vshard
+  cartridge_bootstrap_vshard:
+    control_sock: '{{ control_sock }}'
+  delegate_to: '{{ control_host }}'
+  run_once: true
+  when: cartridge_bootstrap_vshard
+  tags: cartridge-vshard
 
-# - name: Manage failover
-#   cartridge_manage_failover:
-#     control_sock: '{{ control_sock }}'
-#     failover: '{{ cartridge_failover }}'
-#   delegate_to: '{{ control_host }}'
-#   run_once: true
-#   when: cartridge_failover is defined
-#   tags: cartridge-failover
+- name: Manage failover
+  cartridge_manage_failover:
+    control_sock: '{{ control_sock }}'
+    failover: '{{ cartridge_failover }}'
+  delegate_to: '{{ control_host }}'
+  run_once: true
+  when: cartridge_failover is defined
+  tags: cartridge-failover
