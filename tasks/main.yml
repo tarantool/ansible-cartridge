@@ -29,21 +29,6 @@
     - cartridge-instances
     - cartridge-package
 
-
-- name: Set one control instance to rule them all
-  cartridge_control_instance:
-    hosts: '{{ play_hosts }}'
-    hostvars: '{{ hostvars }}'
-    appname: '{{ cartridge_app_name }}'
-  register: control_instance
-  tags: always
-
-- name: Save control server host and sock
-  set_fact:
-    control_host: '{{ control_instance.meta.control_host }}'
-    control_sock: '{{ control_instance.meta.control_sock }}'
-  tags: always
-
 - name: Start instances
   import_tasks: start_instance.yml
   tags: cartridge-instances
@@ -51,13 +36,23 @@
 # Restart instances and reload systemd-daemon if required
 - meta: flush_handlers
 
-- name: Probe instances
-  import_tasks: probe_instance.yml
-  tags: cartridge-instances
+- name: Set current Topology global variable
+  set_fact:
+    current_topology: []
+  tags: cartridge-replicasets
+
+- name: Get current topology
+  include_tasks: get_topology.yml
+  vars:
+    instance: '{{ item }}'
+  loop: '{{ hostvars |  cartridge_hosts }}'
+  run_once: true
+  tags: cartridge-replicasets
 
 - name: Get replicasets
   cartridge_get_replicasets:
     hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
   register: replicasets
   run_once: true
   tags: cartridge-replicasets
@@ -71,6 +66,31 @@
   run_once: true
   tags: cartridge-replicasets
 
+# XXX: select host from current topology
+- name: Set one control instance to rule them all
+  cartridge_control_instance:
+    hosts: '{{ play_hosts }}'
+    hostvars: '{{ hostvars }}'
+    appname: '{{ cartridge_app_name }}'
+  register: control_instance
+  tags:
+    - cartridge-auth
+    - cartridge-app-config
+    - cartridge-vshard
+    - cartridge-failover
+    - cartridge-config
+
+- name: Save control server host and sock
+  set_fact:
+    control_host: '{{ control_instance.meta.control_host }}'
+    control_sock: '{{ control_instance.meta.control_sock }}'
+  tags:
+    - cartridge-auth
+    - cartridge-app-config
+    - cartridge-vshard
+    - cartridge-failover
+    - cartridge-config
+
 - name: Cartridge auth
   cartridge_auth_params:
     auth_params: '{{ cartridge_auth }}'
@@ -78,7 +98,9 @@
   delegate_to: '{{ control_host }}'
   run_once: true
   when: cartridge_auth is defined
-  tags: cartridge-auth
+  tags:
+    - cartridge-auth
+    - cartridge-config
 
 - name: Application config
   cartridge_app_config:
@@ -87,7 +109,9 @@
   delegate_to: '{{ control_host }}'
   run_once: true
   when: cartridge_app_config is defined
-  tags: cartridge-app-config
+  tags:
+    - cartridge-app-config
+    - cartridge-config
 
 - name: Bootstrap vshard
   cartridge_bootstrap_vshard:
@@ -95,7 +119,9 @@
   delegate_to: '{{ control_host }}'
   run_once: true
   when: cartridge_bootstrap_vshard
-  tags: cartridge-vshard
+  tags:
+    - cartridge-vshard
+    - cartridge-config
 
 - name: Manage failover
   cartridge_manage_failover:
@@ -104,4 +130,6 @@
   delegate_to: '{{ control_host }}'
   run_once: true
   when: cartridge_failover is defined
-  tags: cartridge-failover
+  tags:
+    - cartridge-failover
+    - cartridge-config

@@ -6,14 +6,24 @@ from ansible.module_utils.helpers import ModuleRes, CartridgeException
 
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
+    'play_hosts': {'required': True, 'type': 'list'},
 }
 
 
-def setup_replicaset(params):
+def get_replicasets(params):
     hostvars = params['hostvars']
+    play_hosts = params['play_hosts']
 
     replicasets = {}
+    current_topology = []
     for i, instance_vars in hostvars.items():
+        if 'current_topology' in instance_vars:
+            if instance_vars['current_topology']:
+                current_topology = instance_vars['current_topology']
+
+        if i not in play_hosts:
+            continue
+
         if 'replicaset_alias' in instance_vars:
             replicaset_alias = instance_vars['replicaset_alias']
             if replicaset_alias not in replicasets:
@@ -27,8 +37,19 @@ def setup_replicaset(params):
                 })
             replicasets[replicaset_alias]['instances'].append(i)
 
+    for alias, r in replicasets.items():
+        # if replicaset is not configured
+        if r['leader'] not in r['instances']:
+            errmsg = 'Leader of "{}" replicaset is not in play hosts ("{}")'.format(
+                alias, r['leader']
+            )
+            return ModuleRes(success=False, msg=errmsg)
+
     replicasets_list = [v for _, v in replicasets.items()]
-    join_host = replicasets_list[0]['leader'] if replicasets_list else None
+    if not current_topology:
+        join_host = replicasets_list[0]['leader'] if replicasets_list else None
+    else:
+        join_host = current_topology[0]['servers'][0]['alias']
 
     return ModuleRes(success=True, changed=False, meta={
         'replicasets': replicasets_list,
@@ -39,7 +60,7 @@ def setup_replicaset(params):
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
     try:
-        res = setup_replicaset(module.params)
+        res = get_replicasets(module.params)
     except CartridgeException as e:
         module.fail_json(msg=str(e))
 

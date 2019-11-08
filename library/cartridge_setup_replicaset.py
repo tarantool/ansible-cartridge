@@ -105,6 +105,12 @@ def create_replicaset(control_console, params):
     instances_info = get_all_instances_info(control_console)
     instances_info = {i['alias']: i for i in instances_info}  # make it dict
 
+    if replicaset_leader not in instances_info:
+        errmsg = 'Leader "{}" or replicaset "{}" not found is cluster. Make sure it was started'.format(
+            replicaset_leader, replicaset_alias
+        )
+        return ModuleRes(success=False, msg=errmsg)
+
     # Cerate replicaset (join leader)
     leader_instance_info = instances_info[replicaset_leader]
     res = control_console.eval('''
@@ -141,7 +147,9 @@ def create_replicaset(control_console, params):
     # Join other instances
     for replicaset_instance in replicaset_instances:
         if replicaset_instance not in instances_info:
-            errmsg = '"{}" instance was not found in cluster'.format(replicaset_instance)
+            errmsg = 'Instance "{}" or replicaset "{}" not found is cluster. Make sure it was started'.format(
+                replicaset_instance, replicaset_alias
+            )
             return ModuleRes(success=False, msg=errmsg)
 
         replicaset_instance_info = instances_info[replicaset_instance]
