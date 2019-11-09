@@ -15,11 +15,10 @@ def get_replicasets(params):
     play_hosts = params['play_hosts']
 
     replicasets = {}
-    current_topology = []
+    join_host = None
     for i, instance_vars in hostvars.items():
-        if 'current_topology' in instance_vars:
-            if instance_vars['current_topology']:
-                current_topology = instance_vars['current_topology']
+        if 'joined' in instance_vars and instance_vars['joined']:
+            join_host = i
 
         if i not in play_hosts:
             continue
@@ -46,10 +45,9 @@ def get_replicasets(params):
             return ModuleRes(success=False, msg=errmsg)
 
     replicasets_list = [v for _, v in replicasets.items()]
-    if not current_topology:
+
+    if not join_host:
         join_host = replicasets_list[0]['leader'] if replicasets_list else None
-    else:
-        join_host = current_topology[0]['servers'][0]['alias']
 
     return ModuleRes(success=True, changed=False, meta={
         'replicasets': replicasets_list,

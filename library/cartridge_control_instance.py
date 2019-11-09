@@ -4,23 +4,33 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes
 
 argument_spec = {
-    'hosts': {'required': True, 'type': 'list'},
     'hostvars': {'required': True, 'type': 'dict'},
     'appname': {'requires': True, 'type': 'str'},
 }
 
 
 def get_control_instance(params):
-    meta = {
-        'control_sock': None,
-        'control_host': None
-    }
+    hostvars = params['hostvars']
+    appname = params['appname']
 
-    control_host = params['hosts'][0]
-    meta['control_host'] = control_host
-    meta['control_sock'] = '/var/run/tarantool/{}.{}.control'.format(params['appname'], control_host)
+    control_instance = None
+    control_sock = None
 
-    return ModuleRes(success=True, meta=meta)
+    for i, instance_vars in hostvars.items():
+        if 'joined' in instance_vars and instance_vars['joined']:
+            control_instance = i
+            control_sock = '/var/run/tarantool/{}.{}.control'.format(appname, control_instance)
+            break
+
+    if control_instance is None:
+        errmsg = 'Unable to run cartridge config tasks - cluster is not bootstrapped yet. ' + \
+            'Skip `cartridge-control` tag or do not specify cartridge config variables'
+        return ModuleRes(success=False, msg=errmsg)
+
+    return ModuleRes(success=True, meta={
+        'control_instance': control_instance,
+        'control_sock': control_sock,
+    })
 
 
 def main():

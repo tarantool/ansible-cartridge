@@ -22,7 +22,7 @@ def bootstrap_vshard(params):
     res = control_console.eval('''
         local ok, err = require('cartridge.admin').bootstrap_vshard()
         return {
-            ok = ok,
+            ok = ok or require('json').NULL,
             err = err and err.err or require('json').NULL
         }
     ''')

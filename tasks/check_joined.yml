@@ -1,0 +1,14 @@
+---
+- name: Check if {{ instance }} joined
+  cartridge_check_joined:
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ instance }}.control
+  register: check_joined
+  delegate_to: '{{ instance }}'
+  tags: always
+
+- name: Set joined variable
+  set_fact:
+    joined: '{{ check_joined.meta.joined }}'
+  delegate_to: '{{ instance }}'
+  delegate_facts: true
+  tags: always
