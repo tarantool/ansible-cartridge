@@ -106,7 +106,7 @@ def create_replicaset(control_console, params):
     instances_info = {i['alias']: i for i in instances_info}  # make it dict
 
     if replicaset_leader not in instances_info:
-        errmsg = 'Leader "{}" or replicaset "{}" not found is cluster. Make sure it was started'.format(
+        errmsg = 'Leader "{}" (replicaset "{}") not found is cluster. Make sure it was started'.format(
             replicaset_leader, replicaset_alias
         )
         return ModuleRes(success=False, msg=errmsg)
@@ -147,7 +147,7 @@ def create_replicaset(control_console, params):
     # Join other instances
     for replicaset_instance in replicaset_instances:
         if replicaset_instance not in instances_info:
-            errmsg = 'Instance "{}" or replicaset "{}" not found is cluster. Make sure it was started'.format(
+            errmsg = 'Instance "{}" (replicaset "{}") not found is cluster. Make sure it was started'.format(
                 replicaset_instance, replicaset_alias
             )
             return ModuleRes(success=False, msg=errmsg)
@@ -179,7 +179,7 @@ def create_replicaset(control_console, params):
     return ModuleRes(success=True, changed=True)
 
 
-def setup_replicaset(params):
+def manage_replicaset(params):
     control_console = get_control_console(params['control_sock'])
 
     # Check if replicaset is already created
@@ -197,7 +197,7 @@ def setup_replicaset(params):
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
     try:
-        res = setup_replicaset(module.params)
+        res = manage_replicaset(module.params)
     except CartridgeException as e:
         module.fail_json(msg=str(e))
 

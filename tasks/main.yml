@@ -36,6 +36,18 @@
 # Restart instances and reload systemd-daemon if required
 - meta: flush_handlers
 
+- name: Connect instance to membership
+  cartridge_probe_instance:
+    instance: '{{ config }}'
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+  register: probe
+  until: not probe.failed
+  retries: 3
+  delay: 5
+  tags: cartridge-instances
+
 - name: Set current Topology global variable
   set_fact:
     current_topology: []
@@ -57,8 +69,8 @@
   run_once: true
   tags: cartridge-replicasets
 
-- name: Setup replicasets
-  include_tasks: setup_replicaset.yml
+- name: Manage replicasets
+  include_tasks: manage_replicaset.yml
   vars:
     replicaset: '{{ item }}'
     join_host: '{{ replicasets.meta.join_host }}'
@@ -92,8 +104,8 @@
     - cartridge-config
 
 - name: Cartridge auth
-  cartridge_auth_params:
-    auth_params: '{{ cartridge_auth }}'
+  cartridge_auth:
+    auth: '{{ cartridge_auth }}'
     control_sock: '{{ control_sock }}'
   delegate_to: '{{ control_host }}'
   run_once: true

@@ -6,7 +6,7 @@ from ansible.module_utils.helpers import get_control_console
 
 
 argument_spec = {
-    'auth_params': {'required': True, 'type': 'dict'},
+    'auth': {'required': True, 'type': 'dict'},
     'control_sock': {'required': True, 'type': 'str'},
 }
 
@@ -157,8 +157,8 @@ def user_is_deleted(user):
     return 'deleted' in user and user['deleted'] is True
 
 
-def manage_auth_params(params):
-    auth_params = params['auth_params']
+def manage_auth(params):
+    auth_params = params['auth']
     control_console = get_control_console(params['control_sock'])
 
     if not auth_params:
@@ -242,7 +242,7 @@ def manage_auth_params(params):
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
     try:
-        res = manage_auth_params(module.params)
+        res = manage_auth(module.params)
     except CartridgeException as e:
         module.fail_json(msg=str(e))
 

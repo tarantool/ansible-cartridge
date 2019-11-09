@@ -1,6 +1,6 @@
 ---
-- name: Setup {{ replicaset.alias }} replicaset
-  cartridge_setup_replicaset:
+- name: Manage {{ replicaset.alias }} replicaset
+  cartridge_manage_replicaset:
     replicaset: '{{ replicaset }}'
     control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ join_host }}.control
   delegate_to: '{{ join_host }}'
