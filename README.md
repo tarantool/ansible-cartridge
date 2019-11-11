@@ -31,11 +31,11 @@ This role can deploy and configure applications packed in RPM using
 
 ## Usage example
 
-<!-- Example cluster topology:
+Example cluster topology:
 
-![image](https://user-images.githubusercontent.com/32142520/65237544-837dc580-dae3-11e9-97c6-db8676357eb5.png)
+![image](./examples/getting-started-app/images/example-topology.png)
 
-To deploy an application and set up this topology: -->
+To deploy an application and set up this topology:
 
 `playbook.yml`:
 
@@ -66,27 +66,8 @@ all:
     # group instances by machines
     host1:
       vars:
-        # vm1 machine addres and connection opts
-        ansible_host: vm1
-        ansible_user: root
-        become: true
-        become_user: root
-
-      hosts:  # instances to be started on this host
-        storage-1:
-          config:
-            advertise_uri: 'vm1:3301'
-            http_port: 8081
-
-        storage-1-replica:
-          config:
-            advertise_uri: 'vm1:3302'
-            http_port: 8082
-
-    host2:
-      vars:
-        # vm2 machine addres and connection opts
-        ansible_host: vm2
+        # first machine addres and connection opts
+        ansible_host: 172.19.0.2
         ansible_user: root
         become: true
         become_user: root
@@ -94,20 +75,33 @@ all:
       hosts:  # instances to be started on this host
         core-1:
           config:
-            advertise_uri: 'vm2:3311'
-            http_port: 8091
+            advertise_uri: '172.19.0.2:3301'
+            http_port: 8081
 
-        storage-1-replica-2:
+        storage-1-replica:
           config:
-            advertise_uri: 'vm2:3312'
-            http_port: 8092
+            advertise_uri: '172.19.0.2:3302'
+            http_port: 8082
+
+    host2:
+      vars:
+        # second machine addres and connection opts
+        ansible_host: 172.19.0.3
+        ansible_user: root
+        become: true
+        become_user: root
+
+      hosts:  # instances to be started on this host
+        storage-1:
+          config:
+            advertise_uri: '172.19.0.3:3301'
+            http_port: 8091
 
     # group instances by replicasets
     storage_1_replicaset:  # replicaset storage-1
       hosts:  # instances
         storage-1:
         storage-1-replica:
-        storage-1-replica-2:
       vars:
         # replicaset configuration
         replicaset_alias: storage-1
@@ -145,14 +139,10 @@ Configuration format is described in detail in the
   (application name will be detected as package name);
 * `cartridge_app_name` (`string`): application name, required if
   `cartridge_package_path` is not specified;
-* `cartridge_instances` (`list`, optional, default: `[]`): configuration for
-  deployed instances;
 * `cartridge_cluster_cookie` (`string`, required): cluster cookie for all
   cluster instances;
 * `cartridge_defaults` (`dict`, optional, default: `{}`): default configuration
   parameters values for instances;
-* `cartridge_replicasets` (`list`, optional, default: `[]`) - replica sets
-  configuration;
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean
   flag that indicates if vshard should be bootstrapped;
 * `cartridge_failover` (`boolean`, optional): boolean flag that indicates if
@@ -161,9 +151,6 @@ Configuration format is described in detail in the
 * `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`):
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency).
-
-**Note**: If an instance is mentioned in the `cartridge_replicasets` section,
-it should be configured in `cartridge_instances`.
 
 ### Role tags
 
@@ -262,7 +249,7 @@ It can contain [cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.
 
 #### Required parameters
 
-`advertise_uri` is required parameter for instance.
+`advertise_uri` is required parameter for instance configuraion.
 It must be specified in `<host>:<port>` format.
 
 #### Forbidden parameters
@@ -287,18 +274,8 @@ Environment=TARANTOOL_CONSOLE_SOCK=/var/run/tarantool/${app_name}.{instance_name
 To configure replicasets you need to specify replicaset parameters for each instance in replicaset:
 
 * `replicaset_alias` (`string`, required) - replicaset alias, will be displayed in Web UI;
-* `instances` (`list-of-strings`, required) - names of instances, which must be joined to replicaset;
-* `leader` (`string`) - name of leader instance. Optional if replicaset contains only one instance, required for replicaset with more than one instances;
+* `leader` (`string`) - name of leader instance;
 * `roles` (`list-of-strings`, required) - roles to be enabled on the replicaset.
-
-* `name` (`string`, required) - name of the replica set, will be displayed in
-  the Web UI;
-* `instances` (`list-of-strings`, required) - names of instances, which must be
-  joined to the replica set;
-* `leader` (`string`) - name of the leader instance. Optional if the replica set
-  contains only one instance, required for a replica set with more than one
-  instance;
-* `roles` (`list-of-strings`, required) - roles to be enabled on the replica set.
 
 **Note**:
 * A replica set will be set up **only** if a replica set with the same
