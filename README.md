@@ -6,20 +6,22 @@ An Ansible role to easily deploy
 This role can deploy and configure applications packed in RPM using
 [`Cartridge CLI`](https://github.com/tarantool/cartridge-cli).
 
-<!-- ## Table of contents
+## Table of contents
 
 * [Usage](#usage)
 * [Requirements](#requirements)
 * [Usage example](#usage-example)
 * [Getting started](#getting-started)
 * [Role variables](#role-variables)
+* [Role tags](#role-tags)
+* [Example scenario](#example-scenario)
 * [Configuration format](#configuration-format)
   * [Instances](#instances)
   * [Replica sets](#replica-sets)
   * [Vshard bootstrapping](#vshard-bootstrapping)
   * [Failover](#failover)
   * [Cartridge authorization](#cartridge-authorization)
-  * [Application configuration](#application-configuration) -->
+  * [Application configuration](#application-configuration)
 
 
 <!-- ## Requirements
@@ -69,7 +71,6 @@ all:
             # vm1 machine addres and connection opts
             ansible_host: vm1
             ansible_user: root
-            ansible_connection: docker
             become: true
             become_user: root
 
@@ -89,7 +90,6 @@ all:
             # vm2 machine addres and connection opts
             ansible_host: vm2
             ansible_user: root
-            ansible_connection: docker
             become: true
             become_user: root
 
@@ -130,59 +130,6 @@ all:
               - 'vshard-router'
 ```
 
-### Tags
-
-* `cartridge-instances` - install package, update instances config and restart instances;
-* `cartridge-replicasets` - configure replicasets.
-
-### Run all tasks for all hosts
-
-```bash
-ansible-paymook -i hosts.yml playbook.yml
-```
-
-### Run tasks only for two instances
-
-Could be useful for restarting a few instances.
-
-Set up replicasets after instances restart:
-
-```bash
-ansible-paymook -i hosts.yml playbook.yml \
-                --limit core-1,storage-1
-```
-
-Restart only two instances and don't configure replicasets:
-
-```bash
-ansible-paymook -i hosts.yml playbook.yml \
-                --limit core-1,storage-1 \
-                --tags cartridge-instances
-```
-
-### Run tasks only for instances on one host
-
-```bash
-ansible-paymook -i hosts.yml playbook.yml \
-                --limit host1
-```
-
-### Run tasks only for instances from one replicaset
-
-```bash
-ansible-paymook -i hosts.yml playbook.yml \
-                --limit storage_1_replicaset
-```
-
-### Join one replicaset, don't configure instances
-
-```bash
-ansible-paymook -i hosts.yml playbook.yml \
-                --limit storage_1_replicaset \
-                --tags cartridge-replicasets
-```
-
-<!-- 
 ## Getting started
 
 See the [getting started guide](./examples/getting-started-app/README.md)
@@ -220,6 +167,60 @@ Configuration format is described in detail in the
 **Note**: If an instance is mentioned in the `cartridge_replicasets` section,
 it should be configured in `cartridge_instances`.
 
+### Role tags
+
+This role tasks have special tags that allows to perform only secified actions.
+Tasks are running in this order:
+
+* `cartridge-instances` - install package, update instances config and restart instances;
+* `cartridge-replicasets` - configure replicasets;
+* `cartridge-config` - configure cluster, contains this tags:
+  * `cartridge-auth` - configure authorization;
+  * `cartridge-app-config` - patch application clusterwide config;
+  * `cartridge-vshard` - bootstrap Vshard;
+  * `cartridge-failover` - manage cartridge failover.
+
+**Note**, that `cartridge-config` tasks would be skipped if no one of `cartridge_auth`, `cartridge_app_config`, `cartridge_bootstrap_vshard` and `cartridge_failover` variables is specified.
+
+Using `--tags` and `--limits` options you can manage cluster different ways:
+
+### Example scenario
+
+#### Run all tasks for all hosts
+
+All instances will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
+Then, instances would be joined to replicasets.
+If cluster configuration was specified, it would be updated.
+
+```bash
+ansible-paymook -i hosts.yml playbook.yml
+```
+
+#### Update instances from one replicaset
+
+Instances from `storage_1_replicaset` group will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
+
+```bash
+ansible-paymook -i hosts.yml playbook.yml --limit storage_1_replicaset \
+                                          --tags cartridge-instances
+```
+
+#### Join instances to replicaset
+
+Instances from `storage_1_replicaset` group will be joined to replicaset.
+
+```bash
+ansible-paymook -i hosts.yml playbook.yml --limit storage_1_replicaset \
+                                          --tags cartridge-replicasets
+```
+
+#### Start and join other replicaset instances
+
+```bash
+ansible-paymook -i hosts.yml playbook.yml --limit core_1_replicaset \
+```
+
+
 ## Configuration format
 
 Instances and replica sets are identified by names, so you must use unique names
@@ -240,24 +241,14 @@ should specify `cartridge_app_name`.
 Each instance of the application is started as `<app_name>@<instance_name>`
 systemd service.
 
-It can be configured using the `cartridge_instances` variable.
-This variable describes all instances that should be deployed on the host.
-
-`cartridge_instances` is a list of dicts that contains
-[cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts)
-parameters or some application-specific parameters (can be parsed in application
-using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse)
-module).
+It can be configured using the `config` variable.
+This variable describes instance parameters that would be passed to cartridge configuration.
+It can contain [cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse) module).
 
 #### Required parameters
 
-`name` and `advertise_uri` are required parameters for an instance.
-
-**Notes:**
-* `name` will be used for systemd service name and instance alias.
-* `advertise_uri` parameter must be specified in the `<host>:<port>` format.
-* If an instance with the same name is already started on the host, it will be
-  restarted with new configuration.
+`advertise_uri` is required parameter for instance.
+It must be specified in `<host>:<port>` format.
 
 #### Forbidden parameters
 
@@ -278,10 +269,12 @@ Environment=TARANTOOL_CONSOLE_SOCK=/var/run/tarantool/${app_name}.{instance_name
 
 ### Replica sets
 
-Cluster topology can be configured using the `cartridge_replicasets` variable
-(must be placed in `all` group).
+To configure replicasets you need to specify replicaset parameters for each instance in replicaset:
 
-`cartridge_replicasets` is a list of replica set configurations:
+* `replicaset_alias` (`string`, required) - replicaset alias, will be displayed in Web UI;
+* `instances` (`list-of-strings`, required) - names of instances, which must be joined to replicaset;
+* `leader` (`string`) - name of leader instance. Optional if replicaset contains only one instance, required for replicaset with more than one instances;
+* `roles` (`list-of-strings`, required) - roles to be enabled on the replicaset.
 
 * `name` (`string`, required) - name of the replica set, will be displayed in
   the Web UI;
@@ -295,8 +288,8 @@ Cluster topology can be configured using the `cartridge_replicasets` variable
 **Note**:
 * A replica set will be set up **only** if a replica set with the same
   name is not set up yet.
-* If an instance is mentioned in the `cartridge_replicasets` section, it should
-  be configured in `cartridge_instances`.
+
+The easiest way to configure replicaset is to [group instances](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) and set replicaset parameters for all instances in a group.
 
 ### Vshard bootstrapping
 
@@ -402,4 +395,4 @@ section-1: value-1  # hasn't been changed
 
 section-2:
   key-21: value-21-new  # body was replaced
-``` -->
+```
