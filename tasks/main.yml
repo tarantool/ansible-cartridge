@@ -48,11 +48,10 @@
   delay: 5
   tags: cartridge-instances
 
-- name: Check joined instances
-  include_tasks: check_joined.yml
-  vars:
-    instance: '{{ item }}'
-  loop: '{{ hostvars | cartridge_hosts }}'
+- name: Set one control instance to join replicasets
+  cartridge_control_instance:
+    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+  register: control_instance
   run_once: true
   tags: cartridge-replicasets
 
@@ -60,6 +59,7 @@
   cartridge_get_replicasets:
     hostvars: '{{ hostvars }}'
     play_hosts: '{{ play_hosts }}'
+    control_host: '{{ control_instance.meta.host }}'
   register: replicasets
   run_once: true
   tags: cartridge-replicasets
@@ -73,23 +73,10 @@
   run_once: true
   tags: cartridge-replicasets
 
-- name: Check joined instances
-  include_tasks: check_joined.yml
-  vars:
-    instance: '{{ item }}'
-  loop: '{{ hostvars | cartridge_hosts }}'
-  run_once: true
-  tags:
-    - cartridge-auth
-    - cartridge-app-config
-    - cartridge-vshard
-    - cartridge-failover
-    - cartridge-config
-
 - name: Set one control instance to rule them all
   cartridge_control_instance:
-    hostvars: '{{ hostvars }}'
-    appname: '{{ cartridge_app_name }}'
+    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    allow_empty: false
   register: control_instance
   run_once: true
   when: >-
@@ -107,8 +94,8 @@
 - name: Cartridge auth
   cartridge_auth:
     auth: '{{ cartridge_auth }}'
-    control_sock: '{{ control_instance.meta.control_sock }}'
-  delegate_to: '{{ control_instance.meta.control_instance }}'
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+  delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_auth is defined
   tags:
@@ -118,8 +105,8 @@
 - name: Application config
   cartridge_app_config:
     app_config: '{{ cartridge_app_config }}'
-    control_sock: '{{ control_instance.meta.control_sock }}'
-  delegate_to: '{{ control_instance.meta.control_instance }}'
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+  delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_app_config is defined
   tags:
@@ -128,8 +115,8 @@
 
 - name: Bootstrap vshard
   cartridge_bootstrap_vshard:
-    control_sock: '{{ control_instance.meta.control_sock }}'
-  delegate_to: '{{ control_instance.meta.control_instance }}'
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+  delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_bootstrap_vshard
   tags:
@@ -139,8 +126,8 @@
 - name: Manage failover
   cartridge_manage_failover:
     failover: '{{ cartridge_failover }}'
-    control_sock: '{{ control_instance.meta.control_sock }}'
-  delegate_to: '{{ control_instance.meta.control_instance }}'
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+  delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_failover is defined
   tags:

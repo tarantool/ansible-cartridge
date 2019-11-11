@@ -7,6 +7,7 @@ from ansible.module_utils.helpers import ModuleRes, CartridgeException
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
+    'control_host': {'required': True, 'type': 'str'},
 }
 
 
@@ -15,11 +16,7 @@ def get_replicasets(params):
     play_hosts = params['play_hosts']
 
     replicasets = {}
-    join_host = None
     for i, instance_vars in hostvars.items():
-        if 'joined' in instance_vars and instance_vars['joined']:
-            join_host = i
-
         if i not in play_hosts:
             continue
 
@@ -36,14 +33,7 @@ def get_replicasets(params):
                 })
             replicasets[replicaset_alias]['instances'].append(i)
 
-    for alias, r in replicasets.items():
-        # if replicaset is not configured
-        if r['leader'] not in r['instances']:
-            errmsg = 'Leader of "{}" replicaset is not in play hosts ("{}")'.format(
-                alias, r['leader']
-            )
-            return ModuleRes(success=False, msg=errmsg)
-
+    join_host = params['control_host']
     replicasets_list = [v for _, v in replicasets.items()]
 
     if not join_host:

@@ -2,35 +2,36 @@
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes
+from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
-    'hostvars': {'required': True, 'type': 'dict'},
-    'appname': {'requires': True, 'type': 'str'},
+    'sock': {'requires': True, 'type': 'str'},
+    'allow_empty': {'requires': True, 'type': 'bool', 'default': True}
 }
 
 
 def get_control_instance(params):
-    hostvars = params['hostvars']
-    appname = params['appname']
+    control_console = get_control_console(params['sock'])
+    control_instance = ''
 
-    control_instance = None
-    control_sock = None
+    members = control_console.eval('''
+        return require('membership').members()
+    ''')
 
-    for i, instance_vars in hostvars.items():
-        if 'joined' in instance_vars and instance_vars['joined']:
-            control_instance = i
-            control_sock = '/var/run/tarantool/{}.{}.control'.format(appname, control_instance)
+    for _, member in members.items():
+        if 'payload' in member and 'uuid' in member['payload']:
+            if 'alias' not in member['payload']:
+                errmsg = 'Unable to get instance alias for "{}"'.format(member['payload']['uuid'])
+                return ModuleRes(success=False, msg=errmsg)
+
+            control_instance = member['payload']['alias']
             break
 
-    if control_instance is None:
-        errmsg = 'Unable to run cartridge config tasks - cluster is not bootstrapped yet. ' + \
-            'Skip `cartridge-control` tag or do not specify cartridge config variables'
+    if not control_instance and not params['allow_empty']:
+        errmsg = "Cluster isn't bootstrapped yet"
         return ModuleRes(success=False, msg=errmsg)
 
-    return ModuleRes(success=True, meta={
-        'control_instance': control_instance,
-        'control_sock': control_sock,
-    })
+    return ModuleRes(success=True, meta={'host': control_instance})
 
 
 def main():
