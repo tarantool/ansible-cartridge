@@ -56,78 +56,76 @@ To deploy an application and set up this topology: -->
 ```yaml
 ---
 all:
+  vars:
+    cartridge_package_path: ./myapp-1.0.0-0.rpm
+    cartridge_cluster_cookie: secret-cookie
+    cartridge_defaults:
+      log_level: 1
+
   children:
-    cluster:  # cluster configuration
+    # group instances by machines
+    host1:
       vars:
-        cartridge_package_path: ./myapp-1.0.0-0.rpm
-        cartridge_cluster_cookie: secret-cookie
-        cartridge_defaults:
-          log_level: 1
+        # vm1 machine addres and connection opts
+        ansible_host: vm1
+        ansible_user: root
+        become: true
+        become_user: root
 
-      children:
-        # group instances by machines
-        host1:
-          vars:
-            # vm1 machine addres and connection opts
-            ansible_host: vm1
-            ansible_user: root
-            become: true
-            become_user: root
+      hosts:  # instances to be started on this host
+        storage-1:
+          config:
+            advertise_uri: 'vm1:3301'
+            http_port: 8081
 
-          hosts:  # instances to be started on this host
-            storage-1:
-              config:
-                advertise_uri: 'vm1:3301'
-                http_port: 8081
+        storage-1-replica:
+          config:
+            advertise_uri: 'vm1:3302'
+            http_port: 8082
 
-            storage-1-replica:
-              config:
-                advertise_uri: 'vm1:3302'
-                http_port: 8082
+    host2:
+      vars:
+        # vm2 machine addres and connection opts
+        ansible_host: vm2
+        ansible_user: root
+        become: true
+        become_user: root
 
-        host2:
-          vars:
-            # vm2 machine addres and connection opts
-            ansible_host: vm2
-            ansible_user: root
-            become: true
-            become_user: root
+      hosts:  # instances to be started on this host
+        core-1:
+          config:
+            advertise_uri: 'vm2:3311'
+            http_port: 8091
 
-          hosts:  # instances to be started on this host
-            core-1:
-              config:
-                advertise_uri: 'vm2:3311'
-                http_port: 8091
+        storage-1-replica-2:
+          config:
+            advertise_uri: 'vm2:3312'
+            http_port: 8092
 
-            storage-1-replica-2:
-              config:
-                advertise_uri: 'vm2:3312'
-                http_port: 8092
+    # group instances by replicasets
+    storage_1_replicaset:  # replicaset storage-1
+      hosts:  # instances
+        storage-1:
+        storage-1-replica:
+        storage-1-replica-2:
+      vars:
+        # replicaset configuration
+        replicaset_alias: storage-1
+        leader: storage-1
+        roles:
+          - 'vshard-storage'
 
-        # group instances by replicasets
-        storage_1_replicaset:  # replicaset storage-1
-          hosts:  # instances
-            storage-1:
-            storage-1-replica:
-            storage-1-replica-2:
-          vars:
-            # replicaset configuration
-            replicaset_alias: storage-1
-            leader: storage-1
-            roles:
-              - 'vshard-storage'
+    core_1_replicaset:  # replicaset core-1
+      hosts:  # instances
+        core-1:
 
-        core_1_replicaset:  # replicaset core-1
-          hosts:  # instances
-            core-1:
-
-          vars:
-            # replicaset configuration
-            replicaset_alias: core-1
-            leader: core-1
-            roles:
-              - 'app.roles.custom'
-              - 'vshard-router'
+      vars:
+        # replicaset configuration
+        replicaset_alias: core-1
+        leader: core-1
+        roles:
+          - 'app.roles.custom'
+          - 'vshard-router'
 ```
 
 ## Getting started
@@ -174,17 +172,17 @@ Tasks are running in this order:
 
 * `cartridge-instances` - install package, update instances config and restart instances;
 * `cartridge-replicasets` - configure replicasets;
-* `cartridge-config` - configure cluster, contains this tags:
-  * `cartridge-auth` - configure authorization;
-  * `cartridge-app-config` - patch application clusterwide config;
-  * `cartridge-vshard` - bootstrap Vshard;
-  * `cartridge-failover` - manage cartridge failover.
+* `cartridge-config` - configure cluster, contains this tasks:
+  * configure authorization (if `cartridge_auth` is defined);
+  * patch application clusterwide config (if `cartridge_app_config` is defined);
+  * bootstrap Vshard (if `cartridge_bootstrap_vshard` is defined);
+  * manage cartridge failover (if `cartridge_failover` is defined).
 
 **Note**, that `cartridge-config` tasks would be skipped if no one of `cartridge_auth`, `cartridge_app_config`, `cartridge_bootstrap_vshard` and `cartridge_failover` variables is specified.
 
-Using `--tags` and `--limits` options you can manage cluster different ways:
-
 ### Example scenario
+
+Using `--tags` and `--limits` options you can manage cluster different ways:
 
 #### Run all tasks for all hosts
 
@@ -193,15 +191,24 @@ Then, instances would be joined to replicasets.
 If cluster configuration was specified, it would be updated.
 
 ```bash
-ansible-paymook -i hosts.yml playbook.yml
+ansible-playbook -i hosts.yml playbook.yml
 ```
 
-#### Update instances from one replicaset
+#### Update instances in one replicaset
 
 Instances from `storage_1_replicaset` group will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
 
 ```bash
-ansible-paymook -i hosts.yml playbook.yml --limit storage_1_replicaset \
+ansible-playbook -i hosts.yml playbook.yml --limit storage_1_replicaset \
+                                          --tags cartridge-instances
+```
+
+#### Update instances on one machine
+
+Instances from `host1` machine will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --limit host1 \
                                           --tags cartridge-instances
 ```
 
@@ -210,16 +217,24 @@ ansible-paymook -i hosts.yml playbook.yml --limit storage_1_replicaset \
 Instances from `storage_1_replicaset` group will be joined to replicaset.
 
 ```bash
-ansible-paymook -i hosts.yml playbook.yml --limit storage_1_replicaset \
-                                          --tags cartridge-replicasets
+ansible-playbook -i hosts.yml playbook.yml --limit storage_1_replicaset \
+                                           --tags cartridge-replicasets
 ```
 
 #### Start and join other replicaset instances
 
 ```bash
-ansible-paymook -i hosts.yml playbook.yml --limit core_1_replicaset \
+ansible-playbook -i hosts.yml playbook.yml --limit core_1_replicaset \
+                        --tags cartridge-instances,cartridge-replicasets
 ```
 
+#### Patch cluster configuration
+
+Manage cartridge configuration parameters.
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --tags cartridge-config
+```
 
 ## Configuration format
 
@@ -238,10 +253,10 @@ should specify `cartridge_app_name`.
 
 ### Instances
 
-Each instance of the application is started as `<app_name>@<instance_name>`
-systemd service.
+Each instance of application is started as `<app_name>@<instance_name>` systemd service.
+`instance_name` is `inventory_hostname` from Ansible inventory.
 
-It can be configured using the `config` variable.
+Instance can be configured using the `config` variable.
 This variable describes instance parameters that would be passed to cartridge configuration.
 It can contain [cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse) module).
 
@@ -303,6 +318,7 @@ must have at least one `vshard-storage` replica set and at least one
 ### Failover
 
 If `cartridge_bootstrap_vshard` is `true`, then failover will be enabled.
+If it is `false` - failover will be disabled.
 
 ### Cartridge authorization
 
