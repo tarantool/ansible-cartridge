@@ -11,13 +11,13 @@ argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'}
 }
 
-INSTANCE_REQUIRED_PARAMS = ['name', 'advertise_uri']
+INSTANCE_REQUIRED_PARAMS = ['advertise_uri']
 INSTANCE_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir']
-REPLICASET_REQUIRED_PARAMS = ['name', 'instances', 'roles']
+REPLICASET_REQUIRED_PARAMS = ['leader', 'roles']
 
 
 def is_valid_advertise_uri(uri):
-    rgx = re.compile(r'\S+:\d+')
+    rgx = re.compile(r'^\S+:\d+$')
     return re.match(rgx, uri) is not None
 
 
@@ -56,6 +56,7 @@ def validate_types(vars):
         'cartridge_cluster_cookie': str,
         'cartridge_defaults': dict,
         'cartridge_failover': bool,
+        'cartridge_app_config': dict,
         'cartridge_auth': {
             'enabled': bool,
             'cookie_max_age': int,
@@ -70,23 +71,12 @@ def validate_types(vars):
                 }
             ]
         },
-        'cartridge_instances': [
-            {
-                'name': str,
-                'advertise_uri': str,
-                'http_port': str,
-            }
-        ],
-        'cartridge_replicasets': [
-            {
-                'name': str,
-                'roles': [str],
-                'instances': [str],
-                'weight': float,
-                'all_rw': bool,
-            }
-        ],
-        'cartridge_app_config': dict
+        'config': {
+            'advertise_uri': str,
+        },
+        'roles': [str],
+        'leader': str,
+        'replicaset_alias': str,
     }
 
     return check_schema(schema, vars)
@@ -101,6 +91,8 @@ def validate_config(params):
     cluster_cookie = None
     cartridge_auth = None
     app_config = None
+    bootstrap_vshard = None
+    failover = None
 
     for host in params['hosts']:
         host_vars = params['hostvars'][host]
@@ -117,7 +109,7 @@ def validate_config(params):
         # Check app_name
         if app_name is not None:
             if 'cartridge_app_name' in host_vars and host_vars['cartridge_app_name'] != app_name:
-                errmsg = '`cartridge_app_name` name must be the same for all hosts'
+                errmsg = '`cartridge_app_name` must be the same for all hosts'
                 return ModuleRes(success=False, msg=errmsg)
         elif 'cartridge_app_name' in host_vars:
             app_name = host_vars['cartridge_app_name']
@@ -125,7 +117,7 @@ def validate_config(params):
         # Check cluster auth
         if cartridge_auth is not None:
             if 'cartridge_auth' in host_vars and host_vars['cartridge_auth'] != cartridge_auth:
-                errmsg = '`cartridge_auth` name must be the same for all hosts'
+                errmsg = '`cartridge_auth` must be the same for all hosts'
                 return ModuleRes(success=False, msg=errmsg)
         elif 'cartridge_auth' in host_vars:
             cartridge_auth = host_vars['cartridge_auth']
@@ -133,24 +125,40 @@ def validate_config(params):
         # Check app config
         if app_config is not None:
             if 'cartridge_app_config' in host_vars and host_vars['cartridge_app_config'] != app_config:
-                errmsg = '`cartridge_app_config` name must be the same for all hosts'
+                errmsg = '`cartridge_app_config` must be the same for all hosts'
                 return ModuleRes(success=False, msg=errmsg)
         elif 'cartridge_app_config' in host_vars:
             app_config = host_vars['cartridge_app_config']
 
-        if 'cartridge_instances' in host_vars:
-            # Check cluster cookie
-            if 'cartridge_cluster_cookie' not in host_vars:
-                errmsg = '`cartridge_cluster_cookie` must be specified'
-                return ModuleRes(success=False, msg=errmsg)
+        # Check cluster cookie
+        if 'cartridge_cluster_cookie' not in host_vars:
+            errmsg = '`cartridge_cluster_cookie` must be specified'
+            return ModuleRes(success=False, msg=errmsg)
 
-            # Check if cookie is the same for all hosts
-            if cluster_cookie is not None:
-                if host_vars['cartridge_cluster_cookie'] != cluster_cookie:
-                    errmsg = 'Cluster cookie must be the same for all hosts'
-                    return ModuleRes(success=False, msg=errmsg)
-            else:
-                cluster_cookie = host_vars['cartridge_cluster_cookie']
+        # Check cartridge_bootstrap_vshard
+        if bootstrap_vshard is not None:
+            if 'cartridge_bootstrap_vshard' in host_vars \
+             and host_vars['cartridge_bootstrap_vshard'] != bootstrap_vshard:
+                errmsg = '`cartridge_bootstrap_vshard` must be the same for all hosts'
+                return ModuleRes(success=False, msg=errmsg)
+        elif 'cartridge_bootstrap_vshard' in host_vars:
+            bootstrap_vshard = host_vars['cartridge_bootstrap_vshard']
+
+        # Check failover
+        if failover is not None:
+            if 'cartridge_failover' in host_vars and host_vars['cartridge_failover'] != bootstrap_vshard:
+                errmsg = '`cartridge_failover` must be the same for all hosts'
+                return ModuleRes(success=False, msg=errmsg)
+        elif 'cartridge_failover' in host_vars:
+            failover = host_vars['cartridge_failover']
+
+        # Check if cookie is the same for all hosts
+        if cluster_cookie is not None:
+            if host_vars['cartridge_cluster_cookie'] != cluster_cookie:
+                errmsg = 'Cluster cookie must be the same for all instances'
+                return ModuleRes(success=False, msg=errmsg)
+        else:
+            cluster_cookie = host_vars['cartridge_cluster_cookie']
 
         if 'cartridge_defaults' in host_vars:
             if 'cluster_cookie' in host_vars['cartridge_defaults']:
@@ -158,86 +166,59 @@ def validate_config(params):
                 return ModuleRes(success=False, msg=errmsg)
 
         # Check instances
-        if 'cartridge_instances' in host_vars:
-            for instance in host_vars['cartridge_instances']:
-                # Check if instance name is unique
-                if instance['name'] in all_instances:
-                    errmsg = 'Duplicate instance name: "{}"'.format(instance['name'])
-                    return ModuleRes(success=False, msg=errmsg)
+        if 'config' not in host_vars:
+            errmsg = 'Missed required parameter `config` for "{}"'.format(host)
+            return ModuleRes(success=False, msg=errmsg)
 
-                # Check if all required params are specified
-                for p in INSTANCE_REQUIRED_PARAMS:
-                    if p not in instance:
-                        errmsg = 'Parameter "{}" is required for all instances in `cartridge_instances` ("{}")'.format(
-                            p, instance['name']
-                        )
-                        return ModuleRes(success=False, msg=errmsg)
+        # Check if all required params are specified
+        for p in INSTANCE_REQUIRED_PARAMS:
+            if p not in host_vars['config']:
+                errmsg = 'Missed required parameter "{}" in "{}" config'.format(
+                    p, host
+                )
+                return ModuleRes(success=False, msg=errmsg)
 
-                # Check if no forbidden params specified
-                for p in INSTANCE_FORBIDDEN_PARAMS:
-                    if p in instance:
-                        errmsg = 'Parameter "{}" is forbidden for instance config ("{}")'.format(p, instance['name'])
-                        return ModuleRes(success=False, msg=errmsg)
+        # Check if no forbidden params specified
+        for p in INSTANCE_FORBIDDEN_PARAMS:
+            if p in host_vars['config']:
+                errmsg = 'Specified forbidden parameter "{}" in "{}" config'.format(p, host)
+                return ModuleRes(success=False, msg=errmsg)
 
-                # Check if cluster_cookie is not specified
-                if 'cluster_cookie' in instance:
-                    errmsg = '`cluster_cookie is specified for instance "{}"`.'.format(instance['name']) + \
-                        'It must be specified ONLY in `cartridge_cluster_cookie` variable.'
-                    return ModuleRes(success=False, msg=errmsg)
+        # Check if cluster_cookie is not specified
+        if 'cluster_cookie' in host_vars['config']:
+            errmsg = '`cluster_cookie is specified for "{}"`.'.format(host) + \
+                'It must be specified ONLY in `cartridge_cluster_cookie` variable.'
+            return ModuleRes(success=False, msg=errmsg)
 
-                if 'advertise_uri' in instance:
-                    if not is_valid_advertise_uri(instance['advertise_uri']):
-                        errmsg = 'Instance advertise_uri must be specified as `<host>:<port>` ("{}")'.format(
-                            instance['name']
-                        )
-                        return ModuleRes(success=False, msg=errmsg)
-
-                # Save instance info
-                all_instances[instance['name']] = instance
+        if 'advertise_uri' in host_vars['config']:
+            if not is_valid_advertise_uri(host_vars['config']['advertise_uri']):
+                errmsg = 'Instance advertise_uri must be specified as `<host>:<port>` ("{}")'.format(host)
+                return ModuleRes(success=False, msg=errmsg)
 
         # Check replicasets
-        if 'cartridge_replicasets' in host_vars:
-            for replicaset in host_vars['cartridge_replicasets']:
-                # Check if all required params are specified
+        if 'replicaset_alias' in host_vars:
+            replicaset_alias = host_vars['replicaset_alias']
+            if replicaset_alias not in all_replicasets:
                 for p in REPLICASET_REQUIRED_PARAMS:
-                    if p not in replicaset:
-                        errmsg = 'Parameter "{}" is required for all replicasets in `cartridge_replicasets`'.format(p)
-                        return ModuleRes(success=False, msg=errmsg)
-
-                # Check if replicaset name is unique
-                if replicaset['name'] in all_replicasets:
-                    if all_replicasets[replicaset['name']] != replicaset:
-                        errmsg = 'Duplicate replicaset name: "{}"'.format(replicaset['name'])
-                        return ModuleRes(success=False, msg=errmsg)
-
-                if 'leader' not in replicaset:
-                    if len(replicaset['instances']) > 1:
-                        errmsg = 'Leader must be specified for replicaset with more than one instance ("{}")'.format(
-                            replicaset['name']
+                    if p not in host_vars:
+                        errmsg = 'Parameter "{}" is required for all replicasets (missed for "{}")'.format(
+                            p, replicaset_alias
                         )
-
                         return ModuleRes(success=False, msg=errmsg)
-
                 # Save replicaset info
-                all_replicasets[replicaset['name']] = replicaset
-
-    # Check if all replicasets instances are described in `cartridge_instances`
-    #  and one instance belongs to only one replicaset
-    for rname, replicaset in all_replicasets.items():
-        for replicaset_instance in replicaset['instances']:
-            if replicaset_instance not in all_instances:
-                errmsg = 'Replicaset "{}" contains instance "{}" not described in `cartridge_instances`'.format(
-                    rname, replicaset_instance
-                )
-                return ModuleRes(success=False, msg=errmsg)
-
-            if 'belongs_to' not in all_instances[replicaset_instance]:
-                all_instances[replicaset_instance]['belongs_to'] = rname
+                all_replicasets[replicaset_alias] = {
+                    'roles': host_vars['roles'] if 'roles' in host_vars else None,
+                    'leader': host_vars['leader'] if 'leader' in host_vars else None,
+                }
             else:
-                errmsg = 'Instance "{}" is configured to belong to "{}" and "{}" replicasets.'.format(
-                    replicaset_instance, rname, all_instances[replicaset_instance]['belongs_to']
-                )
-                return ModuleRes(success=False, msg=errmsg)
+                replicaset = {
+                    'roles': host_vars['roles'] if 'roles' in host_vars else None,
+                    'leader': host_vars['leader'] if 'leader' in host_vars else None,
+                }
+                if replicaset != all_replicasets[replicaset_alias]:
+                    errmsg = 'Replicaset parameters must be the same for all instances' + \
+                        ' with the same `replicaset_alias` ("{}")'.format(replicaset_alias)
+                    return ModuleRes(success=False, msg=errmsg)
 
     # Check cartridge_auth
     if cartridge_auth is not None:

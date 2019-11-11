@@ -12,14 +12,14 @@
   when: remote_user is not defined and ansible_user is defined
   tags: always
 
-# - name: Validate config
-#   cartridge_validate_config:
-#     hosts: '{{ play_hosts }}'
-#     hostvars: '{{ hostvars }}'
-#   delegate_to: localhost
-#   become: false
-#   run_once: true
-#   tags: always
+- name: Validate config
+  cartridge_validate_config:
+    hosts: '{{ play_hosts }}'
+    hostvars: '{{ hostvars }}'
+  delegate_to: localhost
+  become: false
+  run_once: true
+  tags: always
 
 # Rewrites cartridge_app_name from package info
 - name: Install package
