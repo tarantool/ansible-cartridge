@@ -1,5 +1,3 @@
 ---
-cartridge_replicasets: []
-cartridge_instances: []
 cartridge_defaults: {}
 cartridge_enable_tarantool_repo: true
