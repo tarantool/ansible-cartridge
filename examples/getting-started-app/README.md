@@ -18,7 +18,6 @@ set up the topology, and configure a cluster.
   * [About Ansible](#about-ansible)
   * [Prepare to deploy](#prepare-to-deploy)
   * [Start virtual machines](#start-virtual-machines)
-  * [Install package](#install-package)
   * [Start instances](#start-instances)
   * [Set up replica sets](#set-up-replica-sets)
   * [Bootstrap vshard](#bootstrap-vshard)
@@ -297,24 +296,7 @@ and import the Tarantool Cartridge role.
       name: tarantool-cartridge
 ```
 
-Finally, create an
-[inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html)
-file:
-
-`hosts.yml`:
-
-```yaml
----
-all:
-  hosts:
-    vm1:
-      ansible_host: 172.19.0.2  # first host
-      ansible_user: vagrant
-
-    vm2:
-      ansible_host: 172.19.0.3  # second host
-      ansible_user: vagrant
-```
+Finally, create empty [inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) file `hosts.yml`:
 
 The resulting directory structure:
 
@@ -341,18 +323,48 @@ configure our application step by step.
 We'll be showing only new sections of the inventory, but you can see the
 [full version](#full-inventory) anytime.
 
-### Install package
+### Start instances
 
-To specify a path to the package to be deployed, we need to add the
-`cartridge_package_path` variable to our inventory file.
+Specify this in your `hosts.yml`:
 
 ```yaml
 ---
 all:
-  hosts:
-    ...
   vars:
     cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
+
+    cartridge_cluster_cookie: app-default-cookie  # cluster cookie
+    cartridge_defaults:  # default instance parameters
+      log_level: 5
+
+  children:
+    # group instances by machines
+    host1:  # first machine addres and connection opts
+      vars:
+        ansible_host: 172.19.0.2
+        ansible_user: vagrant
+
+      hosts:  # instances to be started on this machine
+        storage-1:
+          config:
+            advertise_uri: '172.19.0.2:3301'
+            http_port: 8181
+
+    host2:  # second machine addres and connection opts
+      vars:
+        ansible_host: 172.19.0.3
+        ansible_user: vagrant
+
+      hosts:  # instances to be started on this machine
+        app-1:
+          config:
+            advertise_uri: '172.19.0.3:3301'
+            http_port: 8182
+
+        storage-1-replica:
+          config:
+            advertise_uri: '172.19.0.3:3302'
+            http_port: 8183
 ```
 
 Now, run the playbook:
@@ -372,7 +384,9 @@ $ ansible-playbook -i hosts.yml playbook.yml
      $ ssh vagrant@172.19.0.3
      ```
 
-Then, connect to `vm1` and check if the package was installed:
+#### Check if package was installed
+
+Connect to the `vm1` and check if package was installed:
 
 ```bash
 $ vagrant ssh vm1
@@ -393,56 +407,7 @@ Tarantool be automatically installed with your application.
 If you want to install Tarantool yourself (e.g. from a package), you can set
 the `cartridge_enable_tarantool_repo` variable to `false`.
 
-### Start instances
-
-Next, configure and start the instances.
-
-Add the sections `cartridge_instances`, `cartridge_cluster_cookie` and
-`cartridge_defaults`:
-
-(You can look up [here](#full-inventory) anytime to understand where to put
-new sections.)
-
-```yaml
----
-all:
-  hosts:
-    vm1:
-      ...
-      cartridge_instances:  # instances to be started on this host
-        - name: 'storage-1'
-          advertise_uri: '172.19.0.2:3301'
-          http_port: '8181'
-
-    vm2:
-      ...
-      cartridge_instances:  # instances to be started on this host
-        - name: 'app-1'
-          advertise_uri: '172.19.0.3:3301'
-          http_port: '8182'
-
-        - name: 'storage-1-replica'
-          advertise_uri: '172.19.0.3:3302'
-          http_port: '8183'
-
-  vars:
-    cartridge_app_name: getting-started-app  # application name
-
-    cartridge_cluster_cookie: app-default-cookie  # cluster cookie
-    cartridge_defaults:  # default instances parameters
-      log_level: 5
-```
-
-Note that we don't deploy a new package, so we `cartridge_app_name` instead of
-`cartridge_package_path`.
-You can use both, but it's required to specify at least one of them.
-If `cartridge_app_name` isn't set, it will be deduced from package info.
-
-Run the playbook again:
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml
-```
+#### Check if instances was started
 
 Connect to the machines and check that all the instances were started:
 
@@ -499,32 +464,66 @@ The instances *expelling* feature is not supported in the current version of the
 Tarantool Ansible role, but it's coming soon. For now, you can use the Web UI
 to expel instances.
 
-### Set up replica sets
+#### Ansible groups
+
+We grouped our hosts(instances) in two groups: `host1` and `host2`.
+For each group we specified connection options (`ansible_host` and `ansible_user`).
+Read the [doc](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) for details.
+
+You can run playbook on one machine using `--limit` option:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml --limit host1
+```
+
+Or you can update only one instance:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml --limit storage-1
+```
+
+### Set up replicasets
 
 Now we have instances running on two hosts.
 It's time to join them to a replica set.
-Define the replica sets in the `cartridge_replicasets` variable:
+
+Now we will group our hosts by replicasets.
+Don't delete anything from `hosts.yml`, just add `storage_1_replicaset` and `app_1_replicaset` groups.
+`...` means that section remains unchanged.
+You can look at [full inventory](#full-inventory) to understand where to add new sections.
 
 ```yaml
 ---
 all:
-  hosts:
-    ...
-
   vars:
     ...
-    cartridge_replicasets:  # replica sets to be set up
-      - name: 'app-1'
-        instances:
-          - 'app-1'
+  children:
+    # group instances by machines
+    host1:  # first machine addres and connection opts
+      ...
+      
+    host2:  # second machine addres and connection opts
+      ...
+
+    # group instances by replicasets
+    storage_1_replicaset:  # replicaset storage-1
+      vars:  # replicaset configuration
+        replicaset_alias: storage-1
+        leader: storage-1
+        roles: ['storage']
+
+      hosts:  # instances
+        storage-1:
+        storage-1-replica:
+
+    app_1_replicaset:  # replicaset app-1
+      vars:  # replicaset configuration
+        replicaset_alias: app-1
+        leader: app-1
         roles: ['api']
 
-      - name: 'storage-1'
-        instances:
-          - 'storage-1'
-          - 'storage-1-replica'
-        leader: 'storage-1'
-        roles: ['storage']
+      hosts:  # instances
+        app-1:
 ```
 
 Run the playbook:
@@ -551,7 +550,6 @@ Just set the `cartridge_bootstrap_vshard` flag and run the playbook again.
 ```yaml
 ---
 all:
-  ...
   vars:
     ...
     cartridge_bootstrap_vshard: true  # bootstrap vshard
@@ -575,9 +573,7 @@ If you want to manage (enable or disable) automatic failover, use the
 ```yaml
 ---
 all:
-  ...
   vars:
-    ...
     cartridge_failover: true  # enable failover
     ...
 ```
@@ -603,7 +599,6 @@ create a new user:
 ```yaml
 ---
 all:
-  ...
   vars:
     ...
     cartridge_auth:
@@ -640,7 +635,6 @@ To delete a user, just set the `deleted` flag for the user:
 ```yaml
 ---
 all:
-  ...
   vars:
     ...
     cartridge_auth:
@@ -676,7 +670,6 @@ You can patch clusterwide configuration sections using Ansible.
 ```yaml
 ---
 all:
-  ...
   vars:
     ...
     cartridge_app_config:
@@ -705,7 +698,6 @@ To delete a section, you need to set the `deleted` flag for it:
 ```yaml
 ---
 all:
-  ...
   vars:
     ...
     cartridge_app_config:
@@ -814,29 +806,6 @@ Don't hesitate to experiment with the configuration, find and report bugs.
 ```yaml
 ---
 all:
-  hosts:
-    vm1:
-      ansible_host: 172.19.0.2  # first host
-      ansible_user: vagrant
-
-      cartridge_instances:  # instances to be started on this host
-        - name: 'storage-1'
-          advertise_uri: '172.19.0.2:3301'
-          http_port: '8181'
-
-    vm2:
-      ansible_host: 172.19.0.3  # second host
-      ansible_user: vagrant
-
-      cartridge_instances:  # instances to be started on this host
-        - name: 'app-1'
-          advertise_uri: '172.19.0.3:3301'
-          http_port: '8182'
-
-        - name: 'storage-1-replica'
-          advertise_uri: '172.19.0.3:3302'
-          http_port: '8183'
-
   vars:
     cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
     # cartridge_app_name: getting-started-app  # can be used if package is already installed
@@ -847,19 +816,6 @@ all:
 
     cartridge_bootstrap_vshard: true  # bootstrap vshard
     cartridge_failover: true  # enable failover
-
-    cartridge_replicasets:  # replica sets to be set up
-      - name: 'app-1'
-        instances:
-          - 'app-1'
-        roles: ['api']
-
-      - name: 'storage-1'
-        instances:
-          - 'storage-1'
-          - 'storage-1-replica'
-        leader: 'storage-1'
-        roles: ['storage']
 
     cartridge_auth:  # authorization parameters
       enabled: true
@@ -884,4 +840,53 @@ all:
         body:
           max-balance: 10000000
         # deleted: true  # delete section from config
+
+  children:
+    # group instances by machines
+    host1:  # first machine addres and connection opts
+      vars:
+        ansible_host: 172.19.0.2
+        ansible_user: vagrant
+
+      hosts:  # instances to be started on this machine
+        storage-1:
+          config:
+            advertise_uri: '172.19.0.2:3301'
+            http_port: 8181
+
+    host2:  # second machine addres and connection opts
+      vars:
+        ansible_host: 172.19.0.3
+        ansible_user: vagrant
+
+      hosts:  # instances to be started on this machine
+        app-1:
+          config:
+            advertise_uri: '172.19.0.3:3301'
+            http_port: 8182
+
+        storage-1-replica:
+          config:
+            advertise_uri: '172.19.0.3:3302'
+            http_port: 8183
+
+    # group instances by replicasets
+    storage_1_replicaset:  # replicaset storage-1
+      vars:  # replicaset configuration
+        replicaset_alias: storage-1
+        leader: storage-1
+        roles: ['storage']
+
+      hosts:  # instances
+        storage-1:
+        storage-1-replica:
+
+    app_1_replicaset:  # replicaset app-1
+      vars:  # replicaset configuration
+        replicaset_alias: app-1
+        leader: app-1
+        roles: ['api']
+
+      hosts:  # instances
+        app-1:
 ```
