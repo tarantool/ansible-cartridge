@@ -84,12 +84,7 @@
     or cartridge_app_config is defined
     or cartridge_bootstrap_vshard is defined
     or cartridge_failover is defined
-  tags:
-    - cartridge-auth
-    - cartridge-app-config
-    - cartridge-vshard
-    - cartridge-failover
-    - cartridge-config
+  tags: cartridge-config
 
 - name: Cartridge auth
   cartridge_auth:
@@ -98,9 +93,7 @@
   delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_auth is defined
-  tags:
-    - cartridge-auth
-    - cartridge-config
+  tags: cartridge-config
 
 - name: Application config
   cartridge_app_config:
@@ -109,9 +102,7 @@
   delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_app_config is defined
-  tags:
-    - cartridge-app-config
-    - cartridge-config
+  tags: cartridge-config
 
 - name: Bootstrap vshard
   cartridge_bootstrap_vshard:
@@ -119,9 +110,7 @@
   delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_bootstrap_vshard
-  tags:
-    - cartridge-vshard
-    - cartridge-config
+  tags: cartridge-config
 
 - name: Manage failover
   cartridge_manage_failover:
@@ -130,6 +119,4 @@
   delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_failover is defined
-  tags:
-    - cartridge-failover
-    - cartridge-config
+  tags: cartridge-config
