@@ -1,8 +1,10 @@
 # Ansible Role: Tarantool Cartridge
 
-An Ansible role to easily deploy [Tarantool Cartridge](https://github.com/tarantool/cartridge) applications.
+An Ansible role to easily deploy
+[Tarantool Cartridge](https://github.com/tarantool/cartridge) applications.
 
-This role can deploy and configure applications packed in RPM using [`Cartridge CLI`](https://github.com/tarantool/cartridge-cli).
+This role can deploy and configure applications packed in RPM using
+[`Cartridge CLI`](https://github.com/tarantool/cartridge-cli).
 
 ## Table of contents
 
@@ -12,11 +14,11 @@ This role can deploy and configure applications packed in RPM using [`Cartridge 
 * [Role variables](#role-variables)
 * [Configuration format](#configuration-format)
   * [Instances](#instances)
-  * [Replicasets](#replicasets)
+  * [Replica sets](#replica-sets)
   * [Vshard bootstrapping](#vshard-bootstrapping)
   * [Failover](#failover)
-  * [Cartridge auth](#cartridge-auth)
-  * [Application config](#applicaction-config)
+  * [Cartridge authorization](#cartridge-authorization)
+  * [Application configuration](#application-configuration)
 
 ## Requirements
 
@@ -29,7 +31,7 @@ Example cluster topology:
 
 ![image](https://user-images.githubusercontent.com/32142520/65237544-837dc580-dae3-11e9-97c6-db8676357eb5.png)
 
-To deploy application and set up this topology:
+To deploy an application and set up this topology:
 
 `playbook.yml`:
 
@@ -88,7 +90,7 @@ all:
     cartridge_defaults:  # default configuration parameters for all instances
       log_level: 5
 
-    cartridge_replicasets:  # replicasets to be set up
+    cartridge_replicasets:  # replica sets to set up
       - name: 'replicaset-1'
         instances:
           - 'storage_1'
@@ -109,62 +111,89 @@ all:
 
 ## Getting started
 
-You can use [getting started guide](./examples/getting-started-app/README.md) to learn how to set up topology using this role.
+See the [getting started guide](./examples/getting-started-app/README.md)
+to learn how to set up topology using this role.
 
 ## Role variables
 
-The role variables are used to configure started instances, cluster topology, vhsard bootstrapping and failover.
+Role variables are used to configure started instances, cluster topology,
+vhsard bootstrapping, and failover.
 
-Configuration format is described in detail in the [configuration format](#configuration-format) section.
+Configuration format is described in detail in the
+[configuration format](#configuration-format) section.
 
-* `cartridge_package_path` (`string`, optional): path to Cartridge RPM package (application name will be detected as package name);
-* `cartridge_app_name` (`string`): application name, required if `cartridge_package_path` is not specified;
-* `cartridge_instances` (`list`, optional, default: `[]`): configuration for deployed instances;
-* `cartridge_cluster_cookie` (`string`, required): cluster cookie for all cluster instances;
-* `cartridge_defaults` (`dict`, optional, default: `{}`): default configuration parameters values for instances;
-* `cartridge_replicasets` (`list`, optional, default: `[]`) - replicasets configuration;
-* `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean flag that indicates if vshard should be bootstrapped;
-* `cartridge_failover` (`boolean`, optional): boolean flag that indicates if failover should be enabled or disabled;
+* `cartridge_package_path` (`string`, optional): path to Cartridge RPM package
+  (application name will be detected as package name);
+* `cartridge_app_name` (`string`): application name, required if
+  `cartridge_package_path` is not specified;
+* `cartridge_instances` (`list`, optional, default: `[]`): configuration for
+  deployed instances;
+* `cartridge_cluster_cookie` (`string`, required): cluster cookie for all
+  cluster instances;
+* `cartridge_defaults` (`dict`, optional, default: `{}`): default configuration
+  parameters values for instances;
+* `cartridge_replicasets` (`list`, optional, default: `[]`) - replica sets
+  configuration;
+* `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean
+  flag that indicates if vshard should be bootstrapped;
+* `cartridge_failover` (`boolean`, optional): boolean flag that indicates if
+  failover should be enabled or disabled;
 * `cartridge_app_config` (`dict`, optional): application config sections to patch;
-* `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`): indicates if tarantool repository should be enabled (for packages with opensource Tarantool dependency).
+* `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`):
+  indicates if the Tarantool repository should be enabled (for packages with
+  open-source Tarantool dependency).
 
-**Note**: If instance is menitioned in `cartridge_replicasets` section, it should be configured in `cartridge_instances`.
+**Note**: If an instance is mentioned in the `cartridge_replicasets` section,
+it should be configured in `cartridge_instances`.
 
 ## Configuration format
 
-Instances and replicasets are identified by names, so you must use unique names to aviod collisions.
+Instances and replica sets are identified by names, so you must use unique names
+to avoid collisions.
 
 ### Application
 
-You can specify path to rpm package to be installed using `cartridge_package_path`. In this case `cartridge_app_name` will be rewrited by package name from rpm info.
+You can specify path to the rpm package to be installed using
+`cartridge_package_path`. In this case `cartridge_app_name` will be rewritten
+by the package name from rpm info.
 
-But if you don't specify rpm package path (for example, you have already installed rpm, and now you just want to start instances or configure replicasets), you should specify `cartridge_app_name`.
+But if you specify no rpm package path (for example, you have already installed
+rpm, and now you just want to start instances or configure replica sets), you
+should specify `cartridge_app_name`.
 
 ### Instances
 
-Each instance of application is started as `<app_name>@<instance_name>` systemd service.
+Each instance of the application is started as `<app_name>@<instance_name>`
+systemd service.
 
-It can be configured using the `cartridge_instances` variable. 
+It can be configured using the `cartridge_instances` variable.
 This variable describes all instances that should be deployed on the host.
 
-`cartridge_instances` is a list of dicts that contains  [cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse) module).
+`cartridge_instances` is a list of dicts that contains
+[cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts)
+parameters or some application-specific parameters (can be parsed in application
+using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse)
+module).
 
 #### Required parameters
 
-`name` and `advertise_uri` is required parameters for instance.
+`name` and `advertise_uri` are required parameters for an instance.
 
-**Note:** `name` will be used for systemd service name and instance alias.
-
-**Note:** `advertise_uri` parameter must be specified in `<host>:<port>` format.
-
-**Note:** If instance with the same name is already started on the host, it will be restarted with new configuration. 
+**Notes:**
+* `name` will be used for systemd service name and instance alias.
+* `advertise_uri` parameter must be specified in the `<host>:<port>` format.
+* If an instance with the same name is already started on the host, it will be
+  restarted with new configuration.
 
 #### Forbidden parameters
 
-`alias`, `console_sock`, `pid_file` and `workdir` parameters are forbidden for instance.
-Instance alias would be set equal to instance name.
+`alias`, `console_sock`, `pid_file`, and `workdir` parameters are forbidden
+for an instance.
 
-**Note:** in default systemd unit file for Tarantool Cartridge applications some instance parameters are set:
+Instance alias will be set equal to instance name.
+
+**Note:** in the default systemd unit file for Tarantool Cartridge applications,
+some instance parameters are set:
 
 ```
 Environment=TARANTOOL_WORKDIR=/var/lib/tarantool/{app_name}.{instance_name}
@@ -173,40 +202,52 @@ Environment=TARANTOOL_PID_FILE=/var/run/tarantool/${app_name}.{instance_name}.pi
 Environment=TARANTOOL_CONSOLE_SOCK=/var/run/tarantool/${app_name}.{instance_name}.control
 ```
 
-### Replicasets
+### Replica sets
 
-Cluster topology can be configured using `cartridge_replicasets` variable (must be placed in `all` group).
+Cluster topology can be configured using the `cartridge_replicasets` variable
+(must be placed in `all` group).
 
-`cartridge_replicasets` is a list of replicaset configurations:
+`cartridge_replicasets` is a list of replica set configurations:
 
-* `name` (`string`, required) - name of replicaset, will be displayed in Web UI;
-* `instances` (`list-of-strings`, required) - names of instances, which must be joined to replicaset;
-* `leader` (`string`) - name of leader instance. Optional if replicaset contains only one instance, required for replicaset with more than one instances;
-* `roles` (`list-of-strings`, required) - roles to be enabled on the replicaset.
+* `name` (`string`, required) - name of the replica set, will be displayed in
+  the Web UI;
+* `instances` (`list-of-strings`, required) - names of instances, which must be
+  joined to the replica set;
+* `leader` (`string`) - name of the leader instance. Optional if the replica set
+  contains only one instance, required for a replica set with more than one
+  instance;
+* `roles` (`list-of-strings`, required) - roles to be enabled on the replica set.
 
-**Note**: Replicaset would be set up **only** if replicaset with the same name is not set up yet.
-
-**Note**: If instance is menitioned in `cartridge_replicasets` section, it should be configured in `cartridge_instances`.
+**Note**:
+* A replica set will be set up **only** if a replica set with the same
+  name is not set up yet.
+* If an instance is mentioned in the `cartridge_replicasets` section, it should
+  be configured in `cartridge_instances`.
 
 ### Vshard bootstrapping
 
-Flag `cartridge_bootstrap_vshard` indicates if vshard must be bootstrapped on cluster.
+The flag `cartridge_bootstrap_vshard` indicates if vshard must be bootstrapped
+on the cluster.
 
-First, it would be checked if it is reasonble to bootstrap VShard (cluster must have at least one `vshard-storage` replicaset and at least one `vshard-router`).
-If it is, VShard will be bootstrapped.
+First, it will be checked if it is reasonable to bootstrap vshard (the cluster
+must have at least one `vshard-storage` replica set and at least one
+`vshard-router`). If it is, vshard will be bootstrapped.
 
 ### Failover
 
 If `cartridge_bootstrap_vshard` is `true`, then failover will be enabled.
 
-### Cartridge auth
+### Cartridge authorization
 
-`cartridge_auth` parameter is used to specify authorization parameters:
+`cartridge_auth` parameter is used to specify authorization settings:
 
-- `enabled`(`boolean`, optional) - indicates if authentication must be enabled;
-- `cookie_max_age`(`int`, optional) - number of seconds until the authentication cookie expires;
-- `cookie_renew_age`(`int`, optional) - update provided cookie if it's older then this age.
-- `users`(`list-of-dicts`, optional) - list of users to be configured on cluster (described below).
+- `enabled`(`boolean`, optional) - indicates if authorization is enabled;
+- `cookie_max_age`(`int`, optional) - number of seconds until the authorization
+  cookie expires;
+- `cookie_renew_age`(`int`, optional) - update the provided cookie if it's older
+  than this age.
+- `users`(`list-of-dicts`, optional) - list of users to be configured on the
+  cluster (described below).
 
 **Users configuration:**
 
@@ -214,9 +255,9 @@ If `cartridge_bootstrap_vshard` is `true`, then failover will be enabled.
 - `password`(`string`, optional) - is required for new users;
 - `fullname`(`string`, optional);
 - `email`(`string`, optional);
-- `deleted`(`boolean`, optional) - indicates if user must be removed.
+- `deleted`(`boolean`, optional) - indicates if the user must be removed.
 
-**Note:** Default user `admin` can't be managed here.
+**Note:** The default user `admin` can't be managed here.
 
 *Example:*
 
@@ -227,7 +268,7 @@ cartridge_auth:
   cookie_max_age: 1000
   cookie_renew_age: 100
 
-  users:  # cartridge users to be set up
+  users:  # cartridge users to set up
     - username: tarantool
       password: tarantool-the-best
       fullname: Tarantool The Best
@@ -237,10 +278,10 @@ cartridge_auth:
       deleted: true  # marked to be deleted
 ```
 
-### Applicaction config
+### Application configuration
 
 `cartridge_app_config` variable is used to edit cluster configuration.
-It allows to configure config sections in special format:
+It allows to define configuration sections in a special format:
 
 ```yaml
 cartridge_app_config:
@@ -248,15 +289,14 @@ cartridge_app_config:
     body: <section body>
     deleted: <boolean>
 ```
-
-
-- sections with `deleted` flag set up would be deleted;
-- sections not mentioned here wouldn't be changed;
-- other sections value would be replaced with section `body` value.
+**Note:**
+* sections with the `deleted` flag set up will be deleted;
+* sections not mentioned here won't be changed;
+* other sections values will be replaced with the section `body` value.
 
 *Example*
 
-If your cluster config looks like:
+If your cluster configuration looks like:
 
 ```yaml
 section-1: value-1  # section body is a string
@@ -269,7 +309,7 @@ section-3:
   key-31: value-31
 ```
 
-... after running role with this `cartridge_app_config`:
+... after running a role with this `cartridge_app_config`:
 
 ```yaml
 cartridge_app_config:
@@ -281,7 +321,7 @@ cartridge_app_config:
     deleted: true
 ```
 
-... it would be
+... it will be:
 
 ```yaml
 section-1: value-1  # hasn't been changed
