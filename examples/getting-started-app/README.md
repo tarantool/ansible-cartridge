@@ -16,7 +16,6 @@ set up the topology, and configure a cluster.
   * [Setting up the topology](#setting-up-the-topology)
 * [Deploying with Ansible](#deploying-with-ansible)
   * [About Ansible](#about-ansible)
-  * [Example topology](#example-topology)
   * [Prepare to deploy](#prepare-to-deploy)
   * [Start virtual machines](#start-virtual-machines)
   * [Install package](#install-package)
@@ -169,7 +168,7 @@ The next step is to deploy this package on servers and set up a cluster.
 Here follows a description of deploy steps, just to understand the way
 Tarantool Cartridge applications should be deployed.
 You can skip this section if you are not interested in understanding how it works
-under the hood, and proceed directly to [deployment steps](deploying-with-ansible).
+under the hood, and proceed directly to [deployment steps](#deploying-with-ansible).
 
 ### Deploying the package
 
@@ -594,7 +593,7 @@ Check the failover switcher in the Web UI.
 You can experiment with the `cartridge_failover` value.
 If this value is unset, the failover status won't be affected.
 
-### Manage auth
+### Manage authorization
 
 Our application is already configured and started, but what about security?
 
