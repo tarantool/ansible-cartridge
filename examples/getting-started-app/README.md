@@ -339,7 +339,7 @@ all:
 
   children:
     # group instances by machines
-    host1:  # first machine addres and connection opts
+    host1:  # first machine address and connection opts
       vars:
         ansible_host: 172.19.0.2
         ansible_user: vagrant
@@ -350,7 +350,7 @@ all:
             advertise_uri: '172.19.0.2:3301'
             http_port: 8181
 
-    host2:  # second machine addres and connection opts
+    host2:  # second machine address and connection opts
       vars:
         ansible_host: 172.19.0.3
         ansible_user: vagrant
@@ -499,10 +499,10 @@ all:
     ...
   children:
     # group instances by machines
-    host1:  # first machine addres and connection opts
+    host1:  # first machine address and connection opts
       ...
       
-    host2:  # second machine addres and connection opts
+    host2:  # second machine address and connection opts
       ...
 
     # group instances by replicasets
@@ -843,7 +843,7 @@ all:
 
   children:
     # group instances by machines
-    host1:  # first machine addres and connection opts
+    host1:  # first machine address and connection opts
       vars:
         ansible_host: 172.19.0.2
         ansible_user: vagrant
@@ -854,7 +854,7 @@ all:
             advertise_uri: '172.19.0.2:3301'
             http_port: 8181
 
-    host2:  # second machine addres and connection opts
+    host2:  # second machine address and connection opts
       vars:
         ansible_host: 172.19.0.3
         ansible_user: vagrant

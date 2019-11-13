@@ -24,10 +24,10 @@ This role can deploy and configure applications packed in RPM using
   * [Application configuration](#application-configuration)
 
 
-<!-- ## Requirements
+## Requirements
 
 * Tarantool Cartridge 1.2.0 or higher;
-* Ansible 2.8.4 or higher. -->
+* Ansible 2.8.4 or higher.
 
 ## Usage example
 
@@ -66,7 +66,7 @@ all:
     # group instances by machines
     host1:
       vars:
-        # first machine addres and connection opts
+        # first machine address and connection opts
         ansible_host: 172.19.0.2
         ansible_user: root
         become: true
@@ -85,7 +85,7 @@ all:
 
     host2:
       vars:
-        # second machine addres and connection opts
+        # second machine address and connection opts
         ansible_host: 172.19.0.3
         ansible_user: root
         become: true
@@ -169,7 +169,7 @@ Tasks are running in this order:
 
 ### Example scenario
 
-Using `--tags` and `--limits` options you can manage cluster different ways:
+Using `--limits` and `--tags` options you can manage cluster different ways:
 
 #### Run all tasks for all hosts
 
@@ -179,6 +179,21 @@ If cluster configuration was specified, it would be updated.
 
 ```bash
 ansible-playbook -i hosts.yml playbook.yml
+```
+
+#### Start one instance
+
+**Note**, that this instance will be joined to the replicaset if replicaset options are specified for it.
+To prevent it you need to specify `--tags cartridge-instances`.
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --limit core-1
+```
+
+#### Start and join one replicaset
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --limit core_1_replicaset
 ```
 
 #### Update instances in one replicaset
