@@ -43,77 +43,8 @@ provisioner:
     name: ansible-lint
 
   inventory:
-    group_vars:
-      all:
-        cartridge_cluster_cookie: app-default-cookie
-        cartridge_defaults:
-          log_level: 5
-
-        cartridge_bootstrap_vshard: true
-        cartridge_failover: true
-
-        cartridge_auth:
-          enabled: true
-
-          cookie_max_age: 1000
-          cookie_renew_age: 100
-
-          users:
-            - username: tarantool
-              password: tarantool-the-best
-              fullname: Tarantool The Best
-              email: tarantool@tarantool.org
-
-        cartridge_app_config:
-          section-1:
-            body:
-              key-1: value-1
-              key-2: value-2
-
-          section-2:
-            body: section-2-value
-
-          section-3:
-            deleted: true
-
-        cartridge_replicasets:
-          - name: storage-1
-            instances:
-              - storage_1
-              - storage_1_replica
-              - storage_1_replica_2
-            leader: storage_1
-            roles: ['vshard-storage']
-
-          - name: core-1
-            instances:
-              - core_1
-            roles: ['app.roles.custom', 'vshard-router']
-
-    host_vars:
-      vm1:
-        cartridge_package_path: ./myapp-1.0.0-0.rpm
-        cartridge_instances:
-          - name: 'storage_1'
-            advertise_uri: 'vm1:3301'
-            http_port: '8081'
-
-          - name: 'storage_1_replica'
-            advertise_uri: 'vm1:3302'
-            http_port: '8082'
-
-      vm2:
-        # XXX
-        # cartridge_package_path: ./myapp-1.0.0-0.deb
-        cartridge_package_path: ./myapp-1.0.0-0.rpm
-        cartridge_instances:
-          - name: 'core_1'
-            advertise_uri: 'vm2:3311'
-            http_port: '8091'
-
-          - name: 'storage_1_replica_2'
-            advertise_uri: 'vm2:3312'
-            http_port: '8092'
+    links:
+      hosts: hosts.yml
 
 verifier:
   name: testinfra

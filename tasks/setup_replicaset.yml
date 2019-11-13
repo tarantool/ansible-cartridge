@@ -1,7 +1,0 @@
----
-- name: 'Set {{ replicaset.name }} replicaset'
-  cartridge_setup_replicaset:
-    replicaset: '{{ replicaset }}'
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
-  run_once: true

@@ -1,9 +1,13 @@
 import os
 import yaml
-import copy
+# import copy
 
 import testinfra.utils.ansible_runner
 import requests
+
+from ansible.inventory.manager import InventoryManager
+from ansible.vars.manager import VariableManager
+from ansible.parsing.dataloader import DataLoader
 
 ansible_runner = testinfra.utils.ansible_runner.AnsibleRunner(
     os.environ['MOLECULE_INVENTORY_FILE']
@@ -16,9 +20,7 @@ APP_NAME = 'myapp'
 __authorized_session = None
 
 
-def get_authorized_session(host):
-    cluster_cookie = host.ansible.get_variables()['cartridge_cluster_cookie']
-
+def get_authorized_session(cluster_cookie):
     global __authorized_session
     if __authorized_session is None:
         __authorized_session = requests.Session()
@@ -38,23 +40,61 @@ def check_conf_file(conf_file, conf_section, conf):
     assert conf_file_dict[conf_section] == conf
 
 
-def get_instance_alias(instance):
-    return instance['alias'] if 'alias' in instance else instance['name']
+def get_cluster_cookie():
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    return inventory.groups['cluster'].get_vars()['cartridge_cluster_cookie']
 
 
 def get_configured_instances():
-    configured_instances = []
-
-    for testinfra_host in testinfra_hosts:
-        host_vars = ansible_runner.get_variables(testinfra_host)
-        if 'cartridge_instances' in host_vars:
-            configured_instances += host_vars['cartridge_instances']
-
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    configured_instances = {
+        inventory.hosts[i].get_vars()['inventory_hostname']: inventory.hosts[i].get_vars()['config']
+        for i in inventory.hosts
+    }
     return configured_instances
 
 
-def get_admin_api_url(configured_instances):
-    admin_url = 'http://localhost:{}'.format(configured_instances[0]['http_port'])
+def get_instance_vars(instance):
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    return inventory.hosts[instance].get_vars()
+
+
+def get_variable_vaule(name, default=None):
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    all_group_vars = inventory.groups['cluster'].get_vars()
+    return all_group_vars[name] if name in all_group_vars else default
+
+
+def get_configured_replicasets():
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    variable_manager = VariableManager(loader=DataLoader(), inventory=inventory)
+
+    replicasets = {}
+
+    for instance in inventory.hosts:
+        host_vars = variable_manager.get_vars(host=inventory.hosts[instance])
+        if 'replicaset_alias' not in host_vars:
+            continue
+
+        replicaset_alias = host_vars['replicaset_alias']
+        if replicaset_alias not in replicasets:
+            replicasets[replicaset_alias] = {
+                'instances': [],
+                'leader': host_vars['leader'],
+                'roles': host_vars['roles'],
+            }
+
+        replicasets[replicaset_alias]['instances'].append(instance)
+
+    return replicasets
+
+
+def get_any_instance_http_port(instances):
+    return instances[list(instances.keys())[0]]['http_port']
+
+
+def get_admin_api_url(instances):
+    admin_url = 'http://localhost:{}'.format(get_any_instance_http_port(instances))
     admin_api_url = '{}/admin/api'.format(
         admin_url
     )
@@ -71,27 +111,30 @@ def section_is_deleted(section):
 
 
 def test_services_status_and_config(host):
-    ansible_vars = host.ansible.get_variables()
-    instances = copy.deepcopy(
-        ansible_vars['cartridge_instances'] if 'cartridge_instances' in ansible_vars else []
-    )
-    default_conf = \
-        ansible_vars['cartridge_defaults'] if 'cartridge_defaults' in ansible_vars else {}
+    hostname = host.check_output('hostname -s')
+    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
 
-    default_conf.update(cluster_cookie=ansible_vars['cartridge_cluster_cookie'])
+    host_instances = [
+        i for i in inventory.hosts
+        if hostname in list(map(lambda x:  x.name, inventory.hosts[i].get_groups()))
+    ]
 
-    for instance in instances:
-        inst_name = instance['name']
+    default_conf = get_variable_vaule('cartridge_defaults', default={})
+    default_conf.update(cluster_cookie=get_cluster_cookie())
 
-        instance_conf = {k: v for k, v in instance.items() if k != 'name'}
+    for instance in host_instances:
+        instance_vars = get_instance_vars(instance)
 
-        service = host.service('{}@{}'.format(APP_NAME, inst_name))
+        instance_conf = instance_vars['config']
+        instance_name = instance_vars['inventory_hostname']
+
+        service = host.service('{}@{}'.format(APP_NAME, instance_name))
         assert service.is_running
         assert service.is_enabled
 
-        conf_file_path = '/etc/tarantool/conf.d/{}.{}.yml'.format(APP_NAME, inst_name)
+        conf_file_path = '/etc/tarantool/conf.d/{}.{}.yml'.format(APP_NAME, instance_name)
         conf_file = host.file(conf_file_path)
-        conf_section = '{}.{}'.format(APP_NAME, inst_name)
+        conf_section = '{}.{}'.format(APP_NAME, instance_name)
 
         check_conf_file(conf_file, conf_section, instance_conf)
 
@@ -102,12 +145,9 @@ def test_services_status_and_config(host):
     check_conf_file(default_conf_file, default_conf_file_section, default_conf)
 
 
-def test_instances(host):
-    # Get all configured instances
+def test_instances():
+    cluster_cookie = get_cluster_cookie()
     configured_instances = get_configured_instances()
-
-    if not configured_instances:
-        return
 
     # Select one instance to be control
     admin_api_url = get_admin_api_url(configured_instances)
@@ -116,31 +156,30 @@ def test_instances(host):
     query = '''
         query {
           servers {
-            uuid
             uri
             alias
-            status
-            replicaset {
-              uuid
-            }
           }
         }
     '''
-    session = get_authorized_session(host)
+    session = get_authorized_session(cluster_cookie)
     response = session.post(admin_api_url, json={'query': query})
 
     started_instances = response.json()['data']['servers']
     started_instances = {i['alias']: i for i in started_instances}
 
-    # Check if all configyred instances are started and avaliable
+    # Check if all configured instances are started and avaliable
     assert len(configured_instances) == len(started_instances)
-    for configured_instance in configured_instances:
-        assert get_instance_alias(configured_instance) in started_instances
+    assert set(configured_instances.keys()) == set(started_instances.keys())
+    assert all([
+        configured_instances[i]['advertise_uri'] == started_instances[i]['uri']
+        for i in configured_instances
+    ])
 
 
-def test_replicasets(host):
+def test_replicasets():
     # Get all configured instances
     configured_instances = get_configured_instances()
+    cluster_cookie = get_cluster_cookie()
 
     if not configured_instances:
         return
@@ -163,17 +202,18 @@ def test_replicasets(host):
           }
         }
     '''
-    session = get_authorized_session(host)
+    session = get_authorized_session(cluster_cookie)
     response = session.post(admin_api_url, json={'query': query})
 
     started_replicasets = response.json()['data']['replicasets']
     started_replicasets = {r['alias']: r for r in started_replicasets}
 
-    # Configured replicasets
-    configured_replicasets = host.ansible.get_variables()['cartridge_replicasets']
-    configured_replicasets = {r['name']: r for r in configured_replicasets}
+    print(started_replicasets)
+    configured_replicasets = get_configured_replicasets()
+    print(configured_replicasets)
 
     # Check if started replicasets are equal to configured
+    assert len(started_replicasets) == len(configured_replicasets)
     assert set(started_replicasets.keys()) == set(configured_replicasets.keys())
     for name in started_replicasets.keys():
         started_replicaset = started_replicasets[name]
@@ -181,18 +221,17 @@ def test_replicasets(host):
 
         assert set(started_replicaset['roles']) == set(configured_replicaset['roles'])
 
-        if 'leader' not in configured_replicaset:
-            configured_replicaset['leader'] = configured_replicaset['instances'][0]
-
         assert started_replicaset['master']['alias'] == configured_replicaset['leader']
 
         started_replicaset_instances = [i['alias'] for i in started_replicaset['servers']]
         assert set(started_replicaset_instances) == set(configured_replicaset['instances'])
 
 
-def test_failover(host):
+def test_failover():
     # Get configured failover status
-    configured_failover = host.ansible.get_variables()['cartridge_failover']
+    configured_failover = get_variable_vaule('cartridge_failover')
+    if not configured_failover:
+        return
 
     # Get all configured instances
     configured_instances = get_configured_instances()
@@ -202,6 +241,9 @@ def test_failover(host):
 
     # Select one instance to be control
     admin_api_url = get_admin_api_url(configured_instances)
+
+    # Get cluster cookie
+    cluster_cookie = get_cluster_cookie()
 
     # Get cluster failover status
     query = '''
@@ -211,7 +253,7 @@ def test_failover(host):
           }
         }
     '''
-    session = get_authorized_session(host)
+    session = get_authorized_session(cluster_cookie)
     response = session.post(admin_api_url, json={'query': query})
 
     failover = response.json()['data']['cluster']['failover']
@@ -219,18 +261,22 @@ def test_failover(host):
     assert failover == configured_failover
 
 
-def test_auth_params(host):
+def test_auth_params():
     # Get configured auth params
-    configured_auth = host.ansible.get_variables()['cartridge_auth']
+    configured_auth = get_variable_vaule('cartridge_auth')
+    if not configured_auth:
+        return
 
     # Get all configured instances
     configured_instances = get_configured_instances()
-
     if not configured_instances:
         return
 
     # Select one instance to be control
     admin_api_url = get_admin_api_url(configured_instances)
+
+    # Get cluster cookie
+    cluster_cookie = get_cluster_cookie()
 
     # Get cluster auth params
     query = '''
@@ -245,7 +291,7 @@ def test_auth_params(host):
         }
     '''
 
-    session = get_authorized_session(host)
+    session = get_authorized_session(cluster_cookie)
     response = session.post(admin_api_url, json={'query': query})
 
     auth = response.json()['data']['cluster']['auth_params']
@@ -255,25 +301,22 @@ def test_auth_params(host):
             assert auth[key] == configured_auth[key]
 
 
-def test_auth_users(host):
+def test_auth_users():
     # Get configured auth params
-    ansible_vars = host.ansible.get_variables()
-    if 'cartridge_auth' not in ansible_vars:
-        return
-
-    configured_auth = ansible_vars['cartridge_auth']
-
-    if 'users' not in configured_auth:
+    configured_auth = get_variable_vaule('cartridge_auth')
+    if not configured_auth or 'users' not in configured_auth:
         return
 
     # Get all configured instances
     configured_instances = get_configured_instances()
-
     if not configured_instances:
         return
 
     # Select one instance to be control
     admin_api_url = get_admin_api_url(configured_instances)
+
+    # Get cluster cookie
+    cluster_cookie = get_cluster_cookie()
 
     # Get cluster auth params
     query = '''
@@ -288,7 +331,7 @@ def test_auth_users(host):
         }
     '''
 
-    session = get_authorized_session(host)
+    session = get_authorized_session(cluster_cookie)
     response = session.post(admin_api_url, json={'query': query})
 
     auth_users = response.json()['data']['cluster']['users']
@@ -310,7 +353,7 @@ def test_auth_users(host):
     # Check if all users can log in
     login_url = 'http://{}:{}/login'.format(
         'localhost',
-        configured_instances[0]['http_port']
+        get_any_instance_http_port(configured_instances)
     )
 
     for username, user in configured_users.items():
@@ -321,13 +364,11 @@ def test_auth_users(host):
         assert response.status_code == 200
 
 
-def test_app_config(host):
+def test_app_config():
     # Get configured auth params
-    ansible_vars = host.ansible.get_variables()
-    if 'cartridge_app_config' not in ansible_vars:
+    specified_app_config = get_variable_vaule('cartridge_app_config')
+    if not specified_app_config:
         return
-
-    specified_app_config = ansible_vars['cartridge_app_config']
 
     # Get all configured instances
     configured_instances = get_configured_instances()
@@ -335,13 +376,16 @@ def test_app_config(host):
     if not configured_instances:
         return
 
+    # Get cluster cookie
+    cluster_cookie = get_cluster_cookie()
+
     # Get cartridge app config
     config_url = 'http://{}:{}/admin/config'.format(
         'localhost',
-        configured_instances[0]['http_port']
+        get_any_instance_http_port(configured_instances)
     )
 
-    session = get_authorized_session(host)
+    session = get_authorized_session(cluster_cookie)
 
     response = session.get(config_url)
     assert response.status_code == 200

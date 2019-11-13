@@ -4,16 +4,13 @@
   fail:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
   when: ansible_os_family not in ["RedHat", "Debian"]
-
-- name: Set cartridge_confdir and package_updated variables
-  set_fact:
-    cartridge_confdir: /etc/tarantool/conf.d
-    package_updated: false
+  tags: always
 
 - name: Set remote_user for delegated tasks
   set_fact:
     remote_user: '{{ ansible_user }}'
   when: remote_user is not defined and ansible_user is defined
+  tags: always
 
 - name: Validate config
   cartridge_validate_config:
@@ -22,73 +19,104 @@
   delegate_to: localhost
   become: false
   run_once: true
+  tags: always
 
 # Rewrites cartridge_app_name from package info
 - name: Install package
-  include_tasks: install_package.yml
+  import_tasks: install_package.yml
   when: cartridge_package_path is defined
+  tags:
+    - cartridge-instances
+    - cartridge-package
+
+- name: Start instances
+  import_tasks: start_instance.yml
+  tags: cartridge-instances
+
+# Restart instances and reload systemd-daemon if required
+- meta: flush_handlers
+
+- name: Connect instance to membership
+  cartridge_probe_instance:
+    instance: '{{ config }}'
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+  register: probe
+  until: not probe.failed
+  retries: 3
+  delay: 5
+  tags: cartridge-instances
+
+- name: Set one control instance to join replicasets
+  cartridge_control_instance:
+    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+  register: control_instance
+  run_once: true
+  tags: cartridge-replicasets
+
+- name: Get replicasets
+  cartridge_get_replicasets:
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+    control_host: '{{ control_instance.meta.host }}'
+  register: replicasets
+  run_once: true
+  tags: cartridge-replicasets
+
+- name: Manage replicasets
+  include_tasks: manage_replicaset.yml
+  vars:
+    replicaset: '{{ item }}'
+    join_host: '{{ replicasets.meta.join_host }}'
+  loop: '{{ replicasets.meta.replicasets }}'
+  run_once: true
+  tags: cartridge-replicasets
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
-    hosts: '{{ play_hosts }}'
-    hostvars: '{{ hostvars }}'
-    appname: '{{ cartridge_app_name }}'
+    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    allow_empty: false
   register: control_instance
-
-- name: Save control server host and sock
-  set_fact:
-    control_host: '{{ control_instance.meta.control_host }}'
-    control_sock: '{{ control_instance.meta.control_sock }}'
-
-- name: Place default application config
-  include_tasks: default_config.yml
-  when: cartridge_instances | length > 0
-
-- name: Start instances
-  include_tasks: start_instance.yml
-  vars:
-    instance: '{{ item }}'
-  with_items: '{{ cartridge_instances }}'
-
-- name: Probe instances
-  include_tasks: probe_instance.yml
-  vars:
-    instance: '{{ item }}'
-  with_items: '{{ cartridge_instances }}'
-
-- name: Setup replicasets
-  include_tasks: setup_replicaset.yml
-  vars:
-    replicaset: '{{ item }}'
-  with_items: '{{ cartridge_replicasets }}'
+  run_once: true
+  when: >-
+    cartridge_auth is defined
+    or cartridge_app_config is defined
+    or cartridge_bootstrap_vshard is defined
+    or cartridge_failover is defined
+  tags: cartridge-config
 
 - name: Cartridge auth
-  cartridge_auth_params:
-    auth_params: '{{ cartridge_auth }}'
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
+  cartridge_auth:
+    auth: '{{ cartridge_auth }}'
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+  delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_auth is defined
+  tags: cartridge-config
 
 - name: Application config
   cartridge_app_config:
     app_config: '{{ cartridge_app_config }}'
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+  delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_app_config is defined
+  tags: cartridge-config
 
 - name: Bootstrap vshard
   cartridge_bootstrap_vshard:
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+  delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
-  when: cartridge_bootstrap_vshard
+  when: cartridge_bootstrap_vshard is defined and cartridge_bootstrap_vshard
+  tags: cartridge-config
 
 - name: Manage failover
   cartridge_manage_failover:
-    control_sock: '{{ control_sock }}'
     failover: '{{ cartridge_failover }}'
-  delegate_to: '{{ control_host }}'
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+  delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_failover is defined
+  tags: cartridge-config

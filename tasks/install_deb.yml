@@ -37,8 +37,6 @@
   apt:
     deb: /tmp/{{ deb_filename }}
     update_cache: true
-  register: install_deb
-
-- name: Set package_updated
-  set_fact:
-    package_updated: '{{ install_deb.changed }}'
+  notify:
+    - restart-instance
+    - reload-systemd-daemon

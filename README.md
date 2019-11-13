@@ -8,10 +8,13 @@ This role can deploy and configure applications packed in RPM using
 
 ## Table of contents
 
+* [Usage](#usage)
 * [Requirements](#requirements)
 * [Usage example](#usage-example)
 * [Getting started](#getting-started)
 * [Role variables](#role-variables)
+* [Role tags](#role-tags)
+* [Example scenario](#example-scenario)
 * [Configuration format](#configuration-format)
   * [Instances](#instances)
   * [Replica sets](#replica-sets)
@@ -19,6 +22,7 @@ This role can deploy and configure applications packed in RPM using
   * [Failover](#failover)
   * [Cartridge authorization](#cartridge-authorization)
   * [Application configuration](#application-configuration)
+
 
 ## Requirements
 
@@ -29,7 +33,7 @@ This role can deploy and configure applications packed in RPM using
 
 Example cluster topology:
 
-![image](https://user-images.githubusercontent.com/32142520/65237544-837dc580-dae3-11e9-97c6-db8676357eb5.png)
+![image](./examples/getting-started-app/images/example-topology.png)
 
 To deploy an application and set up this topology:
 
@@ -52,61 +56,70 @@ To deploy an application and set up this topology:
 ```yaml
 ---
 all:
-  hosts:
-    vm1:
-      ansible_host: 172.19.0.2  # first host
-      ansible_user: vagrant
+  vars:
+    cartridge_package_path: ./myapp-1.0.0-0.rpm
+    cartridge_cluster_cookie: secret-cookie
+    cartridge_defaults:
+      log_level: 1
 
-      cartridge_instances:  # instances to be started on this host
-        - name: 'core_1'
-          advertise_uri: '172.19.0.2:3301'
-          http_port: '8181'
+  children:
+    # group instances by machines
+    host1:
+      vars:
+        # first machine address and connection opts
+        ansible_host: 172.19.0.2
+        ansible_user: root
+        become: true
+        become_user: root
 
-        - name: 'storage_1'
-          advertise_uri: '172.19.0.2:3302'
-          http_port: '8182'
+      hosts:  # instances to be started on this host
+        core-1:
+          config:
+            advertise_uri: '172.19.0.2:3301'
+            http_port: 8081
 
-    vm2:
-      ansible_host: 172.19.0.3  # second host
-      ansible_user: vagrant
+        storage-1-replica:
+          config:
+            advertise_uri: '172.19.0.2:3302'
+            http_port: 8082
 
-      cartridge_instances:  # instances to be started on this host
-        - name: 'router'
-          advertise_uri: '172.19.0.3:3303'
-          http_port: '8183'
+    host2:
+      vars:
+        # second machine address and connection opts
+        ansible_host: 172.19.0.3
+        ansible_user: root
+        become: true
+        become_user: root
 
-        - name: 'storage_1_replica'
-          advertise_uri: '172.19.0.3:3304'
-          http_port: '8184'
+      hosts:  # instances to be started on this host
+        storage-1:
+          config:
+            advertise_uri: '172.19.0.3:3301'
+            http_port: 8091
 
+    # group instances by replicasets
+    storage_1_replicaset:  # replicaset storage-1
+      hosts:  # instances
+        storage-1:
+        storage-1-replica:
+      vars:
+        # replicaset configuration
+        replicaset_alias: storage-1
+        leader: storage-1
+        roles:
+          - 'vshard-storage'
 
-  vars:  # cluster configuration
-    cartridge_package_path: ./myapp-1.0.0-0.rpm  # path to package to deploy
+    core_1_replicaset:  # replicaset core-1
+      hosts:  # instances
+        core-1:
 
-    cartridge_failover: true  # enable automatic failover
-    cartridge_bootstrap_vshard: true  # bootstrap vshard
-
-    cartridge_cluster_cookie: super-secret-cookie  # cartridge cookie must be specified here
-    cartridge_defaults:  # default configuration parameters for all instances
-      log_level: 5
-
-    cartridge_replicasets:  # replica sets to set up
-      - name: 'replicaset-1'
-        instances:
-          - 'storage_1'
-          - 'storage_1_replica'
-        leader: 'storage_1'
-        roles: ['vshard-storage']
-
-      - name: 'core-1'
-        instances:
-          - core_1
-        roles: ['app.roles.custom']
-
-      - name: 'router-1'
-        instances:
-          - router
-        roles: ['vshard-router']
+      vars:
+        # replicaset configuration
+        replicaset_alias: core-1
+        leader: core-1
+        roles:
+          - 'app.roles.custom'
+          - 'vshard-router'
 ```
 
 ## Getting started
@@ -126,14 +139,10 @@ Configuration format is described in detail in the
   (application name will be detected as package name);
 * `cartridge_app_name` (`string`): application name, required if
   `cartridge_package_path` is not specified;
-* `cartridge_instances` (`list`, optional, default: `[]`): configuration for
-  deployed instances;
 * `cartridge_cluster_cookie` (`string`, required): cluster cookie for all
   cluster instances;
 * `cartridge_defaults` (`dict`, optional, default: `{}`): default configuration
   parameters values for instances;
-* `cartridge_replicasets` (`list`, optional, default: `[]`) - replica sets
-  configuration;
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean
   flag that indicates if vshard should be bootstrapped;
 * `cartridge_failover` (`boolean`, optional): boolean flag that indicates if
@@ -143,8 +152,91 @@ Configuration format is described in detail in the
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency).
 
-**Note**: If an instance is mentioned in the `cartridge_replicasets` section,
-it should be configured in `cartridge_instances`.
+### Role tags
+
+This role tasks have special tags that allows to perform only secified actions.
+Tasks are running in this order:
+
+* `cartridge-instances` - install package, update instances config and restart instances;
+* `cartridge-replicasets` - configure replicasets;
+* `cartridge-config` - configure cluster, contains this tasks:
+  * configure authorization (if `cartridge_auth` is defined);
+  * patch application clusterwide config (if `cartridge_app_config` is defined);
+  * bootstrap Vshard (if `cartridge_bootstrap_vshard` is defined);
+  * manage cartridge failover (if `cartridge_failover` is defined).
+
+**Note**, that `cartridge-config` tasks would be skipped if no one of `cartridge_auth`, `cartridge_app_config`, `cartridge_bootstrap_vshard` and `cartridge_failover` variables is specified.
+
+### Example scenario
+
+Using `--limits` and `--tags` options you can manage cluster different ways:
+
+#### Run all tasks for all hosts
+
+All instances will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
+Then, instances would be joined to replicasets.
+If cluster configuration was specified, it would be updated.
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml
+```
+
+#### Start one instance
+
+**Note**, that this instance will be joined to the replicaset if replicaset options are specified for it.
+To prevent it you need to specify `--tags cartridge-instances`.
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --limit core-1
+```
+
+#### Start and join one replicaset
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --limit core_1_replicaset
+```
+
+#### Update instances in one replicaset
+
+Instances from `storage_1_replicaset` group will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --limit storage_1_replicaset \
+                                          --tags cartridge-instances
+```
+
+#### Update instances on one machine
+
+Instances from `host1` machine will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --limit host1 \
+                                          --tags cartridge-instances
+```
+
+#### Join instances to replicaset
+
+Instances from `storage_1_replicaset` group will be joined to replicaset.
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --limit storage_1_replicaset \
+                                           --tags cartridge-replicasets
+```
+
+#### Start and join other replicaset instances
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --limit core_1_replicaset \
+                        --tags cartridge-instances,cartridge-replicasets
+```
+
+#### Patch cluster configuration
+
+Manage cartridge configuration parameters.
+
+```bash
+ansible-playbook -i hosts.yml playbook.yml --tags cartridge-config
+```
 
 ## Configuration format
 
@@ -163,27 +255,17 @@ should specify `cartridge_app_name`.
 
 ### Instances
 
-Each instance of the application is started as `<app_name>@<instance_name>`
-systemd service.
+Each instance of application is started as `<app_name>@<instance_name>` systemd service.
+`instance_name` is `inventory_hostname` from Ansible inventory.
 
-It can be configured using the `cartridge_instances` variable.
-This variable describes all instances that should be deployed on the host.
-
-`cartridge_instances` is a list of dicts that contains
-[cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts)
-parameters or some application-specific parameters (can be parsed in application
-using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse)
-module).
+Instance can be configured using the `config` variable.
+This variable describes instance parameters that would be passed to cartridge configuration.
+It can contain [cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse) module).
 
 #### Required parameters
 
-`name` and `advertise_uri` are required parameters for an instance.
-
-**Notes:**
-* `name` will be used for systemd service name and instance alias.
-* `advertise_uri` parameter must be specified in the `<host>:<port>` format.
-* If an instance with the same name is already started on the host, it will be
-  restarted with new configuration.
+`advertise_uri` is required parameter for instance configuraion.
+It must be specified in `<host>:<port>` format.
 
 #### Forbidden parameters
 
@@ -204,25 +286,17 @@ Environment=TARANTOOL_CONSOLE_SOCK=/var/run/tarantool/${app_name}.{instance_name
 
 ### Replica sets
 
-Cluster topology can be configured using the `cartridge_replicasets` variable
-(must be placed in `all` group).
+To configure replicasets you need to specify replicaset parameters for each instance in replicaset:
 
-`cartridge_replicasets` is a list of replica set configurations:
-
-* `name` (`string`, required) - name of the replica set, will be displayed in
-  the Web UI;
-* `instances` (`list-of-strings`, required) - names of instances, which must be
-  joined to the replica set;
-* `leader` (`string`) - name of the leader instance. Optional if the replica set
-  contains only one instance, required for a replica set with more than one
-  instance;
-* `roles` (`list-of-strings`, required) - roles to be enabled on the replica set.
+* `replicaset_alias` (`string`, required) - replicaset alias, will be displayed in Web UI;
+* `leader` (`string`) - name of leader instance;
+* `roles` (`list-of-strings`, required) - roles to be enabled on the replicaset.
 
 **Note**:
 * A replica set will be set up **only** if a replica set with the same
   name is not set up yet.
-* If an instance is mentioned in the `cartridge_replicasets` section, it should
-  be configured in `cartridge_instances`.
+
+The easiest way to configure replicaset is to [group instances](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) and set replicaset parameters for all instances in a group.
 
 ### Vshard bootstrapping
 
@@ -236,6 +310,7 @@ must have at least one `vshard-storage` replica set and at least one
 ### Failover
 
 If `cartridge_bootstrap_vshard` is `true`, then failover will be enabled.
+If it is `false` - failover will be disabled.
 
 ### Cartridge authorization
 

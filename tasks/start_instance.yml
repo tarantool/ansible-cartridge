@@ -1,23 +1,51 @@
 ---
-- name: Place {{ instance.name }} config
+- name: Place default config
   copy:
     content: >-
       {{
-        { cartridge_app_name + "." + instance.name: instance | delete_by_key("name") }
+        { cartridge_app_name: cartridge_defaults | combine({"cluster_cookie": cartridge_cluster_cookie}) }
         | to_nice_yaml
       }}
-    dest: '{{ cartridge_confdir }}/{{ cartridge_app_name }}.{{ instance.name }}.yml'
+    dest: /etc/tarantool/conf.d/{{ cartridge_app_name }}.yml
     owner: tarantool
     group: tarantool
     mode: '644'
-  register: instance_config
 
-- name: 'Start systemd service {{ cartridge_app_name }}@{{ instance.name }}'  # noqa 503
-  systemd:
-    name: '{{ cartridge_app_name }}@{{ instance.name }}'
-    state: restarted
-    enabled: true
-  when: |
-    package_updated
-    or instance_config.changed
-    or default_config.changed
+- name: Place instance config
+  copy:
+    content: >-
+      {{
+        { cartridge_app_name + "." + inventory_hostname: config }
+          | to_nice_yaml
+      }}
+    dest: /etc/tarantool/conf.d/{{ cartridge_app_name }}.{{ inventory_hostname }}.yml
+    owner: tarantool
+    group: tarantool
+    mode: '644'
+  notify: restart-instance
+
+- name: Get package update time
+  stat:
+    path: /usr/share/tarantool/{{ cartridge_app_name }}
+    get_attributes: true
+  register: package_st
+
+- name: Get default config update time
+  stat:
+    path: /etc/tarantool/conf.d/{{ cartridge_app_name }}.yml
+    get_attributes: true
+  register: default_conf_st
+
+- name: Get service restart time
+  stat:
+    path: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    get_attributes: true
+  register: socket_st
+
+- name: Check if instance restart is required
+  command: /bin/true
+  notify: restart-instance
+  changed_when: >-
+    not socket_st.stat.exists
+    or socket_st.stat.mtime < package_st.stat.mtime
+    or socket_st.stat.mtime < default_conf_st.stat.mtime

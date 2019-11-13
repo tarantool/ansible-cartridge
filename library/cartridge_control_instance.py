@@ -2,69 +2,36 @@
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes
+from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
-    'hosts': {'required': True, 'type': 'list'},
-    'hostvars': {'required': True, 'type': 'dict'},
-    'appname': {'requires': True, 'type': 'str'},
+    'sock': {'requires': True, 'type': 'str'},
+    'allow_empty': {'requires': True, 'type': 'bool', 'default': True}
 }
 
 
 def get_control_instance(params):
-    meta = {
-        'control_sock': None,
-        'control_host': None
-    }
+    control_console = get_control_console(params['sock'])
+    control_instance = ''
 
-    control_instance_name = None
-    control_instance = None
-    control_host = None
+    members = control_console.eval('''
+        return require('membership').members()
+    ''')
 
-    # Find leader of first replicaset
-    for host in params['hosts']:
-        if 'cartridge_replicasets' in params['hostvars'][host]:
-            replicasets = params['hostvars'][host]['cartridge_replicasets']
-            replicaset = replicasets[0]
-            leader_name = replicaset['leader'] if 'leader' in replicaset else replicaset['instances'][0]
-            control_instance_name = leader_name
+    for _, member in members.items():
+        if 'payload' in member and 'uuid' in member['payload']:
+            if 'alias' not in member['payload']:
+                errmsg = 'Unable to get instance alias for "{}"'.format(member['payload']['uuid'])
+                return ModuleRes(success=False, msg=errmsg)
+
+            control_instance = member['payload']['alias']
             break
 
-    # If not found - get first instance
-    if control_instance_name is None:
-        for host in params['hosts']:
-            if 'cartridge_instances' in params['hostvars'][host]:
-                instances = params['hostvars'][host]['cartridge_instances']
-
-                if instances:
-                    control_instance_name = instances[0]['name']
-                    break
-
-    if control_instance_name is None:
-        return ModuleRes(success=True, meta=meta)
-
-    # Get instance and host
-    for host in params['hosts']:
-        if 'cartridge_instances' in params['hostvars'][host]:
-            instances = params['hostvars'][host]['cartridge_instances']
-            for i in instances:
-                if i['name'] == control_instance_name:
-                    control_instance = i
-                    control_host = host
-                    break
-
-    if not control_instance:
-        errmsg = 'All instances mentioned in cartridge_replicasets must be configured in cartridge_instances'
+    if not control_instance and not params['allow_empty']:
+        errmsg = "Cluster isn't bootstrapped yet"
         return ModuleRes(success=False, msg=errmsg)
 
-    if 'inventory_hostname' in params['hostvars'][control_host]:
-        meta['control_host'] = params['hostvars'][control_host]['inventory_hostname']
-    else:
-        meta['control_host'] = control_host
-
-    # Set control socket
-    meta['control_sock'] = '/var/run/tarantool/{}.{}.control'.format(params['appname'], control_instance_name)
-
-    return ModuleRes(success=True, meta=meta)
+    return ModuleRes(success=True, meta={'host': control_instance})
 
 
 def main():
