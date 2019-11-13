@@ -11,6 +11,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Configure cluster using tarantool console socket instead of HTTP
 * Improved Gitlab CI test packages creation
 * Use both deb and rpm packages in molecule tests
+* Variables structure is changed to interpret instances as Ansible hosts
+* Instance connects to membership by probing other instances
 
 ### Fixed
 
@@ -22,6 +24,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 * DEB packages deployment
 * Reloading systemd daemon after package updating
+* Getting started
 
 ## [0.1.0] - 2019-10-01
 
