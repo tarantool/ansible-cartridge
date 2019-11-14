@@ -3,6 +3,7 @@
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
+from ansible.module_utils.helpers import get_all_cluster_instances
 
 import time
 
@@ -10,33 +11,6 @@ argument_spec = {
     'replicaset': {'required': True, 'type': 'dict'},
     'control_sock': {'required': True, 'type': 'str'},
 }
-
-
-def get_all_instances_info(control_console):
-    servers = control_console.eval('''
-        local instances = require('cartridge').admin_get_servers()
-        local res = {}
-        for _, i in ipairs(instances) do
-            local replicaset = require('json').NULL
-            if i.replicaset then
-                replicaset = {
-                    uuid = i.replicaset.uuid,
-                    alias = i.replicaset.alias,
-                    roles = i.replicaset.roles,
-                }
-            end
-            table.insert(res, {
-                uuid = i.uuid,
-                uri = i.uri,
-                alias = i.alias,
-                status = i.status,
-                replicaset = replicaset,
-            })
-        end
-        return res
-    ''')
-
-    return servers
 
 
 def get_replicaset_info(control_console, name):
@@ -102,7 +76,7 @@ def create_replicaset(control_console, params):
     replicaset_instances = params['replicaset']['instances']
 
     # Check if all instances are started and not configured
-    instances_info = get_all_instances_info(control_console)
+    instances_info = get_all_cluster_instances(control_console)
     instances_info = {i['alias']: i for i in instances_info}  # make it dict
 
     if replicaset_leader not in instances_info:

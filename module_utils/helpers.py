@@ -88,3 +88,34 @@ class Console:
 
 def get_control_console(socket_path):
     return Console(socket_path)
+
+
+def get_all_cluster_instances(control_console):
+    servers = control_console.eval('''
+        local instances = require('cartridge').admin_get_servers()
+        local res = {}
+        for _, i in ipairs(instances) do
+            local replicaset = require('json').NULL
+            if i.replicaset then
+                replicaset = {
+                    uuid = i.replicaset.uuid,
+                    alias = i.replicaset.alias,
+                    roles = i.replicaset.roles,
+                }
+            end
+            table.insert(res, {
+                uuid = i.uuid,
+                uri = i.uri,
+                alias = i.alias,
+                status = i.status,
+                replicaset = replicaset,
+            })
+        end
+        return res
+    ''')
+
+    return servers
+
+
+def instance_expelled(host_vars):
+    return 'expelled' in host_vars and host_vars['expelled']

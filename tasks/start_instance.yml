@@ -30,6 +30,7 @@
     owner: tarantool
     group: tarantool
     mode: '644'
+  tags: cartridge-instances
 
 - name: Place instance config
   copy:
@@ -42,3 +43,4 @@
     owner: tarantool
     group: tarantool
     mode: '644'
+  tags: cartridge-instances

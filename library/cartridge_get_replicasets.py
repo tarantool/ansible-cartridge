@@ -2,6 +2,7 @@
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
+from ansible.module_utils.helpers import instance_expelled
 
 
 argument_spec = {
@@ -18,6 +19,9 @@ def get_replicasets(params):
     replicasets = {}
     for i, instance_vars in hostvars.items():
         if i not in play_hosts:
+            continue
+
+        if instance_expelled(instance_vars):
             continue
 
         if 'replicaset_alias' in instance_vars:

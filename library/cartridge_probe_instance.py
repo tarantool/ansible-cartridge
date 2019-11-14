@@ -3,6 +3,7 @@
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
+from ansible.module_utils.helpers import instance_expelled
 
 
 argument_spec = {
@@ -20,6 +21,9 @@ def probe_server(params):
 
     for i, instance_vars in hostvars.items():
         if 'config' not in instance_vars:
+            continue
+
+        if instance_expelled(instance_vars):
             continue
 
         res = control_console.eval('''

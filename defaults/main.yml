@@ -2,3 +2,4 @@
 cartridge_defaults: {}
 cartridge_enable_tarantool_repo: true
 restarted: false
+expelled: false
