@@ -13,7 +13,7 @@ argument_spec = {
 
 INSTANCE_REQUIRED_PARAMS = ['advertise_uri']
 INSTANCE_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir']
-REPLICASET_REQUIRED_PARAMS = ['leader', 'roles']
+REPLICASET_REQUIRED_PARAMS = ['failover_priority', 'roles']
 
 
 def is_valid_advertise_uri(uri):
@@ -76,7 +76,7 @@ def validate_types(vars):
             'memtx_memory': int,
         },
         'roles': [str],
-        'leader': str,
+        'failover_priority': [str],
         'replicaset_alias': str,
     }
 
@@ -209,12 +209,12 @@ def validate_config(params):
                 # Save replicaset info
                 all_replicasets[replicaset_alias] = {
                     'roles': host_vars['roles'] if 'roles' in host_vars else None,
-                    'leader': host_vars['leader'] if 'leader' in host_vars else None,
+                    'failover_priority': host_vars['failover_priority'] if 'failover_priority' in host_vars else None,
                 }
             else:
                 replicaset = {
                     'roles': host_vars['roles'] if 'roles' in host_vars else None,
-                    'leader': host_vars['leader'] if 'leader' in host_vars else None,
+                    'failover_priority': host_vars['failover_priority'] if 'failover_priority' in host_vars else None,
                 }
                 if replicaset != all_replicasets[replicaset_alias]:
                     errmsg = 'Replicaset parameters must be the same for all instances' + \

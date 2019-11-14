@@ -107,7 +107,10 @@ all:
       vars:
         # replicaset configuration
         replicaset_alias: storage-1
-        leader: storage-1
+        failover_priority:
+          - storage-1
+          - storage-1-replica
+
         roles:
           - 'vshard-storage'
 
@@ -118,7 +121,8 @@ all:
       vars:
         # replicaset configuration
         replicaset_alias: core-1
-        leader: core-1
+        failover_priority:
+          - core-1
         roles:
           - 'app.roles.custom'
           - 'vshard-router'
@@ -157,7 +161,7 @@ Configuration format is described in detail in the
 * `restarted` (`boolean, optional, default: `false`): indicates that instance must be forcedly restarted;
 * `expelled` (`boolean`, optional, default: `false`): boolean flag indicated if instance must be expelled from topology;
 * `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
-* `leader` (`string`, required if `replicaset_alias` specified) - name of leader instance;
+* `failover_priority` (`list-of-string`, required if `replicaset_alias` specified) - failover priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
 
 ### Role tags
@@ -305,7 +309,9 @@ You can use this flag to force instance restarting.
 To configure replicasets you need to specify replicaset parameters for each instance in replicaset:
 
 * `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
-* `leader` (`string`, required if `replicaset_alias` specified) - name of leader instance;
+* `failover_priority` (`list-of-strings`, required if `replicaset_alias` specified) - failover prioriry.
+  It isn't required to specify all instances here, you can specify only one or more.
+  Other instances will have lower priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
 
 **Note**:

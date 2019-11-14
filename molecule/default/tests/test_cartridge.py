@@ -83,7 +83,7 @@ def get_configured_replicasets():
         if replicaset_alias not in replicasets:
             replicasets[replicaset_alias] = {
                 'instances': [],
-                'leader': host_vars['leader'],
+                'failover_priority': host_vars['failover_priority'],
                 'roles': host_vars['roles'],
             }
 
@@ -118,6 +118,10 @@ def section_is_deleted(section):
 
 def instance_is_expelled(host_vars):
     return 'expelled' in host_vars and host_vars['expelled'] is True
+
+
+def aliases_in_priority_order(replicaset_servers):
+    return [s['alias'] for s in sorted(replicaset_servers, key=lambda x: x['priority'])]
 
 
 def test_services_status_and_config(host):
@@ -219,6 +223,7 @@ def test_replicasets():
             roles
             servers {
               alias
+              priority
             }
             master {
               alias
@@ -243,10 +248,11 @@ def test_replicasets():
 
         assert set(started_replicaset['roles']) == set(configured_replicaset['roles'])
 
-        assert started_replicaset['master']['alias'] == configured_replicaset['leader']
-
         started_replicaset_instances = [i['alias'] for i in started_replicaset['servers']]
         assert set(started_replicaset_instances) == set(configured_replicaset['instances'])
+
+        assert started_replicaset['master']['alias'] == configured_replicaset['failover_priority'][0]
+        assert aliases_in_priority_order(started_replicaset['servers']) == configured_replicaset['failover_priority']
 
         if 'all_rw' in configured_replicaset:
             assert started_replicaset['all_rw'] == configured_replicaset['all_rw']
