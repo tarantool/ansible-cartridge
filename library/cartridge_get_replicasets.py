@@ -32,6 +32,8 @@ def get_replicasets(params):
                         'instances': [],
                         'roles': instance_vars['roles'] if 'roles' in instance_vars else None,
                         'leader': instance_vars['leader'] if 'leader' in instance_vars else None,
+                        'all_rw': instance_vars['all_rw'] if 'all_rw' in instance_vars else None,
+                        'weight': instance_vars['weight'] if 'weight' in instance_vars else None,
                         'alias': replicaset_alias,
                     }
                 })

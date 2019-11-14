@@ -248,6 +248,12 @@ def test_replicasets():
         started_replicaset_instances = [i['alias'] for i in started_replicaset['servers']]
         assert set(started_replicaset_instances) == set(configured_replicaset['instances'])
 
+        if 'all_rw' in configured_replicaset:
+            assert started_replicaset['all_rw'] == configured_replicaset['all_rw']
+
+        if 'weight' in configured_replicaset:
+            assert started_replicaset['weight'] == configured_replicaset['weight']
+
 
 def test_failover():
     # Get configured failover status

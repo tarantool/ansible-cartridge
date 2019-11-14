@@ -13,7 +13,7 @@ argument_spec = {
 }
 
 
-def get_replicaset_info(control_console, name):
+def get_cluster_replicaset(control_console, name):
     # Get all replicasets
     replicasets = control_console.eval('''
         local replicasets = require('cartridge').admin_get_replicasets()
@@ -54,19 +54,128 @@ def wait_for_replicaset_is_healthy(control_console, replicaset_alias):
         if now > time_start + timeout:
             return False
 
-        replicaset_info = get_replicaset_info(
+        cluster_replicaset = get_cluster_replicaset(
             control_console,
             replicaset_alias
         )
 
-        if replicaset_info is None:
+        if cluster_replicaset is None:
             errmsg = '"{}" replicaset was not found in cluster'.format(replicaset_alias)
             return ModuleRes(success=False, msg=errmsg)
 
-        if replicaset_info['status'] == 'healthy':
+        if cluster_replicaset['status'] == 'healthy':
             return True
 
         time.sleep(delay)
+
+
+def edit_replicaset(control_console, cluster_instances,
+                    alias=None, uuid=None,
+                    join_servers=None,
+                    failover_priority=None,
+                    roles=None,
+                    all_rw=None,
+                    weight=None):
+
+    assert (alias is not None) ^ (uuid is not None)
+
+    """
+    input EditReplicasetInput {
+        uuid: String
+        weight: Float
+        vshard_group: String
+        join_servers: [JoinServerInput]
+        roles: [String!]
+        alias: String!
+        all_rw: Boolean
+        failover_priority: [String!]
+    }
+    """
+
+    replicaset_params = []
+    if alias is not None:
+        replicaset_params.append('alias = "{}"'.format(alias))
+
+    if uuid is not None:
+        replicaset_params.append('uuid = "{}"'.format(uuid))
+
+    if join_servers:
+        replicaset_params.append('join_servers = {{ {} }}'.format(
+            ', '.join(['{{ uri = "{}" }}'.format(cluster_instances[i]['uri']) for i in join_servers])
+        ))
+
+    if failover_priority:
+        replicaset_params.append('failover_priority = {{ {} }}'.format(
+            ', '.join(['"{}"'.format(cluster_instances[i]['uuid']) for i in failover_priority])
+        ))
+
+    if roles:
+        replicaset_params.append('roles = {{ {} }}'.format(', '.join('"{}"'.format(role) for role in roles)))
+
+    if all_rw is not None:
+        replicaset_params.append('all_rw = {}'.format('true' if all_rw else 'false'))
+
+    if weight is not None:
+        replicaset_params.append('weight = {}'.format(weight))
+
+    res = control_console.eval('''
+        local res, err = require('cartridge').admin_edit_topology({{
+            replicasets = {{
+                {{
+                    {}
+                }},
+            }}
+        }})
+        if not res then
+            return {{
+                ret = require('json').NULL,
+                err = err and err.err or require('json').NULL,
+            }}
+        end
+        local ret = {{
+            replicasets = {{ }},
+            servers = {{ }},
+        }}
+        for _, r in ipairs(res.replicasets or {{}}) do
+            local servers = {{}}
+            for _, s in ipairs(r.servers) do
+                table.insert(servers, {{ alias = s.alias, priority = s.priority, uuid = s.uuid }})
+            end
+            table.insert(ret.replicasets, {{
+                uuid = r.uuid,
+                alias = r.alias,
+                status = r.status,
+                all_rw = r.all_rw,
+                weight = r.weight or require('json').NULL,
+                roles = r.roles,
+                master = {{ alias = r.master.alias }},
+                servers = servers,
+            }})
+        end
+        for _, s in ipairs(res.servers or {{}}) do
+            local replicaset = require('json').NULL
+            if s.replicaset then
+                replicaset = {{
+                    uuid = s.replicaset.uuid,
+                    alias = s.replicaset.alias,
+                    roles = s.replicaset.roles,
+                }}
+            end
+            table.insert(ret.servers, {{
+                uuid = s.uuid or require('json').NULL,
+                uri = s.uri,
+                alias = s.alias,
+                status = s.status,
+                replicaset = replicaset or require('json').NULL,
+            }})
+        end
+        return {{
+            ret = ret,
+            err = require('json').NULL,
+         }}
+    '''.format(', '.join(replicaset_params)))
+
+    return res['ret'], res['err']
 
 
 def create_replicaset(control_console, params):
@@ -74,36 +183,29 @@ def create_replicaset(control_console, params):
     replicaset_leader = params['replicaset']['leader']
     replicaset_roles = params['replicaset']['roles']
     replicaset_instances = params['replicaset']['instances']
+    replicaset_all_rw = params['replicaset']['all_rw'] if 'all_rw' in params['replicaset'] else None
+    replicaset_weight = params['replicaset']['weight'] if 'weight' in params['replicaset'] else None
 
     # Check if all instances are started and not configured
-    instances_info = get_all_cluster_instances(control_console)
-    instances_info = {i['alias']: i for i in instances_info}  # make it dict
+    cluster_instances = get_all_cluster_instances(control_console)
+    cluster_instances = {i['alias']: i for i in cluster_instances}  # make it dict
 
-    if replicaset_leader not in instances_info:
+    if replicaset_leader not in cluster_instances:
         errmsg = 'Leader "{}" (replicaset "{}") not found is cluster. Make sure it was started'.format(
             replicaset_leader, replicaset_alias
         )
         return ModuleRes(success=False, msg=errmsg)
 
     # Cerate replicaset (join leader)
-    leader_instance_info = instances_info[replicaset_leader]
-    res = control_console.eval('''
-        local ok, err = require('cartridge').admin_join_server({{
-            uri = '{}',
-            roles = {{ {} }},
-            replicaset_alias = '{}',
-        }})
-        return {{
-            ok = ok and true or false,
-            err = err and err.err or require('json').NULL
-        }}
-    '''.format(
-        leader_instance_info['uri'],
-        ', '.join(['"{}"'.format(role) for role in replicaset_roles]),
-        replicaset_alias
-    ))
-    if not res['ok']:
-        errmsg = 'Failed to create "{}" replicaset: {}'.format(replicaset_alias, res['err'])
+    res, err = edit_replicaset(control_console, cluster_instances,
+                               alias=replicaset_alias,
+                               join_servers=[replicaset_leader],
+                               roles=replicaset_roles,
+                               all_rw=replicaset_all_rw,
+                               weight=replicaset_weight)
+
+    if not res:
+        errmsg = 'Failed to create "{}" replicaset: {}'.format(replicaset_alias, err)
         return ModuleRes(success=False, msg=errmsg)
 
     # Wait for replicaset is healthy
@@ -112,37 +214,25 @@ def create_replicaset(control_console, params):
         return ModuleRes(success=False, msg=errmsg)
 
     # Get replicaset UUID
-    replicaset_info = get_replicaset_info(control_console, replicaset_alias)
-    replicaset_uuid = replicaset_info['uuid']
+    cluster_replicaset = get_cluster_replicaset(control_console, replicaset_alias)
+    replicaset_uuid = cluster_replicaset['uuid']
 
     # Remove leader from instances list
     replicaset_instances.remove(replicaset_leader)
 
     # Join other instances
     for replicaset_instance in replicaset_instances:
-        if replicaset_instance not in instances_info:
+        if replicaset_instance not in cluster_instances:
             errmsg = 'Instance "{}" (replicaset "{}") not found is cluster. Make sure it was started'.format(
                 replicaset_instance, replicaset_alias
             )
             return ModuleRes(success=False, msg=errmsg)
 
-        replicaset_instance_info = instances_info[replicaset_instance]
-        res = control_console.eval('''
-            local ok, err = require('cartridge').admin_join_server({{
-                uri = '{}',
-                replicaset_uuid = '{}',
-            }})
-            return {{
-                ok = ok and true or false,
-                err = err and err.err or require('json').NULL
-            }}
-        '''.format(
-            replicaset_instance_info['uri'],
-            replicaset_uuid
-        ))
-
-        if not res['ok']:
-            errmsg = 'Failed to join "{}": {}'.format(replicaset_instance, res['err'])
+        res, err = edit_replicaset(control_console, cluster_instances,
+                                   uuid=replicaset_uuid,
+                                   join_servers=[replicaset_instance])
+        if not res:
+            errmsg = 'Failed to join "{}" to replicaset "{}": {}'.format(replicaset_instance, replicaset_alias, err)
             return ModuleRes(success=False, msg=errmsg)
 
         # Wait for replicaset is healthy
@@ -157,12 +247,12 @@ def manage_replicaset(params):
     control_console = get_control_console(params['control_sock'])
 
     # Check if replicaset is already created
-    replicaset_info = get_replicaset_info(
+    cluster_replicaset = get_cluster_replicaset(
         control_console,
         params['replicaset']['alias']
     )
 
-    if replicaset_info is None:
+    if cluster_replicaset is None:
         return create_replicaset(control_console, params)
 
     return ModuleRes(success=True, changed=False)
