@@ -150,7 +150,11 @@ Configuration format is described in detail in the
 * `cartridge_app_config` (`dict`, optional): application config sections to patch;
 * `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`):
   indicates if the Tarantool repository should be enabled (for packages with
-  open-source Tarantool dependency).
+  open-source Tarantool dependency);
+* `config` (`dict`, required): instance configuration;
+* `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
+* `leader` (`string`, required if `replicaset_alias` specified) - name of leader instance;
+* `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
 
 ### Role tags
 
@@ -288,9 +292,9 @@ Environment=TARANTOOL_CONSOLE_SOCK=/var/run/tarantool/${app_name}.{instance_name
 
 To configure replicasets you need to specify replicaset parameters for each instance in replicaset:
 
-* `replicaset_alias` (`string`, required) - replicaset alias, will be displayed in Web UI;
-* `leader` (`string`) - name of leader instance;
-* `roles` (`list-of-strings`, required) - roles to be enabled on the replicaset.
+* `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
+* `leader` (`string`, required if `replicaset_alias` specified) - name of leader instance;
+* `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
 
 **Note**:
 * A replica set will be set up **only** if a replica set with the same
