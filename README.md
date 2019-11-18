@@ -82,6 +82,7 @@ all:
           config:
             advertise_uri: '172.19.0.2:3302'
             http_port: 8082
+          restarted: true  # force instance restart
 
     host2:
       vars:
@@ -152,6 +153,7 @@ Configuration format is described in detail in the
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency);
 * `config` (`dict`, required): instance configuration;
+* `restarted`(`boolean`, optional, default: `false`): indicates that instance must be restarted;
 * `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
 * `leader` (`string`, required if `replicaset_alias` specified) - name of leader instance;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
@@ -287,6 +289,14 @@ Environment=TARANTOOL_CFG=/etc/tarantool/conf.d/
 Environment=TARANTOOL_PID_FILE=/var/run/tarantool/${app_name}.{instance_name}.pid
 Environment=TARANTOOL_CONSOLE_SOCK=/var/run/tarantool/${app_name}.{instance_name}.control
 ```
+
+#### Increasing memtx_memory in runtime
+
+If you specified in `config.memtx_memory` value that increases current `memtx_memory`, this role will try to increase this value in runtime.
+In case of success instance wouldn't be restarted (if other parameters haven't been changed).
+
+**Note**, that if `restarted` flag is set, instance will be restarted anyway without changing `memtx_memory` in runtime.
+You can use this flag to force instance restarting.
 
 ### Replica sets
 

@@ -73,6 +73,7 @@ def validate_types(vars):
         },
         'config': {
             'advertise_uri': str,
+            'memtx_memory': int,
         },
         'roles': [str],
         'leader': str,
