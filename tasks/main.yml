@@ -1,6 +1,5 @@
 ---
-# Works only on RedHat
-- name: Fail for other distributions
+- name: Check distribution
   fail:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
   when: ansible_os_family not in ["RedHat", "Debian"]

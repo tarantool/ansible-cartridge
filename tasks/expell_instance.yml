@@ -13,14 +13,14 @@
     enabled: false
   tags: cartridge-replicasets
 
-- name: 'Delete instance files'
+- name: Delete instance files
   file:
     path: '{{ filepath }}'
     state: absent
   with_items:
-    - '/etc/tarantool/conf.d/{{ cartridge_app_name }}.{{ inventory_hostname }}.yml'
-    - '/var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control'
-    - '/var/lib/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}'
+    - /etc/tarantool/conf.d/{{ cartridge_app_name }}.{{ inventory_hostname }}.yml
+    - /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    - /var/lib/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}
   loop_control:
     loop_var: filepath
   tags: cartridge-replicasets

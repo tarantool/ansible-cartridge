@@ -85,6 +85,8 @@ def get_configured_replicasets():
                 'instances': [],
                 'failover_priority': host_vars['failover_priority'],
                 'roles': host_vars['roles'],
+                'all_rw': host_vars['all_rw'] if 'all_rw' in host_vars else None,
+                'weight': host_vars['weight'] if 'weight' in host_vars else None,
             }
 
         replicasets[replicaset_alias]['instances'].append(instance)
@@ -221,6 +223,8 @@ def test_replicasets():
           replicasets {
             alias
             roles
+            all_rw
+            weight
             servers {
               alias
               priority
@@ -254,10 +258,10 @@ def test_replicasets():
         assert started_replicaset['master']['alias'] == configured_replicaset['failover_priority'][0]
         assert aliases_in_priority_order(started_replicaset['servers']) == configured_replicaset['failover_priority']
 
-        if 'all_rw' in configured_replicaset:
+        if configured_replicaset['all_rw'] is not None:
             assert started_replicaset['all_rw'] == configured_replicaset['all_rw']
 
-        if 'weight' in configured_replicaset:
+        if configured_replicaset['weight'] is not None:
             assert started_replicaset['weight'] == configured_replicaset['weight']
 
 
