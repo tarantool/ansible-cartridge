@@ -108,7 +108,7 @@ all:
         # replicaset configuration
         replicaset_alias: storage-1
         failover_priority:
-          - storage-1
+          - storage-1  # leader
           - storage-1-replica
 
         roles:
@@ -122,7 +122,7 @@ all:
         # replicaset configuration
         replicaset_alias: core-1
         failover_priority:
-          - core-1
+          - core-1  # leader
         roles:
           - 'app.roles.custom'
           - 'vshard-router'
@@ -159,10 +159,12 @@ Configuration format is described in detail in the
   open-source Tarantool dependency);
 * `config` (`dict`, required): instance configuration;
 * `restarted` (`boolean, optional, default: `false`): indicates that instance must be forcedly restarted;
-* `expelled` (`boolean`, optional, default: `false`): boolean flag indicated if instance must be expelled from topology;
-* `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
-* `failover_priority` (`list-of-string`, required if `replicaset_alias` specified) - failover priority;
-* `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
+* `expelled` (`boolean`, optional, default: `false`): boolean flag that indicates if instance must be expelled from topology;
+* `replicaset_alias` (`string`, optional): replicaset alias, will be displayed in Web UI;
+* `failover_priority` (`list-of-string`, required if `replicaset_alias` specified): failover priority;
+* `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
+* `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
+* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled.
 
 ### Role tags
 
@@ -170,7 +172,7 @@ This role tasks have special tags that allows to perform only secified actions.
 Tasks are running in this order:
 
 * `cartridge-instances` - install package, update instances config and restart instances;
-* `cartridge-replicasets` - configure replicasets, expell instances;
+* `cartridge-replicasets` - configure replicasets, expel instances;
 * `cartridge-config` - configure cluster, contains this tasks:
   * configure authorization (if `cartridge_auth` is defined);
   * patch application clusterwide config (if `cartridge_app_config` is defined);
@@ -306,23 +308,24 @@ You can use this flag to force instance restarting.
 
 ### Replica sets
 
+You can find more details about replicasets and automatic failover in [Tarantool Cartridge administrator’s guide](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_admin/#enabling-automatic-failover).
+
 To configure replicasets you need to specify replicaset parameters for each instance in replicaset:
 
 * `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
-* `failover_priority` (`list-of-strings`, required if `replicaset_alias` specified) - failover prioriry.
+* `failover_priority` (`list-of-strings`, required if `replicaset_alias` specified) - failover prioriry order.
+  First instance will be replicaset leader.
   It isn't required to specify all instances here, you can specify only one or more.
   Other instances will have lower priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
-
-**Note**:
-* A replica set will be set up **only** if a replica set with the same
-  name is not set up yet.
+* `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
+* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled.
 
 The easiest way to configure replicaset is to [group instances](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) and set replicaset parameters for all instances in a group.
 
 ### Instances expelling
 
-To expell instance set `expelled` flag to true.
+To expel instance set `expelled` flag to true.
 For example:
 
 ```yaml
