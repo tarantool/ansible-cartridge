@@ -39,6 +39,9 @@ def manage_instance(params):
     current_memtx_memory = control_console.eval('''
         return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or require('json').NULL
     ''')
+    if current_memtx_memory is None:
+        # box.cfg wasn't called
+        return ModuleRes(success=True, changed=False)
 
     if new_memtx_memory <= current_memtx_memory:
         return ModuleRes(success=True, changed=False)
