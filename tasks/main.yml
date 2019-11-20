@@ -1,6 +1,5 @@
 ---
-# Works only on RedHat
-- name: Fail for other distributions
+- name: Check distribution
   fail:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
   when: ansible_os_family not in ["RedHat", "Debian"]
@@ -23,14 +22,13 @@
 
 # Rewrites cartridge_app_name from package info
 - name: Install package
-  import_tasks: install_package.yml
-  when: cartridge_package_path is defined
-  tags:
-    - cartridge-instances
-    - cartridge-package
+  include_tasks: install_package.yml
+  when: cartridge_package_path is defined and not expelled
+  tags: cartridge-instances
 
-- name: Start instances
-  import_tasks: start_instance.yml
+- name: Start instance
+  include_tasks: start_instance.yml
+  when: not expelled
   tags: cartridge-instances
 
 # Restart instances and reload systemd-daemon if required
@@ -46,6 +44,7 @@
   until: not probe.failed
   retries: 3
   delay: 5
+  when: not expelled
   tags: cartridge-instances
 
 - name: Set one control instance to join replicasets
@@ -71,6 +70,13 @@
     join_host: '{{ replicasets.meta.join_host }}'
   loop: '{{ replicasets.meta.replicasets }}'
   run_once: true
+  tags: cartridge-replicasets
+
+- name: Expel instance
+  include_tasks: expel_instance.yml
+  vars:
+    control_host: '{{ replicasets.meta.join_host }}'
+  when: expelled
   tags: cartridge-replicasets
 
 - name: Set one control instance to rule them all

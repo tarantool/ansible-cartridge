@@ -18,6 +18,7 @@ This role can deploy and configure applications packed in RPM using
 * [Configuration format](#configuration-format)
   * [Instances](#instances)
   * [Replica sets](#replica-sets)
+  * [Instances expelling](#instances-expelling)
   * [Vshard bootstrapping](#vshard-bootstrapping)
   * [Failover](#failover)
   * [Cartridge authorization](#cartridge-authorization)
@@ -62,41 +63,43 @@ all:
     cartridge_defaults:
       log_level: 1
 
+  hosts:  # instances
+    core-1:
+      config:
+        advertise_uri: '172.19.0.2:3301'
+        http_port: 8081
+
+    storage-1-replica:
+      config:
+        advertise_uri: '172.19.0.2:3302'
+        http_port: 8082
+      restarted: true  # force instance restart
+
+    storage-1:
+      config:
+        advertise_uri: '172.19.0.3:3301'
+        http_port: 8091
+
   children:
     # group instances by machines
     host1:
       vars:
         # first machine address and connection opts
         ansible_host: 172.19.0.2
-        ansible_user: root
-        become: true
-        become_user: root
+        ansible_user: vagrant
 
       hosts:  # instances to be started on this host
         core-1:
-          config:
-            advertise_uri: '172.19.0.2:3301'
-            http_port: 8081
-
         storage-1-replica:
-          config:
-            advertise_uri: '172.19.0.2:3302'
-            http_port: 8082
-          restarted: true  # force instance restart
 
     host2:
       vars:
         # second machine address and connection opts
         ansible_host: 172.19.0.3
-        ansible_user: root
-        become: true
-        become_user: root
+        ansible_user: vagrant
 
       hosts:  # instances to be started on this host
         storage-1:
-          config:
-            advertise_uri: '172.19.0.3:3301'
-            http_port: 8091
 
     # group instances by replicasets
     storage_1_replicaset:  # replicaset storage-1
@@ -106,7 +109,11 @@ all:
       vars:
         # replicaset configuration
         replicaset_alias: storage-1
-        leader: storage-1
+        weight: 2
+        failover_priority:
+          - storage-1  # leader
+          - storage-1-replica
+
         roles:
           - 'vshard-storage'
 
@@ -117,7 +124,8 @@ all:
       vars:
         # replicaset configuration
         replicaset_alias: core-1
-        leader: core-1
+        failover_priority:
+          - core-1  # leader
         roles:
           - 'app.roles.custom'
           - 'vshard-router'
@@ -153,10 +161,13 @@ Configuration format is described in detail in the
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency);
 * `config` (`dict`, required): instance configuration;
-* restarted`(`boolean, optional, default: `false`): indicates that instance must be forcedly restarted;
-* `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
-* `leader` (`string`, required if `replicaset_alias` specified) - name of leader instance;
-* `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
+* `restarted` (`boolean, optional, default: `false`): indicates that instance must be forcedly restarted;
+* `expelled` (`boolean`, optional, default: `false`): boolean flag that indicates if instance must be expelled from topology;
+* `replicaset_alias` (`string`, optional): replicaset alias, will be displayed in Web UI;
+* `failover_priority` (`list-of-string`, required if `replicaset_alias` specified): failover priority;
+* `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
+* `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
+* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled.
 
 ### Role tags
 
@@ -164,7 +175,7 @@ This role tasks have special tags that allows to perform only secified actions.
 Tasks are running in this order:
 
 * `cartridge-instances` - install package, update instances config and restart instances;
-* `cartridge-replicasets` - configure replicasets;
+* `cartridge-replicasets` - configure replicasets, expel instances;
 * `cartridge-config` - configure cluster, contains this tasks:
   * configure authorization (if `cartridge_auth` is defined);
   * patch application clusterwide config (if `cartridge_app_config` is defined);
@@ -300,17 +311,39 @@ You can use this flag to force instance restarting.
 
 ### Replica sets
 
+You can find more details about replicasets and automatic failover in [Tarantool Cartridge administrator’s guide](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_admin/#enabling-automatic-failover).
+
 To configure replicasets you need to specify replicaset parameters for each instance in replicaset:
 
 * `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
-* `leader` (`string`, required if `replicaset_alias` specified) - name of leader instance;
+* `failover_priority` (`list-of-strings`, required if `replicaset_alias` specified) - failover prioriry order.
+  First instance will be replicaset leader.
+  It isn't required to specify all instances here, you can specify only one or more.
+  Other instances will have lower priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
-
-**Note**:
-* A replica set will be set up **only** if a replica set with the same
-  name is not set up yet.
+* `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
+* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled.
 
 The easiest way to configure replicaset is to [group instances](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) and set replicaset parameters for all instances in a group.
+
+### Instances expelling
+
+To expel instance set `expelled` flag to true.
+For example:
+
+```yaml
+  core-1:
+    config:
+      advertise_uri: '172.19.0.2:3301'
+      http_port: 8081
+    expelled: true  # mark instance to be expelled
+```
+
+Instances expelling is performed after apllying replicasets configuration.
+In is tagged as a `cartridge-replicasets` tasks.
+
+After instance is expelled from the topology, it's systemd service would be stopped and disabled.
+Then, all instance files (configuration file, socket and working directory) would be deleted.
 
 ### Vshard bootstrapping
 

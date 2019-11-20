@@ -2,6 +2,7 @@
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
+from ansible.module_utils.helpers import instance_expelled
 
 
 argument_spec = {
@@ -20,14 +21,20 @@ def get_replicasets(params):
         if i not in play_hosts:
             continue
 
+        if instance_expelled(instance_vars):
+            continue
+
         if 'replicaset_alias' in instance_vars:
             replicaset_alias = instance_vars['replicaset_alias']
             if replicaset_alias not in replicasets:
+                failover_priority = instance_vars['failover_priority'] if 'failover_priority' in instance_vars else None
                 replicasets.update({
                     replicaset_alias: {
                         'instances': [],
                         'roles': instance_vars['roles'] if 'roles' in instance_vars else None,
-                        'leader': instance_vars['leader'] if 'leader' in instance_vars else None,
+                        'failover_priority': failover_priority,
+                        'all_rw': instance_vars['all_rw'] if 'all_rw' in instance_vars else None,
+                        'weight': instance_vars['weight'] if 'weight' in instance_vars else None,
                         'alias': replicaset_alias,
                     }
                 })
@@ -37,7 +44,7 @@ def get_replicasets(params):
     replicasets_list = [v for _, v in replicasets.items()]
 
     if not join_host:
-        join_host = replicasets_list[0]['leader'] if replicasets_list else None
+        join_host = replicasets_list[0]['failover_priority'][0] if replicasets_list else None
 
     return ModuleRes(success=True, changed=False, meta={
         'replicasets': replicasets_list,

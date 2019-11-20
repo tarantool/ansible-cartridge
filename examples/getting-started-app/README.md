@@ -337,6 +337,22 @@ all:
     cartridge_defaults:  # default instance parameters
       log_level: 5
 
+  hosts:  # instances configuration
+    storage-1:
+      config:
+        advertise_uri: '172.19.0.2:3301'
+        http_port: 8181
+
+    app-1:
+      config:
+        advertise_uri: '172.19.0.3:3301'
+        http_port: 8182
+
+    storage-1-replica:
+      config:
+        advertise_uri: '172.19.0.3:3302'
+        http_port: 8183
+
   children:
     # group instances by machines
     host1:  # first machine address and connection opts
@@ -346,9 +362,6 @@ all:
 
       hosts:  # instances to be started on this machine
         storage-1:
-          config:
-            advertise_uri: '172.19.0.2:3301'
-            http_port: 8181
 
     host2:  # second machine address and connection opts
       vars:
@@ -357,14 +370,7 @@ all:
 
       hosts:  # instances to be started on this machine
         app-1:
-          config:
-            advertise_uri: '172.19.0.3:3301'
-            http_port: 8182
-
         storage-1-replica:
-          config:
-            advertise_uri: '172.19.0.3:3302'
-            http_port: 8183
 ```
 
 Now, run the playbook:
@@ -501,7 +507,7 @@ all:
     # group instances by machines
     host1:  # first machine address and connection opts
       ...
-      
+
     host2:  # second machine address and connection opts
       ...
 
@@ -509,7 +515,10 @@ all:
     storage_1_replicaset:  # replicaset storage-1
       vars:  # replicaset configuration
         replicaset_alias: storage-1
-        leader: storage-1
+        weight: 3
+        failover_priority:
+          - storage-1  # leader
+          - storage-1-replica
         roles: ['storage']
 
       hosts:  # instances
@@ -519,7 +528,8 @@ all:
     app_1_replicaset:  # replicaset app-1
       vars:  # replicaset configuration
         replicaset_alias: app-1
-        leader: app-1
+        failover_priority:
+          - app-1  # leader
         roles: ['api']
 
       hosts:  # instances
@@ -539,7 +549,7 @@ Then, go to http://localhost:8181/admin/cluster/dashboard.
 Note that the `storage-1` replica set has two roles, `storage` and its dependency
 `vshard-storage`, and the `app-1` replica set has roles, `api` and `vshard-router`.
 
-You can't edit a replica set using Ansible, but we already have a PR with this feature!
+If you change replica set configuration and run playbook again, replica set will be updated according to the new configuration.
 
 ### Bootstrap vshard
 
@@ -841,6 +851,22 @@ all:
           max-balance: 10000000
         # deleted: true  # delete section from config
 
+  hosts:  # instances configuration
+    storage-1:
+      config:
+        advertise_uri: '172.19.0.2:3301'
+        http_port: 8181
+
+    app-1:
+      config:
+        advertise_uri: '172.19.0.3:3301'
+        http_port: 8182
+
+    storage-1-replica:
+      config:
+        advertise_uri: '172.19.0.3:3302'
+        http_port: 8183
+
   children:
     # group instances by machines
     host1:  # first machine address and connection opts
@@ -850,9 +876,6 @@ all:
 
       hosts:  # instances to be started on this machine
         storage-1:
-          config:
-            advertise_uri: '172.19.0.2:3301'
-            http_port: 8181
 
     host2:  # second machine address and connection opts
       vars:
@@ -861,20 +884,16 @@ all:
 
       hosts:  # instances to be started on this machine
         app-1:
-          config:
-            advertise_uri: '172.19.0.3:3301'
-            http_port: 8182
-
         storage-1-replica:
-          config:
-            advertise_uri: '172.19.0.3:3302'
-            http_port: 8183
 
     # group instances by replicasets
     storage_1_replicaset:  # replicaset storage-1
       vars:  # replicaset configuration
         replicaset_alias: storage-1
-        leader: storage-1
+        weight: 3
+        failover_priority:
+          - storage-1  # leader
+          - storage-1-replica
         roles: ['storage']
 
       hosts:  # instances
@@ -884,7 +903,8 @@ all:
     app_1_replicaset:  # replicaset app-1
       vars:  # replicaset configuration
         replicaset_alias: app-1
-        leader: app-1
+        failover_priority:
+          - app-1  # leader
         roles: ['api']
 
       hosts:  # instances

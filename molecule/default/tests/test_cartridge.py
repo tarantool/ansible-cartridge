@@ -48,7 +48,7 @@ def get_cluster_cookie():
 def get_configured_instances():
     inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
     configured_instances = {
-        inventory.hosts[i].get_vars()['inventory_hostname']: inventory.hosts[i].get_vars()['config']
+        inventory.hosts[i].get_vars()['inventory_hostname']: inventory.hosts[i].get_vars()
         for i in inventory.hosts
     }
     return configured_instances
@@ -76,12 +76,17 @@ def get_configured_replicasets():
         if 'replicaset_alias' not in host_vars:
             continue
 
+        if instance_is_expelled(host_vars):
+            continue
+
         replicaset_alias = host_vars['replicaset_alias']
         if replicaset_alias not in replicasets:
             replicasets[replicaset_alias] = {
                 'instances': [],
-                'leader': host_vars['leader'],
+                'failover_priority': host_vars['failover_priority'],
                 'roles': host_vars['roles'],
+                'all_rw': host_vars['all_rw'] if 'all_rw' in host_vars else None,
+                'weight': host_vars['weight'] if 'weight' in host_vars else None,
             }
 
         replicasets[replicaset_alias]['instances'].append(instance)
@@ -90,7 +95,10 @@ def get_configured_replicasets():
 
 
 def get_any_instance_http_port(instances):
-    return instances[list(instances.keys())[0]]['http_port']
+    for _, instance_vars in instances.items():
+        if not instance_is_expelled(instance_vars):
+            return instance_vars['config']['http_port']
+    assert False
 
 
 def get_admin_api_url(instances):
@@ -108,6 +116,14 @@ def user_is_deleted(user):
 
 def section_is_deleted(section):
     return 'deleted' in section and section['deleted'] is True
+
+
+def instance_is_expelled(host_vars):
+    return 'expelled' in host_vars and host_vars['expelled'] is True
+
+
+def aliases_in_priority_order(replicaset_servers):
+    return [s['alias'] for s in sorted(replicaset_servers, key=lambda x: x['priority'])]
 
 
 def test_services_status_and_config(host):
@@ -129,14 +145,22 @@ def test_services_status_and_config(host):
         instance_name = instance_vars['inventory_hostname']
 
         service = host.service('{}@{}'.format(APP_NAME, instance_name))
-        assert service.is_running
-        assert service.is_enabled
-
         conf_file_path = '/etc/tarantool/conf.d/{}.{}.yml'.format(APP_NAME, instance_name)
         conf_file = host.file(conf_file_path)
-        conf_section = '{}.{}'.format(APP_NAME, instance_name)
 
-        check_conf_file(conf_file, conf_section, instance_conf)
+        if instance_is_expelled(instance_vars):
+            assert not service.is_running
+            assert not service.is_enabled
+
+            assert not conf_file.exists
+            assert not host.file('/var/run/tarantool/{}.{}.control'.format(APP_NAME, instance_name)).exists
+            assert not host.file('/var/lib/tarantool/{}.{}'.format(APP_NAME, instance_name)).exists
+        else:
+            assert service.is_running
+            assert service.is_enabled
+
+            conf_section = '{}.{}'.format(APP_NAME, instance_name)
+            check_conf_file(conf_file, conf_section, instance_conf)
 
     default_conf_file_path = '/etc/tarantool/conf.d/{}.yml'.format(APP_NAME)
     default_conf_file = host.file(default_conf_file_path)
@@ -167,11 +191,17 @@ def test_instances():
     started_instances = response.json()['data']['servers']
     started_instances = {i['alias']: i for i in started_instances}
 
+    # filter out expelled instances
+    configured_instances = {
+        i: instance_vars for i, instance_vars in configured_instances.items()
+        if not instance_is_expelled(instance_vars)
+    }
+
     # Check if all configured instances are started and avaliable
     assert len(configured_instances) == len(started_instances)
     assert set(configured_instances.keys()) == set(started_instances.keys())
     assert all([
-        configured_instances[i]['advertise_uri'] == started_instances[i]['uri']
+        configured_instances[i]['config']['advertise_uri'] == started_instances[i]['uri']
         for i in configured_instances
     ])
 
@@ -193,8 +223,11 @@ def test_replicasets():
           replicasets {
             alias
             roles
+            all_rw
+            weight
             servers {
               alias
+              priority
             }
             master {
               alias
@@ -208,9 +241,7 @@ def test_replicasets():
     started_replicasets = response.json()['data']['replicasets']
     started_replicasets = {r['alias']: r for r in started_replicasets}
 
-    print(started_replicasets)
     configured_replicasets = get_configured_replicasets()
-    print(configured_replicasets)
 
     # Check if started replicasets are equal to configured
     assert len(started_replicasets) == len(configured_replicasets)
@@ -221,10 +252,17 @@ def test_replicasets():
 
         assert set(started_replicaset['roles']) == set(configured_replicaset['roles'])
 
-        assert started_replicaset['master']['alias'] == configured_replicaset['leader']
-
         started_replicaset_instances = [i['alias'] for i in started_replicaset['servers']]
         assert set(started_replicaset_instances) == set(configured_replicaset['instances'])
+
+        assert started_replicaset['master']['alias'] == configured_replicaset['failover_priority'][0]
+        assert aliases_in_priority_order(started_replicaset['servers']) == configured_replicaset['failover_priority']
+
+        if configured_replicaset['all_rw'] is not None:
+            assert started_replicaset['all_rw'] == configured_replicaset['all_rw']
+
+        if configured_replicaset['weight'] is not None:
+            assert started_replicaset['weight'] == configured_replicaset['weight']
 
 
 def test_failover():
