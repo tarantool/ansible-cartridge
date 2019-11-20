@@ -121,7 +121,9 @@ def edit_replicaset(control_console, cluster_instances,
 
     if failover_priority:
         replicaset_params.append('failover_priority = {{ {} }}'.format(
-            ', '.join(['"{}"'.format(cluster_instances[i]['uuid']) for i in failover_priority])
+            ', '.join([
+                '"{}"'.format(cluster_instances[i]['uuid']) for i in failover_priority if i in cluster_instances
+            ])
         ))
 
     if roles:

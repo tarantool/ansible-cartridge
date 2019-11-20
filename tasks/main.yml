@@ -72,8 +72,8 @@
   run_once: true
   tags: cartridge-replicasets
 
-- name: Expell instance
-  include_tasks: expell_instance.yml
+- name: Expel instance
+  include_tasks: expel_instance.yml
   vars:
     control_host: '{{ replicasets.meta.join_host }}'
   when: expelled

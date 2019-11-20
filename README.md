@@ -63,41 +63,43 @@ all:
     cartridge_defaults:
       log_level: 1
 
+  hosts:  # instances
+    core-1:
+      config:
+        advertise_uri: '172.19.0.2:3301'
+        http_port: 8081
+
+    storage-1-replica:
+      config:
+        advertise_uri: '172.19.0.2:3302'
+        http_port: 8082
+      restarted: true  # force instance restart
+
+    storage-1:
+      config:
+        advertise_uri: '172.19.0.3:3301'
+        http_port: 8091
+
   children:
     # group instances by machines
     host1:
       vars:
         # first machine address and connection opts
         ansible_host: 172.19.0.2
-        ansible_user: root
-        become: true
-        become_user: root
+        ansible_user: vagrant
 
       hosts:  # instances to be started on this host
         core-1:
-          config:
-            advertise_uri: '172.19.0.2:3301'
-            http_port: 8081
-
         storage-1-replica:
-          config:
-            advertise_uri: '172.19.0.2:3302'
-            http_port: 8082
-          restarted: true  # force instance restart
 
     host2:
       vars:
         # second machine address and connection opts
         ansible_host: 172.19.0.3
-        ansible_user: root
-        become: true
-        become_user: root
+        ansible_user: vagrant
 
       hosts:  # instances to be started on this host
         storage-1:
-          config:
-            advertise_uri: '172.19.0.3:3301'
-            http_port: 8091
 
     # group instances by replicasets
     storage_1_replicaset:  # replicaset storage-1
@@ -107,6 +109,7 @@ all:
       vars:
         # replicaset configuration
         replicaset_alias: storage-1
+        weight: 2
         failover_priority:
           - storage-1  # leader
           - storage-1-replica
