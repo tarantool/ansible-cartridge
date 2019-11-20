@@ -10,6 +10,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 * Increasing memtx_memory without instance restart
 * `restarted` flag to force instance restart
+* `expelled` flag to expel instance from cluster
+* `weight` and `all_rw` replicaset parameters
+* Editing existed replicaset
+
+### Changed
+
+* `leader` parameter replaced by `failover_priority`
+* Use `cartridge.admin_edit_topology()` call to manage topology
 
 ## [0.2.0] - 2019-11-14
 
