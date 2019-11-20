@@ -851,6 +851,22 @@ all:
           max-balance: 10000000
         # deleted: true  # delete section from config
 
+  hosts:  # instances configuration
+    storage-1:
+      config:
+        advertise_uri: '172.19.0.2:3301'
+        http_port: 8181
+
+    app-1:
+      config:
+        advertise_uri: '172.19.0.3:3301'
+        http_port: 8182
+
+    storage-1-replica:
+      config:
+        advertise_uri: '172.19.0.3:3302'
+        http_port: 8183
+
   children:
     # group instances by machines
     host1:  # first machine address and connection opts
@@ -860,9 +876,6 @@ all:
 
       hosts:  # instances to be started on this machine
         storage-1:
-          config:
-            advertise_uri: '172.19.0.2:3301'
-            http_port: 8181
 
     host2:  # second machine address and connection opts
       vars:
@@ -871,14 +884,7 @@ all:
 
       hosts:  # instances to be started on this machine
         app-1:
-          config:
-            advertise_uri: '172.19.0.3:3301'
-            http_port: 8182
-
         storage-1-replica:
-          config:
-            advertise_uri: '172.19.0.3:3302'
-            http_port: 8183
 
     # group instances by replicasets
     storage_1_replicaset:  # replicaset storage-1
