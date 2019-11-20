@@ -153,7 +153,7 @@ Configuration format is described in detail in the
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency);
 * `config` (`dict`, required): instance configuration;
-* `restarted`(`boolean`, optional, default: `false`): indicates that instance must be restarted;
+* restarted`(`boolean, optional, default: `false`): indicates that instance must be forcedly restarted;
 * `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
 * `leader` (`string`, required if `replicaset_alias` specified) - name of leader instance;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
