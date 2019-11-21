@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes
+from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
@@ -36,7 +36,10 @@ def get_control_instance(params):
 
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
-    res = get_control_instance(module.params)
+    try:
+        res = get_control_instance(module.params)
+    except CartridgeException as e:
+        module.fail_json(msg=str(e))
 
     if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)
