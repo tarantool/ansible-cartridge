@@ -1,6 +1,6 @@
 ---
 - name: Expel instance from topology
-  cartridge_expell_instance:
+  cartridge_expel_instance:
     alias: '{{ inventory_hostname }}'
     control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_host }}.control
   delegate_to: '{{ control_host }}'
