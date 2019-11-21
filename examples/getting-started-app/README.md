@@ -331,6 +331,7 @@ Specify this in your `hosts.yml`:
 ---
 all:
   vars:
+    cartridge_app_name: getting-started-app  # application name
     cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
 
     cartridge_cluster_cookie: app-default-cookie  # cluster cookie
@@ -817,8 +818,8 @@ Don't hesitate to experiment with the configuration, find and report bugs.
 ---
 all:
   vars:
+    cartridge_app_name: getting-started-app  # application name
     cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
-    # cartridge_app_name: getting-started-app  # can be used if package is already installed
 
     cartridge_cluster_cookie: app-default-cookie  # cluster cookie
     cartridge_defaults:  # default instance parameters

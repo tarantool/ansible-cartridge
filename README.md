@@ -146,8 +146,7 @@ Configuration format is described in detail in the
 
 * `cartridge_package_path` (`string`, optional): path to Cartridge RPM package
   (application name will be detected as package name);
-* `cartridge_app_name` (`string`): application name, required if
-  `cartridge_package_path` is not specified;
+* `cartridge_app_name` (`string`): application name, required;
 * `cartridge_cluster_cookie` (`string`, required): cluster cookie for all
   cluster instances;
 * `cartridge_defaults` (`dict`, optional, default: `{}`): default configuration
@@ -263,12 +262,10 @@ to avoid collisions.
 ### Application
 
 You can specify path to the rpm package to be installed using
-`cartridge_package_path`. In this case `cartridge_app_name` will be rewritten
-by the package name from rpm info.
+`cartridge_package_path`.
+Note, that `cartridge_package_path` must be the same for instances on one machine.
 
-But if you specify no rpm package path (for example, you have already installed
-rpm, and now you just want to start instances or configure replica sets), you
-should specify `cartridge_app_name`.
+You should specify `cartridge_app_name` to allow Ansible to manage application correctly.
 
 ### Instances
 

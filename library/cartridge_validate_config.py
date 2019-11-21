@@ -88,6 +88,7 @@ def validate_types(vars):
 def validate_config(params):
     all_instances = {}
     all_replicasets = {}
+    package_path_by_machines = {}
 
     # To check if this params are equal for all hosts
     app_name = None
@@ -104,18 +105,27 @@ def validate_config(params):
         if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
-        # Check if at least one of app_name and package_path specified
-        if 'cartridge_app_name' not in host_vars and 'cartridge_package_path' not in host_vars:
-            errmsg = 'At least one of `cartridge_app_name` and `cartridge_package_path` must be specified'
+        # Check if app_name specified
+        if 'cartridge_app_name' not in host_vars:
+            errmsg = '`cartridge_app_name` must be specified'
             return ModuleRes(success=False, msg=errmsg)
 
         # Check app_name
         if app_name is not None:
-            if 'cartridge_app_name' in host_vars and host_vars['cartridge_app_name'] != app_name:
+            if host_vars['cartridge_app_name'] != app_name:
                 errmsg = '`cartridge_app_name` must be the same for all hosts'
                 return ModuleRes(success=False, msg=errmsg)
         elif 'cartridge_app_name' in host_vars:
             app_name = host_vars['cartridge_app_name']
+
+        # Check if package_path is the same for one machine
+        package_path = host_vars['cartridge_package_path'] if 'cartridge_package_path' in host_vars else None
+        machine_id = host_vars['ansible_machine_id']
+        if machine_id not in package_path_by_machines:
+            package_path_by_machines[machine_id] = package_path
+        elif package_path != package_path_by_machines[machine_id]:
+            errmsg = '`cartridge_package_path` must be the same for one machine instances'
+            return ModuleRes(success=False, msg=errmsg)
 
         # Check cluster auth
         if cartridge_auth is not None:

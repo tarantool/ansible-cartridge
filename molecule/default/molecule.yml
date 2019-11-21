@@ -20,11 +20,8 @@ platforms:
       - name: cartridge-network
     purge_networks: true
   - name: vm2
-    # XXX: wait for Tarantool fix
-    # image: jrei/systemd-ubuntu
-    # command: /lib/systemd/systemd
-    image: centos:7
-    command: /sbin/init
+    image: jrei/systemd-ubuntu
+    command: /lib/systemd/systemd
     tmpfs:
       - /run
       - /tmp

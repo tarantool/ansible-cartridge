@@ -23,7 +23,9 @@
 # Rewrites cartridge_app_name from package info
 - name: Install package
   include_tasks: install_package.yml
-  when: cartridge_package_path is defined and not expelled
+  when: >-
+    cartridge_package_path is defined and
+    inventory_hostname in hostvars | one_not_expelled_instance_for_machine(play_hosts)
   tags: cartridge-instances
 
 - name: Start instance
