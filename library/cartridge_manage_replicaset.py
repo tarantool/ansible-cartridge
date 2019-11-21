@@ -116,13 +116,19 @@ def edit_replicaset(control_console, cluster_instances,
 
     if join_servers:
         replicaset_params.append('join_servers = {{ {} }}'.format(
-            ', '.join(['{{ uri = "{}" }}'.format(cluster_instances[i]['uri']) for i in join_servers])
+            ', '.join([
+                '{{ uri = "{}" }}'.format(cluster_instances[i]['uri'])
+                for i in join_servers
+                if i in cluster_instances
+            ])
         ))
 
     if failover_priority:
         replicaset_params.append('failover_priority = {{ {} }}'.format(
             ', '.join([
-                '"{}"'.format(cluster_instances[i]['uuid']) for i in failover_priority if i in cluster_instances
+                '"{}"'.format(cluster_instances[i]['uuid'])
+                for i in failover_priority
+                if i in cluster_instances
             ])
         ))
 
@@ -288,6 +294,18 @@ def change_replicaset(control_console, params, cluster_replicaset):
     cluster_instances = {i['alias']: i for i in cluster_instances}  # make it dict
 
     servers_to_join = list(set(replicaset_instances) - set([s['alias'] for s in cluster_replicaset['servers']]))
+    for s in servers_to_join:
+        if s not in cluster_instances:
+            errmsg = 'Instance "{}" specified in replicaset "{}" is not in cluster. '.format(s, replicaset_alias) + \
+                'Make sure that it was started.'
+            return ModuleRes(success=False, msg=errmsg)
+
+    for s in replicaset_failover_priority:
+        if s not in cluster_instances:
+            errmsg = 'Instance "{}" specified in replicaset "{}" is not in cluster. '.format(s, replicaset_alias) + \
+                'Make sure that it was started.'
+            return ModuleRes(success=False, msg=errmsg)
+
     if servers_to_join:
         res, err = edit_replicaset(control_console, cluster_instances,
                                    uuid=cluster_replicaset['uuid'],
