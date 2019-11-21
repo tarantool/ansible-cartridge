@@ -7,6 +7,7 @@
   when: >-
     not restarted and
     (config.memtx_memory is defined or cartridge_defaults.memtx_memory is defined )
+  tags: cartridge-instances
 
 - name: Check if instance restart is forced or required to apply changes
   cartridge_needs_restart:
@@ -18,6 +19,7 @@
     cartridge_defaults: '{{ cartridge_defaults }}'
     config: '{{ config }}'
   notify: restart-instance
+  tags: cartridge-instances
 
 - name: Place default config
   copy:
