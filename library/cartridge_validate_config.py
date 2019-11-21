@@ -75,6 +75,8 @@ def validate_types(vars):
             'advertise_uri': str,
             'memtx_memory': int,
         },
+        'restarted': bool,
+        'expelled': bool,
         'roles': [str],
         'failover_priority': [str],
         'replicaset_alias': str,
