@@ -115,6 +115,10 @@
     control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
   delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
+  register: bootstrap_vshard
+  until: not bootstrap_vshard.failed
+  retries: 3
+  delay: 5
   when: cartridge_bootstrap_vshard is defined and cartridge_bootstrap_vshard
   tags: cartridge-config
 

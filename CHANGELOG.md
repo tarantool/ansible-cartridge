@@ -18,6 +18,14 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 * `leader` parameter replaced by `failover_priority`
 * Use `cartridge.admin_edit_topology()` call to manage topology
+* Test inventory restructured
+* Added retry on Vshard bootstrapping
+
+### Fixed
+
+* Added missed tags for start_instance tasks
+* Fix endless loop for recvall() in case of broken pipe
+* Fixed KeyError on joining not started instance to replicaset
 
 ## [0.2.0] - 2019-11-14
 

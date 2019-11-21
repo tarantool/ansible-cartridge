@@ -46,6 +46,10 @@ class Console:
             data = ''
             while True:
                 chunk = self.sock.recv(1024).decode()
+                # It is correct because of cmd structure: it always returns a value
+                if chunk == '':
+                    errmsg = 'Error: broken pipe. Probably, instance was not bootsrapped yet to perform this operation'
+                    raise CartridgeException(errmsg)
                 data = data + chunk
                 if data.endswith('\n...\n'):
                     break
