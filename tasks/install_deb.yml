@@ -15,9 +15,8 @@
   register: deb_info
   changed_when: false
 
-- name: Get app name and deplist
+- name: Get deplist
   set_fact:
-    cartridge_app_name: "{{ deb_info.stdout | regex_search('Package\\s*:\\s*(.*)\\s+', '\\1') | first }}"
     deplist: "{{ deb_info.stdout | regex_search('Depends\\s*:\\s*(.*)', '\\1') | first }}"
 
 # Get tarantool dependency <major>.<minor> version
@@ -38,5 +37,4 @@
     deb: /tmp/{{ deb_filename }}
     update_cache: true
   notify:
-    - restart-instance
     - reload-systemd-daemon

@@ -15,10 +15,6 @@
   register: rpm_info
   changed_when: false
 
-- name: Get app name
-  set_fact:
-    cartridge_app_name: "{{ rpm_info.stdout | regex_search('Name\\s*:\\s*(.*)\\s+', '\\1') | first }}"
-
 - name: Get RPM deplist
   command: 'rpm -qpR /tmp/{{ rpm_filename }}'
   args:
@@ -48,5 +44,4 @@
   register: install_rpm
   failed_when: install_rpm.rc != 0 and "does not update installed package" not in install_rpm.results[0]
   notify:
-    - restart-instance
     - reload-systemd-daemon

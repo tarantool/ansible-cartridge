@@ -5,7 +5,7 @@
     dest: '/tmp/script.{{ package_type }}.sh'
   register: get_script
   until: not get_script.failed
-  retries: 5
+  retries: 3
   delay: 5
 
 - name: Run repository setup script

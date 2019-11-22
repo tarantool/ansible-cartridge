@@ -13,6 +13,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * `expelled` flag to expel instance from cluster
 * `weight` and `all_rw` replicaset parameters
 * Editing existed replicaset
+* Tests for debian
 
 ### Changed
 
@@ -20,6 +21,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * Use `cartridge.admin_edit_topology()` call to manage topology
 * Test inventory restructured
 * Added retry on Vshard bootstrapping
+* `cartridge_app_name` parameter is mandatory now and it isn't rewrited by package info
+* Installing package tasks are running for one non-expelled instance per machine
 
 ### Fixed
 

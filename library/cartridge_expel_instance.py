@@ -12,7 +12,7 @@ argument_spec = {
 }
 
 
-def expell_intstance(params):
+def expel_intstance(params):
     control_console = get_control_console(params['control_sock'])
     instance_alias = params['alias']
 
@@ -44,7 +44,7 @@ def expell_intstance(params):
     '''.format(cluster_instance['uuid']))
 
     if not res['ok']:
-        errmsg = 'Failed to expell instance {}: {}'.format(instance_alias, res['err'])
+        errmsg = 'Failed to expel instance {}: {}'.format(instance_alias, res['err'])
         return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=True)
@@ -52,7 +52,7 @@ def expell_intstance(params):
 
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
-    res = expell_intstance(module.params)
+    res = expel_intstance(module.params)
 
     if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)
