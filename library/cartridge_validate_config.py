@@ -77,6 +77,7 @@ def validate_types(vars):
         },
         'restarted': bool,
         'expelled': bool,
+        'instance_start_timeout': int,
         'roles': [str],
         'failover_priority': [str],
         'replicaset_alias': str,

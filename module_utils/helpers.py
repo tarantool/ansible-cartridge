@@ -31,6 +31,8 @@ class Console:
             self.sock.connect(socket_path)
         except socket.error as socket_err:
             errmsg = 'Failed to connect to socket "{}": {}'.format(socket_path, socket_err)
+            if socket_err.errno == 111:
+                errmsg = 'Failed to connect to socket "{}": Instance is not started yet'.format(socket_path)
             raise CartridgeException(errmsg)
 
         self.sock.recv(1024)

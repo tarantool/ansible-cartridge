@@ -36,6 +36,16 @@
 # Restart instances and reload systemd-daemon if required
 - meta: flush_handlers
 
+- name: Wait for instance to be started
+  cartridge_check_instance_started:
+    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+  register: check_instance
+  until: not check_instance.failed
+  retries: '{{ instance_start_timeout // 5 }}'
+  delay: 5
+  when: not expelled
+  tags: cartridge-instances
+
 - name: Connect instance to membership
   cartridge_probe_instance:
     instance: '{{ config }}'
