@@ -27,7 +27,7 @@ This role can deploy and configure applications packed in RPM using
 
 ## Requirements
 
-* Tarantool Cartridge 1.2.0 or higher;
+* Tarantool Cartridge >=1.2.0, <2;
 * Ansible 2.8.4 or higher.
 
 ## Usage example
