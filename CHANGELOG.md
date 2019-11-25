@@ -6,6 +6,8 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.0.0] - 2019-11-25
+
 ### Added
 
 * Increasing memtx_memory without instance restart
@@ -14,6 +16,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 * `weight` and `all_rw` replicaset parameters
 * Editing existed replicaset
 * Tests for debian
+* `instance_start_timeout` parameter to wait for instance to be started
 
 ### Changed
 
