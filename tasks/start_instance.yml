@@ -5,7 +5,7 @@
     config: '{{ config }}'
     cartridge_defaults: '{{ cartridge_defaults }}'
   when: >-
-    not restarted and
+    not restarted and not expelled and
     (config.memtx_memory is defined or cartridge_defaults.memtx_memory is defined )
   tags: cartridge-instances
 
