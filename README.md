@@ -354,7 +354,7 @@ must have at least one `vshard-storage` replica set and at least one
 
 ### Failover
 
-If `cartridge_bootstrap_vshard` is `true`, then failover will be enabled.
+If `cartridge_failover` is `true`, then failover will be enabled.
 If it is `false` - failover will be disabled.
 
 ### Cartridge authorization
