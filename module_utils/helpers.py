@@ -14,8 +14,23 @@ class ModuleRes:
         self.meta = meta
 
 
+class CartridgeErrorCodes:
+    def __init__(self):
+        self.SOCKET_NOT_FOUND = 'SOCKET_NOT_FOUND'
+        self.FAILED_TO_CONNECT_TO_SOCKET = 'FAILED_TO_CONNECT_TO_SOCKET'
+        self.INSTANCE_IS_NOT_STARTED_YET = 'INSTANCE_IS_NOT_STARTED_YET'
+        self.BROKEN_PIPE = 'BROKEN_PIPE'
+        self.FUNCTION_ERROR = 'FUNCTION_ERROR'
+        self.MISSED_SECTION = 'MISSED_SECTION'
+
+
+cartridge_errcodes = CartridgeErrorCodes()
+
+
 class CartridgeException(Exception):
-    pass
+    def __init__(self, code, message):
+        super(CartridgeException, self).__init__(message)
+        self.code = code
 
 
 class Console:
@@ -23,17 +38,18 @@ class Console:
         if not os.path.exists(socket_path):
             errmsg = 'Instance socket not found: "{}". '.format(socket_path) + \
                 'Make sure instance was started correctly'
-            raise CartridgeException(errmsg)
+            raise CartridgeException(cartridge_errcodes.SOCKET_NOT_FOUND, errmsg)
 
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
         try:
             self.sock.connect(socket_path)
         except socket.error as socket_err:
-            errmsg = 'Failed to connect to socket "{}": {}'.format(socket_path, socket_err)
             if socket_err.errno == 111:
                 errmsg = 'Failed to connect to socket "{}": Instance is not started yet'.format(socket_path)
-            raise CartridgeException(errmsg)
+                raise CartridgeException(cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET, errmsg)
+            errmsg = 'Failed to connect to socket "{}": {}'.format(socket_path, socket_err)
+            raise CartridgeException(cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET, errmsg)
 
         self.sock.recv(1024)
 
@@ -51,7 +67,7 @@ class Console:
                 # It is correct because of cmd structure: it always returns a value
                 if chunk == '':
                     errmsg = 'Error: broken pipe. Probably, instance was not bootsrapped yet to perform this operation'
-                    raise CartridgeException(errmsg)
+                    raise CartridgeException(cartridge_errcodes.BROKEN_PIPE, errmsg)
                 data = data + chunk
                 if data.endswith('\n...\n'):
                     break
@@ -87,7 +103,8 @@ class Console:
 
         ret = json.loads(output)
         if not ret['ok']:
-            raise CartridgeException('Error while running function: {}. (Function: {})'.format(ret['ret'], func_body))
+            errmsg = 'Error while running function: {}. (Function: {})'.format(ret['ret'], func_body)
+            raise CartridgeException(cartridge_errcodes.FUNCTION_ERROR, errmsg)
 
         return ret['ret']
 
