@@ -6,6 +6,9 @@ An Ansible role to easily deploy
 This role can deploy and configure applications packed in RPM using
 [`Cartridge CLI`](https://github.com/tarantool/cartridge-cli).
 
+See the [getting started guide](./examples/getting-started-app/README.md)
+to learn how to set up topology using this role.
+
 ## Table of contents
 
 * [Requirements](#requirements)
