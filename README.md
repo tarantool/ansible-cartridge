@@ -33,10 +33,10 @@ Note that this role requires [root access](https://docs.ansible.com/ansible/2.4/
 
 ## Usage example
 
-First, you need to install this role using `ansible-galaxy`
+First, you need to install this role using `ansible-galaxy`:
 
 ```bash
-$ install tarantool.cartridge,1.0.1
+$ ansible-galaxy install tarantool.cartridge,1.0.1
 ```
 
 Example cluster topology:
