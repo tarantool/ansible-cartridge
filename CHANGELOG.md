@@ -6,6 +6,19 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.0.1] - 2019-12-03
+
+### Added
+
+* Store error codes in CartridgeException
+* Interpret some errors as a valid behaviour in cartridge_needs_restart and
+  cartridge_instance modules
+
+### Fixed
+
+* Do not try to manage memtx_memory in runtime for expelled
+* Fixed "Unable to patch config system section" errmsg
+
 ## [1.0.0] - 2019-11-25
 
 ### Added
