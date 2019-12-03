@@ -243,40 +243,51 @@ virtual machines on `172.19.0.2` and `172.19.0.3`.
 `Vagrantfile`:
 
 ```
-$ssh_pub_key = File.readlines("#{Dir.home}/.ssh/id_rsa.pub").first.strip
-
-$script = <<-SCRIPT
-set -e
-sudo bash -c "echo #{$ssh_pub_key} >> /home/vagrant/.ssh/authorized_keys"
-SCRIPT
+boxes = [
+    {
+        :name     => "vm1",
+        :ip => "172.19.0.2",
+        :ports    => [8181],
+    },
+    {
+        :name     => "vm2",
+        :ip => "172.19.0.3",
+        :ports    => [8182, 8183],
+    },
+]
 
 Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
     v.memory = 2048
   end
 
-  config.vm.define "vm1" do |cfg|
-    cfg.vm.box = "centos/7"
-    cfg.vm.network "private_network", ip: "172.19.0.2"
-    cfg.vm.network "forwarded_port", guest: 8181, host: 8181
-  end
+  # Base Vagrant VM configuration
+  config.vm.box = "centos/7"
+  config.ssh.insert_key = false
+  config.vm.synced_folder ".", "/vagrant", disabled: true
 
-  config.vm.define "vm2" do |cfg|
-    cfg.vm.box = "centos/7"
-    cfg.vm.network "private_network", ip: "172.19.0.3"
-    cfg.vm.network "forwarded_port", guest: 8182, host: 8182
-    cfg.vm.network "forwarded_port", guest: 8183, host: 8183
+  # Configure all VMs
+  boxes.each_with_index do |box, index|
+    config.vm.define box[:name] do |box_config|
+      box_config.vm.hostname = box[:hostname]
+      box_config.vm.network "private_network", ip: box[:ip]
+      box[:ports].each do |port|
+        box_config.vm.network "forwarded_port",
+                              guest: port,
+                              host: port,
+                              autocorrect: true
+      end
+    end
   end
-
-  config.vm.provision :shell, inline: $script
 end
 ```
 
-Next, clone Tarantool Cartridge role into the `tarantool-cartridge` directory.
+Next, install the Tarantool Cartridge role using `ansible-galaxy` CLI:
 
 ```bash
-$ git clone https://github.com/tarantool/ansible-cartridge.git tarantool-cartridge
+$ ansible-galaxy install tarantool.cartridge,1.0.1
 ```
+
 
 Then, create an
 [Ansible playbook](https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html)
@@ -293,7 +304,7 @@ and import the Tarantool Cartridge role.
   tasks:
   - name: Import Tarantool Cartridge role
     import_role:
-      name: tarantool-cartridge
+      name: tarantool.cartridge
 ```
 
 Finally, create empty [inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) file `hosts.yml`:
@@ -307,7 +318,6 @@ The resulting directory structure:
 ├── getting-started-app-1.0.0-0.rpm
 ├── hosts.yml
 ├── playbook.yml
-├── tarantool-cartridge
 ```
 
 ### Start virtual machines
@@ -337,6 +347,10 @@ all:
     cartridge_cluster_cookie: app-default-cookie  # cluster cookie
     cartridge_defaults:  # default instance parameters
       log_level: 5
+
+    # common ssh options
+    ansible_ssh_private_key_file: ~/.vagrant.d/insecure_private_key
+    ansible_ssh_common_args: '-o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 
   hosts:  # instances configuration
     storage-1:
@@ -379,17 +393,6 @@ Now, run the playbook:
 ```bash
 $ ansible-playbook -i hosts.yml playbook.yml
 ```
-
-  **Note:** If you see something like `Failed to connect to the host via ssh:`
-  on running the playbook, try this workaround. After `vagrant` machines start:
-
-  1. Delete keys for `172.19.0.2` and `172.19.0.3` from `~/.ssh/known_hosts`.
-  2. Run these commands and type `yes` to add new keys for these machines:
-
-     ```bash
-     $ ssh vagrant@172.19.0.2
-     $ ssh vagrant@172.19.0.3
-     ```
 
 #### Check if package was installed
 
@@ -503,6 +506,8 @@ You can look at [full inventory](#full-inventory) to understand where to add new
 ---
 all:
   vars:
+    ...
+  hosts:
     ...
   children:
     # group instances by machines
@@ -851,6 +856,10 @@ all:
         body:
           max-balance: 10000000
         # deleted: true  # delete section from config
+
+    # common ssh options
+    ansible_ssh_private_key_file: ~/.vagrant.d/insecure_private_key
+    ansible_ssh_common_args: '-o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 
   hosts:  # instances configuration
     storage-1:
