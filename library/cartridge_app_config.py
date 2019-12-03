@@ -50,7 +50,8 @@ def config_app(params):
 
     for section_name, section in config.items():
         if section_name in system_sections:
-            return ModuleRes('Unable to patch config system section: "{}"'.format(section_name))
+            errmsg = 'Unable to patch config system section: "{}"'.format(section_name)
+            return ModuleRes(success=False, msg=errmsg)
 
         if section_is_deleted(section):
             if section_name in current_config:

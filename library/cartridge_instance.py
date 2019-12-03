@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes, CartridgeException
+from ansible.module_utils.helpers import ModuleRes, CartridgeException, cartridge_errcodes
 from ansible.module_utils.helpers import get_control_console
 
 import os
@@ -33,7 +33,16 @@ def manage_instance(params):
     if not os.path.exists(control_sock):
         return ModuleRes(success=True, changed=False)
 
-    control_console = get_control_console(control_sock)
+    try:
+        control_console = get_control_console(control_sock)
+    except CartridgeException as e:
+        allowed_errcodes = [
+            cartridge_errcodes.SOCKET_NOT_FOUND,
+            cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
+            cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
+        ]
+        if e.code in allowed_errcodes:
+            return ModuleRes(success=True, changed=False)
 
     # Get current memtx memory
     current_memtx_memory = control_console.eval('''

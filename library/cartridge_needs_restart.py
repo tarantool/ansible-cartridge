@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes, CartridgeException
+from ansible.module_utils.helpers import ModuleRes, CartridgeException, cartridge_errcodes
 from ansible.module_utils.helpers import get_control_console
 
 import os
@@ -46,7 +46,8 @@ def read_yaml_file_section(filepath, control_console, section):
     '''.format(filepath))
 
     if section not in sections:
-        raise CartridgeException('Instance file does not contain required section')
+        errmsg = 'File {} does not contain section: {}'.format(filepath, section)
+        raise CartridgeException(cartridge_errcodes.MISSED_SECTION, errmsg)
 
     return sections[section]
 
@@ -100,7 +101,16 @@ def needs_restart(params):
     if last_restart_time < package_update_time:
         return ModuleRes(success=True, changed=True)
 
-    control_console = get_control_console(control_sock)
+    try:
+        control_console = get_control_console(control_sock)
+    except CartridgeException as e:
+        allowed_errcodes = [
+            cartridge_errcodes.SOCKET_NOT_FOUND,
+            cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
+            cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
+        ]
+        if e.code in allowed_errcodes:
+            return ModuleRes(success=True, changed=True)
 
     # check if instance config was changed (except memtx_memory)
     current_instance_conf = read_yaml_file_section(
