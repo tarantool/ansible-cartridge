@@ -8,7 +8,6 @@ This role can deploy and configure applications packed in RPM using
 
 ## Table of contents
 
-* [Usage](#usage)
 * [Requirements](#requirements)
 * [Usage example](#usage-example)
 * [Getting started](#getting-started)
@@ -30,7 +29,15 @@ This role can deploy and configure applications packed in RPM using
 * Tarantool Cartridge >=1.2.0, <2;
 * Ansible 2.8.4 or higher.
 
+Note that this role requires [root access](https://docs.ansible.com/ansible/2.4/become.html).
+
 ## Usage example
+
+First, you need to install this role using `ansible-galaxy`
+
+```bash
+$ install tarantool.cartridge,1.0.1
+```
 
 Example cluster topology:
 
@@ -49,7 +56,7 @@ To deploy an application and set up this topology:
   tasks:
   - name: Import Tarantool Cartridge role
     import_role:
-      name: tarantool-cartridge
+      name: tarantool.cartridge
 ```
 
 `hosts.yml`:
