@@ -6,7 +6,7 @@ galaxy_info:
   author: dokshina
   description: Tarantool Cartridge Application
   company: 'Tarantool (Mail.ru)'
-  license: 'BSD'
+  license: 'MIT'
   min_ansible_version: 2.8
   platforms:
     - name: EL
