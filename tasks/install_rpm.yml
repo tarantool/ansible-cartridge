@@ -8,13 +8,6 @@
   set_fact:
     rpm_filename: '{{ cartridge_package_path | basename }}'
 
-- name: Get rpm info
-  command: 'rpm -qip /tmp/{{ rpm_filename }}'
-  args:
-    warn: false
-  register: rpm_info
-  changed_when: false
-
 - name: Get RPM deplist
   command: 'rpm -qpR /tmp/{{ rpm_filename }}'
   args:
