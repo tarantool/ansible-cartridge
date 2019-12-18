@@ -14,8 +14,19 @@ def one_not_expelled_instance_for_machine(hostvars, play_hosts):
     return res
 
 
+def one_not_expelled_instance(hostvars, play_hosts):
+    for i in play_hosts:
+        if 'expelled' in hostvars[i] and hostvars[i]['expelled']:
+            continue
+
+        return i
+
+    raise Exception('At least one play host should be non-expelled')
+
+
 class FilterModule(object):
     def filters(self):
         return {
             'one_not_expelled_instance_for_machine': one_not_expelled_instance_for_machine,
+            'one_not_expelled_instance': one_not_expelled_instance,
         }
