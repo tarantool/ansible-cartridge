@@ -61,9 +61,10 @@
 
 - name: Set one control instance to join replicasets
   cartridge_control_instance:
-    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ hostvars | one_not_expelled_instance(play_hosts) }}.control
   register: control_instance
   run_once: true
+  delegate_to: '{{ hostvars | one_not_expelled_instance(play_hosts) }}'
   tags: cartridge-replicasets
 
 - name: Get replicasets
@@ -93,10 +94,11 @@
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
-    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ hostvars | one_not_expelled_instance(play_hosts) }}.control
     allow_empty: false
   register: control_instance
   run_once: true
+  delegate_to: '{{ hostvars | one_not_expelled_instance(play_hosts) }}'
   when: >-
     cartridge_auth is defined
     or cartridge_app_config is defined

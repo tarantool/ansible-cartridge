@@ -27,7 +27,7 @@
   vars:
     repository: 'tarantool/{{ tnt_version[0] }}_{{ tnt_version[1] }}'
     package_type: rpm
-  when: '"tarantool" in deplist.stdout and cartridge_enable_tarantool_repo'
+  when: 'cartridge_enable_tarantool_repo and "tarantool" in deplist.stdout'
 
 - name: Install RPM
   yum:
