@@ -6,6 +6,12 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [1.0.2] - 2019-12-18
+
+### Fixed
+
+* Error on control instance selection
+
 ## [1.0.1] - 2019-12-03
 
 ### Added
