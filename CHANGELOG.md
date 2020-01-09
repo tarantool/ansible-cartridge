@@ -11,6 +11,11 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+### Changed
+
+* `ansible_host` value is used as an unique host identifier
+  instead of `ansible_machine_id`
+
 ## [1.0.2] - 2019-12-18
 
 ### Fixed
