@@ -15,6 +15,19 @@
   register: deb_info
   changed_when: false
 
+- name: Get package name
+  set_fact:
+    package_name: "{{ deb_info.stdout | regex_search('Package\\s*:\\s*(.*)\\s+', '\\1') | first }}"
+
+- name: Fail if cartridge_app_name isn't equal to package name
+  fail:
+    msg: >-
+      {{
+        'cartridge_app_name value should be equal to package name. ' +
+        'Found cartridge_app_name: "%s", package name: "%s"' | format(cartridge_app_name, package_name)
+      }}
+  when: cartridge_app_name != package_name
+
 - name: Get deplist
   set_fact:
     deplist: "{{ deb_info.stdout | regex_search('Depends\\s*:\\s*(.*)', '\\1') | first }}"

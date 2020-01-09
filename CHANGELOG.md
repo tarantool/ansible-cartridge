@@ -15,6 +15,8 @@ to use the newest tag with new release
 
 * `ansible_host` value is used as an unique host identifier
   instead of `ansible_machine_id`
+* `cartridge_app_name` is checked to be equal to package name
+   on package installation
 
 ## [1.0.2] - 2019-12-18
 
