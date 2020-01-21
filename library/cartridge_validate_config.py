@@ -94,7 +94,6 @@ def check_cluster_cookie_symbols(cluster_cookie):
         errmsg = 'Cluster cookie сannot be longer than {}'.format(CLUSTER_COOKIE_MAX_LEN)
         return False, errmsg
 
-
     m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, cluster_cookie)
     if m is not None:
         errmsg = 'Cluster cookie cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
