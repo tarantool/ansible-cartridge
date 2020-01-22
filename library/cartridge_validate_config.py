@@ -15,6 +15,9 @@ INSTANCE_REQUIRED_PARAMS = ['advertise_uri']
 INSTANCE_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir']
 REPLICASET_REQUIRED_PARAMS = ['failover_priority', 'roles']
 
+CLUSTER_COOKIE_MAX_LEN = 256
+CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX = r'[^a-zA-Z0-9_.~-]+'
+
 
 def is_valid_advertise_uri(uri):
     rgx = re.compile(r'^\S+:\d+$')
@@ -84,6 +87,20 @@ def validate_types(vars):
     }
 
     return check_schema(schema, vars)
+
+
+def check_cluster_cookie_symbols(cluster_cookie):
+    if len(cluster_cookie) > CLUSTER_COOKIE_MAX_LEN:
+        errmsg = 'Cluster cookie сannot be longer than {}'.format(CLUSTER_COOKIE_MAX_LEN)
+        return False, errmsg
+
+    m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, cluster_cookie)
+    if m is not None:
+        errmsg = 'Cluster cookie cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
+            '("{}" found)'.format(m.group())
+        return False, errmsg
+
+    return True, None
 
 
 def validate_config(params):
@@ -202,6 +219,10 @@ def validate_config(params):
         if 'cluster_cookie' in host_vars['config']:
             errmsg = '`cluster_cookie is specified for "{}"`.'.format(host) + \
                 'It must be specified ONLY in `cartridge_cluster_cookie` variable.'
+            return ModuleRes(success=False, msg=errmsg)
+
+        ok, errmsg = check_cluster_cookie_symbols(cluster_cookie)
+        if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
         if 'advertise_uri' in host_vars['config']:
