@@ -1,6 +1,7 @@
 FROM centos:7
 
 ARG TARANTOOL_REPO
+ARG CARTRIDGE_CLI_VERSION
 
 RUN set -x \
     && curl -sL https://rpm.nodesource.com/setup_8.x | bash - \
@@ -14,7 +15,7 @@ RUN yum install -y tarantool tarantool-devel
 
 ENV PATH=$PWD:$PATH
 
-RUN tarantoolctl rocks install cartridge-cli 1.1.0 \
+RUN tarantoolctl rocks install cartridge-cli ${CARTRIDGE_CLI_VERSION} \
     &&  .rocks/bin/cartridge create --name myapp . \
     && .rocks/bin/cartridge pack rpm --version 1.0.0 myapp \
     && .rocks/bin/cartridge pack deb --version 1.0.0 myapp

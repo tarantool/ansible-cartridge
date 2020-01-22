@@ -2,6 +2,7 @@ FROM centos:7
 
 ARG TARANTOOL_DOWNLOAD_TOKEN
 ARG BUNDLE_VERSION
+ARG CARTRIDGE_CLI_VERSION
 
 RUN set -x \
     && curl -sL https://rpm.nodesource.com/setup_8.x | bash - \
@@ -16,7 +17,7 @@ RUN curl -O -L https://tarantool:${TARANTOOL_DOWNLOAD_TOKEN}@download.tarantool.
 
 ENV PATH="/tarantool-enterprise:${PATH}"
 
-RUN tarantoolctl rocks install cartridge-cli 1.1.0 \
+RUN tarantoolctl rocks install cartridge-cli ${CARTRIDGE_CLI_VERSION} \
     &&  .rocks/bin/cartridge create --name myapp . \
     && .rocks/bin/cartridge pack rpm --version 1.0.0 myapp \
     && .rocks/bin/cartridge pack deb --version 1.0.0 myapp
