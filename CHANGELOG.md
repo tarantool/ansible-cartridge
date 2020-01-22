@@ -11,6 +11,8 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+## [1.0.4] - 2020-01-22
+
 ### Added
 
 * Cluster cookie checks
