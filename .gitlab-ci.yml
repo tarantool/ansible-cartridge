@@ -3,15 +3,23 @@ variables:
   BUNDLE_VERSION: 1.10.3-93-g580699f
   DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
+  DOCKER_BUILDKIT: 1
 
 stages:
   - test
 
-default:
+.test:
   image: docker:git
   services:
     - name: docker:dind
       alias: localhost
+
+  stage: test
+  tags:
+    - molecule-dind
+
+  variables:
+    CARTRIDGE_CLI_VERSION: 1.2.1
 
   before_script:
     - apk update && apk add --no-cache docker
@@ -23,41 +31,31 @@ default:
     - pip3 install ansible molecule docker
     - ansible --version
 
-test-enterprise:
-  stage: test
-  tags:
-    - molecule-dind
+  cache:
+    key: ${CARTRIDGE_CLI_VERSION}:${TARANTOOL_VERSION}
+    paths:
+      - packages
+
   script:
     - ./linter.sh
 
+    - ./create-packages.sh
     - cd .. && (rm -rf tarantool-cartridge || true)
     - cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
 
-    - TARANTOOL_VERSION=enterprise ./create-packages.sh
     - molecule test
+
+test-enterprise:
+  extends: .test
+  variables:
+    TARANTOOL_VERSION: enterprise
 
 test-opensource-1.10:
-  stage: test
-  tags:
-    - molecule-dind
-  script:
-    - ./linter.sh
-
-    - cd .. && (rm -rf tarantool-cartridge || true)
-    - cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
-
-    - TARANTOOL_VERSION=opensource-1.10 ./create-packages.sh
-    - molecule test
+  extends: .test
+  variables:
+    TARANTOOL_VERSION: opensource-1.10
 
 test-opensource-2.2:
-  stage: test
-  tags:
-    - molecule-dind
-  script:
-    - ./linter.sh
-
-    - cd .. && (rm -rf tarantool-cartridge || true)
-    - cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
-
-    - TARANTOOL_VERSION=opensource-2.2 ./create-packages.sh
-    - molecule test
+  extends: .test
+  variables:
+    TARANTOOL_VERSION: opensource-2.2
