@@ -90,7 +90,8 @@ def edit_replicaset(control_console, cluster_instances,
                     failover_priority=None,
                     roles=None,
                     all_rw=None,
-                    weight=None):
+                    weight=None,
+                    vshard_group=None):
 
     assert (alias is not None) ^ (uuid is not None)
 
@@ -140,6 +141,9 @@ def edit_replicaset(control_console, cluster_instances,
 
     if weight is not None:
         replicaset_params.append('weight = {}'.format(weight))
+
+    if vshard_group is not None:
+        replicaset_params.append('vshard_group = "{}"'.format(vshard_group))
 
     res = control_console.eval('''
         local res, err = require('cartridge').admin_edit_topology({{
@@ -208,6 +212,7 @@ def create_replicaset(control_console, params):
     replicaset_instances = params['replicaset']['instances']
     replicaset_all_rw = params['replicaset']['all_rw'] if 'all_rw' in params['replicaset'] else None
     replicaset_weight = params['replicaset']['weight'] if 'weight' in params['replicaset'] else None
+    replicaset_vshard_group = params['replicaset'].get('vshard_group', None)
 
     cluster_instances = get_all_cluster_instances(control_console)
     cluster_instances = {i['alias']: i for i in cluster_instances}  # make it dict
@@ -226,7 +231,8 @@ def create_replicaset(control_console, params):
                                join_servers=[replicaset_leader],
                                roles=replicaset_roles,
                                all_rw=replicaset_all_rw,
-                               weight=replicaset_weight)
+                               weight=replicaset_weight,
+                               vshard_group=replicaset_vshard_group)
 
     if not res:
         errmsg = 'Failed to create "{}" replicaset: {}'.format(replicaset_alias, err)
@@ -289,6 +295,7 @@ def change_replicaset(control_console, params, cluster_replicaset):
     replicaset_instances = params['replicaset']['instances']
     replicaset_all_rw = params['replicaset']['all_rw'] if 'all_rw' in params['replicaset'] else None
     replicaset_weight = params['replicaset']['weight'] if 'weight' in params['replicaset'] else None
+    replicaset_vshard_group = params['replicaset'].get('vshard_group', None)
 
     cluster_instances = get_all_cluster_instances(control_console)
     cluster_instances = {i['alias']: i for i in cluster_instances}  # make it dict
@@ -328,7 +335,8 @@ def change_replicaset(control_console, params, cluster_replicaset):
                                roles=replicaset_roles,
                                failover_priority=replicaset_failover_priority,
                                all_rw=replicaset_all_rw,
-                               weight=replicaset_weight)
+                               weight=replicaset_weight,
+                               vshard_group=replicaset_vshard_group)
     if not res:
         errmsg = 'Failed to edit replicaset "{}": {}'.format(replicaset_alias, err)
         return ModuleRes(success=False, msg=errmsg)

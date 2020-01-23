@@ -84,6 +84,7 @@ def validate_types(vars):
         'roles': [str],
         'failover_priority': [str],
         'replicaset_alias': str,
+        'vshard_group': str,
     }
 
     return check_schema(schema, vars)
@@ -244,11 +245,13 @@ def validate_config(params):
                 all_replicasets[replicaset_alias] = {
                     'roles': host_vars['roles'] if 'roles' in host_vars else None,
                     'failover_priority': host_vars['failover_priority'] if 'failover_priority' in host_vars else None,
+                    'vshard_group': host_vars['vshard_group'] if 'vshard_group' in host_vars else None,
                 }
             else:
                 replicaset = {
                     'roles': host_vars['roles'] if 'roles' in host_vars else None,
                     'failover_priority': host_vars['failover_priority'] if 'failover_priority' in host_vars else None,
+                    'vshard_group': host_vars['vshard_group'] if 'vshard_group' in host_vars else None,
                 }
                 if replicaset != all_replicasets[replicaset_alias]:
                     errmsg = 'Replicaset parameters must be the same for all instances' + \

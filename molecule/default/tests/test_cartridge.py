@@ -87,6 +87,7 @@ def get_configured_replicasets():
                 'roles': host_vars['roles'],
                 'all_rw': host_vars['all_rw'] if 'all_rw' in host_vars else None,
                 'weight': host_vars['weight'] if 'weight' in host_vars else None,
+                'vshard_group': host_vars.get('vshard_group', None)
             }
 
         replicasets[replicaset_alias]['instances'].append(instance)
@@ -225,6 +226,7 @@ def test_replicasets():
             roles
             all_rw
             weight
+            vshard_group
             servers {
               alias
               priority
@@ -263,6 +265,9 @@ def test_replicasets():
 
         if configured_replicaset['weight'] is not None:
             assert started_replicaset['weight'] == configured_replicaset['weight']
+
+        if configured_replicaset['vshard_group'] is not None:
+            assert started_replicaset['vshard_group'] == configured_replicaset['vshard_group']
 
 
 def test_failover():
