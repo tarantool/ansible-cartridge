@@ -44,7 +44,7 @@ prebuild:
   image: $CI_REGISTRY_IMAGE
 
   variables:
-    CARTRIDGE_CLI_VERSION: 1.2.1
+    CARTRIDGE_CLI_VERSION: 1.3.2
 
   before_script:
     - docker info
