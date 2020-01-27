@@ -11,7 +11,7 @@ fi
 
 tarantool_version=${TARANTOOL_VERSION:-opensource-1.10}
 dockerfile_suffix=opensource
-cartridge_cli_version=${CARTRIDGE_CLI_VERSION:-1.2.1}
+cartridge_cli_version=${CARTRIDGE_CLI_VERSION:-1.3.2}
 
 if [[ $tarantool_version == "enterprise" ]] ;
 then

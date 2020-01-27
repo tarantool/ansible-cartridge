@@ -1,34 +1,54 @@
 ---
 variables:
   BUNDLE_VERSION: 1.10.3-93-g580699f
-  DOCKER_DRIVER: overlay2
-  DOCKER_TLS_CERTDIR: ""
-  DOCKER_BUILDKIT: 1
 
 stages:
+  - prebuild
   - test
 
-.test:
-  image: docker:git
+.dind:
+  tags:
+    - molecule-dind
   services:
     - name: docker:dind
       alias: localhost
+  image: docker:git
+  variables:
+    DOCKER_DRIVER: overlay2
+    DOCKER_TLS_CERTDIR: ''
+    DOCKER_BUILDKIT: 1
 
+prebuild:
+  extends: .dind
+  stage: prebuild
+  only:
+    changes:
+      - Dockerfile
+      - .gitlab-ci.yml
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  script:
+    - docker pull $CI_REGISTRY_IMAGE || true
+
+    - docker build
+      --cache-from $CI_REGISTRY_IMAGE
+      --tag $CI_REGISTRY_IMAGE
+      .
+    - docker push $CI_REGISTRY_IMAGE
+  after_script:
+    - docker logout registry.gitlab.com
+
+.test:
+  extends: .dind
   stage: test
-  tags:
-    - molecule-dind
+  image: $CI_REGISTRY_IMAGE
 
   variables:
-    CARTRIDGE_CLI_VERSION: 1.2.1
+    CARTRIDGE_CLI_VERSION: 1.3.2
 
   before_script:
-    - apk update && apk add --no-cache docker
-      python3-dev py3-pip docker gcc git curl build-base
-      autoconf automake py3-cryptography linux-headers
-      musl-dev libffi-dev openssl-dev openssh bash
     - docker info
     - python3 --version
-    - pip3 install ansible molecule docker
     - ansible --version
 
   cache:
