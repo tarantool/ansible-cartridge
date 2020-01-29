@@ -11,6 +11,10 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+### Added
+
+* `vshard_group` parameter for `vshard-storage` replicasets
+
 ## [1.0.4] - 2020-01-22
 
 ### Added

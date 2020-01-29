@@ -52,7 +52,7 @@ prebuild:
     - ansible --version
 
   cache:
-    key: ${CARTRIDGE_CLI_VERSION}:${TARANTOOL_VERSION}
+    key: ${CI_COMMIT_REF_NAME}:${TARANTOOL_VERSION}:${CARTRIDGE_CLI_VERSION}
     paths:
       - packages
 

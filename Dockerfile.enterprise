@@ -19,6 +19,7 @@ ENV PATH="/tarantool-enterprise:${PATH}"
 
 RUN tarantoolctl rocks install cartridge-cli ${CARTRIDGE_CLI_VERSION} \
     &&  .rocks/bin/cartridge create --name myapp . \
+    && sed -i "/cartridge.cfg({/a \ \ \ \ vshard_groups = {hot = { bucket_count = 20000 }}," myapp/init.lua \
     && .rocks/bin/cartridge pack rpm --version 1.0.0 myapp \
     && .rocks/bin/cartridge pack deb --version 1.0.0 myapp
 

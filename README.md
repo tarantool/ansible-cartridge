@@ -169,7 +169,7 @@ Configuration format is described in detail in the
 * `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`):
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency);
-* `config` (`dict`, required): instance configuration;
+* `config` (`dict`, required): [instance configuration](#instances);
 * `restarted` (`boolean`, optional, default: `false`): indicates that instance must be forcedly restarted;
 * `expelled` (`boolean`, optional, default: `false`): boolean flag that indicates if instance must be expelled from topology;
 * `instance_start_timeout` (`number`, optional, default: 60): time in seconds to wait for instance to be started;
@@ -330,9 +330,52 @@ To configure replicasets you need to specify replicaset parameters for each inst
   Other instances will have lower priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
 * `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
-* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled.
+* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled;
+* `vshard_group` (`string`, optional): vshard group (plase, read [this](#specifying-vshard-group) section before using this parameter);
 
 The easiest way to configure replicaset is to [group instances](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) and set replicaset parameters for all instances in a group.
+
+#### Specifying vshard group
+
+If your application is designed to use multiple independent vshard groups (see cartridge
+[documentation](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_dev/#using-multiple-vshard-storage-groups)), you can specify vshard group for `vshard-storage` repicaset `vshard_group`
+parameter.
+This parameter will be ignored for replicaset with other roles.
+By default, all `vshard-storage` replicasets belong to group `default`
+
+Be very careful using this parameter.
+Once you specified `vshard_group`, it can't be changed.
+Moreover, **your application should support specified group**.
+It means that your  application should pass vshard groups configuration in
+`cartridge.cfg()` call.
+
+For example, if your application configures `hot` and `cold` vshard groups ...
+
+```lua
+-- init.lua
+
+...
+cartridge.cfg({
+  ...
+  vshard_groups = {
+    hot = { bucket_count = 20000 },
+    cold = { bucket_count = 30000 },
+  }
+})
+```
+
+... you can specify them to be used by `vshard-storage` replicaset:
+
+```yaml
+    hot_storage_replicaset:
+      hosts:
+        hot-storage:
+      vars:
+        replicaset_alias: hot-storage
+        failover_priority: [hot-storage]
+        roles: [vshard-storage]
+        vshard_group: hot
+```
 
 ### Instances expelling
 
