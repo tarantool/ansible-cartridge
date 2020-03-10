@@ -108,6 +108,9 @@ class Console:
 
         return ret['ret']
 
+    def __del__(self):
+        self.close()
+
 
 def get_control_console(socket_path):
     return Console(socket_path)
