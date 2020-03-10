@@ -1,3 +1,3 @@
 #!/usr/bin/env sh
 
-flake8 --max-line-length 120 library module_utils filter_plugins
+flake8 library module_utils filter_plugins molecule/default/tests/unit
