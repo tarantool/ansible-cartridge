@@ -4,6 +4,7 @@ variables:
 
 stages:
   - prebuild
+  - unit
   - test
 
 .dind:
@@ -19,25 +20,59 @@ stages:
     DOCKER_TLS_CERTDIR: ''
     DOCKER_BUILDKIT: 1
 
-prebuild:
-  extends: .dind
+.prebuild:
+  tags:
+    - shell
   stage: prebuild
+  variables:
+    DOCKER_BUILDKIT: 1
+  before_script:
+    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
+  script:
+    - docker pull $IMAGE || true
+
+    - docker build
+      --cache-from $IMAGE
+      --tag $IMAGE
+      --file $DOCKERFILE
+      .
+    - docker push $IMAGE
+  after_script:
+    - docker logout registry.gitlab.com
+
+prebuild-test:
+  extends: .prebuild
   only:
     changes:
       - Dockerfile
       - .gitlab-ci.yml
-  before_script:
-    - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
-  script:
-    - docker pull $CI_REGISTRY_IMAGE || true
+  variables:
+    IMAGE: $CI_REGISTRY_IMAGE
+    DOCKERFILE: Dockerfile
 
-    - docker build
-      --cache-from $CI_REGISTRY_IMAGE
-      --tag $CI_REGISTRY_IMAGE
-      .
-    - docker push $CI_REGISTRY_IMAGE
-  after_script:
-    - docker logout registry.gitlab.com
+prebuild-unit:
+  extends: .prebuild
+  only:
+    changes:
+      - Dockerfile.unit
+      - .gitlab-ci.yml
+      - unit/requirements.txt
+  variables:
+    IMAGE: $CI_REGISTRY_IMAGE:unit
+    DOCKERFILE: Dockerfile.unit
+
+
+unit:
+  stage: unit
+  tags:
+    - docker
+  image: $CI_REGISTRY_IMAGE:unit
+  before_script:
+    - tarantool --version
+    - python3.6 --version
+  script:
+    - python3.6 -m unittest discover -v unit
+
 
 .test:
   extends: .dind
@@ -59,8 +94,6 @@ prebuild:
       - packages
 
   script:
-    - ./unit.sh
-
     - ./create-packages.sh
     - cd .. && (rm -rf tarantool-cartridge || true)
     - cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
