@@ -34,18 +34,16 @@ platforms:
     purge_networks: true
     privileged: true
 
+lint: |
+  set -xe
+  yamllint .
+  flake8
+
 provisioner:
   name: ansible
-  lint:
-    name: ansible-lint
-
   inventory:
     links:
       hosts: hosts.yml
 
 verifier:
   name: testinfra
-  lint:
-    name: flake8
-    options:
-      max-line-length: 120
