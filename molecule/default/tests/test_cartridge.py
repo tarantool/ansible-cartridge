@@ -133,7 +133,7 @@ def test_services_status_and_config(host):
 
     host_instances = [
         i for i in inventory.hosts
-        if hostname in list(map(lambda x:  x.name, inventory.hosts[i].get_groups()))
+        if hostname in list(map(lambda x: x.name, inventory.hosts[i].get_groups()))
     ]
 
     default_conf = get_variable_vaule('cartridge_defaults', default={})
