@@ -58,7 +58,7 @@ prebuild:
       - packages
 
   script:
-    - ./linter.sh
+    - ./unit.sh
 
     - ./create-packages.sh
     - cd .. && (rm -rf tarantool-cartridge || true)
