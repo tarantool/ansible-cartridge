@@ -50,6 +50,7 @@ prebuild:
     - docker info
     - python3 --version
     - ansible --version
+    - molecule --version
 
   cache:
     key: ${CI_COMMIT_REF_NAME}:${TARANTOOL_VERSION}:${CARTRIDGE_CLI_VERSION}
