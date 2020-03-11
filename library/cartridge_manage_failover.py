@@ -16,24 +16,24 @@ def manage_failover(params):
     control_console = get_control_console(params['control_sock'])
 
     current_failover = control_console.eval('''
-        return require('cartridge').admin_get_failover()
+        return require('cartridge').failover_get_params().enabled
     ''')
 
     if current_failover == failover:
         return ModuleRes(success=True, changed=False)
 
-    function_name = 'admin_enable_failover' if failover else 'admin_disable_failover'
+    enable = 'true' if failover else 'false'
 
     res = control_console.eval('''
-        local failover, err = require('cartridge').{}()
+        local failover, err = require('cartridge').failover_set_params({{enabled = {}}})
         return {{
             ok = failover ~= nil,
             err = err and err.err or require('json').NULL
         }}
-    '''.format(function_name))
+    '''.format(enable))
 
     if not res['ok']:
-        errmsg = 'Failed {}: {}'.format(function_name, res['err'])
+        errmsg = 'Failed failover_set_params({{enabled={}}}): {}'.format(enable, res['err'])
         return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=True)
