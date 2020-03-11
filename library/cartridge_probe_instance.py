@@ -7,7 +7,6 @@ from ansible.module_utils.helpers import instance_expelled
 
 
 argument_spec = {
-    'instance': {'required': True, 'type': 'dict'},
     'control_sock': {'required': True, 'type': 'str'},
     'hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},

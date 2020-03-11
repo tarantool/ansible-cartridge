@@ -1,10 +1,8 @@
 import os
-import logging
 import socket
 import time
 import re
 import json
-import time
 
 from subprocess import Popen
 
@@ -30,11 +28,11 @@ class Instance:
 
         env = os.environ.copy()
         env['TARANTOOL_CONSOLE_SOCK'] = self.console_sock
-        self.process = Popen(command, env=env)
 
-        logging.warning('PID %d', self.process.pid)
+        with open(os.devnull, 'w') as FNULL:
+            self.process = Popen(command, env=env, stdout=FNULL, stderr=FNULL)
 
-        time.sleep(0.2)
+        time.sleep(0.3)
 
         self.sock.connect(self.console_sock)
         self.sock.recv(1024)
@@ -50,7 +48,7 @@ class Instance:
                 # It is correct because of cmd structure: it always returns a value
                 if chunk == '':
                     errmsg = 'Error: broken pipe. Probably, instance was not bootsrapped yet to perform this operation'
-                    raise Exception(cartridge_errcodes.BROKEN_PIPE, errmsg)
+                    raise Exception(errmsg)
                 data = data + chunk
                 if data.endswith('\n...\n'):
                     break
@@ -65,7 +63,7 @@ class Instance:
             end)
             ret = require("json").encode({{
                 ok = ok,
-                ret = ret or require("json").NULL,
+                ret = ret ~= nil and ret or require("json").NULL,
             }})
             return string.hex(ret)
         '''.format(func_body)
@@ -92,8 +90,27 @@ class Instance:
 
     def set_membership_status(self, status):
         self.eval('''
-            return require('membership').set_status('{}')
+            require('membership').set_status('{}')
         '''.format(status))
+
+    def set_cartridge_known_server(self, advertise_uri, probe_ok):
+        probe_ok_str = 'true' if probe_ok is True else 'false'
+
+        self.eval('''
+            require('cartridge').internal.set_known_server('{}', {})
+        '''.format(advertise_uri, probe_ok_str))
+
+    def clear_probed(self, advertise_uri):
+        self.eval('''
+            require('cartridge').internal.clear_probed('{}')
+        '''.format(advertise_uri))
+
+    def server_was_probed(self, advertise_uri):
+        was_probed = self.eval('''
+            return require('cartridge').internal.server_was_probed('{}')
+        '''.format(advertise_uri))
+
+        return was_probed
 
     def stop(self):
         self.sock.close()
