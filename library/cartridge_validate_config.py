@@ -210,6 +210,10 @@ def validate_config(params):
                 errmsg = 'Specified forbidden parameter "{}" in "{}" config'.format(p, host)
                 return ModuleRes(success=False, msg=errmsg)
 
+        if host_vars.get('expelled') is True and host_vars.get('restarted') is True:
+            errmsg = 'Flags "expelled" and "restarted" can not be set at the same time'
+            return ModuleRes(success=False, msg=errmsg)
+
         # Check if cluster_cookie is not specified
         if 'cluster_cookie' in host_vars['config']:
             errmsg = '`cluster_cookie is specified for "{}"`.'.format(host) + \

@@ -151,6 +151,22 @@ class TestValidateConfig(unittest.TestCase):
         self.assertFalse(res.success)
         self.assertIn("memtx_memory must be <class 'int'>", res.msg)
 
+        res = call_validate_config({
+            'instance-1': {
+                'restarted': 'yes',
+            }
+        })
+        self.assertFalse(res.success)
+        self.assertIn("restarted must be <class 'bool'>", res.msg)
+
+        res = call_validate_config({
+            'instance-1': {
+                'expelled': 'yes',
+            }
+        })
+        self.assertFalse(res.success)
+        self.assertIn("expelled must be <class 'bool'>", res.msg)
+
     def test_common_params_are_the_same(self):
         res = call_validate_config({
             'instance-1': {
@@ -505,6 +521,48 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertTrue(res.success)
+
+    def test_instance_states(self):
+        # restarted
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'restarted': True,
+            },
+        })
+        self.assertTrue(res.success)
+
+        # expelled
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'expelled': True,
+            },
+        })
+        self.assertTrue(res.success)
+
+        # both expelled and restarted set to true
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'expelled': True,
+                'restarted': True,
+            },
+        })
+        self.assertFalse(res.success)
+        self.assertIn(
+            'Flags "expelled" and "restarted" can not be set at the same time',
+            res.msg
+        )
 
 
 if __name__ == '__main__':
