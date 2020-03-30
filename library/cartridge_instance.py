@@ -44,6 +44,8 @@ def manage_instance(params):
         if e.code in allowed_errcodes:
             return ModuleRes(success=True, changed=False)
 
+        raise e
+
     # Get current memtx memory
     current_memtx_memory = control_console.eval('''
         return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or require('json').NULL
