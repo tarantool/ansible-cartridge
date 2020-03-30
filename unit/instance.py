@@ -32,7 +32,7 @@ class Instance:
         with open(os.devnull, 'w') as FNULL:
             self.process = Popen(command, env=env, stdout=FNULL, stderr=FNULL)
 
-        time.sleep(0.3)
+        time.sleep(3)
 
         self.sock.connect(self.console_sock)
         self.sock.recv(1024)
@@ -90,8 +90,26 @@ class Instance:
 
     def set_membership_status(self, status):
         self.eval('''
-            require('membership').set_status('{}')
+            require('membership').internal.set_status('{}')
         '''.format(status))
+
+    def set_membership_members(self, members):
+        self.eval('''
+            require('membership').internal.clear_members()
+        ''')
+
+        for member in members:
+            opts = []
+
+            for opt in ['uri', 'status', 'uuid', 'alias']:
+                if opt in member:
+                    opts.append("{} = '{}'".format(opt, member[opt]))
+
+            self.eval('''
+                require('membership').internal.add_member({{
+                    {}
+                }})
+            '''.format(', '.join(opts)))
 
     def set_cartridge_known_server(self, advertise_uri, probe_ok):
         probe_ok_str = 'true' if probe_ok is True else 'false'

@@ -15,6 +15,6 @@ local ok, err = pcall(cartridge.cfg, {
     console_sock = console_sock,
 })
 if not ok then
-    log.error('%s', err)
+    require('log').error('%s', err)
     os.exit(1)
 end
