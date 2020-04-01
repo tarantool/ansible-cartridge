@@ -6,6 +6,8 @@ cartridge.internal = {}
 local known_servers = {}
 local probed_servers = {}
 
+box.cfg = function() end
+
 -- cfg
 function cartridge.cfg(opts)
     assert(type(opts.console_sock == 'string'))
@@ -14,6 +16,10 @@ function cartridge.cfg(opts)
     if not ok then
         return nil, err
     end
+
+    box.cfg = {
+        memtx_memory = 100,
+    }
 
     return true
 end

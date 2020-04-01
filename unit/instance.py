@@ -6,6 +6,8 @@ import json
 
 from subprocess import Popen
 
+from os_mock import OsPathExistsMock, OsPathGetMtimeMock
+
 
 script_abspath = os.path.realpath(
     os.path.join(
@@ -15,6 +17,18 @@ script_abspath = os.path.realpath(
 
 
 class Instance:
+    APPNAME = 'myapp'
+    INSTANCE_NAME = 'instance-1'
+    COOKIE = 'cookie'
+
+    INSTANCE_CONF_PATH = '/etc/tarantool/conf.d/{}.{}.yml'.format(APPNAME, INSTANCE_NAME)
+    APP_CONF_PATH = '/etc/tarantool/conf.d/{}.yml'.format(APPNAME)
+    APP_CODE_PATH = '/usr/share/tarantool/{}'.format(APPNAME)
+
+    DATE_YESTERDAY = -1
+    DATE_TODAY = 0
+    DATE_TOMORROW = 1
+
     def __init__(self, console_sock, cluster_cookie):
         self.script = "init.lua"
         self.console_sock = console_sock
@@ -36,6 +50,20 @@ class Instance:
 
         self.sock.connect(self.console_sock)
         self.sock.recv(1024)
+
+        os.path.exists = OsPathExistsMock()
+        os.path.getmtime = OsPathGetMtimeMock()
+
+        files = {
+            self.console_sock: '',
+            self.APP_CODE_PATH: '',
+        }
+        for path, content in files.items():
+            self.write_file(path, content)
+            self.set_path_mtime(path, self.DATE_TODAY)
+
+        self.set_default_instance_config()
+        self.set_default_app_config()
 
     def eval(self, func_body):
         def sendall(msg):
@@ -135,3 +163,60 @@ class Instance:
         if self.process is not None:
             self.process.kill()
             self.process.communicate()
+
+    def write_file(self, path, content=''):
+        os.path.exists.set_exists(path)
+        self.eval('''
+            require('fio').path.write_file({{
+                path = '{}',
+                content = '{}',
+            }})
+        '''.format(path, content))
+
+    def remove_file(self, path):
+        os.path.exists.set_not_exists(path)
+        self.eval('''
+            require('fio').path.remove_file('{}')
+        '''.format(path))
+
+    def set_instance_config(self, config):
+        params = ', '.join([
+            '{}: {}'.format(k, v)
+            for k, v in config.items()
+        ])
+        conf = '{appname}.{instance_name}: {{ {params} }}'.format(
+            appname=self.APPNAME,
+            instance_name=self.INSTANCE_NAME,
+            params=params
+        )
+        self.write_file(self.INSTANCE_CONF_PATH, conf)
+
+    def set_app_config(self, config):
+        config = config.copy()
+        config.update({'cluster_cookie': self.COOKIE})
+
+        params = ', '.join([
+            '{}: {}'.format(k, v)
+            for k, v in config.items()
+        ])
+        conf = '{appname}: {{ {params} }}'.format(
+            appname=self.APPNAME,
+            params=params
+        )
+        self.write_file(self.APP_CONF_PATH, conf)
+
+    def set_default_instance_config(self):
+        self.set_instance_config({})
+
+    def set_default_app_config(self):
+        self.set_app_config({
+            'cluster_cookie': self.COOKIE
+        })
+
+    def set_path_mtime(self, path, mtime):
+        os.path.getmtime.set_mtime(path, mtime)
+
+    def set_memtx_memory(self, new_value):
+        self.eval('''
+            box.cfg.memtx_memory = {}
+        '''.format(new_value))
