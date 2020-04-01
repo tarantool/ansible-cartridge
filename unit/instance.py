@@ -3,6 +3,7 @@ import socket
 import time
 import re
 import json
+import tenacity
 
 from subprocess import Popen
 
@@ -37,6 +38,12 @@ class Instance:
         self.process = None
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
+    @tenacity.retry(wait=tenacity.wait_fixed(0.1),
+                    stop=tenacity.stop_after_delay(5))
+    def _connect(self):
+        self.sock.connect(self.console_sock)
+        self.sock.recv(1024)
+
     def start(self):
         command = [os.path.join(script_abspath, self.script)]
 
@@ -46,10 +53,7 @@ class Instance:
         with open(os.devnull, 'w') as FNULL:
             self.process = Popen(command, env=env, stdout=FNULL, stderr=FNULL)
 
-        time.sleep(3)
-
-        self.sock.connect(self.console_sock)
-        self.sock.recv(1024)
+        self._connect()
 
         os.path.exists = OsPathExistsMock()
         os.path.getmtime = OsPathGetMtimeMock()
