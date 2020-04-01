@@ -6,6 +6,8 @@ local fio = require('fio')
 local script_dir = fio.abspath(fio.dirname(arg[0]))
 package.path = package.path .. ';' .. script_dir .. '/?.lua'
 
+require('fio-patch')
+
 local cartridge = require('cartridge')
 
 local console_sock = os.getenv('TARANTOOL_CONSOLE_SOCK')
