@@ -220,6 +220,26 @@ class Instance:
         os.path.getmtime.set_mtime(path, mtime)
 
     def set_memtx_memory(self, new_value):
+        if new_value is None:
+            self.eval('''
+                box.cfg.memtx_memory = nil
+            ''')
+        else:
+            self.eval('''
+                box.cfg.memtx_memory = {}
+            '''.format(new_value))
+
+    def get_memtx_memory(self):
+        return self.eval('''
+            return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or require('json').NULL
+        ''')
+
+    def set_fail_on_memory_inc(self, value=True):
         self.eval('''
-            box.cfg.memtx_memory = {}
-        '''.format(new_value))
+            require('cartridge').internal.set_fail_on_memory_inc({})
+        '''.format('true' if value else 'false'))
+
+    def set_box_cfg_function(self, value=True):
+        self.eval('''
+            require('cartridge').internal.set_box_cfg_function({})
+        '''.format('true' if value else 'false'))

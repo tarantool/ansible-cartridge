@@ -29,7 +29,7 @@ def manage_instance(params):
     else:
         new_memtx_memory = cartridge_defaults['memtx_memory']
 
-    # Check if instance is started
+    # Check if instance isn't started yet
     if not os.path.exists(control_sock):
         return ModuleRes(success=True, changed=False)
 

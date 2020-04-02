@@ -5,8 +5,39 @@ cartridge.internal = {}
 
 local known_servers = {}
 local probed_servers = {}
+local fail_on_increasing_memtx_memory = false
 
-box.cfg = function() end
+local mt = {}
+mt.__call = function(self, opts)
+    if opts.memtx_memory == nil then
+        return
+    end
+
+    if self.memtx_memory == nil then
+        self.memtx_memory = opts.memtx_memory
+    end
+
+    if opts.memtx_memory == self.memtx_memory then
+        return
+    end
+
+    if opts.memtx_memory < self.memtx_memory then
+        error("cannot decrease memory size at runtime")
+    end
+
+    if fail_on_increasing_memtx_memory then
+        error("cannot decrease memory size at runtime")
+    end
+
+    self.memtx_memory = opts.memtx_memory
+end
+
+local box_cfg_table = {}
+setmetatable(box_cfg_table, mt)
+
+local box_cfg_function = function() end
+
+box.cfg = box_cfg_function
 
 -- cfg
 function cartridge.cfg(opts)
@@ -17,9 +48,7 @@ function cartridge.cfg(opts)
         return nil, err
     end
 
-    box.cfg = {
-        memtx_memory = 100,
-    }
+    box.cfg = box_cfg_table
 
     return true
 end
@@ -51,6 +80,20 @@ function cartridge.internal.set_known_server(advertise_uri, probe_ok)
     assert(type(probe_ok) == 'boolean')
 
     known_servers[advertise_uri] = probe_ok
+end
+
+function cartridge.internal.set_fail_on_memory_inc(value)
+    assert(type(value) == 'boolean')
+    fail_on_increasing_memtx_memory = value
+end
+
+function cartridge.internal.set_box_cfg_function(value)
+    assert(type(value) == 'boolean')
+    if value then
+        box.cfg = box_cfg_function
+    else
+        box.cfg = box_cfg_table
+    end
 end
 
 return cartridge
