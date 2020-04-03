@@ -99,7 +99,10 @@ class Console:
         hex_output = re.sub(r"'?\n...\n$", '', hex_output)
         hex_output = re.sub(r"\n\s*", '', hex_output)
 
-        output = bytearray.fromhex(hex_output).decode('utf-8')
+        try:
+            output = bytearray.fromhex(hex_output).decode('utf-8')
+        except Exception:
+            raise Exception(hex_output)
 
         ret = json.loads(output)
         if not ret['ok']:
