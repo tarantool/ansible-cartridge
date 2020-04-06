@@ -8,10 +8,11 @@ stages:
 
 .dind:
   tags:
-    - molecule-dind
+    - dind
   services:
     - name: docker:dind
       alias: localhost
+      command: ["--mtu=1300"]
   image: docker:git
   variables:
     DOCKER_DRIVER: overlay2
