@@ -95,7 +95,15 @@ unit:
     - cd .. && (rm -rf tarantool-cartridge || true)
     - cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
 
-    - molecule test
+    - docker network create
+      --driver bridge
+      --opt com.docker.network.driver.mtu=1450
+      cartridge-network
+
+    - molecule test --destroy=never
+
+  after_script:
+    - molecule destroy
 
 test-enterprise:
   extends: .test
