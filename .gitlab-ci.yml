@@ -21,11 +21,8 @@ stages:
     DOCKER_BUILDKIT: 1
 
 .prebuild:
-  tags:
-    - shell
+  extends: .dind
   stage: prebuild
-  variables:
-    DOCKER_BUILDKIT: 1
   before_script:
     - docker login -u gitlab-ci-token -p $CI_JOB_TOKEN registry.gitlab.com
   script:
