@@ -353,3 +353,13 @@ class Instance:
         return self.eval('''
             return require('cartridge').internal.get_edit_topology_calls()
         ''')
+
+    def set_can_bootstrap_vshard(self, value=True):
+        self.eval('''
+            require('cartridge').internal.set_can_bootstrap_vshard({})
+        '''.format('true' if value else 'false'))
+
+    def set_fail_on_bootstrap_vshard(self, value=True):
+        self.eval('''
+            require('cartridge').internal.set_fail_on_bootstrap_vshard({})
+        '''.format('true' if value else 'false'))

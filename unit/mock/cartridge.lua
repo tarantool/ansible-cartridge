@@ -7,6 +7,14 @@ local known_servers = {}
 local probed_servers = {}
 local fail_on_increasing_memtx_memory = false
 local fail_on_edit_topology = false
+local can_bootstrap_vshard = true
+local fail_on_bootstrap_vshard = false
+
+local vshard_utils = {}
+package.loaded['cartridge.vshard-utils'] = vshard_utils
+
+local admin = {}
+package.loaded['cartridge.admin'] = admin
 
 -- box.cfg mock
 local mt = {}
@@ -293,6 +301,16 @@ function cartridge.admin_edit_topology(opts)
     }
 end
 
+-- cartridge.vshard-utils
+function vshard_utils.can_bootstrap()
+    return can_bootstrap_vshard
+end
+
+-- cartridge.admin
+function admin.bootstrap_vshard()
+    return not fail_on_bootstrap_vshard
+end
+
 -- internal helpers
 function cartridge.internal.server_was_probed(advertise_uri)
     assert(type(advertise_uri) == 'string')
@@ -387,6 +405,16 @@ end
 
 function cartridge.internal.clear_edit_topology_calls()
     edit_topology_calls = {}
+end
+
+function cartridge.internal.set_can_bootstrap_vshard(value)
+    assert(type(value) == 'boolean')
+    can_bootstrap_vshard = value
+end
+
+function cartridge.internal.set_fail_on_bootstrap_vshard(value)
+    assert(type(value) == 'boolean')
+    fail_on_bootstrap_vshard = value
 end
 
 cartridge.internal.topology = topology
