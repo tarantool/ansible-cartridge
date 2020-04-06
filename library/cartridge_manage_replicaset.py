@@ -25,13 +25,13 @@ def get_cluster_replicaset(control_console, name):
             end
 
             table.insert(res, {
-                uuid = r.uuid,
-                alias = r.alias,
-                status = r.status,
-                roles = r.roles,
-                all_rw = r.all_rw,
+                uuid = r.uuid or require('json').NULL,
+                alias = r.alias or require('json').NULL,
+                status = r.status or require('json').NULL,
+                roles = r.roles or require('json').NULL,
+                all_rw = r.all_rw or require('json').NULL,
                 weight = r.weight or require('json').NULL,
-                master = { alias = r.master.alias },
+                vshard_group = r.vshard_group or require('json').NULL,
                 servers = servers,
             })
         end
@@ -62,8 +62,7 @@ def wait_for_replicaset_is_healthy(control_console, replicaset_alias):
         )
 
         if cluster_replicaset is None:
-            errmsg = '"{}" replicaset was not found in cluster'.format(replicaset_alias)
-            return ModuleRes(success=False, msg=errmsg)
+            return False
 
         if cluster_replicaset['status'] == 'healthy':
             return True
@@ -80,6 +79,7 @@ def cluster_replicasets_are_equal(rpl1, rpl2):
         and rpl1['alias'] == rpl2['alias'] \
         and rpl1['all_rw'] == rpl2['all_rw'] \
         and rpl1['weight'] == rpl2['weight'] \
+        and rpl1['vshard_group'] == rpl2['vshard_group'] \
         and set(rpl1['roles']) == set(rpl2['roles']) \
         and aliases_in_priority_order(rpl1['servers']) == aliases_in_priority_order(rpl2['servers'])
 
@@ -169,13 +169,13 @@ def edit_replicaset(control_console, cluster_instances,
                 table.insert(servers, {{ alias = s.alias, priority = s.priority, uuid = s.uuid }})
             end
             table.insert(ret.replicasets, {{
-                uuid = r.uuid,
-                alias = r.alias,
-                status = r.status,
-                all_rw = r.all_rw,
+                uuid = r.uuid or require('json').NULL,
+                alias = r.alias or require('json').NULL,
+                status = r.status or require('json').NULL,
+                all_rw = r.all_rw or require('json').NULL,
                 weight = r.weight or require('json').NULL,
-                roles = r.roles,
-                master = {{ alias = r.master.alias }},
+                roles = r.roles or require('json').NULL,
+                vshard_group = r.vshard_group or require('json').NULL,
                 servers = servers,
             }})
         end
@@ -183,16 +183,16 @@ def edit_replicaset(control_console, cluster_instances,
             local replicaset = require('json').NULL
             if s.replicaset then
                 replicaset = {{
-                    uuid = s.replicaset.uuid,
-                    alias = s.replicaset.alias,
-                    roles = s.replicaset.roles,
+                    uuid = s.replicaset.uuid or require('json').NULL,
+                    alias = s.replicaset.alias or require('json').NULL,
+                    roles = s.replicaset.roles or require('json').NULL,
                 }}
             end
             table.insert(ret.servers, {{
                 uuid = s.uuid or require('json').NULL,
-                uri = s.uri,
-                alias = s.alias,
-                status = s.status,
+                uri = s.uri or require('json').NULL,
+                alias = s.alias or require('json').NULL,
+                status = s.status or require('json').NULL,
                 replicaset = replicaset or require('json').NULL,
             }})
         end

@@ -127,16 +127,16 @@ def get_all_cluster_instances(control_console):
             local replicaset = require('json').NULL
             if i.replicaset then
                 replicaset = {
-                    uuid = i.replicaset.uuid,
-                    alias = i.replicaset.alias,
-                    roles = i.replicaset.roles,
+                    uuid = i.replicaset.uuid or require('json').NULL,
+                    alias = i.replicaset.alias or require('json').NULL,
+                    roles = i.replicaset.roles or require('json').NULL,
                 }
             end
             table.insert(res, {
-                uuid = i.uuid,
-                uri = i.uri,
-                alias = i.alias,
-                status = i.status,
+                uuid = i.uuid or require('json').NULL,
+                uri = i.uri or require('json').NULL,
+                alias = i.alias or require('json').NULL,
+                status = i.status or require('json').NULL,
                 replicaset = replicaset,
             })
         end

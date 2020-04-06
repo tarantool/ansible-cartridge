@@ -246,3 +246,105 @@ class Instance:
         self.eval('''
             require('cartridge').internal.set_box_cfg_function({})
         '''.format('true' if value else 'false'))
+
+    def clear_topology_servers(self):
+        self.eval('''
+            require('cartridge').internal.clear_topology_servers()
+        ''')
+
+    def add_topology_servers(self, servers):
+        for s in servers:
+            s_replicaset = '{{ alias = "{alias}", uuid = "{uuid}", roles = {roles} }}'.format(
+                alias=s['replicaset']['alias'],
+                uuid=s['replicaset']['uuid'],
+                roles='{{ {} }}'.format(', '.join([
+                    '"{}"'.format(role) for role in s['replicaset']['roles']
+                ]))
+            )
+
+            self.eval('''
+                require('cartridge').internal.add_topology_server({{
+                    uuid = '{uuid}',
+                    uri = '{uri}',
+                    alias = '{alias}',
+                    status = '{status}',
+                    replicaset = {replicaset}
+                }})
+            '''.format(
+                uuid=s['uuid'],
+                uri=s['uri'],
+                alias=s['alias'],
+                status=s.get('status', 'healthy'),
+                replicaset=s_replicaset
+            ))
+
+    def clear_topology_replicasets(self):
+        self.eval('''
+            require('cartridge').internal.clear_topology_replicasets()
+        ''')
+
+    def add_topology_replicaset(self, r):
+        r_servers = '{{ {} }}'.format(
+            ', '.join([
+                "{{ alias = '{}', priority = {} }}".format(s['alias'], s['priority'])
+                for s in r['servers']
+            ])
+        )
+
+        weight = 'nil'
+        if 'weight' in r and r['weight'] is not None:
+            weight = r['weight']
+
+        all_rw = 'nil'
+        if 'all_rw' in r and r['all_rw'] is not None:
+            all_rw = 'true' if r['all_rw'] else 'false'
+
+        self.eval('''
+            require('cartridge').internal.add_topology_replicaset({{
+                uuid = '{uuid}',
+                alias = '{alias}',
+                status = '{status}',
+                roles = {roles},
+                weight = {weight},
+                all_rw = {all_rw},
+                servers = {servers},
+            }})
+        '''.format(
+            uuid=r['uuid'],
+            alias=r['alias'],
+            status=r.get('status', 'healthy'),
+            roles='{{ {} }}'.format(', '.join([
+                '"{}"'.format(role) for role in r['roles']
+            ])),
+            weight=weight,
+            all_rw=all_rw,
+            servers=r_servers
+        ))
+
+    def clear_unjoined_servers(self, servers):
+        self.eval('''
+            require('cartridge').internal.clear_unjoined_servers()
+        ''')
+
+    def add_unjoined_server(self, alias, uri, status='healthy'):
+        self.eval('''
+            require('cartridge').internal.add_unjoined_server({{
+                uri = '{uri}',
+                alias = '{alias}',
+                status = '{status}',
+            }})
+        '''.format(
+            uri=uri,
+            alias=alias,
+            status=status,
+        ))
+
+    def clear_edit_topology_calls(self):
+        self.eval('''
+            require('cartridge').internal.clear_edit_topology_calls()
+        ''')
+
+    def get_edit_topology_calls(self):
+        return self.eval('''
+            return require('cartridge').internal.get_edit_topology_calls()
+        ''')
