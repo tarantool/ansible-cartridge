@@ -47,3 +47,5 @@ provisioner:
 
 verifier:
   name: testinfra
+  options:
+    v: true
