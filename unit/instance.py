@@ -242,6 +242,11 @@ class Instance:
             require('cartridge').internal.set_fail_on_memory_inc({})
         '''.format('true' if value else 'false'))
 
+    def set_fail_on_edit_topology(self, value=True):
+        self.eval('''
+            require('cartridge').internal.set_fail_on_edit_topology({})
+        '''.format('true' if value else 'false'))
+
     def set_box_cfg_function(self, value=True):
         self.eval('''
             require('cartridge').internal.set_box_cfg_function({})

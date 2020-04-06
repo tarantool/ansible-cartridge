@@ -6,6 +6,7 @@ cartridge.internal = {}
 local known_servers = {}
 local probed_servers = {}
 local fail_on_increasing_memtx_memory = false
+local fail_on_edit_topology = false
 
 -- box.cfg mock
 local mt = {}
@@ -243,12 +244,49 @@ local function __edit_replicaset(params)
     return true
 end
 
+local function __edit_server(params)
+    if params.expelled == true then
+        assert(params.uuid ~= nil)
+        assert(topology.servers[params.uuid] ~= nil)
+        local server = topology.servers[params.uuid]
+
+        topology.servers[params.uuid] = nil
+        local replicaset_uuid = server.replicaset.uuid
+        assert(topology.replicasets[replicaset_uuid] ~= nil)
+
+        local replicaset = topology.replicasets[replicaset_uuid]
+        local new_servers = {}
+        for _, s in ipairs(replicaset.servers) do
+            if s.alias ~= server.alias then
+                table.insert(new_servers, {
+                    alias = s.alias,
+                    priority = #new_servers + 1
+                })
+            end
+        end
+        replicaset.servers = new_servers
+    end
+
+    return true
+end
+
 function cartridge.admin_edit_topology(opts)
     table.insert(edit_topology_calls, opts)
-    for _, replicaset in ipairs(opts.replicasets) do
-        local ok, err = __edit_replicaset(replicaset)
-        if ok == nil then return nil, err end
+
+    if fail_on_edit_topology then
+        return false, {err = 'Some cartridge error'}
     end
+
+    for _, replicaset in ipairs(opts.replicasets or {}) do
+        local ok, err = __edit_replicaset(replicaset)
+        if ok == nil then return nil, {err = err} end
+    end
+
+    for _, server in ipairs(opts.servers or {}) do
+        local ok, err = __edit_server(server)
+        if ok == nil then return nil, {err = err} end
+    end
+
     return {
         servers = cartridge.admin_get_servers(),
         replicasets = cartridge.admin_get_replicasets(),
@@ -276,6 +314,11 @@ end
 function cartridge.internal.set_fail_on_memory_inc(value)
     assert(type(value) == 'boolean')
     fail_on_increasing_memtx_memory = value
+end
+
+function cartridge.internal.set_fail_on_edit_topology(value)
+    assert(type(value) == 'boolean')
+    fail_on_edit_topology = value
 end
 
 function cartridge.internal.set_box_cfg_function(value)

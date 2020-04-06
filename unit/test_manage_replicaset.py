@@ -8,6 +8,7 @@ sys.path.append(os.path.dirname(__file__))
 
 import unittest
 from instance import Instance
+from helpers import add_replicaset
 
 from library.cartridge_manage_replicaset import manage_replicaset
 
@@ -32,39 +33,6 @@ def call_manage_replicaset(control_sock,
             'vshard_group': vshard_group,
         }
     })
-
-
-def add_replicaset(instance, alias, roles, servers,
-                   status='healthy', all_rw=False, weight=None):
-    r_uuid = '{}-uuid'.format(alias)
-    r_servers = []
-    for s in servers:  # servers = ['alias-1', 'alias-2']
-        r_servers.append({
-            'alias': s,
-            'uuid': '{}-uuid'.format(s),
-            'uri': '{}-uri'.format(s),
-            'status': 'healthy',
-            'replicaset': {
-                'uuid': r_uuid,
-                'alias': alias,
-                'roles': roles,
-            }
-        })
-
-    instance.add_topology_servers(r_servers)
-
-    replicaset = {
-        'uuid': r_uuid,
-        'alias': alias,
-        'status': status,
-        'roles': roles,
-        'weight': weight,
-        'all_rw': all_rw,
-        'servers': [{'alias': s, 'priority': i + 1} for i, s in enumerate(servers)]
-    }
-    instance.add_topology_replicaset(replicaset)
-
-    return replicaset
 
 
 class TestManageInstance(unittest.TestCase):
@@ -269,6 +237,47 @@ class TestManageInstance(unittest.TestCase):
         )
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
+
+    def test_fail_on_edit_topology(self):
+        # fail on create
+        self.instance.add_unjoined_server(alias='r1-master', uri='r1-master-uri')
+        self.instance.clear_edit_topology_calls()
+        self.instance.set_fail_on_edit_topology()
+
+        # create replicaset with instances known by cluster
+        self.instance.clear_edit_topology_calls()
+        res = call_manage_replicaset(
+            self.console_sock,
+            alias='r1',
+            failover_priority=['r1-master'],
+            instances=['r1-master'],
+            roles=['role-1']
+        )
+        self.assertFalse(res.success)
+        self.assertIn('Failed to create', res.msg)
+
+        # fail on edit
+        add_replicaset(
+            self.instance,
+            alias='r1',
+            roles=['role-1'],
+            servers=['r1-master', 'r1-replica'],
+        )
+
+        self.instance.clear_edit_topology_calls()
+        self.instance.set_fail_on_edit_topology()
+
+        res = call_manage_replicaset(
+            self.console_sock,
+            alias='r1',
+            failover_priority=['r1-master'],
+            instances=['r1-master'],
+            roles=['role-1', 'role-2'],
+        )
+        self.assertFalse(res.success)
+        self.assertIn('Failed to edit replicaset', res.msg)
+
+        self.instance.set_fail_on_edit_topology(False)
 
     def tearDown(self):
         self.instance.stop()
