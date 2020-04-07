@@ -3,11 +3,18 @@ local console = require('console')
 local cartridge = {}
 cartridge.internal = {}
 
-local vshard_utils = {}
-package.loaded['cartridge.vshard-utils'] = vshard_utils
+local cartridge_vshard_utils = {}
+package.loaded['cartridge.vshard-utils'] = cartridge_vshard_utils
 
-local admin = {}
-package.loaded['cartridge.admin'] = admin
+local cartridge_auth = {}
+package.loaded['cartridge.auth'] = cartridge_auth
+
+local cartridge_webui_auth = {}
+package.loaded['cartridge.webui.api-auth'] = cartridge_webui_auth
+
+local cartridge_admin = {}
+package.loaded['cartridge.admin'] = cartridge_admin
+
 
 local known_servers = {}
 local probed_servers = {}
@@ -20,6 +27,10 @@ local fail_on = {
     bootstrap_vshard = false,
     config_patch_clusterwide = false,
     manage_failover = false,
+    auth_set_params = false,
+    auth_add_user = false,
+    auth_edit_user = false,
+    auth_remove_user = false,
 }
 
 local calls = {
@@ -28,12 +39,19 @@ local calls = {
     bootstrap_vshard = {},
     config_patch_clusterwide = {},
     manage_failover = {},
+    auth_set_params = {},
+    auth_add_user = {},
+    auth_edit_user = {},
+    auth_remove_user = {},
 }
 
 local vars = {
     config = {},
     failover = false,
     can_bootstrap_vshard = true,
+    auth_params = {},
+    webui_auth_params = {},
+    users = {},
 }
 
 local topology = {
@@ -372,13 +390,13 @@ end
 
 -- * ---------------- Module cartridge.vshard-utils ---------------
 
-function vshard_utils.can_bootstrap()
+function cartridge_vshard_utils.can_bootstrap()
     return vars.can_bootstrap_vshard
 end
 
 -- * ------------------- Module cartridge.admin -------------------
 
-function admin.bootstrap_vshard()
+function cartridge_admin.bootstrap_vshard()
     if fail_on.bootstrap_vshard then
         return nil, {err = CARTRIDGE_ERR}
     end
@@ -386,9 +404,146 @@ function admin.bootstrap_vshard()
     return true
 end
 
--- * ---------------------- Internal helpers ---------------------
+-- * ------------------- Module cartridge.auth -------------------
 
--- * ----------------- cartridge functions calls -----------------
+function cartridge_auth.get_params()
+    return vars.auth_params
+end
+
+function cartridge_auth.set_params(params)
+    table.insert(calls.auth_set_params, params)
+
+    if fail_on.auth_set_params then
+        return nil, {err = CARTRIDGE_ERR}
+    end
+
+    assert(type(params.enabled) == 'boolean' or params.enabled == nil)
+    assert(type(params.cookie_max_age) == 'number' or params.cookie_max_age == nil)
+    assert(type(params.cookie_renew_age) == 'number' or params.cookie_renew_age == nil)
+
+    if params.enabled ~= nil then
+        vars.auth_params.enabled = params.enabled
+    end
+
+    if params.cookie_max_age ~= nil then
+        vars.auth_params.cookie_max_age = params.cookie_max_age
+    end
+
+    if params.cookie_renew_age ~= nil then
+        vars.auth_params.cookie_renew_age = params.cookie_renew_age
+    end
+
+    return true
+end
+
+function cartridge_auth.list_users()
+    return vars.users
+end
+
+function cartridge_auth.add_user(username, password, fullname, email)
+    assert(type(username) == 'string')
+    assert(type(password) == 'string' or password == nil)
+    assert(type(fullname) == 'string' or fullname == nil)
+    assert(type(email) == 'string' or email == nil)
+
+    table.insert(calls.auth_add_user, {
+        username = username,
+        fullname= fullname,
+        email = email,
+        password = password,
+    })
+
+    if fail_on.auth_add_user then
+        return nil, {err = CARTRIDGE_ERR}
+    end
+
+    local user = {
+        username = username,
+        fullname= fullname,
+        email = email,
+    }
+
+    table.insert(vars.users, user)
+    return user
+end
+
+function cartridge_auth.get_user(username)
+    if fail_on.auth_add_user then
+        return nil, {err = CARTRIDGE_ERR}
+    end
+
+    for _, user in ipairs(vars.users) do
+        if user.username == username then
+            return user
+        end
+    end
+
+    return nil, string.format('User %q not found', username)
+end
+
+function cartridge_auth.edit_user(username, password, fullname, email)
+    assert(type(username) == 'string')
+    assert(type(password) == 'string' or password == nil)
+    assert(type(fullname) == 'string' or fullname == nil)
+    assert(type(email) == 'string' or email == nil)
+
+    table.insert(calls.auth_edit_user, {
+        username = username,
+        fullname= fullname,
+        email = email,
+        password = password,
+    })
+
+    if fail_on.auth_edit_user then
+        return nil, {err = CARTRIDGE_ERR}
+    end
+
+    local user = cartridge_auth.get_user(username)
+    if user == nil then
+        return nil, string.format('User %q not found', username)
+    end
+
+    if password ~= nil then
+        -- don't save password
+    end
+
+    if fullname ~= nil then
+        user.fullname = fullname
+    end
+
+    if email ~= nil then
+        user.email = email
+    end
+
+    return user
+end
+
+function cartridge_auth.remove_user(username)
+    assert(type(username) == 'string')
+
+    table.insert(calls.auth_remove_user, username)
+
+    if fail_on.auth_remove_user then
+        return nil, {err = CARTRIDGE_ERR}
+    end
+
+    local user = cartridge_auth.get_user(username)
+    if user == nil then
+        return nil, string.format('User %q not found', username)
+    end
+
+    return true
+end
+
+-- * --------------- Module cartridge.webui.api-auth ---------------
+
+function cartridge_webui_auth.get_auth_params()
+    return vars.webui_auth_params
+end
+
+-- * ----------------------- Internal helpers ----------------------
+
+-- * ------------------ cartridge functions calls ------------------
 
 function cartridge.internal.set_fail(func, value)
     assert(fail_on[func] ~= nil)
