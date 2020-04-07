@@ -41,7 +41,7 @@ class TestAppConfig(unittest.TestCase):
             'users_acl',
         ]
         for section in system_sections:
-            self.instance.clear_config_patch_calls()
+            self.instance.clear_calls('config_patch_clusterwide')
 
             res = call_config_app(self.console_sock, {
                 section: {}
@@ -49,7 +49,7 @@ class TestAppConfig(unittest.TestCase):
             self.assertFalse(res.success)
             self.assertIn('Unable to patch config system section', res.msg)
 
-            calls = self.instance.get_config_patch_calls()
+            calls = self.instance.get_calls('config_patch_clusterwide')
             self.assertEqual(len(calls), 0)
 
     def test_adding_new_sections(self):
@@ -57,8 +57,8 @@ class TestAppConfig(unittest.TestCase):
         SECTION_BODY = 'SECTION BODY'
 
         # config is empty
-        self.instance.set_config({})
-        self.instance.clear_config_patch_calls()
+        self.instance.set_variable('config', {})
+        self.instance.clear_calls('config_patch_clusterwide')
 
         res = call_config_app(self.console_sock, {
             SECTION_NAME: {
@@ -68,17 +68,17 @@ class TestAppConfig(unittest.TestCase):
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
-        calls = self.instance.get_config_patch_calls()
+        calls = self.instance.get_calls('config_patch_clusterwide')
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0], {
             SECTION_NAME: SECTION_BODY
         })
 
         # config is already set (res.changed should be false)
-        self.instance.set_config({
+        self.instance.set_variable('config', {
             SECTION_NAME: SECTION_BODY
         })
-        self.instance.clear_config_patch_calls()
+        self.instance.clear_calls('config_patch_clusterwide')
 
         res = call_config_app(self.console_sock, {
             SECTION_NAME: {
@@ -88,7 +88,7 @@ class TestAppConfig(unittest.TestCase):
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
-        calls = self.instance.get_config_patch_calls()
+        calls = self.instance.get_calls('config_patch_clusterwide')
         self.assertEqual(len(calls), 0)
 
     def test_deleting_sections(self):
@@ -98,11 +98,11 @@ class TestAppConfig(unittest.TestCase):
         SECTION2_BODY = 'SECTION-2 BODY'
 
         # set two sections
-        self.instance.set_config({
+        self.instance.set_variable('config', {
             SECTION1_NAME: SECTION1_BODY,
             SECTION2_NAME: SECTION2_BODY,
         })
-        self.instance.clear_config_patch_calls()
+        self.instance.clear_calls('config_patch_clusterwide')
 
         # delete section-1
         res = call_config_app(self.console_sock, {
@@ -113,17 +113,17 @@ class TestAppConfig(unittest.TestCase):
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
-        calls = self.instance.get_config_patch_calls()
+        calls = self.instance.get_calls('config_patch_clusterwide')
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0], {
             SECTION1_NAME: None
         })
 
         # set only section-2
-        self.instance.set_config({
+        self.instance.set_variable('config', {
             SECTION2_NAME: SECTION2_BODY,
         })
-        self.instance.clear_config_patch_calls()
+        self.instance.clear_calls('config_patch_clusterwide')
 
         # delete section-1
         res = call_config_app(self.console_sock, {
@@ -134,15 +134,15 @@ class TestAppConfig(unittest.TestCase):
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
-        calls = self.instance.get_config_patch_calls()
+        calls = self.instance.get_calls('config_patch_clusterwide')
         self.assertEqual(len(calls), 0)
 
         # set two sections
-        self.instance.set_config({
+        self.instance.set_variable('config', {
             SECTION1_NAME: SECTION1_BODY,
             SECTION2_NAME: SECTION2_BODY,
         })
-        self.instance.clear_config_patch_calls()
+        self.instance.clear_calls('config_patch_clusterwide')
 
         # set deleted to False for section-1
         res = call_config_app(self.console_sock, {
@@ -154,7 +154,7 @@ class TestAppConfig(unittest.TestCase):
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
-        calls = self.instance.get_config_patch_calls()
+        calls = self.instance.get_calls('config_patch_clusterwide')
         self.assertEqual(len(calls), 0)
 
     def test_changing_section(self):
@@ -166,11 +166,11 @@ class TestAppConfig(unittest.TestCase):
         SECTION1_NEW_BODY = {'hi': 'I am section-1 new body'}
 
         # set two sections
-        self.instance.set_config({
+        self.instance.set_variable('config', {
             SECTION1_NAME: SECTION1_BODY,
             SECTION2_NAME: SECTION2_BODY,
         })
-        self.instance.clear_config_patch_calls()
+        self.instance.clear_calls('config_patch_clusterwide')
 
         # change only section-1
         res = call_config_app(self.console_sock, {
@@ -184,7 +184,7 @@ class TestAppConfig(unittest.TestCase):
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
-        calls = self.instance.get_config_patch_calls()
+        calls = self.instance.get_calls('config_patch_clusterwide')
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0], {
             SECTION1_NAME: SECTION1_NEW_BODY
@@ -195,11 +195,11 @@ class TestAppConfig(unittest.TestCase):
         SECTION_BODY = 'SECTION BODY'
         SECTION_NEW_BODY = 'NEW SECTION BODY'
 
-        self.instance.set_config({
+        self.instance.set_variable('config', {
             SECTION_NAME: SECTION_BODY
         })
-        self.instance.clear_config_patch_calls()
-        self.instance.set_fail_on_config_patch()
+        self.instance.clear_calls('config_patch_clusterwide')
+        self.instance.set_fail_on('config_patch_clusterwide')
 
         # change section
         res = call_config_app(self.console_sock, {

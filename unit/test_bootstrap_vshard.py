@@ -27,22 +27,22 @@ class TestBootstrapVshard(unittest.TestCase):
         self.instance.start()
 
     def test_can_not_bootstrap_vshard(self):
-        self.instance.set_can_bootstrap_vshard(False)
+        self.instance.set_variable('can_bootstrap_vshard', False)
 
         res = call_bootstrap_vshard(self.console_sock)
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
     def test_bootstrap_successfully(self):
-        self.instance.set_can_bootstrap_vshard(True)
+        self.instance.set_variable('can_bootstrap_vshard', True)
 
         res = call_bootstrap_vshard(self.console_sock)
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
     def test_bootstrap_fails(self):
-        self.instance.set_can_bootstrap_vshard(True)
-        self.instance.set_fail_on_bootstrap_vshard(True)
+        self.instance.set_variable('can_bootstrap_vshard', True)
+        self.instance.set_fail_on('bootstrap_vshard')
 
         res = call_bootstrap_vshard(self.console_sock)
         self.assertFalse(res.success)

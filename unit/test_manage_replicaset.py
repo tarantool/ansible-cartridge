@@ -45,7 +45,7 @@ class TestManageInstance(unittest.TestCase):
 
     def test_create_replicaset(self):
         # create replicaset with instances not known by cluster
-        self.instance.clear_edit_topology_calls()
+        self.instance.clear_calls('edit_topology')
         res = call_manage_replicaset(
             self.console_sock,
             alias='r1',
@@ -55,14 +55,14 @@ class TestManageInstance(unittest.TestCase):
         )
         self.assertFalse(res.success, msg=res.msg)
         self.assertIn('Leader "r1-master" (replicaset "r1") not found is cluster', res.msg)
-        self.assertEqual(len(self.instance.get_edit_topology_calls()), 0)
+        self.assertEqual(len(self.instance.get_calls('edit_topology')), 0)
 
         # add unjoined
         self.instance.add_unjoined_server(alias='r1-master', uri='r1-master-uri')
         self.instance.add_unjoined_server(alias='r1-replica', uri='r1-replica-uri')
 
         # create replicaset with instances known by cluster
-        self.instance.clear_edit_topology_calls()
+        self.instance.clear_calls('edit_topology')
         res = call_manage_replicaset(
             self.console_sock,
             alias='r1',
@@ -74,7 +74,7 @@ class TestManageInstance(unittest.TestCase):
         self.assertTrue(res.changed)
 
         # check performed `edit_topology` calls
-        calls = self.instance.get_edit_topology_calls()
+        calls = self.instance.get_calls('edit_topology')
         self.assertEqual(len(calls), 2)
         join_leader_call = calls[0]
         join_replica_call = calls[1]
@@ -99,7 +99,7 @@ class TestManageInstance(unittest.TestCase):
         })
 
         # repeat the call (res.changed should be false)
-        self.instance.clear_edit_topology_calls()
+        self.instance.clear_calls('edit_topology')
         res = call_manage_replicaset(
             self.console_sock,
             alias='r1',
@@ -111,7 +111,7 @@ class TestManageInstance(unittest.TestCase):
         self.assertFalse(res.changed)
 
         # check performed `edit_topology` calls
-        calls = self.instance.get_edit_topology_calls()
+        calls = self.instance.get_calls('edit_topology')
         self.assertEqual(len(calls), 1)
         self.assertIn('replicasets', calls[0])
         r_params = calls[0]['replicasets'][0]
@@ -137,7 +137,7 @@ class TestManageInstance(unittest.TestCase):
         }
 
         for param, value in params.items():
-            self.instance.clear_edit_topology_calls()
+            self.instance.clear_calls('edit_topology')
 
             res = call_manage_replicaset(
                 self.console_sock,
@@ -150,7 +150,7 @@ class TestManageInstance(unittest.TestCase):
             self.assertTrue(res.changed)
 
             # check performed `edit_topology` calls
-            calls = self.instance.get_edit_topology_calls()
+            calls = self.instance.get_calls('edit_topology')
             self.assertEqual(len(calls), 1)
             self.assertIn('replicasets', calls[0])
             r_params = calls[0]['replicasets'][0]
@@ -161,7 +161,7 @@ class TestManageInstance(unittest.TestCase):
             })
 
             # set the same parameter again (res.changed should be false)
-            self.instance.clear_edit_topology_calls()
+            self.instance.clear_calls('edit_topology')
             res = call_manage_replicaset(
                 self.console_sock,
                 alias='r1',
@@ -173,7 +173,7 @@ class TestManageInstance(unittest.TestCase):
             self.assertFalse(res.changed)
 
             # check performed `edit_topology` calls
-            calls = self.instance.get_edit_topology_calls()
+            calls = self.instance.get_calls('edit_topology')
             self.assertEqual(len(calls), 1)
             self.assertIn('replicasets', calls[0])
             r_params = calls[0]['replicasets'][0]
@@ -198,7 +198,7 @@ class TestManageInstance(unittest.TestCase):
         )
 
         # join new server and set it to be a new master
-        self.instance.clear_edit_topology_calls()
+        self.instance.clear_calls('edit_topology')
         res = call_manage_replicaset(
             self.console_sock,
             alias='r1',
@@ -209,7 +209,7 @@ class TestManageInstance(unittest.TestCase):
         self.assertTrue(res.changed)
 
         # check performed `edit_topology` calls
-        calls = self.instance.get_edit_topology_calls()
+        calls = self.instance.get_calls('edit_topology')
         self.assertEqual(len(calls), 2)
         join_call = calls[0]
         edit_priority_call = calls[1]
@@ -241,11 +241,11 @@ class TestManageInstance(unittest.TestCase):
     def test_fail_on_edit_topology(self):
         # fail on create
         self.instance.add_unjoined_server(alias='r1-master', uri='r1-master-uri')
-        self.instance.clear_edit_topology_calls()
-        self.instance.set_fail_on_edit_topology()
+        self.instance.clear_calls('edit_topology')
+        self.instance.set_fail_on('edit_topology')
 
         # create replicaset with instances known by cluster
-        self.instance.clear_edit_topology_calls()
+        self.instance.clear_calls('edit_topology')
         res = call_manage_replicaset(
             self.console_sock,
             alias='r1',
@@ -265,8 +265,8 @@ class TestManageInstance(unittest.TestCase):
             servers=['r1-master', 'r1-replica'],
         )
 
-        self.instance.clear_edit_topology_calls()
-        self.instance.set_fail_on_edit_topology()
+        self.instance.clear_calls('edit_topology')
+        self.instance.set_fail_on('edit_topology')
 
         res = call_manage_replicaset(
             self.console_sock,
@@ -279,7 +279,7 @@ class TestManageInstance(unittest.TestCase):
         self.assertIn('Failed to edit replicaset', res.msg)
         self.assertIn('cartridge err', res.msg)
 
-        self.instance.set_fail_on_edit_topology(False)
+        self.instance.set_fail_on('edit_topology', False)
 
     def tearDown(self):
         self.instance.stop()

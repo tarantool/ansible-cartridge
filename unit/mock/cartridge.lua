@@ -3,60 +3,38 @@ local console = require('console')
 local cartridge = {}
 cartridge.internal = {}
 
-local known_servers = {}
-local probed_servers = {}
-
-local CARTRIDGE_ERR = 'cartridge err'
-
-local fail_on_increasing_memtx_memory = false
-local fail_on_edit_topology = false
-local can_bootstrap_vshard = true
-local fail_on_bootstrap_vshard = false
-local fail_on_config_patch = false
-
-local edit_topology_calls = {}
-local config_patch_clusterwide_calls = {}
-
 local vshard_utils = {}
 package.loaded['cartridge.vshard-utils'] = vshard_utils
 
 local admin = {}
 package.loaded['cartridge.admin'] = admin
 
-local config = {}
+local known_servers = {}
+local probed_servers = {}
 
--- box.cfg mock
-local mt = {}
-mt.__call = function(self, opts)
-    if opts.memtx_memory == nil then
-        return
-    end
+local CARTRIDGE_ERR = 'cartridge err'
 
-    if self.memtx_memory == nil then
-        self.memtx_memory = opts.memtx_memory
-    end
+local fail_on = {
+    increase_memtx_memory = false,
+    edit_topology = false,
+    bootstrap_vshard = false,
+    config_patch_clusterwide = false,
+    manage_failover = false,
+}
 
-    if opts.memtx_memory == self.memtx_memory then
-        return
-    end
+local calls = {
+    increase_memtx_memory = {},
+    edit_topology = {},
+    bootstrap_vshard = {},
+    config_patch_clusterwide = {},
+    manage_failover = {},
+}
 
-    if opts.memtx_memory < self.memtx_memory then
-        error("cannot decrease memory size at runtime")
-    end
-
-    if fail_on_increasing_memtx_memory then
-        error("cannot decrease memory size at runtime")
-    end
-
-    self.memtx_memory = opts.memtx_memory
-end
-
-local box_cfg_table = {}
-setmetatable(box_cfg_table, mt)
-
-local box_cfg_function = function() end
-
-box.cfg = box_cfg_function
+local vars = {
+    config = {},
+    failover = false,
+    can_bootstrap_vshard = true,
+}
 
 local topology = {
     replicasets = {
@@ -97,7 +75,52 @@ local unjoined_servers = {
     --]]
 }
 
--- cartridge API functions
+-- * ------------------------- box.cfg -------------------------
+
+-- box.cfg mock
+local mt = {}
+mt.__call = function(self, opts)
+    if opts.memtx_memory == nil then
+        return
+    end
+
+    if self.memtx_memory == nil then
+        self.memtx_memory = opts.memtx_memory
+    end
+
+    if opts.memtx_memory == self.memtx_memory then
+        return
+    end
+
+    if opts.memtx_memory < self.memtx_memory then
+        error("cannot decrease memory size at runtime")
+    end
+
+    if fail_on.increase_memtx_memory then
+        error("cannot decrease memory size at runtime")
+    end
+
+    self.memtx_memory = opts.memtx_memory
+end
+
+local box_cfg_table = {}
+setmetatable(box_cfg_table, mt)
+
+local box_cfg_function = function() end
+
+box.cfg = box_cfg_function
+
+function cartridge.internal.set_box_cfg_function(value)
+    assert(type(value) == 'boolean')
+    if value then
+        box.cfg = box_cfg_function
+    else
+        box.cfg = box_cfg_table
+    end
+end
+
+-- * ------------------ Cartridge module functions ------------------
+
 function cartridge.cfg(opts)
     assert(type(opts.console_sock == 'string'))
 
@@ -286,9 +309,9 @@ local function __edit_server(params)
 end
 
 function cartridge.admin_edit_topology(opts)
-    table.insert(edit_topology_calls, opts)
+    table.insert(calls.edit_topology, opts)
 
-    if fail_on_edit_topology then
+    if fail_on.edit_topology then
         return false, {err = CARTRIDGE_ERR}
     end
 
@@ -309,32 +332,63 @@ function cartridge.admin_edit_topology(opts)
 end
 
 function cartridge.config_get_readonly()
-    return config
+    return vars.config
 end
 
 function cartridge.config_patch_clusterwide(patch)
     -- this function is used only to collect calls
     -- or fail if required
-    table.insert(config_patch_clusterwide_calls, patch)
+    table.insert(calls.config_patch_clusterwide, patch)
 
-    if fail_on_config_patch then
-        return nil, {err = 'Cartridge err'}
+    if fail_on.config_patch_clusterwide then
+        return nil, {err = CARTRIDGE_ERR}
     end
 
     return true
 end
 
--- cartridge.vshard-utils
+-- * ---------------- Module cartridge.vshard-utils ---------------
+
 function vshard_utils.can_bootstrap()
-    return can_bootstrap_vshard
+    return vars.can_bootstrap_vshard
 end
 
--- cartridge.admin
+-- * ------------------- Module cartridge.admin -------------------
+
 function admin.bootstrap_vshard()
-    return not fail_on_bootstrap_vshard
+    return not fail_on.bootstrap_vshard
 end
 
--- internal helpers
+-- * ---------------------- Internal helpers ---------------------
+
+-- * ----------------- cartridge functions calls -----------------
+
+function cartridge.internal.set_fail(func, value)
+    assert(fail_on[func] ~= nil)
+    assert(type(value) == 'boolean')
+    fail_on[func] = value
+end
+
+function cartridge.internal.clear_calls(func)
+    assert(calls[func] ~= nil)
+    calls[func] = {}
+end
+
+function cartridge.internal.get_calls(func)
+    assert(calls[func] ~= nil)
+    return calls[func]
+end
+
+-- * --------------------------- vars ---------------------------
+
+function cartridge.internal.set_variable(name, value)
+    assert(vars[name] ~= nil)
+    assert(type(value) == type(vars[name]))
+    vars[name] = value
+end
+
+-- * ------------------------ membership ------------------------
+
 function cartridge.internal.server_was_probed(advertise_uri)
     assert(type(advertise_uri) == 'string')
     return probed_servers[advertise_uri] == true
@@ -352,24 +406,7 @@ function cartridge.internal.set_known_server(advertise_uri, probe_ok)
     known_servers[advertise_uri] = probe_ok
 end
 
-function cartridge.internal.set_fail_on_memory_inc(value)
-    assert(type(value) == 'boolean')
-    fail_on_increasing_memtx_memory = value
-end
-
-function cartridge.internal.set_fail_on_edit_topology(value)
-    assert(type(value) == 'boolean')
-    fail_on_edit_topology = value
-end
-
-function cartridge.internal.set_box_cfg_function(value)
-    assert(type(value) == 'boolean')
-    if value then
-        box.cfg = box_cfg_function
-    else
-        box.cfg = box_cfg_table
-    end
-end
+-- * ------------------------- topology -------------------------
 
 function cartridge.internal.add_topology_server(s)
     for _, p in ipairs({'uuid', 'uri', 'alias', 'status'}) do
@@ -408,54 +445,6 @@ function cartridge.internal.add_unjoined_server(s)
         assert(type(s[p]) == 'string')
     end
     table.insert(unjoined_servers, s)
-end
-
-function cartridge.internal.clear_topology_servers()
-    topology.servers = {}
-end
-
-function cartridge.internal.clear_topology_replicasets()
-    topology.replicasets = {}
-end
-
-function cartridge.internal.clear_unjoined_servers()
-    unjoined_servers = {}
-end
-
-function cartridge.internal.get_edit_topology_calls()
-    return edit_topology_calls
-end
-
-function cartridge.internal.clear_edit_topology_calls()
-    edit_topology_calls = {}
-end
-
-function cartridge.internal.set_can_bootstrap_vshard(value)
-    assert(type(value) == 'boolean')
-    can_bootstrap_vshard = value
-end
-
-function cartridge.internal.set_fail_on_bootstrap_vshard(value)
-    assert(type(value) == 'boolean')
-    fail_on_bootstrap_vshard = value
-end
-
-function cartridge.internal.set_fail_on_config_patch(value)
-    assert(type(value) == 'boolean')
-    fail_on_config_patch = value
-end
-
-function cartridge.internal.set_config(new_config)
-    assert(type(new_config) == 'table')
-    config = new_config
-end
-
-function cartridge.internal.get_config_patch_clusterwide_calls()
-    return config_patch_clusterwide_calls
-end
-
-function cartridge.internal.clear_config_patch_clusterwide_calls()
-    config_patch_clusterwide_calls = {}
 end
 
 cartridge.internal.topology = topology

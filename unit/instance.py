@@ -122,6 +122,27 @@ class Instance:
 
         return ret['ret']
 
+    def stop(self):
+        self.sock.close()
+        if self.process is not None:
+            self.process.kill()
+            self.process.communicate()
+
+    def write_file(self, path, content=''):
+        os.path.exists.set_exists(path)
+        self.eval('''
+            require('fio').path.write_file({{
+                path = '{}',
+                content = '{}',
+            }})
+        '''.format(path, content))
+
+    def remove_file(self, path):
+        os.path.exists.set_not_exists(path)
+        self.eval('''
+            require('fio').path.remove_file('{}')
+        '''.format(path))
+
     def set_membership_status(self, status):
         self.eval('''
             require('membership').internal.set_status('{}')
@@ -164,27 +185,6 @@ class Instance:
 
         return was_probed
 
-    def stop(self):
-        self.sock.close()
-        if self.process is not None:
-            self.process.kill()
-            self.process.communicate()
-
-    def write_file(self, path, content=''):
-        os.path.exists.set_exists(path)
-        self.eval('''
-            require('fio').path.write_file({{
-                path = '{}',
-                content = '{}',
-            }})
-        '''.format(path, content))
-
-    def remove_file(self, path):
-        os.path.exists.set_not_exists(path)
-        self.eval('''
-            require('fio').path.remove_file('{}')
-        '''.format(path))
-
     def set_instance_config(self, config):
         params = ', '.join([
             '{}: {}'.format(k, v)
@@ -222,6 +222,11 @@ class Instance:
     def set_path_mtime(self, path, mtime):
         os.path.getmtime.set_mtime(path, mtime)
 
+    def set_box_cfg_function(self, value=True):
+        self.eval('''
+            require('cartridge').internal.set_box_cfg_function({})
+        '''.format('true' if value else 'false'))
+
     def set_memtx_memory(self, new_value):
         if new_value is None:
             self.eval('''
@@ -237,25 +242,32 @@ class Instance:
             return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or require('json').NULL
         ''')
 
-    def set_fail_on_memory_inc(self, value=True):
+    def set_fail_on(self, func, value=True):
         self.eval('''
-            require('cartridge').internal.set_fail_on_memory_inc({})
-        '''.format('true' if value else 'false'))
+            require('cartridge').internal.set_fail('{func}', {value})
+        '''.format(
+            func=func,
+            value='true' if value else 'false'
+        ))
 
-    def set_fail_on_edit_topology(self, value=True):
+    def clear_calls(self, func):
         self.eval('''
-            require('cartridge').internal.set_fail_on_edit_topology({})
-        '''.format('true' if value else 'false'))
+            require('cartridge').internal.clear_calls('{func}')
+        '''.format(func=func))
 
-    def set_box_cfg_function(self, value=True):
-        self.eval('''
-            require('cartridge').internal.set_box_cfg_function({})
-        '''.format('true' if value else 'false'))
+    def get_calls(self, func):
+        return self.eval('''
+            return require('cartridge').internal.get_calls('{func}')
+        '''.format(func=func))
 
-    def clear_topology_servers(self):
-        self.eval('''
-            require('cartridge').internal.clear_topology_servers()
-        ''')
+    def set_variable(self, name, value):
+        return self.eval('''
+            local value = require('json').decode('{encoded_value}')
+            return require('cartridge').internal.set_variable('{name}', value)
+        '''.format(
+            name=name,
+            encoded_value=json.dumps(value)
+        ))
 
     def add_topology_servers(self, servers):
         for s in servers:
@@ -282,11 +294,6 @@ class Instance:
                 status=s.get('status', 'healthy'),
                 replicaset=s_replicaset
             ))
-
-    def clear_topology_replicasets(self):
-        self.eval('''
-            require('cartridge').internal.clear_topology_replicasets()
-        ''')
 
     def add_topology_replicaset(self, r):
         r_servers = '{{ {} }}'.format(
@@ -326,11 +333,6 @@ class Instance:
             servers=r_servers
         ))
 
-    def clear_unjoined_servers(self, servers):
-        self.eval('''
-            require('cartridge').internal.clear_unjoined_servers()
-        ''')
-
     def add_unjoined_server(self, alias, uri, status='healthy'):
         self.eval('''
             require('cartridge').internal.add_unjoined_server({{
@@ -343,44 +345,3 @@ class Instance:
             alias=alias,
             status=status,
         ))
-
-    def clear_edit_topology_calls(self):
-        self.eval('''
-            require('cartridge').internal.clear_edit_topology_calls()
-        ''')
-
-    def get_edit_topology_calls(self):
-        return self.eval('''
-            return require('cartridge').internal.get_edit_topology_calls()
-        ''')
-
-    def set_can_bootstrap_vshard(self, value=True):
-        self.eval('''
-            require('cartridge').internal.set_can_bootstrap_vshard({})
-        '''.format('true' if value else 'false'))
-
-    def set_fail_on_bootstrap_vshard(self, value=True):
-        self.eval('''
-            require('cartridge').internal.set_fail_on_bootstrap_vshard({})
-        '''.format('true' if value else 'false'))
-
-    def set_config(self, config):
-        self.eval('''
-            local config = require('json').decode('{}')
-            require('cartridge').internal.set_config(config)
-        '''.format(json.dumps(config)))
-
-    def clear_config_patch_calls(self):
-        self.eval('''
-            require('cartridge').internal.clear_config_patch_clusterwide_calls()
-        ''')
-
-    def get_config_patch_calls(self):
-        return self.eval('''
-            return require('cartridge').internal.get_config_patch_clusterwide_calls()
-        ''')
-
-    def set_fail_on_config_patch(self, value=True):
-        self.eval('''
-            require('cartridge').internal.set_fail_on_config_patch({})
-        '''.format('true' if value else 'false'))

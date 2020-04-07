@@ -129,7 +129,7 @@ class TestManageInstance(unittest.TestCase):
         INSTANCE_BIG_MEMTX_MEMORY = 1024
         APP_BIG_MEMTX_MEMORY = 2048
 
-        self.instance.set_fail_on_memory_inc()
+        self.instance.set_fail_on('increase_memtx_memory')
 
         # increased only in instance config
         self.instance.set_memtx_memory(SMALL_MEMTX_MEMORY)

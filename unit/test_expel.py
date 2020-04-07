@@ -29,26 +29,26 @@ class TestExpelInstance(unittest.TestCase):
         self.instance.start()
 
     def test_non_existent_instance(self):
-        self.instance.clear_edit_topology_calls()
+        self.instance.clear_calls('edit_topology')
 
         res = call_expel_intstance(self.console_sock, 'non-existent-instance')
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
-        calls = self.instance.get_edit_topology_calls()
+        calls = self.instance.get_calls('edit_topology')
         self.assertEqual(len(calls), 0)
 
     def test_unjoined_instance(self):
         ALIAS = 'instance'
         self.instance.add_unjoined_server(alias=ALIAS, uri='{}-uri'.format(ALIAS))
 
-        self.instance.clear_edit_topology_calls()
+        self.instance.clear_calls('edit_topology')
 
         res = call_expel_intstance(self.console_sock, ALIAS)
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
-        calls = self.instance.get_edit_topology_calls()
+        calls = self.instance.get_calls('edit_topology')
         self.assertEqual(len(calls), 0)
 
     def test_instance_from_replicaset(self):
@@ -59,13 +59,13 @@ class TestExpelInstance(unittest.TestCase):
             servers=['r1-master', 'r1-replica'],
         )
 
-        self.instance.clear_edit_topology_calls()
+        self.instance.clear_calls('edit_topology')
         res = call_expel_intstance(self.console_sock, 'r1-master')
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
         # check `edit_topology` call
-        calls = self.instance.get_edit_topology_calls()
+        calls = self.instance.get_calls('edit_topology')
         self.assertEqual(len(calls), 1)
         self.assertIn('servers', calls[0])
         self.assertEqual(len(calls[0]['servers']), 1)
@@ -77,12 +77,12 @@ class TestExpelInstance(unittest.TestCase):
 
         # call again (res.changed should be false)
         # in fact, bacause server is expelled from topology
-        self.instance.clear_edit_topology_calls()
+        self.instance.clear_calls('edit_topology')
         res = call_expel_intstance(self.console_sock, 'r1-master')
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
-        calls = self.instance.get_edit_topology_calls()
+        calls = self.instance.get_calls('edit_topology')
         self.assertEqual(len(calls), 0)
 
     def test_fail_on_edit_topology(self):
@@ -93,14 +93,12 @@ class TestExpelInstance(unittest.TestCase):
             servers=['r1-master', 'r1-replica'],
         )
 
-        self.instance.clear_edit_topology_calls()
-        self.instance.set_fail_on_edit_topology()
+        self.instance.clear_calls('edit_topology')
+        self.instance.set_fail_on('edit_topology')
 
         res = call_expel_intstance(self.console_sock, 'r1-master')
         self.assertFalse(res.success)
         self.assertIn('Failed to expel instance', res.msg)
-
-        self.instance.set_fail_on_edit_topology(False)
 
     def tearDown(self):
         self.instance.stop()
