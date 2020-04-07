@@ -347,6 +347,29 @@ function cartridge.config_patch_clusterwide(patch)
     return true
 end
 
+local function manage_failover(verb)
+    assert(verb == 'enable' or verb == 'disable')
+    table.insert(calls.manage_failover, verb)
+
+    if fail_on.manage_failover then
+        return nil, {err = CARTRIDGE_ERR}
+    end
+
+    return true
+end
+
+function cartridge.admin_get_failover()
+    return vars.failover
+end
+
+function cartridge.admin_enable_failover()
+    return manage_failover('enable')
+end
+
+function cartridge.admin_disable_failover()
+    return manage_failover('disable')
+end
+
 -- * ---------------- Module cartridge.vshard-utils ---------------
 
 function vshard_utils.can_bootstrap()
@@ -356,7 +379,11 @@ end
 -- * ------------------- Module cartridge.admin -------------------
 
 function admin.bootstrap_vshard()
-    return not fail_on.bootstrap_vshard
+    if fail_on.bootstrap_vshard then
+        return nil, {err = CARTRIDGE_ERR}
+    end
+
+    return true
 end
 
 -- * ---------------------- Internal helpers ---------------------

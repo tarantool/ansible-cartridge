@@ -47,6 +47,7 @@ class TestBootstrapVshard(unittest.TestCase):
         res = call_bootstrap_vshard(self.console_sock)
         self.assertFalse(res.success)
         self.assertIn('Bootstrap vshard failed', res.msg)
+        self.assertIn('cartridge err', res.msg)
 
     def tearDown(self):
         self.instance.stop()
