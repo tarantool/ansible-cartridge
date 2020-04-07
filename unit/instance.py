@@ -363,3 +363,24 @@ class Instance:
         self.eval('''
             require('cartridge').internal.set_fail_on_bootstrap_vshard({})
         '''.format('true' if value else 'false'))
+
+    def set_config(self, config):
+        self.eval('''
+            local config = require('json').decode('{}')
+            require('cartridge').internal.set_config(config)
+        '''.format(json.dumps(config)))
+
+    def clear_config_patch_calls(self):
+        self.eval('''
+            require('cartridge').internal.clear_config_patch_clusterwide_calls()
+        ''')
+
+    def get_config_patch_calls(self):
+        return self.eval('''
+            return require('cartridge').internal.get_config_patch_clusterwide_calls()
+        ''')
+
+    def set_fail_on_config_patch(self, value=True):
+        self.eval('''
+            require('cartridge').internal.set_fail_on_config_patch({})
+        '''.format('true' if value else 'false'))

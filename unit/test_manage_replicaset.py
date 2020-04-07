@@ -255,6 +255,7 @@ class TestManageInstance(unittest.TestCase):
         )
         self.assertFalse(res.success)
         self.assertIn('Failed to create', res.msg)
+        self.assertIn('cartridge err', res.msg)
 
         # fail on edit
         add_replicaset(
@@ -276,6 +277,7 @@ class TestManageInstance(unittest.TestCase):
         )
         self.assertFalse(res.success)
         self.assertIn('Failed to edit replicaset', res.msg)
+        self.assertIn('cartridge err', res.msg)
 
         self.instance.set_fail_on_edit_topology(False)
 

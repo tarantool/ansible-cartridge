@@ -5,16 +5,25 @@ cartridge.internal = {}
 
 local known_servers = {}
 local probed_servers = {}
+
+local CARTRIDGE_ERR = 'cartridge err'
+
 local fail_on_increasing_memtx_memory = false
 local fail_on_edit_topology = false
 local can_bootstrap_vshard = true
 local fail_on_bootstrap_vshard = false
+local fail_on_config_patch = false
+
+local edit_topology_calls = {}
+local config_patch_clusterwide_calls = {}
 
 local vshard_utils = {}
 package.loaded['cartridge.vshard-utils'] = vshard_utils
 
 local admin = {}
 package.loaded['cartridge.admin'] = admin
+
+local config = {}
 
 -- box.cfg mock
 local mt = {}
@@ -87,8 +96,6 @@ local unjoined_servers = {
     }
     --]]
 }
-
-local edit_topology_calls = {}
 
 -- cartridge API functions
 function cartridge.cfg(opts)
@@ -282,7 +289,7 @@ function cartridge.admin_edit_topology(opts)
     table.insert(edit_topology_calls, opts)
 
     if fail_on_edit_topology then
-        return false, {err = 'Some cartridge error'}
+        return false, {err = CARTRIDGE_ERR}
     end
 
     for _, replicaset in ipairs(opts.replicasets or {}) do
@@ -299,6 +306,22 @@ function cartridge.admin_edit_topology(opts)
         servers = cartridge.admin_get_servers(),
         replicasets = cartridge.admin_get_replicasets(),
     }
+end
+
+function cartridge.config_get_readonly()
+    return config
+end
+
+function cartridge.config_patch_clusterwide(patch)
+    -- this function is used only to collect calls
+    -- or fail if required
+    table.insert(config_patch_clusterwide_calls, patch)
+
+    if fail_on_config_patch then
+        return nil, {err = 'Cartridge err'}
+    end
+
+    return true
 end
 
 -- cartridge.vshard-utils
@@ -415,6 +438,24 @@ end
 function cartridge.internal.set_fail_on_bootstrap_vshard(value)
     assert(type(value) == 'boolean')
     fail_on_bootstrap_vshard = value
+end
+
+function cartridge.internal.set_fail_on_config_patch(value)
+    assert(type(value) == 'boolean')
+    fail_on_config_patch = value
+end
+
+function cartridge.internal.set_config(new_config)
+    assert(type(new_config) == 'table')
+    config = new_config
+end
+
+function cartridge.internal.get_config_patch_clusterwide_calls()
+    return config_patch_clusterwide_calls
+end
+
+function cartridge.internal.clear_config_patch_clusterwide_calls()
+    config_patch_clusterwide_calls = {}
 end
 
 cartridge.internal.topology = topology
