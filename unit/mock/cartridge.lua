@@ -419,6 +419,8 @@ end
 -- * ------------------- Module cartridge.admin -------------------
 
 function cartridge_admin.bootstrap_vshard()
+    table.insert(calls.bootstrap_vshard, true)
+
     if fail_on.bootstrap_vshard then
         return nil, {err = CARTRIDGE_ERR}
     end
