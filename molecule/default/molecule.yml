@@ -37,7 +37,7 @@ platforms:
 lint: |
   set -xe
   yamllint .
-  flake8
+  flake8 library molecule/default/tests
 
 provisioner:
   name: ansible

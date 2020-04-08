@@ -68,6 +68,7 @@ unit:
     - tarantool --version
     - python3.6 --version
   script:
+    - flake8 library unit
     - python3.6 -m unittest discover -v unit
 
 
