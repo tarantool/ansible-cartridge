@@ -9,6 +9,8 @@ sys.path.append(os.path.dirname(__file__))
 import unittest
 from instance import Instance
 
+from helpers import set_box_cfg
+
 from library.cartridge_needs_restart import needs_restart
 
 
@@ -57,7 +59,7 @@ class TestNeedsRestart(unittest.TestCase):
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
-        # cennot connect to console sock
+        # cannot connect to console sock
         bad_socket_path = 'bad-socket-path'
         self.instance.write_file(bad_socket_path)
 
@@ -94,7 +96,7 @@ class TestNeedsRestart(unittest.TestCase):
             param_name: param_current_value,
             memtx_memory_param_name: memtx_memory_current_value
         })
-        self.instance.set_memtx_memory(memtx_memory_current_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_current_value)
 
         # nothing changed
         res = call_needs_restart(
@@ -121,7 +123,7 @@ class TestNeedsRestart(unittest.TestCase):
         # param isn't changed
         # memtx_memory is changed in config
         # but isn't changed on instance
-        self.instance.set_memtx_memory(memtx_memory_current_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_current_value)
         res = call_needs_restart(
             control_sock=self.console_sock,
             config={
@@ -135,7 +137,7 @@ class TestNeedsRestart(unittest.TestCase):
         # param isn't changed
         # memtx_memory is changed in config
         # and changed on instance
-        self.instance.set_memtx_memory(memtx_memory_new_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_new_value)
         res = call_needs_restart(
             control_sock=self.console_sock,
             config={
@@ -149,7 +151,7 @@ class TestNeedsRestart(unittest.TestCase):
         # param is changed
         # memtx_memory is changed in config
         # and changed on instance
-        self.instance.set_memtx_memory(memtx_memory_new_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_new_value)
         res = call_needs_restart(
             control_sock=self.console_sock,
             config={
@@ -173,7 +175,7 @@ class TestNeedsRestart(unittest.TestCase):
             param_name: param_current_value,
             memtx_memory_param_name: memtx_memory_current_value
         })
-        self.instance.set_memtx_memory(memtx_memory_current_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_current_value)
 
         # nothing changed
         res = call_needs_restart(
@@ -200,7 +202,7 @@ class TestNeedsRestart(unittest.TestCase):
         # param isn't changed
         # memtx_memory is changed in config
         # but isn't changed on instance
-        self.instance.set_memtx_memory(memtx_memory_current_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_current_value)
         res = call_needs_restart(
             control_sock=self.console_sock,
             cartridge_defaults={
@@ -214,7 +216,7 @@ class TestNeedsRestart(unittest.TestCase):
         # param isn't changed
         # memtx_memory is changed in config
         # and changed on instance
-        self.instance.set_memtx_memory(memtx_memory_new_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_new_value)
         res = call_needs_restart(
             control_sock=self.console_sock,
             cartridge_defaults={
@@ -228,7 +230,7 @@ class TestNeedsRestart(unittest.TestCase):
         # param is changed
         # memtx_memory is changed in config
         # and changed on instance
-        self.instance.set_memtx_memory(memtx_memory_new_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_new_value)
         res = call_needs_restart(
             control_sock=self.console_sock,
             cartridge_defaults={
@@ -251,7 +253,7 @@ class TestNeedsRestart(unittest.TestCase):
         self.instance.set_instance_config({
             memtx_memory_param_name: memtx_memory_current_value
         })
-        self.instance.set_memtx_memory(memtx_memory_current_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_current_value)
 
         # nothing changed
         res = call_needs_restart(
@@ -294,7 +296,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # memtx_memory changed both in cartridge_defaults and config
         # memtx_memory on instance is equal to value from cartridge_defaults
-        self.instance.set_memtx_memory(memtx_memory_new_app_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_new_app_value)
         res = call_needs_restart(
             control_sock=self.console_sock,
             config={
@@ -309,7 +311,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # memtx_memory changed both in cartridge_defaults and config
         # memtx_memory on instance is equal to value from config
-        self.instance.set_memtx_memory(memtx_memory_new_instance_value)
+        set_box_cfg(self.instance, memtx_memory=memtx_memory_new_instance_value)
         res = call_needs_restart(
             control_sock=self.console_sock,
             config={

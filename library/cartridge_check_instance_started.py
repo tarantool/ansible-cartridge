@@ -11,10 +11,13 @@ argument_spec = {
 
 
 def check_instance_started(params):
-    control_console = get_control_console(params['control_sock'])
-    ok = control_console.eval('''
-        return require('membership').myself().status == 'alive'
-    ''')
+    try:
+        control_console = get_control_console(params['control_sock'])
+        ok = control_console.eval('''
+            return require('membership').myself().status == 'alive'
+        ''')
+    except CartridgeException as e:
+        return ModuleRes(success=False, msg=str(e))
 
     return ModuleRes(success=ok)
 

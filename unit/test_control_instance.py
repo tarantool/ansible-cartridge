@@ -29,6 +29,21 @@ ALIAS1 = 'alias-1'
 ALIAS2 = 'alias-1'
 
 
+def set_membership_members(instance, members):
+    instance.set_variable('membership_members', {
+        m['uri']: {
+            'uri': m['uri'],
+            'status': m.get('status', 'alive'),
+            'incarnation': 1,
+            'payload': {
+                'uuid': m.get('uuid'),
+                'alias': m.get('alias')
+            }
+        }
+        for m in members
+    })
+
+
 class TestControlInstance(unittest.TestCase):
     def setUp(self):
         self.cookie = 'secret'
@@ -39,7 +54,7 @@ class TestControlInstance(unittest.TestCase):
 
     def test_instance_without_alias(self):
         # with UUID (already bootstrapped) and without alias
-        self.instance.set_membership_members([
+        set_membership_members(self.instance, [
             {'uri': URI1, 'uuid': UUID1},
         ])
         res = call_get_control_instance(self.console_sock)
@@ -48,7 +63,7 @@ class TestControlInstance(unittest.TestCase):
 
     def test_one_instance(self):
         # with UUID and alias
-        self.instance.set_membership_members([
+        set_membership_members(self.instance, [
             {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
         ])
         res = call_get_control_instance(self.console_sock)
@@ -56,7 +71,7 @@ class TestControlInstance(unittest.TestCase):
         self.assertEqual(res.meta, {'host': ALIAS1})
 
         # without UUID
-        self.instance.set_membership_members([
+        set_membership_members(self.instance, [
             {'uri': URI1, 'alias': ALIAS1},
         ])
         res = call_get_control_instance(self.console_sock)
@@ -64,7 +79,7 @@ class TestControlInstance(unittest.TestCase):
         self.assertEqual(res.meta, {'host': ''})
 
         # without UUID, allow_empty=False
-        self.instance.set_membership_members([
+        set_membership_members(self.instance, [
             {'uri': URI1, 'alias': ALIAS1},
         ])
         res = call_get_control_instance(self.console_sock, allow_empty=False)
@@ -73,7 +88,7 @@ class TestControlInstance(unittest.TestCase):
 
     def test_two_instances(self):
         # both with UUID and alias (one is selected)
-        self.instance.set_membership_members([
+        set_membership_members(self.instance, [
             {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
             {'uri': URI2, 'uuid': UUID2, 'alias': ALIAS2},
         ])
@@ -82,7 +97,7 @@ class TestControlInstance(unittest.TestCase):
         self.assertIn(res.meta['host'], [ALIAS1, ALIAS2])
 
         # one with UUID (it is selected)
-        self.instance.set_membership_members([
+        set_membership_members(self.instance, [
             {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
             {'uri': URI2, 'alias': ALIAS2},
         ])
@@ -91,7 +106,7 @@ class TestControlInstance(unittest.TestCase):
         self.assertEqual(res.meta, {'host': ALIAS1})
 
         # one with UUID (but without alias)
-        self.instance.set_membership_members([
+        set_membership_members(self.instance, [
             {'uri': URI1, 'uuid': UUID1},
             {'uri': URI2, 'alias': ALIAS2},
         ])
@@ -100,7 +115,7 @@ class TestControlInstance(unittest.TestCase):
         self.assertIn("Unable to get instance alias", res.msg)
 
         # both without UUID (no one selected)
-        self.instance.set_membership_members([
+        set_membership_members(self.instance, [
             {'uri': URI1, 'alias': ALIAS1},
             {'uri': URI2, 'alias': ALIAS2},
         ])
@@ -109,7 +124,7 @@ class TestControlInstance(unittest.TestCase):
         self.assertEqual(res.meta, {'host': ''})
 
         # both without UUID, allow_empty=False
-        self.instance.set_membership_members([
+        set_membership_members(self.instance, [
             {'uri': URI1, 'alias': ALIAS1},
             {'uri': URI2, 'alias': ALIAS2},
         ])

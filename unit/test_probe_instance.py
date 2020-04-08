@@ -23,6 +23,12 @@ def call_probe_instance(control_sock, hostvars, play_hosts=None):
     })
 
 
+def set_known_servers(instance, servers):
+    instance.set_variable('known_servers', {
+        s: True for s in servers
+    })
+
+
 URI1 = '127.0.0.1:3301'
 URI2 = '127.0.0.1:3302'
 
@@ -36,10 +42,10 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.start()
 
     def test_probe_ok(self):
-        self.instance.set_cartridge_known_server(URI1, True)
-        self.instance.set_cartridge_known_server(URI2, True)
+        set_known_servers(self.instance, [URI1, URI2])
 
-        self.instance.clear_probed(URI1)
+        # one instance
+        self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             control_sock=self.console_sock,
             hostvars={
@@ -49,10 +55,13 @@ class TestProbeInstance(unittest.TestCase):
             }
         )
         self.assertTrue(res.success, msg=res.msg)
-        self.assertTrue(self.instance.server_was_probed(URI1))
 
-        self.instance.clear_probed(URI1)
-        self.instance.clear_probed(URI2)
+        calls = self.instance.get_calls('admin_probe_server')
+        self.assertEqual(len(calls), 1)
+        self.assertIn(URI1, calls)
+
+        # two instances
+        self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             control_sock=self.console_sock,
             hostvars={
@@ -65,14 +74,17 @@ class TestProbeInstance(unittest.TestCase):
             }
         )
         self.assertTrue(res.success, msg=res.msg)
-        self.assertTrue(self.instance.server_was_probed(URI1))
-        self.assertTrue(self.instance.server_was_probed(URI2))
+
+        calls = self.instance.get_calls('admin_probe_server')
+        self.assertEqual(len(calls), 2)
+        self.assertIn(URI1, calls)
+        self.assertIn(URI2, calls)
 
     def test_probe_one_fails(self):
-        self.instance.set_cartridge_known_server(URI1, True)
-        self.instance.set_cartridge_known_server(URI2, False)
+        set_known_servers(self.instance, [URI1])
 
-        self.instance.clear_probed(URI2)
+        # probe not known server
+        self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             control_sock=self.console_sock,
             hostvars={
@@ -82,10 +94,13 @@ class TestProbeInstance(unittest.TestCase):
             }
         )
         self.assertFalse(res.success)
-        self.assertTrue(self.instance.server_was_probed(URI2))
 
-        self.instance.clear_probed(URI1)
-        self.instance.clear_probed(URI2)
+        calls = self.instance.get_calls('admin_probe_server')
+        self.assertEqual(len(calls), 1)
+        self.assertIn(URI2, calls)
+
+        # probe both known and not known server
+        self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             control_sock=self.console_sock,
             hostvars={
@@ -98,15 +113,21 @@ class TestProbeInstance(unittest.TestCase):
             }
         )
         self.assertFalse(res.success)
-        self.assertTrue(self.instance.server_was_probed(URI1))
-        self.assertTrue(self.instance.server_was_probed(URI2))
+
+        calls = self.instance.get_calls('admin_probe_server')
+        self.assertIn(len(calls), [1, 2])
+        if len(calls) == 1:
+            self.assertIn(URI2, calls)
+        else:
+            self.assertIn(URI1, calls)
+            self.assertIn(URI2, calls)
 
     def test_probe_expelled(self):
         # expelled server shouldn't be probed
-        self.instance.set_cartridge_known_server(URI1, True)
-        self.instance.set_cartridge_known_server(URI2, False)
+        set_known_servers(self.instance, [URI1])
 
-        self.instance.clear_probed(URI2)
+        # probe only expelled
+        self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             control_sock=self.console_sock,
             hostvars={
@@ -117,10 +138,12 @@ class TestProbeInstance(unittest.TestCase):
             }
         )
         self.assertTrue(res.success, msg=res.msg)
-        self.assertFalse(self.instance.server_was_probed(URI2))
 
-        self.instance.clear_probed(URI1)
-        self.instance.clear_probed(URI2)
+        calls = self.instance.get_calls('admin_probe_server')
+        self.assertEqual(len(calls), 0)
+
+        # probe both expelled and not
+        self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             control_sock=self.console_sock,
             hostvars={
@@ -134,15 +157,16 @@ class TestProbeInstance(unittest.TestCase):
             }
         )
         self.assertTrue(res.success, msg=res.msg)
-        self.assertTrue(self.instance.server_was_probed(URI1))
-        self.assertFalse(self.instance.server_was_probed(URI2))
+
+        calls = self.instance.get_calls('admin_probe_server')
+        self.assertEqual(len(calls), 1)
+        self.assertIn(URI1, calls)
 
     def test_probe_restarted(self):
         # restarted server should be probed
-        self.instance.set_cartridge_known_server(URI1, True)
-        self.instance.set_cartridge_known_server(URI2, False)
+        set_known_servers(self.instance, [])
 
-        self.instance.clear_probed(URI2)
+        self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             control_sock=self.console_sock,
             hostvars={
@@ -153,16 +177,18 @@ class TestProbeInstance(unittest.TestCase):
             }
         )
         self.assertFalse(res.success)
-        self.assertTrue(self.instance.server_was_probed(URI2))
+
+        calls = self.instance.get_calls('admin_probe_server')
+        self.assertEqual(len(calls), 1)
+        self.assertIn(URI2, calls)
 
     def test_failed_for_non_play_host(self):
-        self.instance.set_cartridge_known_server(URI1, True)
-        self.instance.set_cartridge_known_server(URI2, False)
+        set_known_servers(self.instance, [URI1])
 
         # probe can fail for instance not mentioned in play_hosts
         # but it should be probed
-        self.instance.clear_probed(URI1)
-        self.instance.clear_probed(URI2)
+        self.instance.clear_calls('admin_probe_server')
+
         res = call_probe_instance(
             control_sock=self.console_sock,
             hostvars={
@@ -176,8 +202,11 @@ class TestProbeInstance(unittest.TestCase):
             play_hosts=['instance-1']
         )
         self.assertTrue(res.success, msg=res.msg)
-        self.assertTrue(self.instance.server_was_probed(URI1))
-        self.assertTrue(self.instance.server_was_probed(URI2))
+
+        calls = self.instance.get_calls('admin_probe_server')
+        self.assertEqual(len(calls), 2)
+        self.assertIn(URI1, calls)
+        self.assertIn(URI2, calls)
 
     def tearDown(self):
         self.instance.stop()

@@ -143,48 +143,6 @@ class Instance:
             require('fio').path.remove_file('{}')
         '''.format(path))
 
-    def set_membership_status(self, status):
-        self.eval('''
-            require('membership').internal.set_status('{}')
-        '''.format(status))
-
-    def set_membership_members(self, members):
-        self.eval('''
-            require('membership').internal.clear_members()
-        ''')
-
-        for member in members:
-            opts = []
-
-            for opt in ['uri', 'status', 'uuid', 'alias']:
-                if opt in member:
-                    opts.append("{} = '{}'".format(opt, member[opt]))
-
-            self.eval('''
-                require('membership').internal.add_member({{
-                    {}
-                }})
-            '''.format(', '.join(opts)))
-
-    def set_cartridge_known_server(self, advertise_uri, probe_ok):
-        probe_ok_str = 'true' if probe_ok is True else 'false'
-
-        self.eval('''
-            require('cartridge').internal.set_known_server('{}', {})
-        '''.format(advertise_uri, probe_ok_str))
-
-    def clear_probed(self, advertise_uri):
-        self.eval('''
-            require('cartridge').internal.clear_probed('{}')
-        '''.format(advertise_uri))
-
-    def server_was_probed(self, advertise_uri):
-        was_probed = self.eval('''
-            return require('cartridge').internal.server_was_probed('{}')
-        '''.format(advertise_uri))
-
-        return was_probed
-
     def set_instance_config(self, config):
         params = ', '.join([
             '{}: {}'.format(k, v)
@@ -227,21 +185,6 @@ class Instance:
             require('cartridge').internal.set_box_cfg_function({})
         '''.format('true' if value else 'false'))
 
-    def set_memtx_memory(self, new_value):
-        if new_value is None:
-            self.eval('''
-                box.cfg.memtx_memory = nil
-            ''')
-        else:
-            self.eval('''
-                box.cfg.memtx_memory = {}
-            '''.format(new_value))
-
-    def get_memtx_memory(self):
-        return self.eval('''
-            return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or require('json').NULL
-        ''')
-
     def set_fail_on(self, func, value=True):
         self.eval('''
             require('cartridge').internal.set_fail('{func}', {value})
@@ -261,12 +204,20 @@ class Instance:
         '''.format(func=func))
 
     def set_variable(self, name, value):
-        return self.eval('''
+        self.eval('''
             local value = require('json').decode('{encoded_value}')
-            return require('cartridge').internal.set_variable('{name}', value)
+            require('cartridge').internal.set_variable('{name}', value)
         '''.format(
             name=name,
             encoded_value=json.dumps(value)
+        ))
+
+    def set_box_cfd(self, new_box_cfg):
+        self.eval('''
+            local value = require('json').decode('{encoded_value}')
+            require('cartridge').internal.set_box_cfg(value)
+        '''.format(
+            encoded_value=json.dumps(new_box_cfg)
         ))
 
     def add_topology_servers(self, servers):

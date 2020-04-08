@@ -18,6 +18,12 @@ def call_check_instance_started(control_sock):
     })
 
 
+def set_myself(instance, status):
+    instance.set_variable('membership_myself', {
+        'status': status
+    })
+
+
 class TestInstanceStarted(unittest.TestCase):
     def setUp(self):
         self.cookie = 'secret'
@@ -26,14 +32,31 @@ class TestInstanceStarted(unittest.TestCase):
         self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
+    def test_instance_not_started(self):
+        # console sock doesn't exists
+        self.instance.remove_file(self.console_sock)
+        res = call_check_instance_started(self.console_sock)
+        self.assertFalse(res.success)
+        self.assertIn('Instance socket not found', res.msg)
+
+        # cannot connect to console sock
+        bad_socket_path = 'bad-socket-path'
+        self.instance.write_file(bad_socket_path)
+
+        res = call_check_instance_started(bad_socket_path)
+
+        self.assertFalse(res.success)
+        self.assertIn('Failed to connect to socke', res.msg)
+
     def test_alive(self):
         # require('membership').myself().status is 'active'
-        self.instance.set_membership_status('alive')
+        set_myself(self.instance, status='alive')
         res = call_check_instance_started(self.console_sock)
         self.assertTrue(res.success, msg=res.msg)
 
+    def test_dead(self):
         # require('membership').myself().status is 'dead'
-        self.instance.set_membership_status('dead')
+        set_myself(self.instance, status='dead')
         res = call_check_instance_started(self.console_sock)
         self.assertFalse(res.success)
 

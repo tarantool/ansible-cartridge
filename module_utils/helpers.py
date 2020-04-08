@@ -35,6 +35,8 @@ class CartridgeException(Exception):
 
 class Console:
     def __init__(self, socket_path):
+        self.sock = None
+
         if not os.path.exists(socket_path):
             errmsg = 'Instance socket not found: "{}". '.format(socket_path) + \
                 'Make sure instance was started correctly'
@@ -54,7 +56,8 @@ class Console:
         self.sock.recv(1024)
 
     def close(self):
-        return self.sock.close()
+        if self.sock is not None:
+            self.sock.close()
 
     def eval(self, func_body):
         def sendall(msg):

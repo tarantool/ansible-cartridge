@@ -15,9 +15,10 @@ package.loaded['cartridge.webui.api-auth'] = cartridge_webui_auth
 local cartridge_admin = {}
 package.loaded['cartridge.admin'] = cartridge_admin
 
+local membership = {}
+membership.internal = {}
+package.loaded['membership'] = membership
 
-local known_servers = {}
-local probed_servers = {}
 
 local CARTRIDGE_ERR = 'cartridge err'
 
@@ -43,6 +44,8 @@ local calls = {
     auth_add_user = {},
     auth_edit_user = {},
     auth_remove_user = {},
+    admin_probe_server = {},
+    box_cfg = {},
 }
 
 local vars = {
@@ -52,6 +55,9 @@ local vars = {
     auth_params = {},
     webui_auth_params = {},
     users = {},
+    membership_myself = {},
+    membership_members = {},
+    known_servers = {},
 }
 
 local topology = {
@@ -98,6 +104,8 @@ local unjoined_servers = {
 -- box.cfg mock
 local mt = {}
 mt.__call = function(self, opts)
+    table.insert(calls.box_cfg, opts)
+
     if opts.memtx_memory == nil then
         return
     end
@@ -137,6 +145,14 @@ function cartridge.internal.set_box_cfg_function(value)
     end
 end
 
+function cartridge.internal.set_box_cfg(params)
+    table.clear(box_cfg_table)
+
+    for k, v in pairs(params) do
+        box_cfg_table[k] = v
+    end
+end
+
 -- * ------------------ Cartridge module functions ------------------
 
 function cartridge.cfg(opts)
@@ -154,9 +170,10 @@ end
 
 function cartridge.admin_probe_server(advertise_uri)
     assert(type(advertise_uri) == 'string')
-    probed_servers[advertise_uri] = true
 
-    if known_servers[advertise_uri] then
+    table.insert(calls.admin_probe_server, advertise_uri)
+
+    if vars.known_servers[advertise_uri] then
         return true
     end
 
@@ -541,9 +558,19 @@ function cartridge_webui_auth.get_auth_params()
     return vars.webui_auth_params
 end
 
+-- * ---------------------- Module membership ----------------------
+
+function membership.myself()
+    return vars.membership_myself
+end
+
+function membership.members()
+    return vars.membership_members
+end
+
 -- * ----------------------- Internal helpers ----------------------
 
--- * ------------------ cartridge functions calls ------------------
+-- * ----------------------- functions calls -----------------------
 
 function cartridge.internal.set_fail(func, value)
     assert(fail_on[func] ~= nil)
@@ -567,25 +594,6 @@ function cartridge.internal.set_variable(name, value)
     assert(vars[name] ~= nil)
     assert(type(value) == type(vars[name]))
     vars[name] = value
-end
-
--- * ------------------------ membership ------------------------
-
-function cartridge.internal.server_was_probed(advertise_uri)
-    assert(type(advertise_uri) == 'string')
-    return probed_servers[advertise_uri] == true
-end
-
-function cartridge.internal.clear_probed(advertise_uri)
-    assert(type(advertise_uri) == 'string')
-    probed_servers[advertise_uri] = nil
-end
-
-function cartridge.internal.set_known_server(advertise_uri, probe_ok)
-    assert(type(advertise_uri) == 'string')
-    assert(type(probe_ok) == 'boolean')
-
-    known_servers[advertise_uri] = probe_ok
 end
 
 -- * ------------------------- topology -------------------------

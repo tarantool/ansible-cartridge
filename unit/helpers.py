@@ -29,3 +29,9 @@ def add_replicaset(instance, alias, roles, servers,
     instance.add_topology_replicaset(replicaset)
 
     return replicaset
+
+
+def set_box_cfg(instace, memtx_memory):
+    instace.set_box_cfd({
+        'memtx_memory': memtx_memory,
+    })
