@@ -58,6 +58,7 @@ local vars = {
     membership_myself = {},
     membership_members = {},
     known_servers = {},
+    become_unhealthy_after_edit = false,
 }
 
 local topology = {
@@ -311,6 +312,10 @@ local function __edit_replicaset(params)
         end
 
         replicaset.servers = new_servers
+    end
+
+    if vars.become_unhealthy_after_edit then
+        replicaset.status = 'unhealthy'
     end
 
     topology.replicasets[replicaset_uuid] = replicaset

@@ -10,6 +10,7 @@ import time
 argument_spec = {
     'replicaset': {'required': True, 'type': 'dict'},
     'control_sock': {'required': True, 'type': 'str'},
+    'healthy_timeout': {'required': False, 'default': 10, 'type': 'int'},
 }
 
 
@@ -46,9 +47,8 @@ def get_cluster_replicaset(control_console, name):
     return None
 
 
-def wait_for_replicaset_is_healthy(control_console, replicaset_alias):
+def wait_for_replicaset_is_healthy(control_console, replicaset_alias, timeout):
     delay = 0.5
-    timeout = 10
     time_start = time.time()
 
     while True:
@@ -214,6 +214,8 @@ def create_replicaset(control_console, params):
     replicaset_weight = params['replicaset']['weight'] if 'weight' in params['replicaset'] else None
     replicaset_vshard_group = params['replicaset'].get('vshard_group', None)
 
+    healthy_timeout = params['healthy_timeout']
+
     cluster_instances = get_all_cluster_instances(control_console)
     cluster_instances = {i['alias']: i for i in cluster_instances}  # make it dict
 
@@ -242,7 +244,7 @@ def create_replicaset(control_console, params):
         cluster_instances[i['alias']] = i
 
     # Wait for replicaset is healthy
-    if not wait_for_replicaset_is_healthy(control_console, replicaset_alias):
+    if not wait_for_replicaset_is_healthy(control_console, replicaset_alias, healthy_timeout):
         errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_alias)
         return ModuleRes(success=False, msg=errmsg)
 
@@ -272,7 +274,7 @@ def create_replicaset(control_console, params):
             cluster_instances[i['alias']] = i
 
         # Wait for replicaset is healthy
-        if not wait_for_replicaset_is_healthy(control_console, replicaset_alias):
+        if not wait_for_replicaset_is_healthy(control_console, replicaset_alias, healthy_timeout):
             errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_alias)
             return ModuleRes(success=False, msg=errmsg)
 
@@ -296,6 +298,12 @@ def change_replicaset(control_console, params, cluster_replicaset):
     replicaset_all_rw = params['replicaset']['all_rw'] if 'all_rw' in params['replicaset'] else None
     replicaset_weight = params['replicaset']['weight'] if 'weight' in params['replicaset'] else None
     replicaset_vshard_group = params['replicaset'].get('vshard_group', None)
+
+    healthy_timeout = params['healthy_timeout']
+
+    if cluster_replicaset['status'] != 'healthy':
+        errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_alias)
+        return ModuleRes(success=False, msg=errmsg)
 
     cluster_instances = get_all_cluster_instances(control_console)
     cluster_instances = {i['alias']: i for i in cluster_instances}  # make it dict
@@ -323,7 +331,7 @@ def change_replicaset(control_console, params, cluster_replicaset):
             return ModuleRes(success=False, msg=errmsg)
 
         # Wait for replicaset is healthy
-        if not wait_for_replicaset_is_healthy(control_console, replicaset_alias):
+        if not wait_for_replicaset_is_healthy(control_console, replicaset_alias, healthy_timeout):
             errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_alias)
             return ModuleRes(success=False, msg=errmsg)
 
@@ -342,7 +350,7 @@ def change_replicaset(control_console, params, cluster_replicaset):
         return ModuleRes(success=False, msg=errmsg)
 
     # Wait for replicaset is healthy
-    if not wait_for_replicaset_is_healthy(control_console, replicaset_alias):
+    if not wait_for_replicaset_is_healthy(control_console, replicaset_alias, healthy_timeout):
         errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_alias)
         return ModuleRes(success=False, msg=errmsg)
 

@@ -12,6 +12,8 @@ from helpers import add_replicaset
 
 from library.cartridge_manage_replicaset import manage_replicaset
 
+HEALTHY_TIMEOUT = 0.1
+
 
 def call_manage_replicaset(control_sock,
                            alias,
@@ -31,7 +33,8 @@ def call_manage_replicaset(control_sock,
             'all_rw': all_rw,
             'weight': weight,
             'vshard_group': vshard_group,
-        }
+        },
+        'healthy_timeout': HEALTHY_TIMEOUT,
     })
 
 
@@ -280,6 +283,63 @@ class TestManageInstance(unittest.TestCase):
         self.assertIn('cartridge err', res.msg)
 
         self.instance.set_fail_on('edit_topology', False)
+
+    def test_replicaset_in_unhealthy(self):
+        # try to edit unhealthy replicaset
+        add_replicaset(
+            self.instance,
+            alias='r1',
+            roles=['role-1'],
+            servers=['r1-master'],
+            status='unhealthy',
+        )
+
+        res = call_manage_replicaset(
+            self.console_sock,
+            alias='r1',
+            roles=['role-2'],
+            failover_priority=['r1-master'],
+            instances=['r1-master'],
+        )
+
+        self.assertFalse(res.success)
+        self.assertIn('Replicaset "r1" is not healthy', res.msg)
+
+        # replicaset becomes unhealthy after creation
+        self.instance.set_variable('become_unhealthy_after_edit', True)
+
+        self.instance.add_unjoined_server(alias='r2-master', uri='r2-master-uri')
+
+        res = call_manage_replicaset(
+            self.console_sock,
+            alias='r2',
+            roles=['role-2'],
+            failover_priority=['r2-master'],
+            instances=['r2-master'],
+        )
+        self.assertFalse(res.success)
+        self.assertIn('Replicaset "r2" is not healthy', res.msg)
+
+        # replicaset becomes unhealthy after edit
+        self.instance.set_variable('become_unhealthy_after_edit', True)
+
+        add_replicaset(
+            self.instance,
+            alias='r3',
+            roles=['role-1'],
+            servers=['r3-master'],
+            status='unhealthy',
+        )
+
+        res = call_manage_replicaset(
+            self.console_sock,
+            alias='r3',
+            roles=['role-2'],
+            failover_priority=['r3-master'],
+            instances=['r3-master'],
+        )
+        self.assertFalse(res.success)
+        self.assertIn('Replicaset "r3" is not healthy', res.msg)
 
     def tearDown(self):
         self.instance.stop()
