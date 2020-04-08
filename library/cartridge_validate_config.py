@@ -60,6 +60,7 @@ def check_schema(schema, conf, path=''):
 def validate_types(vars):
     schema = {
         'cartridge_package_path': str,
+        'cartridge_allow_downgrade': bool,
         'cartridge_app_name': str,
         'cartridge_cluster_cookie': str,
         'cartridge_defaults': dict,
@@ -119,6 +120,7 @@ def validate_config(params):
     app_config = None
     bootstrap_vshard = None
     failover = None
+    allow_downgrade = None
 
     for host in params['hosts']:
         host_vars = params['hostvars'][host]
@@ -172,11 +174,19 @@ def validate_config(params):
 
         # Check failover
         if failover is not None:
-            if 'cartridge_failover' in host_vars and host_vars['cartridge_failover'] != bootstrap_vshard:
+            if 'cartridge_failover' in host_vars and host_vars['cartridge_failover'] != failover:
                 errmsg = '`cartridge_failover` must be the same for all hosts'
                 return ModuleRes(success=False, msg=errmsg)
         elif 'cartridge_failover' in host_vars:
             failover = host_vars['cartridge_failover']
+
+        # Check cartridge_allow_downgrade
+        if allow_downgrade is not None:
+            if 'cartridge_allow_downgrade' in host_vars and host_vars['cartridge_allow_downgrade'] != allow_downgrade:
+                errmsg = '`cartridge_allow_downgrade` must be the same for all hosts'
+                return ModuleRes(success=False, msg=errmsg)
+        elif 'cartridge_allow_downgrade' in host_vars:
+            allow_downgrade = host_vars['cartridge_allow_downgrade']
 
         # Check if cookie is the same for all hosts
         if cluster_cookie is not None:
