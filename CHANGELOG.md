@@ -11,6 +11,10 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+### Added
+
+* `cartridge_allow_downgrade` flag to allow package downgrading
+
 ### Fixed
 
 * Liitle bugs in python modules

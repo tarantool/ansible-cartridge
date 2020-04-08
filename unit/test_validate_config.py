@@ -168,6 +168,14 @@ class TestValidateConfig(unittest.TestCase):
         self.assertFalse(res.success)
         self.assertIn("expelled must be <class 'bool'>", res.msg)
 
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_allow_downgrade': 'yes',
+            }
+        })
+        self.assertFalse(res.success)
+        self.assertIn("cartridge_allow_downgrade must be <class 'bool'>", res.msg)
+
     def test_common_params_are_the_same(self):
         res = call_validate_config({
             'instance-1': {
@@ -236,6 +244,23 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertFalse(res.success)
         self.assertIn("`cartridge_failover` must be the same for all hosts", res.msg)
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+                'cartridge_allow_downgrade': True,
+            },
+            'instance-2': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3302'},
+                'cartridge_allow_downgrade': False,
+            },
+        })
+        self.assertFalse(res.success)
+        self.assertIn("`cartridge_allow_downgrade` must be the same for all hosts", res.msg)
 
     def test_replicasets(self):
         res = call_validate_config({

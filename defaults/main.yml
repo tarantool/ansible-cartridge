@@ -4,3 +4,4 @@ cartridge_enable_tarantool_repo: true
 restarted: false
 expelled: false
 instance_start_timeout: 60
+cartridge_allow_downgrade: false
