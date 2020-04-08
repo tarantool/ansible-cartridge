@@ -25,7 +25,7 @@ def expel_intstance(params):
             cluster_instance = i
             break
 
-    if cluster_instance is None or 'uuid' not in cluster_instance:
+    if cluster_instance is None or cluster_instance.get('uuid') is None:
         return ModuleRes(success=True, changed=False)
 
     res = control_console.eval('''
@@ -39,7 +39,7 @@ def expel_intstance(params):
         }})
         return {{
             ok = err == nil,
-            err = err ~= nil and err.err or require('json').NULL
+            err = err ~= nil and err.err or box.NULL
         }}
     '''.format(cluster_instance['uuid']))
 

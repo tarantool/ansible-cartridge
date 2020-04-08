@@ -39,7 +39,7 @@ def config_app(params):
         }
     ''')
     if not res['ok']:
-        errmsg = 'Config upload failed: {}'.format(res['config'])
+        errmsg = 'Config patch failed: {}'.format(res['config'])
         return ModuleRes(success=False, msg=errmsg)
 
     current_config = res['config']
@@ -71,12 +71,12 @@ def config_app(params):
         local ok, err = cartridge.config_patch_clusterwide(patch)
         return {{
             ok = ok == true,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(json.dumps(patch)))
 
     if not res['ok']:
-        errmsg = 'Config upload failed: {}'.format(res['err'])
+        errmsg = 'Config patch failed: {}'.format(res['err'])
         return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=True)

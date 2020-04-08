@@ -70,7 +70,7 @@ def check_conf_updated(new_conf, old_conf, ignore_keys=[]):
 
 def get_memtx_memory(control_console):
     return control_console.eval('''
-        return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or require('json').NULL
+        return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or box.NULL
     ''')
 
 
@@ -94,13 +94,6 @@ def needs_restart(params):
     if not os.path.exists(control_sock):
         return ModuleRes(success=True, changed=True)
 
-    last_restart_time = os.path.getmtime(control_sock)
-
-    # check if application code was updated
-    package_update_time = os.path.getmtime(app_code_path)
-    if last_restart_time < package_update_time:
-        return ModuleRes(success=True, changed=True)
-
     try:
         control_console = get_control_console(control_sock)
     except CartridgeException as e:
@@ -111,6 +104,13 @@ def needs_restart(params):
         ]
         if e.code in allowed_errcodes:
             return ModuleRes(success=True, changed=True)
+
+    last_restart_time = os.path.getmtime(control_sock)
+
+    # check if application code was updated
+    package_update_time = os.path.getmtime(app_code_path)
+    if last_restart_time < package_update_time:
+        return ModuleRes(success=True, changed=True)
 
     # check if instance config was changed (except memtx_memory)
     current_instance_conf = read_yaml_file_section(
@@ -137,7 +137,9 @@ def needs_restart(params):
     elif 'memtx_memory' in new_default_conf:
         new_memtx_memory = new_default_conf['memtx_memory']
 
-    # check if memtx_memory was changed in config but wasn't changed on instance
+    # This code is ran after attempt to change memtx_memory in runtime
+    # If current memtx_memory wasn't changed to the new value,
+    # it mean that instance should be restarted to apply change
     if new_memtx_memory is not None:
         current_memtx_memory = get_memtx_memory(control_console)
         if current_memtx_memory != new_memtx_memory:

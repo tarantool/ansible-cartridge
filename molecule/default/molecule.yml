@@ -34,18 +34,18 @@ platforms:
     purge_networks: true
     privileged: true
 
+lint: |
+  set -xe
+  yamllint .
+  flake8 library molecule/default/tests
+
 provisioner:
   name: ansible
-  lint:
-    name: ansible-lint
-
   inventory:
     links:
       hosts: hosts.yml
 
 verifier:
   name: testinfra
-  lint:
-    name: flake8
-    options:
-      max-line-length: 120
+  options:
+    v: true

@@ -7,7 +7,6 @@ from ansible.module_utils.helpers import instance_expelled
 
 
 argument_spec = {
-    'instance': {'required': True, 'type': 'dict'},
     'control_sock': {'required': True, 'type': 'str'},
     'hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
@@ -30,7 +29,7 @@ def probe_server(params):
             local ok, err = require('cartridge').admin_probe_server('{}')
             return {{
                 ok = ok and true or false,
-                err = err and err.err or require('json').NULL
+                err = err and err.err or box.NULL
             }}
         '''.format(instance_vars['config']['advertise_uri']))
 

@@ -48,7 +48,6 @@
 
 - name: Connect instance to membership
   cartridge_probe_instance:
-    instance: '{{ config }}'
     control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
     hostvars: '{{ hostvars }}'
     play_hosts: '{{ play_hosts }}'

@@ -10,6 +10,7 @@ import time
 argument_spec = {
     'replicaset': {'required': True, 'type': 'dict'},
     'control_sock': {'required': True, 'type': 'str'},
+    'healthy_timeout': {'required': False, 'default': 10, 'type': 'int'},
 }
 
 
@@ -25,13 +26,13 @@ def get_cluster_replicaset(control_console, name):
             end
 
             table.insert(res, {
-                uuid = r.uuid,
-                alias = r.alias,
-                status = r.status,
-                roles = r.roles,
-                all_rw = r.all_rw,
-                weight = r.weight or require('json').NULL,
-                master = { alias = r.master.alias },
+                uuid = r.uuid or box.NULL,
+                alias = r.alias or box.NULL,
+                status = r.status or box.NULL,
+                roles = r.roles or box.NULL,
+                all_rw = r.all_rw or box.NULL,
+                weight = r.weight or box.NULL,
+                vshard_group = r.vshard_group or box.NULL,
                 servers = servers,
             })
         end
@@ -46,9 +47,8 @@ def get_cluster_replicaset(control_console, name):
     return None
 
 
-def wait_for_replicaset_is_healthy(control_console, replicaset_alias):
+def wait_for_replicaset_is_healthy(control_console, replicaset_alias, timeout):
     delay = 0.5
-    timeout = 10
     time_start = time.time()
 
     while True:
@@ -62,8 +62,7 @@ def wait_for_replicaset_is_healthy(control_console, replicaset_alias):
         )
 
         if cluster_replicaset is None:
-            errmsg = '"{}" replicaset was not found in cluster'.format(replicaset_alias)
-            return ModuleRes(success=False, msg=errmsg)
+            return False
 
         if cluster_replicaset['status'] == 'healthy':
             return True
@@ -80,6 +79,7 @@ def cluster_replicasets_are_equal(rpl1, rpl2):
         and rpl1['alias'] == rpl2['alias'] \
         and rpl1['all_rw'] == rpl2['all_rw'] \
         and rpl1['weight'] == rpl2['weight'] \
+        and rpl1['vshard_group'] == rpl2['vshard_group'] \
         and set(rpl1['roles']) == set(rpl2['roles']) \
         and aliases_in_priority_order(rpl1['servers']) == aliases_in_priority_order(rpl2['servers'])
 
@@ -155,8 +155,8 @@ def edit_replicaset(control_console, cluster_instances,
         }})
         if not res then
             return {{
-                ret = require('json').NULL,
-                err = err and err.err or require('json').NULL,
+                ret = box.NULL,
+                err = err and err.err or box.NULL,
             }}
         end
         local ret = {{
@@ -169,36 +169,36 @@ def edit_replicaset(control_console, cluster_instances,
                 table.insert(servers, {{ alias = s.alias, priority = s.priority, uuid = s.uuid }})
             end
             table.insert(ret.replicasets, {{
-                uuid = r.uuid,
-                alias = r.alias,
-                status = r.status,
-                all_rw = r.all_rw,
-                weight = r.weight or require('json').NULL,
-                roles = r.roles,
-                master = {{ alias = r.master.alias }},
+                uuid = r.uuid or box.NULL,
+                alias = r.alias or box.NULL,
+                status = r.status or box.NULL,
+                all_rw = r.all_rw or box.NULL,
+                weight = r.weight or box.NULL,
+                roles = r.roles or box.NULL,
+                vshard_group = r.vshard_group or box.NULL,
                 servers = servers,
             }})
         end
         for _, s in ipairs(res.servers or {{}}) do
-            local replicaset = require('json').NULL
+            local replicaset = box.NULL
             if s.replicaset then
                 replicaset = {{
-                    uuid = s.replicaset.uuid,
-                    alias = s.replicaset.alias,
-                    roles = s.replicaset.roles,
+                    uuid = s.replicaset.uuid or box.NULL,
+                    alias = s.replicaset.alias or box.NULL,
+                    roles = s.replicaset.roles or box.NULL,
                 }}
             end
             table.insert(ret.servers, {{
-                uuid = s.uuid or require('json').NULL,
-                uri = s.uri,
-                alias = s.alias,
-                status = s.status,
-                replicaset = replicaset or require('json').NULL,
+                uuid = s.uuid or box.NULL,
+                uri = s.uri or box.NULL,
+                alias = s.alias or box.NULL,
+                status = s.status or box.NULL,
+                replicaset = replicaset or box.NULL,
             }})
         end
         return {{
             ret = ret,
-            err = require('json').NULL,
+            err = box.NULL,
          }}
     '''.format(', '.join(replicaset_params)))
 
@@ -213,6 +213,8 @@ def create_replicaset(control_console, params):
     replicaset_all_rw = params['replicaset']['all_rw'] if 'all_rw' in params['replicaset'] else None
     replicaset_weight = params['replicaset']['weight'] if 'weight' in params['replicaset'] else None
     replicaset_vshard_group = params['replicaset'].get('vshard_group', None)
+
+    healthy_timeout = params['healthy_timeout']
 
     cluster_instances = get_all_cluster_instances(control_console)
     cluster_instances = {i['alias']: i for i in cluster_instances}  # make it dict
@@ -242,7 +244,7 @@ def create_replicaset(control_console, params):
         cluster_instances[i['alias']] = i
 
     # Wait for replicaset is healthy
-    if not wait_for_replicaset_is_healthy(control_console, replicaset_alias):
+    if not wait_for_replicaset_is_healthy(control_console, replicaset_alias, healthy_timeout):
         errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_alias)
         return ModuleRes(success=False, msg=errmsg)
 
@@ -272,7 +274,7 @@ def create_replicaset(control_console, params):
             cluster_instances[i['alias']] = i
 
         # Wait for replicaset is healthy
-        if not wait_for_replicaset_is_healthy(control_console, replicaset_alias):
+        if not wait_for_replicaset_is_healthy(control_console, replicaset_alias, healthy_timeout):
             errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_alias)
             return ModuleRes(success=False, msg=errmsg)
 
@@ -296,6 +298,12 @@ def change_replicaset(control_console, params, cluster_replicaset):
     replicaset_all_rw = params['replicaset']['all_rw'] if 'all_rw' in params['replicaset'] else None
     replicaset_weight = params['replicaset']['weight'] if 'weight' in params['replicaset'] else None
     replicaset_vshard_group = params['replicaset'].get('vshard_group', None)
+
+    healthy_timeout = params['healthy_timeout']
+
+    if cluster_replicaset['status'] != 'healthy':
+        errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_alias)
+        return ModuleRes(success=False, msg=errmsg)
 
     cluster_instances = get_all_cluster_instances(control_console)
     cluster_instances = {i['alias']: i for i in cluster_instances}  # make it dict
@@ -323,7 +331,7 @@ def change_replicaset(control_console, params, cluster_replicaset):
             return ModuleRes(success=False, msg=errmsg)
 
         # Wait for replicaset is healthy
-        if not wait_for_replicaset_is_healthy(control_console, replicaset_alias):
+        if not wait_for_replicaset_is_healthy(control_console, replicaset_alias, healthy_timeout):
             errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_alias)
             return ModuleRes(success=False, msg=errmsg)
 
@@ -342,7 +350,7 @@ def change_replicaset(control_console, params, cluster_replicaset):
         return ModuleRes(success=False, msg=errmsg)
 
     # Wait for replicaset is healthy
-    if not wait_for_replicaset_is_healthy(control_console, replicaset_alias):
+    if not wait_for_replicaset_is_healthy(control_console, replicaset_alias, healthy_timeout):
         errmsg = 'Replicaset "{}" is not healthy'.format(replicaset_alias)
         return ModuleRes(success=False, msg=errmsg)
 

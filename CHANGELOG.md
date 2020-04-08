@@ -11,6 +11,10 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+### Fixed
+
+* Liitle bugs in python modules
+
 ## [1.1.0] - 2020-01-29
 
 ### Added

@@ -27,14 +27,13 @@ def get_replicasets(params):
         if 'replicaset_alias' in instance_vars:
             replicaset_alias = instance_vars['replicaset_alias']
             if replicaset_alias not in replicasets:
-                failover_priority = instance_vars['failover_priority'] if 'failover_priority' in instance_vars else None
                 replicasets.update({
                     replicaset_alias: {
                         'instances': [],
-                        'roles': instance_vars['roles'] if 'roles' in instance_vars else None,
-                        'failover_priority': failover_priority,
-                        'all_rw': instance_vars['all_rw'] if 'all_rw' in instance_vars else None,
-                        'weight': instance_vars['weight'] if 'weight' in instance_vars else None,
+                        'roles': instance_vars.get('roles', None),
+                        'failover_priority': instance_vars.get('failover_priority', None),
+                        'all_rw': instance_vars.get('all_rw', None),
+                        'weight': instance_vars.get('weight', None),
                         'vshard_group': instance_vars.get('vshard_group', None),
                         'alias': replicaset_alias,
                     }
@@ -44,8 +43,13 @@ def get_replicasets(params):
     join_host = params['control_host']
     replicasets_list = [v for _, v in replicasets.items()]
 
-    if not join_host:
-        join_host = replicasets_list[0]['failover_priority'][0] if replicasets_list else None
+    for r in replicasets_list:
+        if r['failover_priority'] is None:
+            r['failover_priority'] = [r['instances'][0]]
+
+    if replicasets_list and not join_host:
+        first_replicaset = replicasets_list[0]
+        join_host = first_replicaset['failover_priority'][0]
 
     return ModuleRes(success=True, changed=False, meta={
         'replicasets': replicasets_list,

@@ -35,6 +35,8 @@ class CartridgeException(Exception):
 
 class Console:
     def __init__(self, socket_path):
+        self.sock = None
+
         if not os.path.exists(socket_path):
             errmsg = 'Instance socket not found: "{}". '.format(socket_path) + \
                 'Make sure instance was started correctly'
@@ -54,7 +56,8 @@ class Console:
         self.sock.recv(1024)
 
     def close(self):
-        return self.sock.close()
+        if self.sock is not None:
+            self.sock.close()
 
     def eval(self, func_body):
         def sendall(msg):
@@ -99,7 +102,10 @@ class Console:
         hex_output = re.sub(r"'?\n...\n$", '', hex_output)
         hex_output = re.sub(r"\n\s*", '', hex_output)
 
-        output = bytearray.fromhex(hex_output).decode('utf-8')
+        try:
+            output = bytearray.fromhex(hex_output).decode('utf-8')
+        except Exception:
+            raise Exception(hex_output)
 
         ret = json.loads(output)
         if not ret['ok']:
@@ -107,6 +113,9 @@ class Console:
             raise CartridgeException(cartridge_errcodes.FUNCTION_ERROR, errmsg)
 
         return ret['ret']
+
+    def __del__(self):
+        self.close()
 
 
 def get_control_console(socket_path):
@@ -118,19 +127,19 @@ def get_all_cluster_instances(control_console):
         local instances = require('cartridge').admin_get_servers()
         local res = {}
         for _, i in ipairs(instances) do
-            local replicaset = require('json').NULL
+            local replicaset = box.NULL
             if i.replicaset then
                 replicaset = {
-                    uuid = i.replicaset.uuid,
-                    alias = i.replicaset.alias,
-                    roles = i.replicaset.roles,
+                    uuid = i.replicaset.uuid or box.NULL,
+                    alias = i.replicaset.alias or box.NULL,
+                    roles = i.replicaset.roles or box.NULL,
                 }
             end
             table.insert(res, {
-                uuid = i.uuid,
-                uri = i.uri,
-                alias = i.alias,
-                status = i.status,
+                uuid = i.uuid or box.NULL,
+                uri = i.uri or box.NULL,
+                alias = i.alias or box.NULL,
+                status = i.status or box.NULL,
                 replicaset = replicaset,
             })
         end

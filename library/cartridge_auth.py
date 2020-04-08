@@ -40,7 +40,7 @@ def edit_cluster_auth_params(control_console, enabled=None,
         }})
         return {{
             ok = ok and true or false,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(
         ', '.join(auth_params_lua)
@@ -95,7 +95,7 @@ def add_cluster_user(control_console, user):
         local user, err = auth.add_user({})
         return {{
             ok = user ~= nil,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(', '.join(add_user_params_lua)))
 
@@ -108,7 +108,7 @@ def delete_cluster_user(control_console, user):
         local user, err = auth.remove_user('{}')
         return {{
             ok = user ~= nil,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(user['username']))
 
@@ -128,7 +128,7 @@ def edit_cluster_user(control_console, user):
         local user, err = auth.edit_user({})
         return {{
             ok = user ~= nil,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(', '.join(edit_user_params_lua)))
 
@@ -165,7 +165,7 @@ def manage_auth(params):
         return ModuleRes(success=True, changed=False)
 
     # Check if auth backeng implements all functions for users managing
-    if 'users' in auth_params:
+    if auth_params.get('users') is not None:
         if not check_cluster_auth_implements_all(control_console):
             errmsg = 'Cluster auth back-end must implement all user managing functions'
             return ModuleRes(success=False, msg=errmsg)
@@ -177,9 +177,9 @@ def manage_auth(params):
 
     ok, new_cluster_auth_params = edit_cluster_auth_params(
         control_console,
-        enabled=auth_params['enabled'] if 'enabled' in auth_params else None,
-        cookie_max_age=auth_params['cookie_max_age'] if 'cookie_max_age' in auth_params else None,
-        cookie_renew_age=auth_params['cookie_renew_age'] if 'cookie_renew_age' in auth_params else None,
+        enabled=auth_params.get('enabled'),
+        cookie_max_age=auth_params.get('cookie_max_age'),
+        cookie_renew_age=auth_params.get('cookie_renew_age'),
     )
     if not ok:
         return ModuleRes(success=False, msg=new_cluster_auth_params)
@@ -187,7 +187,7 @@ def manage_auth(params):
     params_changed = new_cluster_auth_params != cluster_auth_params
 
     # Manage users
-    if 'users' not in auth_params:
+    if auth_params.get('users') is None:
         return ModuleRes(success=True, changed=params_changed)
 
     users = auth_params['users']
@@ -195,22 +195,30 @@ def manage_auth(params):
     if not ok:
         return ModuleRes(success=False, msg=cluster_users)
 
-    users_to_add = [
-        user for user in users if user['username'] in
-        set(u['username']for u in users) - set(u['username'] for u in cluster_users) and not user_is_deleted(user)
-    ]
+    # find new users
+    new_usernames = set(u['username'] for u in users).difference(
+        set(u['username'] for u in cluster_users)
+    )
 
-    users_to_edit = [
-        user
-        for user in users
-        if user['username'] in
-        set(u['username'] for u in cluster_users) & set(u['username'] for u in users if not user_is_deleted(user))
-    ]
+    users_to_add = list(filter(
+        lambda u: u['username'] in new_usernames and not user_is_deleted(u),
+        users
+    ))
 
-    users_to_delete = [
-        user for user in users
-        if user_is_deleted(user) and len([u for u in cluster_users if u['username'] == user['username']]) > 0
-    ]
+    # find users to edit
+    users_to_edit = list(filter(
+        lambda u: u['username'] not in new_usernames and not user_is_deleted(u),
+        users
+    ))
+
+    # find users to delete
+    users_to_delete = list(filter(
+        lambda u: user_is_deleted(u) and len(list(filter(
+            lambda c: c['username'] == u['username'],
+            cluster_users)
+        )) > 0,
+        users
+    ))
 
     users_changed = False
 
@@ -222,12 +230,13 @@ def manage_auth(params):
         users_changed = True
 
     for user in users_to_edit:
+        cluster_user = [u for u in cluster_users if u['username'] == user['username']][0]
+
         ok, edited_user = edit_cluster_user(control_console, user)
         if not ok:
             return ModuleRes(success=False, msg=edited_user)
 
-        cluster_user = [u for u in cluster_users if u['username'] == user['username']][0]
-        users_changed = cluster_user != edited_user
+        users_changed = users_changed or cluster_user != edited_user
 
     for user in users_to_delete:
         ok, err = delete_cluster_user(control_console, user)

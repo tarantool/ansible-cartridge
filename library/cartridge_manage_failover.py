@@ -28,7 +28,7 @@ def manage_failover(params):
         local failover, err = require('cartridge').{}()
         return {{
             ok = failover ~= nil,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(function_name))
 

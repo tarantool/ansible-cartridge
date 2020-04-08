@@ -19,8 +19,8 @@ def get_control_instance(params):
     ''')
 
     for _, member in members.items():
-        if 'payload' in member and 'uuid' in member['payload']:
-            if 'alias' not in member['payload']:
+        if 'payload' in member and member['payload'].get('uuid') is not None:
+            if member['payload'].get('alias') is None:
                 errmsg = 'Unable to get instance alias for "{}"'.format(member['payload']['uuid'])
                 return ModuleRes(success=False, msg=errmsg)
 

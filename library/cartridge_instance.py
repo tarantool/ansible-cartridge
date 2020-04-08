@@ -29,7 +29,7 @@ def manage_instance(params):
     else:
         new_memtx_memory = cartridge_defaults['memtx_memory']
 
-    # Check if instance is started
+    # Check if instance isn't started yet
     if not os.path.exists(control_sock):
         return ModuleRes(success=True, changed=False)
 
@@ -44,9 +44,11 @@ def manage_instance(params):
         if e.code in allowed_errcodes:
             return ModuleRes(success=True, changed=False)
 
+        raise e
+
     # Get current memtx memory
     current_memtx_memory = control_console.eval('''
-        return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or require('json').NULL
+        return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or box.NULL
     ''')
     if current_memtx_memory is None:
         # box.cfg wasn't called

@@ -12,7 +12,8 @@ argument_spec = {
 }
 
 INSTANCE_REQUIRED_PARAMS = ['advertise_uri']
-INSTANCE_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir']
+INSTANCE_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir', 'cluster_cookie']
+
 REPLICASET_REQUIRED_PARAMS = ['failover_priority', 'roles']
 
 CLUSTER_COOKIE_MAX_LEN = 256
@@ -26,6 +27,8 @@ def is_valid_advertise_uri(uri):
 
 def check_schema(schema, conf, path=''):
     if isinstance(schema, dict):
+        if not isinstance(conf, dict):
+            return False, '{} must be {}'.format(path, dict)
         for k in schema:
             if k in conf:
                 subpath = '{}.{}'.format(path, k)
@@ -34,6 +37,8 @@ def check_schema(schema, conf, path=''):
                     return False, err
         return True, None
     elif isinstance(schema, list):
+        if not isinstance(conf, list):
+            return False, '{} must be {}'.format(path, list)
         for i, c in enumerate(conf):
             subpath = '{}[{}]'.format(path, i)
             ok, err = check_schema(schema[0], c, subpath)
@@ -105,9 +110,7 @@ def check_cluster_cookie_symbols(cluster_cookie):
 
 
 def validate_config(params):
-    all_instances = {}
     all_replicasets = {}
-    package_path_by_machines = {}
 
     # To check if this params are equal for all hosts
     app_name = None
@@ -137,15 +140,6 @@ def validate_config(params):
         elif 'cartridge_app_name' in host_vars:
             app_name = host_vars['cartridge_app_name']
 
-        # Check if package_path is the same for one machine
-        package_path = host_vars['cartridge_package_path'] if 'cartridge_package_path' in host_vars else None
-        machine_id = host_vars['ansible_machine_id']
-        if machine_id not in package_path_by_machines:
-            package_path_by_machines[machine_id] = package_path
-        elif package_path != package_path_by_machines[machine_id]:
-            errmsg = '`cartridge_package_path` must be the same for one machine instances'
-            return ModuleRes(success=False, msg=errmsg)
-
         # Check cluster auth
         if cartridge_auth is not None:
             if 'cartridge_auth' in host_vars and host_vars['cartridge_auth'] != cartridge_auth:
@@ -170,7 +164,7 @@ def validate_config(params):
         # Check cartridge_bootstrap_vshard
         if bootstrap_vshard is not None:
             if 'cartridge_bootstrap_vshard' in host_vars \
-             and host_vars['cartridge_bootstrap_vshard'] != bootstrap_vshard:
+               and host_vars['cartridge_bootstrap_vshard'] != bootstrap_vshard:
                 errmsg = '`cartridge_bootstrap_vshard` must be the same for all hosts'
                 return ModuleRes(success=False, msg=errmsg)
         elif 'cartridge_bootstrap_vshard' in host_vars:
@@ -215,6 +209,10 @@ def validate_config(params):
             if p in host_vars['config']:
                 errmsg = 'Specified forbidden parameter "{}" in "{}" config'.format(p, host)
                 return ModuleRes(success=False, msg=errmsg)
+
+        if host_vars.get('expelled') is True and host_vars.get('restarted') is True:
+            errmsg = 'Flags "expelled" and "restarted" can not be set at the same time'
+            return ModuleRes(success=False, msg=errmsg)
 
         # Check if cluster_cookie is not specified
         if 'cluster_cookie' in host_vars['config']:
@@ -294,7 +292,12 @@ def validate_config(params):
                     )
                     return ModuleRes(success=False, msg=errmsg)
 
-    return ModuleRes(success=True, changed=False, meta={'all_instances': all_instances})
+                if section['deleted'] is False:
+                    if 'body' not in section:
+                        errmsg = '`cartridge_app_config.{}.body` is required'.format(section_name)
+                        return ModuleRes(success=False, msg=errmsg)
+
+    return ModuleRes(success=True, changed=False)
 
 
 def main():
