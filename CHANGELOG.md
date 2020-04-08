@@ -11,6 +11,8 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+## [1.2.0] - 2020-04-08
+
 ### Added
 
 * `cartridge_allow_downgrade` flag to allow package downgrading
