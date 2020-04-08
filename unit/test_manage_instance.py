@@ -38,7 +38,7 @@ class TestManageInstance(unittest.TestCase):
             control_sock=self.console_sock
         )
 
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), None)
 
@@ -50,7 +50,7 @@ class TestManageInstance(unittest.TestCase):
             control_sock=bad_socket_path
         )
 
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), None)
 
@@ -60,7 +60,7 @@ class TestManageInstance(unittest.TestCase):
             control_sock=self.console_sock
         )
 
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), None)
 
@@ -76,7 +76,7 @@ class TestManageInstance(unittest.TestCase):
                 'memtx_memory': SMALL_MEMTX_MEMORY,
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), BIG_MEMTX_MEMORY)
 
@@ -93,7 +93,7 @@ class TestManageInstance(unittest.TestCase):
                 'memtx_memory': INSTANCE_BIG_MEMTX_MEMORY,
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), INSTANCE_BIG_MEMTX_MEMORY)
 
@@ -105,7 +105,7 @@ class TestManageInstance(unittest.TestCase):
                 'memtx_memory': APP_BIG_MEMTX_MEMORY,
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), APP_BIG_MEMTX_MEMORY)
 
@@ -120,7 +120,7 @@ class TestManageInstance(unittest.TestCase):
                 'memtx_memory': APP_BIG_MEMTX_MEMORY,
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), INSTANCE_BIG_MEMTX_MEMORY)
 
@@ -139,7 +139,7 @@ class TestManageInstance(unittest.TestCase):
                 'memtx_memory': INSTANCE_BIG_MEMTX_MEMORY,
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), SMALL_MEMTX_MEMORY)
 
@@ -151,7 +151,7 @@ class TestManageInstance(unittest.TestCase):
                 'memtx_memory': APP_BIG_MEMTX_MEMORY,
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), SMALL_MEMTX_MEMORY)
 
@@ -166,7 +166,7 @@ class TestManageInstance(unittest.TestCase):
                 'memtx_memory': APP_BIG_MEMTX_MEMORY,
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), SMALL_MEMTX_MEMORY)
 
@@ -179,7 +179,7 @@ class TestManageInstance(unittest.TestCase):
                 'memtx_memory': 100,
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(self.instance.get_memtx_memory(), None)
 

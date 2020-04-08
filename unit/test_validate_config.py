@@ -68,7 +68,8 @@ class TestValidateConfig(unittest.TestCase):
                 'config': {'advertise_uri': 'localhost:3301'}
             }
         })
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.changed)
 
     def test_forbidden_params(self):
         config = {
@@ -284,7 +285,8 @@ class TestValidateConfig(unittest.TestCase):
                 'roles': ['I-am-role'],
             },
         })
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.changed)
 
         res = call_validate_config({
             'instance-1': {
@@ -354,7 +356,8 @@ class TestValidateConfig(unittest.TestCase):
                 'vshard_group': 'group1',
             },
         })
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.changed)
 
     def test_app_config(self):
         res = call_validate_config({
@@ -376,7 +379,8 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_app_config': {},
             },
         })
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.changed)
 
         res = call_validate_config({
             'instance-1': {
@@ -493,7 +497,8 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.changed)
 
         res = call_validate_config({
             'instance-1': {
@@ -508,7 +513,8 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.changed)
 
         res = call_validate_config({
             'instance-1': {
@@ -520,7 +526,8 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.changed)
 
     def test_instance_states(self):
         # restarted
@@ -533,7 +540,8 @@ class TestValidateConfig(unittest.TestCase):
                 'restarted': True,
             },
         })
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.changed)
 
         # expelled
         res = call_validate_config({
@@ -545,7 +553,8 @@ class TestValidateConfig(unittest.TestCase):
                 'expelled': True,
             },
         })
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.changed)
 
         # both expelled and restarted set to true
         res = call_validate_config({

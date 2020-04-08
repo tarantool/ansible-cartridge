@@ -30,7 +30,7 @@ class TestInstanceStarted(unittest.TestCase):
         # require('membership').myself().status is 'active'
         self.instance.set_membership_status('alive')
         res = call_check_instance_started(self.console_sock)
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
 
         # require('membership').myself().status is 'dead'
         self.instance.set_membership_status('dead')

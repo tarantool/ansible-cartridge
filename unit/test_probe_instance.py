@@ -48,7 +48,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(self.instance.server_was_probed(URI1))
 
         self.instance.clear_probed(URI1)
@@ -64,7 +64,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(self.instance.server_was_probed(URI1))
         self.assertTrue(self.instance.server_was_probed(URI2))
 
@@ -116,7 +116,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(self.instance.server_was_probed(URI2))
 
         self.instance.clear_probed(URI1)
@@ -133,7 +133,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(self.instance.server_was_probed(URI1))
         self.assertFalse(self.instance.server_was_probed(URI2))
 
@@ -175,7 +175,7 @@ class TestProbeInstance(unittest.TestCase):
             },
             play_hosts=['instance-1']
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(self.instance.server_was_probed(URI1))
         self.assertTrue(self.instance.server_was_probed(URI2))
 

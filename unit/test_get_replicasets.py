@@ -31,7 +31,7 @@ class TestGetReplicasets(unittest.TestCase):
                 }
             }
         })
-        self.assertEqual(res.success, True)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertEqual(res.meta, {
             'replicasets': [],
             'join_host': '',
@@ -44,7 +44,7 @@ class TestGetReplicasets(unittest.TestCase):
                 'replicaset_alias': 'replicaset-1',
             }
         })
-        self.assertEqual(res.success, True)
+        self.assertTrue(res.success, msg=res.msg)
 
         self.assertIn('replicasets', res.meta)
         self.assertIn('join_host', res.meta)
@@ -67,7 +67,7 @@ class TestGetReplicasets(unittest.TestCase):
             'instance-1': replicaset_vars,
             'instance-2': replicaset_vars,
         })
-        self.assertEqual(res.success, True)
+        self.assertTrue(res.success, msg=res.msg)
 
         self.assertIn('replicasets', res.meta)
         self.assertIn('join_host', res.meta)
@@ -90,7 +90,7 @@ class TestGetReplicasets(unittest.TestCase):
             'r1-leader': replicaset_vars,
             'r1-replica': replicaset_vars,
         })
-        self.assertEqual(res.success, True)
+        self.assertTrue(res.success, msg=res.msg)
 
         self.assertIn('replicasets', res.meta)
         self.assertIn('join_host', res.meta)
@@ -135,7 +135,7 @@ class TestGetReplicasets(unittest.TestCase):
                 hostvars.update({i: config['vars']})
 
         res = call_get_replicasets(hostvars)
-        self.assertEqual(res.success, True)
+        self.assertTrue(res.success, msg=res.msg)
 
         self.assertIn('replicasets', res.meta)
         self.assertIn('join_host', res.meta)

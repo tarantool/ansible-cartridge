@@ -43,7 +43,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI1, 'uuid': UUID1},
         ])
         res = call_get_control_instance(self.console_sock)
-        self.assertEqual(res.success, False)
+        self.assertFalse(res.success)
         self.assertIn('Unable to get instance alias', res.msg)
 
     def test_one_instance(self):
@@ -52,7 +52,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
         ])
         res = call_get_control_instance(self.console_sock)
-        self.assertEqual(res.success, True)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertEqual(res.meta, {'host': ALIAS1})
 
         # without UUID
@@ -60,7 +60,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI1, 'alias': ALIAS1},
         ])
         res = call_get_control_instance(self.console_sock)
-        self.assertEqual(res.success, True)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertEqual(res.meta, {'host': ''})
 
         # without UUID, allow_empty=False
@@ -68,7 +68,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI1, 'alias': ALIAS1},
         ])
         res = call_get_control_instance(self.console_sock, allow_empty=False)
-        self.assertEqual(res.success, False)
+        self.assertFalse(res.success)
         self.assertIn("Cluster isn't bootstrapped yet", res.msg)
 
     def test_two_instances(self):
@@ -78,7 +78,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI2, 'uuid': UUID2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(self.console_sock)
-        self.assertEqual(res.success, True)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertIn(res.meta['host'], [ALIAS1, ALIAS2])
 
         # one with UUID (it is selected)
@@ -87,7 +87,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(self.console_sock)
-        self.assertEqual(res.success, True)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertEqual(res.meta, {'host': ALIAS1})
 
         # one with UUID (but without alias)
@@ -96,7 +96,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(self.console_sock)
-        self.assertEqual(res.success, False)
+        self.assertFalse(res.success)
         self.assertIn("Unable to get instance alias", res.msg)
 
         # both without UUID (no one selected)
@@ -105,7 +105,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(self.console_sock)
-        self.assertEqual(res.success, True)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertEqual(res.meta, {'host': ''})
 
         # both without UUID, allow_empty=False
@@ -114,7 +114,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(self.console_sock, allow_empty=False)
-        self.assertEqual(res.success, False)
+        self.assertFalse(res.success)
         self.assertIn("Cluster isn't bootstrapped yet", res.msg)
 
     def tearDown(self):

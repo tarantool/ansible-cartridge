@@ -43,7 +43,7 @@ class TestNeedsRestart(unittest.TestCase):
             control_sock=self.console_sock,
             restart_forced=True
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
     def test_instance_not_started(self):
@@ -54,7 +54,7 @@ class TestNeedsRestart(unittest.TestCase):
             control_sock=self.console_sock
         )
 
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
         # cennot connect to console sock
@@ -65,7 +65,7 @@ class TestNeedsRestart(unittest.TestCase):
             control_sock=bad_socket_path
         )
 
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
     def test_code_was_updated(self):
@@ -78,7 +78,7 @@ class TestNeedsRestart(unittest.TestCase):
             instance_name=self.instance.INSTANCE_NAME
         )
 
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
     def test_instance_config_changes(self):
@@ -104,7 +104,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_current_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
         # param changed, memtx_memory not
@@ -115,7 +115,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_current_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
         # param isn't changed
@@ -129,7 +129,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_new_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
         # param isn't changed
@@ -143,7 +143,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_new_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
         # param is changed
@@ -157,7 +157,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_new_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
     def test_app_config_changes(self):
@@ -183,7 +183,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_current_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
         # param changed, memtx_memory not
@@ -194,7 +194,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_current_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
         # param isn't changed
@@ -208,7 +208,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_new_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
         # param isn't changed
@@ -222,7 +222,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_new_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
         # param is changed
@@ -236,7 +236,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_new_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
     def test_both_app_and_instance_memtx_memory_changed(self):
@@ -263,7 +263,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_current_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
         # memtx_memory changed only in cartridge_defaults
@@ -276,7 +276,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_new_instance_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
         # memtx_memory changed both in cartridge_defaults and config
@@ -289,7 +289,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_new_app_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
         # memtx_memory changed both in cartridge_defaults and config
@@ -304,7 +304,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_new_app_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
         # memtx_memory changed both in cartridge_defaults and config
@@ -319,7 +319,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memtx_memory_param_name: memtx_memory_new_app_value
             }
         )
-        self.assertTrue(res.success)
+        self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
 
     def tearDown(self):
