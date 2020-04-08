@@ -71,7 +71,7 @@ def config_app(params):
         local ok, err = cartridge.config_patch_clusterwide(patch)
         return {{
             ok = ok == true,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(json.dumps(patch)))
 

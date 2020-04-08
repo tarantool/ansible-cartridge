@@ -39,7 +39,7 @@ def expel_intstance(params):
         }})
         return {{
             ok = err == nil,
-            err = err ~= nil and err.err or require('json').NULL
+            err = err ~= nil and err.err or box.NULL
         }}
     '''.format(cluster_instance['uuid']))
 

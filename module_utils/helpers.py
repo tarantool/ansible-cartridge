@@ -127,19 +127,19 @@ def get_all_cluster_instances(control_console):
         local instances = require('cartridge').admin_get_servers()
         local res = {}
         for _, i in ipairs(instances) do
-            local replicaset = require('json').NULL
+            local replicaset = box.NULL
             if i.replicaset then
                 replicaset = {
-                    uuid = i.replicaset.uuid or require('json').NULL,
-                    alias = i.replicaset.alias or require('json').NULL,
-                    roles = i.replicaset.roles or require('json').NULL,
+                    uuid = i.replicaset.uuid or box.NULL,
+                    alias = i.replicaset.alias or box.NULL,
+                    roles = i.replicaset.roles or box.NULL,
                 }
             end
             table.insert(res, {
-                uuid = i.uuid or require('json').NULL,
-                uri = i.uri or require('json').NULL,
-                alias = i.alias or require('json').NULL,
-                status = i.status or require('json').NULL,
+                uuid = i.uuid or box.NULL,
+                uri = i.uri or box.NULL,
+                alias = i.alias or box.NULL,
+                status = i.status or box.NULL,
                 replicaset = replicaset,
             })
         end

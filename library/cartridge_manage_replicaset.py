@@ -26,13 +26,13 @@ def get_cluster_replicaset(control_console, name):
             end
 
             table.insert(res, {
-                uuid = r.uuid or require('json').NULL,
-                alias = r.alias or require('json').NULL,
-                status = r.status or require('json').NULL,
-                roles = r.roles or require('json').NULL,
-                all_rw = r.all_rw or require('json').NULL,
-                weight = r.weight or require('json').NULL,
-                vshard_group = r.vshard_group or require('json').NULL,
+                uuid = r.uuid or box.NULL,
+                alias = r.alias or box.NULL,
+                status = r.status or box.NULL,
+                roles = r.roles or box.NULL,
+                all_rw = r.all_rw or box.NULL,
+                weight = r.weight or box.NULL,
+                vshard_group = r.vshard_group or box.NULL,
                 servers = servers,
             })
         end
@@ -155,8 +155,8 @@ def edit_replicaset(control_console, cluster_instances,
         }})
         if not res then
             return {{
-                ret = require('json').NULL,
-                err = err and err.err or require('json').NULL,
+                ret = box.NULL,
+                err = err and err.err or box.NULL,
             }}
         end
         local ret = {{
@@ -169,36 +169,36 @@ def edit_replicaset(control_console, cluster_instances,
                 table.insert(servers, {{ alias = s.alias, priority = s.priority, uuid = s.uuid }})
             end
             table.insert(ret.replicasets, {{
-                uuid = r.uuid or require('json').NULL,
-                alias = r.alias or require('json').NULL,
-                status = r.status or require('json').NULL,
-                all_rw = r.all_rw or require('json').NULL,
-                weight = r.weight or require('json').NULL,
-                roles = r.roles or require('json').NULL,
-                vshard_group = r.vshard_group or require('json').NULL,
+                uuid = r.uuid or box.NULL,
+                alias = r.alias or box.NULL,
+                status = r.status or box.NULL,
+                all_rw = r.all_rw or box.NULL,
+                weight = r.weight or box.NULL,
+                roles = r.roles or box.NULL,
+                vshard_group = r.vshard_group or box.NULL,
                 servers = servers,
             }})
         end
         for _, s in ipairs(res.servers or {{}}) do
-            local replicaset = require('json').NULL
+            local replicaset = box.NULL
             if s.replicaset then
                 replicaset = {{
-                    uuid = s.replicaset.uuid or require('json').NULL,
-                    alias = s.replicaset.alias or require('json').NULL,
-                    roles = s.replicaset.roles or require('json').NULL,
+                    uuid = s.replicaset.uuid or box.NULL,
+                    alias = s.replicaset.alias or box.NULL,
+                    roles = s.replicaset.roles or box.NULL,
                 }}
             end
             table.insert(ret.servers, {{
-                uuid = s.uuid or require('json').NULL,
-                uri = s.uri or require('json').NULL,
-                alias = s.alias or require('json').NULL,
-                status = s.status or require('json').NULL,
-                replicaset = replicaset or require('json').NULL,
+                uuid = s.uuid or box.NULL,
+                uri = s.uri or box.NULL,
+                alias = s.alias or box.NULL,
+                status = s.status or box.NULL,
+                replicaset = replicaset or box.NULL,
             }})
         end
         return {{
             ret = ret,
-            err = require('json').NULL,
+            err = box.NULL,
          }}
     '''.format(', '.join(replicaset_params)))
 

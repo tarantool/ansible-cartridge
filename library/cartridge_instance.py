@@ -48,7 +48,7 @@ def manage_instance(params):
 
     # Get current memtx memory
     current_memtx_memory = control_console.eval('''
-        return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or require('json').NULL
+        return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or box.NULL
     ''')
     if current_memtx_memory is None:
         # box.cfg wasn't called

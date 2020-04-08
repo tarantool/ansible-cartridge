@@ -94,7 +94,7 @@ class Instance:
             end)
             ret = require("json").encode({{
                 ok = ok,
-                ret = ret ~= nil and ret or require("json").NULL,
+                ret = ret ~= nil and ret or box.NULL,
             }})
             return string.hex(ret)
         '''.format(func_body)

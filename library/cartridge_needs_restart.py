@@ -70,7 +70,7 @@ def check_conf_updated(new_conf, old_conf, ignore_keys=[]):
 
 def get_memtx_memory(control_console):
     return control_console.eval('''
-        return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or require('json').NULL
+        return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or box.NULL
     ''')
 
 

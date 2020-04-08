@@ -40,7 +40,7 @@ def edit_cluster_auth_params(control_console, enabled=None,
         }})
         return {{
             ok = ok and true or false,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(
         ', '.join(auth_params_lua)
@@ -95,7 +95,7 @@ def add_cluster_user(control_console, user):
         local user, err = auth.add_user({})
         return {{
             ok = user ~= nil,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(', '.join(add_user_params_lua)))
 
@@ -108,7 +108,7 @@ def delete_cluster_user(control_console, user):
         local user, err = auth.remove_user('{}')
         return {{
             ok = user ~= nil,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(user['username']))
 
@@ -128,7 +128,7 @@ def edit_cluster_user(control_console, user):
         local user, err = auth.edit_user({})
         return {{
             ok = user ~= nil,
-            err = err and err.err or require('json').NULL
+            err = err and err.err or box.NULL
         }}
     '''.format(', '.join(edit_user_params_lua)))
 
