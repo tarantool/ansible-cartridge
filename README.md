@@ -156,7 +156,7 @@ Configuration format is described in detail in the
 
 * `cartridge_package_path` (`string`, optional): path to Cartridge RPM package
   (application name will be detected as package name);
-* `cartridge_allow_downgrade` (`boolean`, optional, default: `false`): flag indicates
+* `cartridge_allow_downgrade` (`boolean`, optional, default: `false`): indicates
   if package downgrading is allowed;
 * `cartridge_app_name` (`string`): application name, required;
 * `cartridge_cluster_cookie` (`string`, required): cluster cookie for all
