@@ -49,5 +49,7 @@
   apt:
     deb: /tmp/{{ deb_filename }}
     update_cache: true
+    force: '{{ cartridge_allow_downgrade }}'
+
   notify:
     - reload-systemd-daemon
