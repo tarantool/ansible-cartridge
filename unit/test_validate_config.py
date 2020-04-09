@@ -19,7 +19,88 @@ def call_validate_config(hostvars, play_hosts=None):
     })
 
 
+class WrongTypeValue:
+    pass
+
+
 class TestValidateConfig(unittest.TestCase):
+    def test_invalid_types(self):
+        wrong_type_value = WrongTypeValue()
+
+        params_by_types = {
+            str: {
+                'cartridge_package_path',
+                'cartridge_app_name',
+                'cartridge_cluster_cookie',
+                'replicaset_alias',
+                'vshard_group',
+                'config.advertise_uri',
+                'cartridge_auth.users[0].username',
+                'cartridge_auth.users[0].password',
+                'cartridge_auth.users[0].fullname',
+                'cartridge_auth.users[0].email',
+                'roles[0]',
+                'failover_priority[0]',
+            },
+            bool: {
+                'cartridge_bootstrap_vshard',
+                'cartridge_failover',
+                'restarted',
+                'expelled',
+                'all_rw',
+                'cartridge_enable_tarantool_repo',
+                'cartridge_auth.enabled',
+                'cartridge_auth.users[0].deleted',
+            },
+            dict: {
+                'cartridge_defaults',
+                'cartridge_app_config',
+            },
+            int: {
+                'instance_start_timeout',
+                'weight',
+                'config.memtx_memory',
+                'cartridge_auth.cookie_max_age',
+                'cartridge_auth.cookie_renew_age',
+            },
+            list: {
+                'roles',
+                'failover_priority',
+                'cartridge_auth.users',
+            }
+        }
+
+        def get_wrong_params(path):
+            if path.startswith('config.'):
+                p = path.split('.')[-1]
+                return {'config': {p: wrong_type_value}}
+
+            if path.startswith('roles[0]'):
+                return {'roles': [wrong_type_value]}
+
+            if path.startswith('failover_priority[0]'):
+                return {'failover_priority': [wrong_type_value]}
+
+            if path.startswith('cartridge_auth.users[0].'):
+                p = path.split('.')[-1]
+                return {
+                    'cartridge_auth': {
+                        'users': [{p: wrong_type_value}]
+                    }
+                }
+
+            if path.startswith('cartridge_auth.'):
+                p = path.split('.')[-1]
+                return {'cartridge_auth': {p: wrong_type_value}}
+
+            return {path: wrong_type_value}
+
+        for t, params in params_by_types.items():
+            for p in params:
+                res = call_validate_config({'instance-1': get_wrong_params(p)})
+                self.assertFalse(res.success)
+                self.assertIn("{} must be {}".format(p, t), res.msg)
+
     def test_instance_required_params(self):
         required_params = {
             'cartridge_app_name': 'app-name',
@@ -100,75 +181,6 @@ class TestValidateConfig(unittest.TestCase):
             'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"',
             res.msg
         )
-
-    def test_invalid_types(self):
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_package_path': 42
-            }
-        })
-        self.assertFalse(res.success)
-        self.assertIn("cartridge_package_path must be <class 'str'>", res.msg)
-
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_failover': 42
-            }
-        })
-        self.assertFalse(res.success)
-        self.assertIn("cartridge_failover must be <class 'bool'>", res.msg)
-
-        res = call_validate_config({
-            'instance-1': {
-                'config': 42
-            }
-        })
-        self.assertFalse(res.success)
-        self.assertIn("config must be <class 'dict'>", res.msg)
-
-        res = call_validate_config({
-            'instance-1': {
-                'config': {
-                    'advertise_uri': 42,
-                }
-            }
-        })
-        self.assertFalse(res.success)
-        self.assertIn("advertise_uri must be <class 'str'>", res.msg)
-
-        res = call_validate_config({
-            'instance-1': {
-                'config': {
-                    'memtx_memory': 'some-string'
-                }
-            }
-        })
-        self.assertFalse(res.success)
-        self.assertIn("memtx_memory must be <class 'int'>", res.msg)
-
-        res = call_validate_config({
-            'instance-1': {
-                'restarted': 'yes',
-            }
-        })
-        self.assertFalse(res.success)
-        self.assertIn("restarted must be <class 'bool'>", res.msg)
-
-        res = call_validate_config({
-            'instance-1': {
-                'expelled': 'yes',
-            }
-        })
-        self.assertFalse(res.success)
-        self.assertIn("expelled must be <class 'bool'>", res.msg)
-
-        res = call_validate_config({
-            'instance-1': {
-                'roles': 'role',
-            }
-        })
-        self.assertFalse(res.success)
-        self.assertIn("roles must be <class 'list'>", res.msg)
 
     def test_instance_common_params(self):
         params = {

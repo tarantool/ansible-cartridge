@@ -82,8 +82,23 @@ def validate_types(vars):
         'cartridge_app_name': str,
         'cartridge_cluster_cookie': str,
         'cartridge_defaults': dict,
+        'cartridge_bootstrap_vshard': bool,
         'cartridge_failover': bool,
         'cartridge_app_config': dict,
+        'restarted': bool,
+        'expelled': bool,
+        'instance_start_timeout': int,
+        'replicaset_alias': str,
+        'failover_priority': [str],
+        'roles': [str],
+        'all_rw': bool,
+        'weight': int,
+        'vshard_group': str,
+        'cartridge_enable_tarantool_repo': bool,
+        'config': {
+            'advertise_uri': str,
+            'memtx_memory': int,
+        },
         'cartridge_auth': {
             'enabled': bool,
             'cookie_max_age': int,
@@ -98,17 +113,6 @@ def validate_types(vars):
                 }
             ]
         },
-        'config': {
-            'advertise_uri': str,
-            'memtx_memory': int,
-        },
-        'restarted': bool,
-        'expelled': bool,
-        'instance_start_timeout': int,
-        'roles': [str],
-        'failover_priority': [str],
-        'replicaset_alias': str,
-        'vshard_group': str,
     }
 
     return check_schema(schema, vars)
