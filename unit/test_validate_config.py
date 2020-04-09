@@ -162,7 +162,15 @@ class TestValidateConfig(unittest.TestCase):
         self.assertFalse(res.success)
         self.assertIn("expelled must be <class 'bool'>", res.msg)
 
-    def test_common_params_are_the_same(self):
+        res = call_validate_config({
+            'instance-1': {
+                'roles': 'role',
+            }
+        })
+        self.assertFalse(res.success)
+        self.assertIn("roles must be <class 'list'>", res.msg)
+
+    def test_instance_common_params(self):
         params = {
             'cartridge_app_name': ['app-name', 'other-app-name'],
             'cartridge_cluster_cookie': ['cookie', 'other-cookie'],
@@ -214,127 +222,90 @@ class TestValidateConfig(unittest.TestCase):
                 self.assertFalse(res.success)
                 self.assertIn('"{}" must be the same for all hosts'.format(p), res.msg)
 
-    def test_replicasets(self):
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-                'replicaset_alias': 'replicaset-1',
-                'failover_priority': ['instance-1', 'instance-2'],
-            },
-        })
-        self.assertFalse(res.success)
-        self.assertIn('Parameter "roles" is required for all replicasets', res.msg)
+    def test_replicaset_required_params(self):
+        instance_required_params = {
+            'cartridge_app_name': 'app-name',
+            'cartridge_cluster_cookie': 'cookie',
+            'config': {'advertise_uri': 'localhost:3301'},
+            'replicaset_alias': 'replicaset-1',
+            'failover_priority': ['instance-1'],
+            'roles': ['role-1'],
+        }
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-                'replicaset_alias': 'replicaset-1',
-                'roles': ['I-am-role'],
-            },
-        })
-        self.assertFalse(res.success)
-        self.assertIn('Parameter "failover_priority" is required for all replicasets', res.msg)
+        replicaset_required_params = ['failover_priority', 'roles']
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-                'replicaset_alias': 'replicaset-1',
-                'failover_priority': ['instance-1', 'instance-2'],
-                'roles': 'I-am-role',
-            },
-        })
-        self.assertFalse(res.success)
-        self.assertIn("roles must be <class 'list'>", res.msg)
+        for p in replicaset_required_params:
+            params = copy.deepcopy(instance_required_params)
+            del params[p]
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-                'replicaset_alias': 'replicaset-1',
-                'failover_priority': ['instance-1', 'instance-2'],
-                'roles': ['I-am-role'],
-            },
-        })
-        self.assertTrue(res.success, msg=res.msg)
-        self.assertFalse(res.changed)
+            res = call_validate_config({'instance-1': params})
+            self.assertFalse(res.success)
+            self.assertIn('Parameter "{}" is required for all replicasets'.format(p), res.msg)
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-                'replicaset_alias': 'replicaset-1',
-                'failover_priority': ['instance-1', 'instance-2'],
-                'roles': ['I-am-role'],
-            },
-            'instance-2': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3302'},
-                'replicaset_alias': 'replicaset-1',
-                'failover_priority': ['instance-1', 'instance-2'],
-                'roles': ['I-am-another-role'],
-            },
-        })
-        self.assertFalse(res.success)
-        self.assertIn(
-            'Replicaset parameters must be the same for all instances with the same "replicaset_alias"',
-            res.msg
-        )
+    def test_replicaset_common_params(self):
+        params = {
+            'failover_priority': [['i1', 'i2'], ['i2', 'i1']],
+            'roles': [['role-1', 'role-2'], ['role-2', 'role-1']],
+            'all_rw': [True, False],
+            'weight': [1, 2],
+            'vshard_group': ['hot', 'cold'],
+        }
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-                'replicaset_alias': 'replicaset-1',
-                'failover_priority': ['instance-1', 'instance-2'],
-                'roles': ['I-am-role'],
-            },
-            'instance-2': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3302'},
-                'replicaset_alias': 'replicaset-1',
-                'failover_priority': ['instance-2', 'instance-1'],
-                'roles': ['I-am-role'],
-            },
-        })
-        self.assertFalse(res.success)
-        self.assertIn(
-            'Replicaset parameters must be the same for all instances with the same "replicaset_alias"',
-            res.msg
-        )
+        replicaset1_required_params = {  # instance-11, instance-12
+            'cartridge_app_name': 'app-name',
+            'cartridge_cluster_cookie': 'cookie',
+            'config': {'advertise_uri': 'localhost:3301'},
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-                'replicaset_alias': 'replicaset-1',
-                'roles': ['I-am-role'],
-                'failover_priority': ['instance-1', 'instance-2'],
-                'vshard_group': 'group1',
-            },
-            'instance-2': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3302'},
-                'replicaset_alias': 'replicaset-1',
-                'roles': ['I-am-role'],
-                'failover_priority': ['instance-1', 'instance-2'],
-                'vshard_group': 'group1',
-            },
-        })
-        self.assertTrue(res.success, msg=res.msg)
-        self.assertFalse(res.changed)
+            'replicaset_alias': 'replicaset-1',
+            'failover_priority': ['instance-11'],
+            'roles': ['role-1'],
+        }
+
+        replicaset2_params = {  # instance-21
+            'cartridge_app_name': 'app-name',
+            'cartridge_cluster_cookie': 'cookie',
+            'config': {'advertise_uri': 'localhost:3302'},
+
+            'replicaset_alias': 'replicaset-2',
+            'failover_priority': ['instance-21'],
+            'roles': ['role-2'],
+        }
+
+        for p, values in params.items():
+            v1, v2 = values
+
+            # passed different values
+            instance11_params = copy.deepcopy(replicaset1_required_params)
+            instance11_params.update({p: v1})
+
+            instance12_params = copy.deepcopy(replicaset1_required_params)
+            instance12_params.update({p: v2})
+
+            res = call_validate_config({
+                'instance-11': instance11_params,
+                'instance-12': instance12_params,
+                'instance-21': replicaset2_params,
+            })
+            self.assertFalse(res.success)
+            errmsg = 'Replicaset parameters must be the same for all instances from one replicaset ("replicaset-1")'
+            self.assertIn(errmsg, res.msg)
+
+            # passed only for one instance
+            if p not in replicaset1_required_params:
+                instance11_params = copy.deepcopy(replicaset1_required_params)
+                instance11_params.update({p: v1})
+
+                instance12_params = copy.deepcopy(replicaset1_required_params)
+                # don't set for instance-12
+
+                res = call_validate_config({
+                    'instance-11': instance11_params,
+                    'instance-12': instance12_params,
+                    'instance-21': replicaset2_params,
+                })
+                self.assertFalse(res.success)
+                errmsg = 'Replicaset parameters must be the same for all instances from one replicaset ("replicaset-1")'
+                self.assertIn(errmsg, res.msg)
 
     def test_app_config(self):
         res = call_validate_config({

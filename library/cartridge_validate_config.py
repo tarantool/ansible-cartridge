@@ -25,6 +25,14 @@ PARAMS_THE_SAME_FOR_ALL_HOSTS = [
 CONFIG_REQUIRED_PARAMS = ['advertise_uri']
 CONFIG_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir', 'cluster_cookie']
 
+REPLICASET_PARAMS = [
+    'replicaset_alias',
+    'failover_priority',
+    'roles',
+    'all_rw',
+    'weight',
+    'vshard_group',
+]
 REPLICASET_REQUIRED_PARAMS = ['failover_priority', 'roles']
 
 CLUSTER_COOKIE_MAX_LEN = 256
@@ -142,6 +150,11 @@ def check_instance_config(config, host):
             errmsg = 'Specified forbidden parameter "{}" in "{}" config'.format(p, host)
             return False, errmsg
 
+    if 'advertise_uri' in config:
+        if not is_valid_advertise_uri(config['advertise_uri']):
+            errmsg = 'Instance advertise_uri must be specified as "<host>:<port>" ("{}")'.format(host)
+            return False, errmsg
+
     return True, None
 
 
@@ -157,9 +170,34 @@ def check_params_the_same_for_all_hosts(host_vars, found_common_params):
     return True, None
 
 
-def validate_config(params):
-    all_replicasets = {}
+def check_replicaset(host_vars, found_replicasets):
+    if 'replicaset_alias' not in host_vars:
+        return True, None
 
+    replicaset_alias = host_vars['replicaset_alias']
+
+    replicaset = {p: host_vars.get(p) for p in REPLICASET_PARAMS}
+
+    if replicaset_alias not in found_replicasets:
+        for p in REPLICASET_REQUIRED_PARAMS:
+            if p not in host_vars:
+                errmsg = 'Parameter "{}" is required for all replicasets (missed for "{}")'.format(
+                    p, replicaset_alias
+                )
+                return False, errmsg
+        # Save replicaset info
+        found_replicasets[replicaset_alias] = replicaset
+    else:
+        if replicaset != found_replicasets[replicaset_alias]:
+            errmsg = 'Replicaset parameters must be the same for all instances' + \
+                ' from one replicaset ("{}")'.format(replicaset_alias)
+            return False, errmsg
+
+    return True, None
+
+
+def validate_config(params):
+    found_replicasets = {}
     found_common_params = {}
 
     for host in params['hosts']:
@@ -194,37 +232,10 @@ def validate_config(params):
         if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
-        if 'advertise_uri' in host_vars['config']:
-            if not is_valid_advertise_uri(host_vars['config']['advertise_uri']):
-                errmsg = 'Instance advertise_uri must be specified as "<host>:<port>" ("{}")'.format(host)
-                return ModuleRes(success=False, msg=errmsg)
-
         # Check replicasets
-        if 'replicaset_alias' in host_vars:
-            replicaset_alias = host_vars['replicaset_alias']
-            if replicaset_alias not in all_replicasets:
-                for p in REPLICASET_REQUIRED_PARAMS:
-                    if p not in host_vars:
-                        errmsg = 'Parameter "{}" is required for all replicasets (missed for "{}")'.format(
-                            p, replicaset_alias
-                        )
-                        return ModuleRes(success=False, msg=errmsg)
-                # Save replicaset info
-                all_replicasets[replicaset_alias] = {
-                    'roles': host_vars['roles'] if 'roles' in host_vars else None,
-                    'failover_priority': host_vars['failover_priority'] if 'failover_priority' in host_vars else None,
-                    'vshard_group': host_vars['vshard_group'] if 'vshard_group' in host_vars else None,
-                }
-            else:
-                replicaset = {
-                    'roles': host_vars['roles'] if 'roles' in host_vars else None,
-                    'failover_priority': host_vars['failover_priority'] if 'failover_priority' in host_vars else None,
-                    'vshard_group': host_vars['vshard_group'] if 'vshard_group' in host_vars else None,
-                }
-                if replicaset != all_replicasets[replicaset_alias]:
-                    errmsg = 'Replicaset parameters must be the same for all instances' + \
-                        ' with the same "replicaset_alias" ("{}")'.format(replicaset_alias)
-                    return ModuleRes(success=False, msg=errmsg)
+        ok, errmsg = check_replicaset(host_vars, found_replicasets)
+        if not ok:
+            return ModuleRes(success=False, msg=errmsg)
 
     # Check cartridge_auth
     cartridge_auth = found_common_params.get('cartridge_auth')
