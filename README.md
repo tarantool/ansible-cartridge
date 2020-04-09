@@ -276,6 +276,12 @@ You can specify path to the rpm package to be installed using
 `cartridge_package_path`.
 Note, that `cartridge_package_path` must be the same for instances on one machine.
 
+This role does not allow package downgrades because this may drive the cluster
+inoperative.
+If you are sure that you need to downgrade package and you are aware of the risks,
+you can perform this action manually (for example, using Ansible
+[yum](https://docs.ansible.com/ansible/latest/modules/yum_module.html) module).
+
 You should specify `cartridge_app_name` to allow Ansible to manage application correctly.
 
 ### Instances
