@@ -1,5 +1,6 @@
 # Hack ansible.module_utils.helpers import
 import sys
+import copy
 import module_utils.helpers as helpers
 sys.modules['ansible.module_utils.helpers'] = helpers
 
@@ -19,28 +20,22 @@ def call_validate_config(hostvars, play_hosts=None):
 
 
 class TestValidateConfig(unittest.TestCase):
-    def test_required_params(self):
-        res = call_validate_config({'instance-1': {}})
-        self.assertFalse(res.success)
-        self.assertIn('`cartridge_app_name` must be specified', res.msg)
+    def test_instance_required_params(self):
+        required_params = {
+            'cartridge_app_name': 'app-name',
+            'cartridge_cluster_cookie': 'cookie',
+            'config': {'advertise_uri': 'localhost:3301'}
+        }
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-            }
-        })
-        self.assertFalse(res.success)
-        self.assertIn('`cartridge_cluster_cookie` must be specified', res.msg)
+        for p in required_params:
+            params = required_params.copy()
+            del params[p]
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-            }
-        })
-        self.assertFalse(res.success)
-        self.assertIn('Missed required parameter `config` for "instance-1"', res.msg)
+            res = call_validate_config({'instance-1': params})
+            self.assertFalse(res.success)
+            self.assertIn('"{}" must be specified'.format(p), res.msg)
 
+    def test_config_required_params(self):
         res = call_validate_config({
             'instance-1': {
                 'cartridge_app_name': 'app-name',
@@ -59,7 +54,7 @@ class TestValidateConfig(unittest.TestCase):
             }
         })
         self.assertFalse(res.success)
-        self.assertIn('Instance advertise_uri must be specified as `<host>:<port>` ("instance-1")', res.msg)
+        self.assertIn('Instance advertise_uri must be specified as "<host>:<port>" ("instance-1")', res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -72,7 +67,7 @@ class TestValidateConfig(unittest.TestCase):
         self.assertFalse(res.changed)
 
     def test_forbidden_params(self):
-        config = {
+        params = {
             'instance-1': {
                 'cartridge_app_name': 'app-name',
                 'cartridge_cluster_cookie': 'cookie',
@@ -81,16 +76,15 @@ class TestValidateConfig(unittest.TestCase):
         }
 
         for p in ['alias', 'console_sock', 'pid_file', 'workdir', 'cluster_cookie']:
-            config['instance-1']['config'][p] = 'I AM FORBIDDEN'
+            bad_params = copy.deepcopy(params)
+            bad_params['instance-1']['config'][p] = 'I AM FORBIDDEN'
 
-            res = call_validate_config(config)
+            res = call_validate_config(bad_params)
             self.assertFalse(res.success)
             self.assertIn(
                 'Specified forbidden parameter "{}" in "instance-1" config'.format(p),
                 res.msg
             )
-
-            del config['instance-1']['config'][p]
 
     def test_cluster_cookie(self):
         res = call_validate_config({
@@ -103,7 +97,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertFalse(res.success)
         self.assertIn(
-            'Cluster cookie must be specified in `cartridge_cluster_cookie`, not in `cartridge_defaults`',
+            'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"',
             res.msg
         )
 
@@ -169,73 +163,56 @@ class TestValidateConfig(unittest.TestCase):
         self.assertIn("expelled must be <class 'bool'>", res.msg)
 
     def test_common_params_are_the_same(self):
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-            },
-            'instance-2': {
-                'cartridge_app_name': 'other-app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3302'},
-            },
-        })
-        self.assertFalse(res.success)
-        self.assertIn("`cartridge_app_name` must be the same for all hosts", res.msg)
+        params = {
+            'cartridge_app_name': ['app-name', 'other-app-name'],
+            'cartridge_cluster_cookie': ['cookie', 'other-cookie'],
+            'cartridge_auth': [{'enabled': True}, {'enabled': False}],
+            'cartridge_bootstrap_vshard': [True, False],
+            'cartridge_failover': [True, False],
+            'cartridge_allow_downgrade': [True, False],
+            'cartridge_app_config': [
+                {'section-1': {'body': 'body'}},
+                {'section-1': {'body': 'other-body'}}
+            ],
+        }
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-            },
-            'instance-2': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'other-cookie',
-                'config': {'advertise_uri': 'localhost:3302'},
-            },
-        })
-        self.assertFalse(res.success)
-        self.assertIn("Cluster cookie must be the same for all instances", res.msg)
+        required_params = {
+            'cartridge_app_name': 'app-name',
+            'cartridge_cluster_cookie': 'cookie',
+            'config': {'advertise_uri': 'localhost:3301'},
+        }
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-                'cartridge_app_config': {
-                    'section-1': {'body': 42}
-                },
-            },
-            'instance-2': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3302'},
-                'cartridge_app_config': {
-                    'section-1': {'body': 420}
-                },
-            },
-        })
-        self.assertFalse(res.success)
-        self.assertIn("`cartridge_app_config` must be the same for all hosts", res.msg)
+        for p, values in params.items():
+            v1, v2 = values
 
-        res = call_validate_config({
-            'instance-1': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3301'},
-                'cartridge_failover': True,
-            },
-            'instance-2': {
-                'cartridge_app_name': 'app-name',
-                'cartridge_cluster_cookie': 'cookie',
-                'config': {'advertise_uri': 'localhost:3302'},
-                'cartridge_failover': False,
-            },
-        })
-        self.assertFalse(res.success)
-        self.assertIn("`cartridge_failover` must be the same for all hosts", res.msg)
+            # passed different values
+            instance1_params = copy.deepcopy(required_params)
+            instance1_params.update({p: v1})
+
+            instance2_params = copy.deepcopy(required_params)
+            instance2_params.update({p: v2})
+
+            res = call_validate_config({
+                'instance-1': instance1_params,
+                'instance-2': instance2_params,
+            })
+            self.assertFalse(res.success)
+            self.assertIn('"{}" must be the same for all hosts'.format(p), res.msg)
+
+            # passed only for one instance
+            if p not in required_params:
+                instance1_params = copy.deepcopy(required_params)
+                instance1_params.update({p: v1})
+
+                instance2_params = copy.deepcopy(required_params)
+                # don't set for instance-2
+
+                res = call_validate_config({
+                    'instance-1': instance1_params,
+                    'instance-2': instance2_params,
+                })
+                self.assertFalse(res.success)
+                self.assertIn('"{}" must be the same for all hosts'.format(p), res.msg)
 
     def test_replicasets(self):
         res = call_validate_config({
@@ -308,7 +285,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertFalse(res.success)
         self.assertIn(
-            "Replicaset parameters must be the same for all instances with the same `replicaset_alias`",
+            'Replicaset parameters must be the same for all instances with the same "replicaset_alias"',
             res.msg
         )
 
@@ -332,7 +309,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertFalse(res.success)
         self.assertIn(
-            "Replicaset parameters must be the same for all instances with the same `replicaset_alias`",
+            'Replicaset parameters must be the same for all instances with the same "replicaset_alias"',
             res.msg
         )
 
@@ -391,7 +368,7 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertFalse(res.success)
-        self.assertIn("`cartridge_app_config.section-1` must be dict", res.msg)
+        self.assertIn('"cartridge_app_config.section-1" must be dict', res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -403,7 +380,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertFalse(res.success)
         self.assertIn(
-            "`cartridge_app_config.section-1` must have `body` or `deleted` subsection",
+            '"cartridge_app_config.section-1" must have "body" or "deleted" subsection',
             res.msg
         )
 
@@ -419,7 +396,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertFalse(res.success)
         self.assertIn(
-            "`cartridge_app_config.section-1` can contain only `body` or `deleted` subsections",
+            'cartridge_app_config.section-1" can contain only "body" or "deleted" subsections',
             res.msg
         )
 
@@ -435,7 +412,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertFalse(res.success)
         self.assertIn(
-            "`cartridge_app_config.section-1` can contain only `body` or `deleted` subsections",
+            '"cartridge_app_config.section-1" can contain only "body" or "deleted" subsections',
             res.msg
         )
 
@@ -454,7 +431,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertFalse(res.success)
         self.assertIn(
-            "`cartridge_app_config.section-1` can contain only `body` or `deleted` subsections",
+            '"cartridge_app_config.section-1" can contain only "body" or "deleted" subsections',
             res.msg
         )
 
@@ -472,7 +449,7 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertFalse(res.success)
-        self.assertIn("`cartridge_app_config.section-1.deleted` must be bool", res.msg)
+        self.assertIn('"cartridge_app_config.section-1.deleted" must be bool', res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -485,7 +462,7 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertFalse(res.success)
-        self.assertIn("`cartridge_app_config.section-1.body` is required", res.msg)
+        self.assertIn('"cartridge_app_config.section-1.body" is required', res.msg)
 
         res = call_validate_config({
             'instance-1': {

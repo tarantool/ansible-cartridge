@@ -11,8 +11,19 @@ argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'}
 }
 
-INSTANCE_REQUIRED_PARAMS = ['advertise_uri']
-INSTANCE_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir', 'cluster_cookie']
+INSTANCE_REQUIRED_PARAMS = ['cartridge_app_name', 'cartridge_cluster_cookie', 'config']
+PARAMS_THE_SAME_FOR_ALL_HOSTS = [
+    'cartridge_app_name',
+    'cartridge_cluster_cookie',
+    'cartridge_auth',
+    'cartridge_bootstrap_vshard',
+    'cartridge_failover',
+    'cartridge_allow_downgrade',
+    'cartridge_app_config',
+]
+
+CONFIG_REQUIRED_PARAMS = ['advertise_uri']
+CONFIG_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir', 'cluster_cookie']
 
 REPLICASET_REQUIRED_PARAMS = ['failover_priority', 'roles']
 
@@ -109,16 +120,47 @@ def check_cluster_cookie_symbols(cluster_cookie):
     return True, None
 
 
+def check_required_params(host_vars, host):
+    for p in INSTANCE_REQUIRED_PARAMS:
+        if host_vars.get(p) is None:
+            errmsg = '"{}" must be specified (misseg for "{}")'.format(p, host)
+            return False, errmsg
+
+    return True, None
+
+
+def check_instance_config(config, host):
+    # Check if all required params are specified
+    for p in CONFIG_REQUIRED_PARAMS:
+        if config.get(p) is None:
+            errmsg = 'Missed required parameter "{}" in "{}" config'.format(p, host)
+            return False, errmsg
+
+    # Check if no forbidden params specified
+    for p in CONFIG_FORBIDDEN_PARAMS:
+        if config.get(p) is not None:
+            errmsg = 'Specified forbidden parameter "{}" in "{}" config'.format(p, host)
+            return False, errmsg
+
+    return True, None
+
+
+def check_params_the_same_for_all_hosts(host_vars, found_common_params):
+    for p in PARAMS_THE_SAME_FOR_ALL_HOSTS:
+        if found_common_params.get(p) is not None:
+            if host_vars.get(p) != found_common_params.get(p):
+                errmsg = '"{}" must be the same for all hosts'.format(p)
+                return False, errmsg
+        elif host_vars.get(p) is not None:
+            found_common_params[p] = host_vars.get(p)
+
+    return True, None
+
+
 def validate_config(params):
     all_replicasets = {}
 
-    # To check if this params are equal for all hosts
-    app_name = None
-    cluster_cookie = None
-    cartridge_auth = None
-    app_config = None
-    bootstrap_vshard = None
-    failover = None
+    found_common_params = {}
 
     for host in params['hosts']:
         host_vars = params['hostvars'][host]
@@ -127,106 +169,34 @@ def validate_config(params):
         if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
-        # Check if app_name specified
-        if 'cartridge_app_name' not in host_vars:
-            errmsg = '`cartridge_app_name` must be specified'
+        ok, errmsg = check_required_params(host_vars, host)
+        if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
-        # Check app_name
-        if app_name is not None:
-            if host_vars['cartridge_app_name'] != app_name:
-                errmsg = '`cartridge_app_name` must be the same for all hosts'
-                return ModuleRes(success=False, msg=errmsg)
-        elif 'cartridge_app_name' in host_vars:
-            app_name = host_vars['cartridge_app_name']
-
-        # Check cluster auth
-        if cartridge_auth is not None:
-            if 'cartridge_auth' in host_vars and host_vars['cartridge_auth'] != cartridge_auth:
-                errmsg = '`cartridge_auth` must be the same for all hosts'
-                return ModuleRes(success=False, msg=errmsg)
-        elif 'cartridge_auth' in host_vars:
-            cartridge_auth = host_vars['cartridge_auth']
-
-        # Check app config
-        if app_config is not None:
-            if 'cartridge_app_config' in host_vars and host_vars['cartridge_app_config'] != app_config:
-                errmsg = '`cartridge_app_config` must be the same for all hosts'
-                return ModuleRes(success=False, msg=errmsg)
-        elif 'cartridge_app_config' in host_vars:
-            app_config = host_vars['cartridge_app_config']
-
-        # Check cluster cookie
-        if 'cartridge_cluster_cookie' not in host_vars:
-            errmsg = '`cartridge_cluster_cookie` must be specified'
+        ok, errmsg = check_instance_config(host_vars['config'], host)
+        if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
-        # Check cartridge_bootstrap_vshard
-        if bootstrap_vshard is not None:
-            if 'cartridge_bootstrap_vshard' in host_vars \
-               and host_vars['cartridge_bootstrap_vshard'] != bootstrap_vshard:
-                errmsg = '`cartridge_bootstrap_vshard` must be the same for all hosts'
-                return ModuleRes(success=False, msg=errmsg)
-        elif 'cartridge_bootstrap_vshard' in host_vars:
-            bootstrap_vshard = host_vars['cartridge_bootstrap_vshard']
-
-        # Check failover
-        if failover is not None:
-            if 'cartridge_failover' in host_vars and host_vars['cartridge_failover'] != bootstrap_vshard:
-                errmsg = '`cartridge_failover` must be the same for all hosts'
-                return ModuleRes(success=False, msg=errmsg)
-        elif 'cartridge_failover' in host_vars:
-            failover = host_vars['cartridge_failover']
-
-        # Check if cookie is the same for all hosts
-        if cluster_cookie is not None:
-            if host_vars['cartridge_cluster_cookie'] != cluster_cookie:
-                errmsg = 'Cluster cookie must be the same for all instances'
-                return ModuleRes(success=False, msg=errmsg)
-        else:
-            cluster_cookie = host_vars['cartridge_cluster_cookie']
+        ok, errmsg = check_params_the_same_for_all_hosts(host_vars, found_common_params)
+        if not ok:
+            return ModuleRes(success=False, msg=errmsg)
 
         if 'cartridge_defaults' in host_vars:
             if 'cluster_cookie' in host_vars['cartridge_defaults']:
-                errmsg = 'Cluster cookie must be specified in `cartridge_cluster_cookie`, not in `cartridge_defaults`'
-                return ModuleRes(success=False, msg=errmsg)
-
-        # Check instances
-        if 'config' not in host_vars:
-            errmsg = 'Missed required parameter `config` for "{}"'.format(host)
-            return ModuleRes(success=False, msg=errmsg)
-
-        # Check if all required params are specified
-        for p in INSTANCE_REQUIRED_PARAMS:
-            if p not in host_vars['config']:
-                errmsg = 'Missed required parameter "{}" in "{}" config'.format(
-                    p, host
-                )
-                return ModuleRes(success=False, msg=errmsg)
-
-        # Check if no forbidden params specified
-        for p in INSTANCE_FORBIDDEN_PARAMS:
-            if p in host_vars['config']:
-                errmsg = 'Specified forbidden parameter "{}" in "{}" config'.format(p, host)
+                errmsg = 'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"'
                 return ModuleRes(success=False, msg=errmsg)
 
         if host_vars.get('expelled') is True and host_vars.get('restarted') is True:
             errmsg = 'Flags "expelled" and "restarted" can not be set at the same time'
             return ModuleRes(success=False, msg=errmsg)
 
-        # Check if cluster_cookie is not specified
-        if 'cluster_cookie' in host_vars['config']:
-            errmsg = '`cluster_cookie is specified for "{}"`.'.format(host) + \
-                'It must be specified ONLY in `cartridge_cluster_cookie` variable.'
-            return ModuleRes(success=False, msg=errmsg)
-
-        ok, errmsg = check_cluster_cookie_symbols(cluster_cookie)
+        ok, errmsg = check_cluster_cookie_symbols(host_vars['cartridge_cluster_cookie'])
         if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
         if 'advertise_uri' in host_vars['config']:
             if not is_valid_advertise_uri(host_vars['config']['advertise_uri']):
-                errmsg = 'Instance advertise_uri must be specified as `<host>:<port>` ("{}")'.format(host)
+                errmsg = 'Instance advertise_uri must be specified as "<host>:<port>" ("{}")'.format(host)
                 return ModuleRes(success=False, msg=errmsg)
 
         # Check replicasets
@@ -253,48 +223,50 @@ def validate_config(params):
                 }
                 if replicaset != all_replicasets[replicaset_alias]:
                     errmsg = 'Replicaset parameters must be the same for all instances' + \
-                        ' with the same `replicaset_alias` ("{}")'.format(replicaset_alias)
+                        ' with the same "replicaset_alias" ("{}")'.format(replicaset_alias)
                     return ModuleRes(success=False, msg=errmsg)
 
     # Check cartridge_auth
+    cartridge_auth = found_common_params.get('cartridge_auth')
     if cartridge_auth is not None:
         if 'users' in cartridge_auth:
             for user in cartridge_auth['users']:
                 if 'username' not in user:
-                    errmsg = 'Field "username" is required for `cartridge_auth.users`'
+                    errmsg = 'Field "username" is required for "cartridge_auth.users"'
                     return ModuleRes(success=False, msg=errmsg)
 
     # Check app_config
+    app_config = found_common_params.get('cartridge_app_config')
     if app_config is not None:
         for section_name, section in app_config.items():
             if not isinstance(section, dict):
-                errmsg = '`cartridge_app_config.{}` must be dict, found {}'.format(
+                errmsg = '"cartridge_app_config.{}" must be dict, found {}'.format(
                     section_name, type(section)
                 )
                 return ModuleRes(success=False, msg=errmsg)
 
             if not section:
-                errmsg = '`cartridge_app_config.{}` must have `body` or `deleted` subsection'.format(section_name)
+                errmsg = '"cartridge_app_config.{}" must have "body" or "deleted" subsection'.format(section_name)
                 return ModuleRes(success=False, msg=errmsg)
 
             allowed_keys = ['body', 'deleted']
             for key in section:
                 if key not in allowed_keys:
-                    errmsg = '`cartridge_app_config.{}` can contain only `body` or `deleted` subsections'.format(
+                    errmsg = '"cartridge_app_config.{}" can contain only "body" or "deleted" subsections'.format(
                         section_name
                     )
                     return ModuleRes(success=False, msg=errmsg)
 
             if 'deleted' in section:
                 if not isinstance(section['deleted'], bool):
-                    errmsg = '`cartridge_app_config.{}.deleted` must be bool, found {}'.format(
+                    errmsg = '"cartridge_app_config.{}.deleted" must be bool, found {}'.format(
                         section_name, type(section['deleted'])
                     )
                     return ModuleRes(success=False, msg=errmsg)
 
                 if section['deleted'] is False:
                     if 'body' not in section:
-                        errmsg = '`cartridge_app_config.{}.body` is required'.format(section_name)
+                        errmsg = '"cartridge_app_config.{}.body" is required'.format(section_name)
                         return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=False)
