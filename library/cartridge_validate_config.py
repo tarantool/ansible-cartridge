@@ -47,33 +47,33 @@ def is_valid_advertise_uri(uri):
 def check_schema(schema, conf, path=''):
     if isinstance(schema, dict):
         if not isinstance(conf, dict):
-            return False, '{} must be {}'.format(path, dict)
+            return '{} must be {}'.format(path, dict)
         for k in schema:
             if k in conf:
                 subpath = '{}.{}'.format(path, k)
-                ok, err = check_schema(schema[k], conf[k], subpath)
-                if not ok:
-                    return False, err
-        return True, None
+                errmsg = check_schema(schema[k], conf[k], subpath)
+                if errmsg is not None:
+                    return errmsg
+        return None
     elif isinstance(schema, list):
         if not isinstance(conf, list):
-            return False, '{} must be {}'.format(path, list)
+            return '{} must be {}'.format(path, list)
         for i, c in enumerate(conf):
             subpath = '{}[{}]'.format(path, i)
-            ok, err = check_schema(schema[0], c, subpath)
-            if not ok:
-                return False, err
-        return True, None
+            errmsg = check_schema(schema[0], c, subpath)
+            if errmsg is not None:
+                return errmsg
+        return None
     elif isinstance(schema, type):
         if schema in [float, int]:
             if not (isinstance(conf, float) or isinstance(conf, int)):
-                return False, '{} must be {}'.format(path, schema)
+                return '{} must be {}'.format(path, schema)
         else:
             if not isinstance(conf, schema):
-                return False, '{} must be {}'.format(path, schema)
-        return True, None
+                return '{} must be {}'.format(path, schema)
+        return None
     else:
-        return False, 'Wrong type'
+        return 'Wrong type'
 
 
 def validate_types(vars):
@@ -121,28 +121,28 @@ def validate_types(vars):
 def check_cluster_cookie_symbols(cluster_cookie):
     if len(cluster_cookie) > CLUSTER_COOKIE_MAX_LEN:
         errmsg = 'Cluster cookie сannot be longer than {}'.format(CLUSTER_COOKIE_MAX_LEN)
-        return False, errmsg
+        return errmsg
 
     m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, cluster_cookie)
     if m is not None:
         errmsg = 'Cluster cookie cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
             '("{}" found)'.format(m.group())
-        return False, errmsg
+        return errmsg
 
-    return True, None
+    return None
 
 
 def check_required_params(host_vars, host):
     for p in INSTANCE_REQUIRED_PARAMS:
         if host_vars.get(p) is None:
             errmsg = '"{}" must be specified (misseg for "{}")'.format(p, host)
-            return False, errmsg
+            return errmsg
 
-    ok, errmsg = check_cluster_cookie_symbols(host_vars['cartridge_cluster_cookie'])
-    if not ok:
-        return False, errmsg
+    errmsg = check_cluster_cookie_symbols(host_vars['cartridge_cluster_cookie'])
+    if errmsg is not None:
+        return errmsg
 
-    return True, None
+    return None
 
 
 def check_instance_config(config, host):
@@ -150,20 +150,20 @@ def check_instance_config(config, host):
     for p in CONFIG_REQUIRED_PARAMS:
         if config.get(p) is None:
             errmsg = 'Missed required parameter "{}" in "{}" config'.format(p, host)
-            return False, errmsg
+            return errmsg
 
     # Check if no forbidden params specified
     for p in CONFIG_FORBIDDEN_PARAMS:
         if config.get(p) is not None:
             errmsg = 'Specified forbidden parameter "{}" in "{}" config'.format(p, host)
-            return False, errmsg
+            return errmsg
 
     if 'advertise_uri' in config:
         if not is_valid_advertise_uri(config['advertise_uri']):
             errmsg = 'Instance advertise_uri must be specified as "<host>:<port>" ("{}")'.format(host)
-            return False, errmsg
+            return errmsg
 
-    return True, None
+    return None
 
 
 def check_params_the_same_for_all_hosts(host_vars, found_common_params):
@@ -171,16 +171,16 @@ def check_params_the_same_for_all_hosts(host_vars, found_common_params):
         if found_common_params.get(p) is not None:
             if host_vars.get(p) != found_common_params.get(p):
                 errmsg = '"{}" must be the same for all hosts'.format(p)
-                return False, errmsg
+                return errmsg
         elif host_vars.get(p) is not None:
             found_common_params[p] = host_vars.get(p)
 
-    return True, None
+    return None
 
 
 def check_replicaset(host_vars, found_replicasets):
     if 'replicaset_alias' not in host_vars:
-        return True, None
+        return None
 
     replicaset_alias = host_vars['replicaset_alias']
 
@@ -192,33 +192,33 @@ def check_replicaset(host_vars, found_replicasets):
                 errmsg = 'Parameter "{}" is required for all replicasets (missed for "{}")'.format(
                     p, replicaset_alias
                 )
-                return False, errmsg
+                return errmsg
         # Save replicaset info
         found_replicasets[replicaset_alias] = replicaset
     else:
         if replicaset != found_replicasets[replicaset_alias]:
             errmsg = 'Replicaset parameters must be the same for all instances' + \
                 ' from one replicaset ("{}")'.format(replicaset_alias)
-            return False, errmsg
+            return errmsg
 
-    return True, None
+    return None
 
 
 def check_app_config(found_common_params):
     app_config = found_common_params.get('cartridge_app_config')
     if app_config is None:
-        return True, None
+        return None
 
     for section_name, section in app_config.items():
         if not isinstance(section, dict):
             errmsg = '"cartridge_app_config.{}" must be dict, found {}'.format(
                 section_name, type(section)
             )
-            return False, errmsg
+            return errmsg
 
         if not section:
             errmsg = '"cartridge_app_config.{}" must have "body" or "deleted" subsection'.format(section_name)
-            return False, errmsg
+            return errmsg
 
         allowed_keys = ['body', 'deleted']
         for key in section:
@@ -226,36 +226,36 @@ def check_app_config(found_common_params):
                 errmsg = '"cartridge_app_config.{}" can contain only "body" or "deleted" subsections'.format(
                     section_name
                 )
-                return False, errmsg
+                return errmsg
 
         if 'deleted' in section:
             if not isinstance(section['deleted'], bool):
                 errmsg = '"cartridge_app_config.{}.deleted" must be bool, found {}'.format(
                     section_name, type(section['deleted'])
                 )
-                return False, errmsg
+                return errmsg
 
             if section['deleted'] is False:
                 if 'body' not in section:
                     errmsg = '"cartridge_app_config.{}.body" is required'.format(section_name)
-                    return False, errmsg
+                    return errmsg
 
-    return True, None
+    return None
 
 
 def check_auth(found_common_params):
     cartridge_auth = found_common_params.get('cartridge_auth')
     if cartridge_auth is None:
-        return True, None
+        return None
 
     if cartridge_auth is not None:
         if 'users' in cartridge_auth:
             for user in cartridge_auth['users']:
                 if 'username' not in user:
                     errmsg = 'Field "username" is required for "cartridge_auth.users"'
-                    return False, errmsg
+                    return errmsg
 
-    return True
+    return None
 
 
 def validate_config(params):
@@ -266,23 +266,23 @@ def validate_config(params):
         host_vars = params['hostvars'][host]
 
         # Validate types
-        ok, errmsg = validate_types(host_vars)
-        if not ok:
+        errmsg = validate_types(host_vars)
+        if errmsg is not None:
             return ModuleRes(success=False, msg=errmsg)
 
         # All required params should be specified
-        ok, errmsg = check_required_params(host_vars, host)
-        if not ok:
+        errmsg = check_required_params(host_vars, host)
+        if errmsg is not None:
             return ModuleRes(success=False, msg=errmsg)
 
         # Instance config
-        ok, errmsg = check_instance_config(host_vars['config'], host)
-        if not ok:
+        errmsg = check_instance_config(host_vars['config'], host)
+        if errmsg is not None:
             return ModuleRes(success=False, msg=errmsg)
 
         # Params common for all instances
-        ok, errmsg = check_params_the_same_for_all_hosts(host_vars, found_common_params)
-        if not ok:
+        errmsg = check_params_the_same_for_all_hosts(host_vars, found_common_params)
+        if errmsg is not None:
             return ModuleRes(success=False, msg=errmsg)
 
         # Cartridge defaults
@@ -297,18 +297,18 @@ def validate_config(params):
             return ModuleRes(success=False, msg=errmsg)
 
         # Replicasets
-        ok, errmsg = check_replicaset(host_vars, found_replicasets)
-        if not ok:
+        errmsg = check_replicaset(host_vars, found_replicasets)
+        if errmsg is not None:
             return ModuleRes(success=False, msg=errmsg)
 
     # Authorization params
-    ok, errmsg = check_auth(found_common_params)
-    if not ok:
+    errmsg = check_auth(found_common_params)
+    if errmsg is not None:
         return ModuleRes(success=False, msg=errmsg)
 
     # Clusterwide config
-    ok, errmsg = check_app_config(found_common_params)
-    if not ok:
+    errmsg = check_app_config(found_common_params)
+    if errmsg is not None:
         return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=False)
