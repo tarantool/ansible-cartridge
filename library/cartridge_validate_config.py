@@ -18,7 +18,6 @@ PARAMS_THE_SAME_FOR_ALL_HOSTS = [
     'cartridge_auth',
     'cartridge_bootstrap_vshard',
     'cartridge_failover',
-    'cartridge_allow_downgrade',
     'cartridge_app_config',
 ]
 

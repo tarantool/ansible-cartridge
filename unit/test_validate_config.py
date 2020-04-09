@@ -189,7 +189,6 @@ class TestValidateConfig(unittest.TestCase):
             'cartridge_auth': [{'enabled': True}, {'enabled': False}],
             'cartridge_bootstrap_vshard': [True, False],
             'cartridge_failover': [True, False],
-            'cartridge_allow_downgrade': [True, False],
             'cartridge_app_config': [
                 {'section-1': {'body': 'body'}},
                 {'section-1': {'body': 'other-body'}}
