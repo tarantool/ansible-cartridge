@@ -54,7 +54,7 @@
     name: '/tmp/{{ rpm_filename }}'
     state: present
     update_cache: true
-    allow_downgrade: '{{ cartridge_allow_downgrade }}'
   register: install_rpm
+  failed_when: install_rpm.rc != 0 and "does not update installed package" not in install_rpm.results[0]
   notify:
     - reload-systemd-daemon
