@@ -156,8 +156,6 @@ Configuration format is described in detail in the
 
 * `cartridge_package_path` (`string`, optional): path to Cartridge RPM package
   (application name will be detected as package name);
-* `cartridge_allow_downgrade` (`boolean`, optional, default: `false`): indicates
-  if package downgrading is allowed;
 * `cartridge_app_name` (`string`): application name, required;
 * `cartridge_cluster_cookie` (`string`, required): cluster cookie for all
   cluster instances;
@@ -277,6 +275,12 @@ to avoid collisions.
 You can specify path to the rpm package to be installed using
 `cartridge_package_path`.
 Note, that `cartridge_package_path` must be the same for instances on one machine.
+
+This role does not allow package downgrades because this may drive the cluster
+inoperative.
+If you are sure that you need to downgrade package and you are aware of the risks,
+you can perform this action manually (for example, using Ansible
+[yum](https://docs.ansible.com/ansible/latest/modules/yum_module.html) module).
 
 You should specify `cartridge_app_name` to allow Ansible to manage application correctly.
 
