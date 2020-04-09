@@ -166,6 +166,7 @@ Configuration format is described in detail in the
 * `cartridge_failover` (`boolean`, optional): boolean flag that indicates if
   failover should be enabled or disabled;
 * `cartridge_app_config` (`dict`, optional): application config sections to patch;
+* `cartridge_auth`: (`dict`, optional): [authorization configuration](#cartridge-authorization);
 * `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`):
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency);
