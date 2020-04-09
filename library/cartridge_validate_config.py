@@ -138,6 +138,10 @@ def check_required_params(host_vars, host):
             errmsg = '"{}" must be specified (misseg for "{}")'.format(p, host)
             return False, errmsg
 
+    ok, errmsg = check_cluster_cookie_symbols(host_vars['cartridge_cluster_cookie'])
+    if not ok:
+        return False, errmsg
+
     return True, None
 
 
@@ -200,6 +204,60 @@ def check_replicaset(host_vars, found_replicasets):
     return True, None
 
 
+def check_app_config(found_common_params):
+    app_config = found_common_params.get('cartridge_app_config')
+    if app_config is None:
+        return True, None
+
+    for section_name, section in app_config.items():
+        if not isinstance(section, dict):
+            errmsg = '"cartridge_app_config.{}" must be dict, found {}'.format(
+                section_name, type(section)
+            )
+            return False, errmsg
+
+        if not section:
+            errmsg = '"cartridge_app_config.{}" must have "body" or "deleted" subsection'.format(section_name)
+            return False, errmsg
+
+        allowed_keys = ['body', 'deleted']
+        for key in section:
+            if key not in allowed_keys:
+                errmsg = '"cartridge_app_config.{}" can contain only "body" or "deleted" subsections'.format(
+                    section_name
+                )
+                return False, errmsg
+
+        if 'deleted' in section:
+            if not isinstance(section['deleted'], bool):
+                errmsg = '"cartridge_app_config.{}.deleted" must be bool, found {}'.format(
+                    section_name, type(section['deleted'])
+                )
+                return False, errmsg
+
+            if section['deleted'] is False:
+                if 'body' not in section:
+                    errmsg = '"cartridge_app_config.{}.body" is required'.format(section_name)
+                    return False, errmsg
+
+    return True, None
+
+
+def check_auth(found_common_params):
+    cartridge_auth = found_common_params.get('cartridge_auth')
+    if cartridge_auth is None:
+        return True, None
+
+    if cartridge_auth is not None:
+        if 'users' in cartridge_auth:
+            for user in cartridge_auth['users']:
+                if 'username' not in user:
+                    errmsg = 'Field "username" is required for "cartridge_auth.users"'
+                    return False, errmsg
+
+    return True
+
+
 def validate_config(params):
     found_replicasets = {}
     found_common_params = {}
@@ -207,82 +265,51 @@ def validate_config(params):
     for host in params['hosts']:
         host_vars = params['hostvars'][host]
 
+        # Validate types
         ok, errmsg = validate_types(host_vars)
         if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
+        # All required params should be specified
         ok, errmsg = check_required_params(host_vars, host)
         if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
+        # Instance config
         ok, errmsg = check_instance_config(host_vars['config'], host)
         if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
+        # Params common for all instances
         ok, errmsg = check_params_the_same_for_all_hosts(host_vars, found_common_params)
         if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
+        # Cartridge defaults
         if 'cartridge_defaults' in host_vars:
             if 'cluster_cookie' in host_vars['cartridge_defaults']:
                 errmsg = 'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"'
                 return ModuleRes(success=False, msg=errmsg)
 
+        # Instance state
         if host_vars.get('expelled') is True and host_vars.get('restarted') is True:
             errmsg = 'Flags "expelled" and "restarted" can not be set at the same time'
             return ModuleRes(success=False, msg=errmsg)
 
-        ok, errmsg = check_cluster_cookie_symbols(host_vars['cartridge_cluster_cookie'])
-        if not ok:
-            return ModuleRes(success=False, msg=errmsg)
-
-        # Check replicasets
+        # Replicasets
         ok, errmsg = check_replicaset(host_vars, found_replicasets)
         if not ok:
             return ModuleRes(success=False, msg=errmsg)
 
-    # Check cartridge_auth
-    cartridge_auth = found_common_params.get('cartridge_auth')
-    if cartridge_auth is not None:
-        if 'users' in cartridge_auth:
-            for user in cartridge_auth['users']:
-                if 'username' not in user:
-                    errmsg = 'Field "username" is required for "cartridge_auth.users"'
-                    return ModuleRes(success=False, msg=errmsg)
+    # Authorization params
+    ok, errmsg = check_auth(found_common_params)
+    if not ok:
+        return ModuleRes(success=False, msg=errmsg)
 
-    # Check app_config
-    app_config = found_common_params.get('cartridge_app_config')
-    if app_config is not None:
-        for section_name, section in app_config.items():
-            if not isinstance(section, dict):
-                errmsg = '"cartridge_app_config.{}" must be dict, found {}'.format(
-                    section_name, type(section)
-                )
-                return ModuleRes(success=False, msg=errmsg)
-
-            if not section:
-                errmsg = '"cartridge_app_config.{}" must have "body" or "deleted" subsection'.format(section_name)
-                return ModuleRes(success=False, msg=errmsg)
-
-            allowed_keys = ['body', 'deleted']
-            for key in section:
-                if key not in allowed_keys:
-                    errmsg = '"cartridge_app_config.{}" can contain only "body" or "deleted" subsections'.format(
-                        section_name
-                    )
-                    return ModuleRes(success=False, msg=errmsg)
-
-            if 'deleted' in section:
-                if not isinstance(section['deleted'], bool):
-                    errmsg = '"cartridge_app_config.{}.deleted" must be bool, found {}'.format(
-                        section_name, type(section['deleted'])
-                    )
-                    return ModuleRes(success=False, msg=errmsg)
-
-                if section['deleted'] is False:
-                    if 'body' not in section:
-                        errmsg = '"cartridge_app_config.{}.body" is required'.format(section_name)
-                        return ModuleRes(success=False, msg=errmsg)
+    # Clusterwide config
+    ok, errmsg = check_app_config(found_common_params)
+    if not ok:
+        return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=False)
 
