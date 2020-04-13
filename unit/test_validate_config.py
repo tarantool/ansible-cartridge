@@ -243,7 +243,7 @@ class TestValidateConfig(unittest.TestCase):
             'roles': ['role-1'],
         }
 
-        replicaset_required_params = ['failover_priority', 'roles']
+        replicaset_required_params = ['roles']
 
         for p in replicaset_required_params:
             params = copy.deepcopy(instance_required_params)

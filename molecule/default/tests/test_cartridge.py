@@ -83,11 +83,11 @@ def get_configured_replicasets():
         if replicaset_alias not in replicasets:
             replicasets[replicaset_alias] = {
                 'instances': [],
-                'failover_priority': host_vars['failover_priority'],
+                'failover_priority': host_vars.get('failover_priority'),
                 'roles': host_vars['roles'],
-                'all_rw': host_vars['all_rw'] if 'all_rw' in host_vars else None,
-                'weight': host_vars['weight'] if 'weight' in host_vars else None,
-                'vshard_group': host_vars.get('vshard_group', None)
+                'all_rw': host_vars.get('all_rw'),
+                'weight': host_vars.get('weight'),
+                'vshard_group': host_vars.get('vshard_group')
             }
 
         replicasets[replicaset_alias]['instances'].append(instance)
@@ -257,8 +257,10 @@ def test_replicasets():
         started_replicaset_instances = [i['alias'] for i in started_replicaset['servers']]
         assert set(started_replicaset_instances) == set(configured_replicaset['instances'])
 
-        assert started_replicaset['master']['alias'] == configured_replicaset['failover_priority'][0]
-        assert aliases_in_priority_order(started_replicaset['servers']) == configured_replicaset['failover_priority']
+        if configured_replicaset['failover_priority'] is not None:
+            configured_failover_priority = configured_replicaset['failover_priority']
+            assert started_replicaset['master']['alias'] == configured_failover_priority[0]
+            assert aliases_in_priority_order(started_replicaset['servers']) == configured_failover_priority
 
         if configured_replicaset['all_rw'] is not None:
             assert started_replicaset['all_rw'] == configured_replicaset['all_rw']
