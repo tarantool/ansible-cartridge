@@ -1,0 +1,8 @@
+FROM centos:7 as base
+
+RUN yum -y update
+RUN yum install -y git gcc make cmake unzip
+
+RUN git config --global user.email "test@tarantool.io" \
+    && git config --global user.name "Tar Antool"
+

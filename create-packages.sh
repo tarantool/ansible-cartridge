@@ -1,52 +1,39 @@
 #!/bin/bash
 
-set -e
+# This script (re)creates `packages` directory
+# In this directory application `myapp` is created
+# Then, this application is packed into RPM and DEB
+# Note, that if you are using OS X, you should have `gnu-sed` installed
+# and packing will be performed in docker in this case
+
+set -xe
 
 packages_dirname="packages"
 
 if [ -d "${packages_dirname}" ]; then
-    echo "Directory packages already exists"
-    exit 0
+    echo "Remove existent packages directory"
+    rm -rf ${packages_dirname}
 fi
 
-tarantool_version=${TARANTOOL_VERSION:-opensource-1.10}
-dockerfile_suffix=opensource
-cartridge_cli_version=${CARTRIDGE_CLI_VERSION:-1.3.2}
+appname=myapp
+version=1.0.0-0
 
-if [[ $tarantool_version == "enterprise" ]] ;
-then
-    dockerfile_suffix=enterprise
+pack_flags=''
+if [[ `tarantool -V` == *"Target: Darwin"* ]]; then
+    pack_flags+='--use-docker'
 fi
 
-if [[ $tarantool_version == "opensource-2.2" ]] ;
-then
-    tarantool_repo=tarantool/2_2
-elif [[ $tarantool_version == "opensource-1.10" ]] ;
-then
-    tarantool_repo=tarantool/1_10
-fi
+mkdir ${packages_dirname}
+pushd ${packages_dirname}
 
-IMAGE=${tarantool_version}-packages-builder
-CONTAINER=${IMAGE}-container
+cartridge create --name ${appname}
 
-echo "Build packages for ${tarantool_version}"
+sed -i '/cartridge.cfg({/a \ \ \ \ vshard_groups = {hot = { bucket_count = 20000 }},' myapp/init.lua
 
-docker rm ${CONTAINER} || true
+cartridge pack rpm --version ${version} ${pack_flags} ${appname}
+cartridge pack deb --version ${version} ${pack_flags} ${appname}
 
-docker build --build-arg TARANTOOL_DOWNLOAD_TOKEN=${TARANTOOL_DOWNLOAD_TOKEN} \
-             --build-arg BUNDLE_VERSION=${BUNDLE_VERSION} \
-             --build-arg TARANTOOL_REPO=${tarantool_repo} \
-             --build-arg CARTRIDGE_CLI_VERSION=${cartridge_cli_version} \
-             -t ${IMAGE} \
-             -f Dockerfile.${dockerfile_suffix} \
-             -t ${IMAGE} .
+rm -rf ${appname}
 
-docker create --name ${CONTAINER} ${IMAGE} usr/bin/true
-
-mkdir "${packages_dirname}"
-
-docker cp ${CONTAINER}:/opt/myapp/myapp-1.0.0-0.rpm ${packages_dirname}
-docker cp ${CONTAINER}:/opt/myapp/myapp-1.0.0-0.deb ${packages_dirname}
-docker rm ${CONTAINER}
-
-echo "Packages are placed in packages directory"
+echo "Packages are placed in ${packages_dirname} directory"
+popd
