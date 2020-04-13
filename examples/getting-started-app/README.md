@@ -33,7 +33,7 @@ Now you will learn how to *deploy* this application on servers and
 
 This example directory contains `getting-started-app-1.0.0-0.rpm` file.
 It's the RPM package with the example application, we will deploy in on two
-virtual machines described in the `Vagrantfile`.
+virtual machines described in the [`Vagrantfile`](./Vagrantfile).
 
 You can use your own Tarantool Cartridge application.
 Use [Cartridge CLI](https://github.com/tarantool/cartridge-cli) to create
@@ -301,7 +301,7 @@ Tarantool be automatically installed with your application.
 If you want to install Tarantool yourself (e.g. from a package), you can set
 the `cartridge_enable_tarantool_repo` variable to `false`.
 
-#### Check instances systemd services
+#### Check systemd services
 
 Connect to the machines and check that all the instances were started:
 
