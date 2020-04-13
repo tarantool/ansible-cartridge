@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script creates `packages` directory if it doesn't exists
+# This script (re)creates `packages` directory
 # In this directory application `myapp` is created
 # Then, this application is packed into RPM and DEB
 # Note, that if you are using OS X, you should have `gnu-sed` installed
@@ -11,8 +11,8 @@ set -xe
 packages_dirname="packages"
 
 if [ -d "${packages_dirname}" ]; then
-    echo "Directory packages already exists"
-    exit 0
+    echo "Remove existent packages directory"
+    rm -rf ${packages_dirname}
 fi
 
 appname=myapp

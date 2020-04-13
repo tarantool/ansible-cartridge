@@ -1,9 +1,11 @@
 ---
 variables:
   BUNDLE_VERSION: 2.3.1-3-g889e0f5
+  CARTRIDGE_CLI_VERSION: 1.7.0
 
 stages:
   - prebuild
+  - packages
   - unit
   - test
 
@@ -47,6 +49,16 @@ prebuild-test:
     IMAGE: $CI_REGISTRY_IMAGE
     DOCKERFILE: Dockerfile
 
+prebuild-packages:
+  extends: .prebuild
+  only:
+    changes:
+      - Dockerfile.packages
+      - .gitlab-ci.yml
+  variables:
+    IMAGE: $CI_REGISTRY_IMAGE:packages
+    DOCKERFILE: Dockerfile.packages
+
 prebuild-unit:
   extends: .prebuild
   only:
@@ -57,6 +69,49 @@ prebuild-unit:
   variables:
     IMAGE: $CI_REGISTRY_IMAGE:unit
     DOCKERFILE: Dockerfile.unit
+
+
+.packages:
+  extends: .dind
+  stage: packages
+  image: $CI_REGISTRY_IMAGE:packages
+  script:
+    - tarantool --version
+    - cartridge --version
+
+    - ./create-packages.sh
+  artifacts:
+    paths:
+      - ./packages/myapp-*.rpm
+      - ./packages/myapp-*.deb
+    when: always
+  dependencies: []
+
+packages-enterprise:
+  extends: .packages
+  before_script:
+    - curl -O -L https://tarantool:${TARANTOOL_DOWNLOAD_TOKEN}@download.tarantool.io/enterprise/tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
+    - tar -xzf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
+    - rm -rf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
+    - source tarantool-enterprise/env.sh
+
+.packages-opensource:
+  extends: .packages
+  before_script:
+    - curl -s https://packagecloud.io/install/repositories/tarantool/${TARANTOOL_VERSION}/script.rpm.sh | bash
+    - yum install -y tarantool tarantool-devel
+    - tarantoolctl rocks install cartridge-cli ${CARTRIDGE_CLI_VERSION}
+    - PATH=$PWD/.rocks/bin/:$PATH
+
+packages-opensource-1.10:
+  extends: .packages-opensource
+  variables:
+    TARANTOOL_VERSION: '1_10'
+
+packages-opensource-2.2:
+  extends: .packages-opensource
+  variables:
+    TARANTOOL_VERSION: '2_2'
 
 
 unit:
@@ -77,22 +132,9 @@ unit:
   stage: test
   image: $CI_REGISTRY_IMAGE
 
-  variables:
-    CARTRIDGE_CLI_VERSION: 1.6.0
-
-  cache:
-    key: ${CI_COMMIT_REF_NAME}:${TARANTOOL_VERSION}:${CARTRIDGE_CLI_VERSION}
-    paths:
-      - packages
-
   script:
     - docker info
     - molecule --version
-    - tarantool --version
-
-    - tarantoolctl rocks install cartridge-cli ${CARTRIDGE_CLI_VERSION}
-    - PATH=${PATH}:.rocks/bin
-    - ./create-packages.sh
 
     - cd .. && (rm -rf tarantool-cartridge || true)
     - cp -R ansible-cartridge tarantool-cartridge && cd tarantool-cartridge
@@ -109,25 +151,15 @@ unit:
 
 test-enterprise:
   extends: .test
-  before_script:
-    - curl -O -L https://tarantool:${TARANTOOL_DOWNLOAD_TOKEN}@download.tarantool.io/enterprise/tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
-    - tar -xzf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
-    - rm -f tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
-    - source tarantool-enterprise/env.sh
-
-.test-opensource:
-  extends: .test
-  before_script:
-    - echo ${TARANTOOL_VERSION}
-    - curl -s https://packagecloud.io/install/repositories/tarantool/${TARANTOOL_VERSION}/script.rpm.sh | bash
-    - yum -y install tarantool tarantool-devel
+  dependencies:
+    - packages-enterprise
 
 test-opensource-1.10:
-  extends: .test-opensource
-  variables:
-    TARANTOOL_VERSION: '1_10'
+  extends: .test
+  dependencies:
+    - packages-opensource-1.10
 
 test-opensource-2.2:
-  extends: .test-opensource
-  variables:
-    TARANTOOL_VERSION: '2_2'
+  extends: .test
+  dependencies:
+    - packages-opensource-2.2
