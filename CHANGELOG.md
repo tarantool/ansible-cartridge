@@ -14,6 +14,7 @@ to use the newest tag with new release
 ### Changed
 
 - `any_errors_fatal: true` is set for package installation tasks
+- `falover_priority` parameter is optional
 
 ## [1.2.0] - 2020-04-08
 
