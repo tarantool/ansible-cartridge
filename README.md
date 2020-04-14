@@ -135,8 +135,6 @@ all:
       vars:
         # replicaset configuration
         replicaset_alias: core-1
-        failover_priority:
-          - core-1  # leader
         roles:
           - 'app.roles.custom'
           - 'vshard-router'
@@ -176,7 +174,7 @@ Configuration format is described in detail in the
 * `expelled` (`boolean`, optional, default: `false`): boolean flag that indicates if instance must be expelled from topology;
 * `instance_start_timeout` (`number`, optional, default: 60): time in seconds to wait for instance to be started;
 * `replicaset_alias` (`string`, optional): replicaset alias, will be displayed in Web UI;
-* `failover_priority` (`list-of-string`, required if `replicaset_alias` specified): failover priority;
+* `failover_priority` (`list-of-string`): failover priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
 * `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
 * `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled.
@@ -332,7 +330,7 @@ You can find more details about replicasets and automatic failover in [Tarantool
 To configure replicasets you need to specify replicaset parameters for each instance in replicaset:
 
 * `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
-* `failover_priority` (`list-of-strings`, required if `replicaset_alias` specified) - failover prioriry order.
+* `failover_priority` (`list-of-strings`, optional) - failover prioriry order.
   First instance will be replicaset leader.
   It isn't required to specify all instances here, you can specify only one or more.
   Other instances will have lower priority;
@@ -380,7 +378,6 @@ cartridge.cfg({
         hot-storage:
       vars:
         replicaset_alias: hot-storage
-        failover_priority: [hot-storage]
         roles: [vshard-storage]
         vshard_group: hot
 ```
