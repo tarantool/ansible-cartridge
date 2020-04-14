@@ -32,7 +32,7 @@ REPLICASET_PARAMS = [
     'weight',
     'vshard_group',
 ]
-REPLICASET_REQUIRED_PARAMS = ['failover_priority', 'roles']
+REPLICASET_REQUIRED_PARAMS = ['roles']
 
 CLUSTER_COOKIE_MAX_LEN = 256
 CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX = r'[^a-zA-Z0-9_.~-]+'
