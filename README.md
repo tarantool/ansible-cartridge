@@ -56,6 +56,7 @@ To deploy an application and set up this topology:
   hosts: all
   become: true
   become_user: root
+  any_errors_fatal: true
   tasks:
   - name: Import Tarantool Cartridge role
     import_role:

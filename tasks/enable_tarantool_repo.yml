@@ -7,7 +7,9 @@
   until: not get_script.failed
   retries: 3
   delay: 5
+  any_errors_fatal: true
 
 - name: Run repository setup script
   command: bash /tmp/script.{{ package_type }}.sh
   changed_when: false
+  any_errors_fatal: true

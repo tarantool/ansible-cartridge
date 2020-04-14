@@ -11,6 +11,10 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+### Changed
+
+- `any_errors_fatal: true` is set for package installation tasks
+
 ## [1.2.0] - 2020-04-08
 
 ### Fixed

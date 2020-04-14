@@ -3,10 +3,12 @@
   copy:
     src: '{{ cartridge_package_path }}'
     dest: /tmp/
+  any_errors_fatal: true
 
 - name: Set RPM filename
   set_fact:
     rpm_filename: '{{ cartridge_package_path | basename }}'
+  any_errors_fatal: true
 
 - name: Get RPM info  # noqa 301 303
   command: 'rpm -qip /tmp/{{ rpm_filename }}'
@@ -14,10 +16,12 @@
     warn: false
   register: rpm_info
   changed_when: false
+  any_errors_fatal: true
 
 - name: Get package name
   set_fact:
     package_name: "{{ rpm_info.stdout | regex_search('Name\\s*:\\s*(.*)\\s+', '\\1') | first }}"
+  any_errors_fatal: true
 
 - name: Fail if cartridge_app_name isn't equal to package name
   fail:
@@ -27,6 +31,7 @@
         'Found cartridge_app_name: "%s", package name: "%s"' | format(cartridge_app_name, package_name)
       }}
   when: cartridge_app_name != package_name
+  any_errors_fatal: true
 
 - name: Get RPM deplist
   command: 'rpm -qpR /tmp/{{ rpm_filename }}'
@@ -35,12 +40,14 @@
   register: deplist
   changed_when: false
   when: cartridge_enable_tarantool_repo
+  any_errors_fatal: true
 
 # Get tarantool dependency <major>.<minor> version
 - name: Get tarantool dependency version
   set_fact:
     tnt_version: "{{ deplist.stdout | regex_search('tarantool >= ([0-9]+).([0-9]+)', '\\1', '\\2') }}"
   when: cartridge_enable_tarantool_repo
+  any_errors_fatal: true
 
 - name: Enable Tarantool repo
   include_tasks: enable_tarantool_repo.yml
@@ -58,3 +65,4 @@
   failed_when: install_rpm.rc != 0 and "does not update installed package" not in install_rpm.results[0]
   notify:
     - reload-systemd-daemon
+  any_errors_fatal: true

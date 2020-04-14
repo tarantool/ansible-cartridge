@@ -3,10 +3,12 @@
   copy:
     src: '{{ cartridge_package_path }}'
     dest: /tmp/
+  any_errors_fatal: true
 
 - name: Set DEB filename
   set_fact:
     deb_filename: '{{ cartridge_package_path | basename }}'
+  any_errors_fatal: true
 
 - name: Get deb info
   command: 'dpkg -I /tmp/{{ deb_filename }}'
@@ -14,10 +16,12 @@
     warn: false
   register: deb_info
   changed_when: false
+  any_errors_fatal: true
 
 - name: Get package name
   set_fact:
     package_name: "{{ deb_info.stdout | regex_search('Package\\s*:\\s*(.*)\\s+', '\\1') | first }}"
+  any_errors_fatal: true
 
 - name: Fail if cartridge_app_name isn't equal to package name
   fail:
@@ -27,16 +31,19 @@
         'Found cartridge_app_name: "%s", package name: "%s"' | format(cartridge_app_name, package_name)
       }}
   when: cartridge_app_name != package_name
+  any_errors_fatal: true
 
 - name: Get deplist
   set_fact:
     deplist: "{{ deb_info.stdout | regex_search('Depends\\s*:\\s*(.*)', '\\1') | first }}"
+  any_errors_fatal: true
 
 # Get tarantool dependency <major>.<minor> version
 - name: Get tarantool dependency version
   set_fact:
     tnt_version: "{{ deplist | regex_search('tarantool\\s+\\(\\s*>=\\s*([0-9]+).([0-9]+)', '\\1', '\\2') }}"
   when: cartridge_enable_tarantool_repo
+  any_errors_fatal: true
 
 - name: Enable Tarantool repo
   include_tasks: enable_tarantool_repo.yml
@@ -51,3 +58,4 @@
     update_cache: true
   notify:
     - reload-systemd-daemon
+  any_errors_fatal: true
