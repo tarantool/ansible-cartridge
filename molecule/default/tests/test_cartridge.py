@@ -274,8 +274,8 @@ def test_replicasets():
 
 def test_failover():
     # Get configured failover status
-    configured_failover = get_variable_vaule('cartridge_failover')
-    if not configured_failover:
+    configured_failover_params = get_variable_vaule('cartridge_failover_params')
+    if not configured_failover_params:
         return
 
     # Get all configured instances
@@ -294,16 +294,31 @@ def test_failover():
     query = '''
         query {
           cluster {
-            failover
+            failover_params {
+                mode
+                state_provider
+                tarantool_params {
+                    uri
+                    password
+                }
+            }
           }
         }
     '''
     session = get_authorized_session(cluster_cookie)
     response = session.post(admin_api_url, json={'query': query})
 
-    failover = response.json()['data']['cluster']['failover']
+    failover_params = response.json()['data']['cluster']['failover_params']
 
-    assert failover == configured_failover
+    assert failover_params['mode'] == configured_failover_params['mode']
+    if configured_failover_params.get('state_provider') is not None:
+        assert failover_params['state_provider'] == configured_failover_params['state_provider']
+    if configured_failover_params.get('state_provider_uri') is not None:
+        assert 'tarantool_params' in failover_params
+        assert failover_params['tarantool_params']['uri'] == configured_failover_params['state_provider_uri']
+    if configured_failover_params.get('state_provider_password') is not None:
+        assert 'tarantool_params' in failover_params
+        assert failover_params['tarantool_params']['password'] == configured_failover_params['state_provider_password']
 
 
 def test_auth_params():
