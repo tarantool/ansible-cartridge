@@ -332,6 +332,8 @@ def validate_config(params):
     found_replicasets = {}
     found_common_params = {}
 
+    warnings = []
+
     for host in params['hosts']:
         host_vars = params['hostvars'][host]
 
@@ -386,7 +388,13 @@ def validate_config(params):
     if errmsg is not None:
         return ModuleRes(success=False, msg=errmsg)
 
-    return ModuleRes(success=True, changed=False)
+    if found_common_params.get('cartridge_failover') is not None:
+        warnings.append(
+            'Variable `cartridge_failover` is deprecated since 1.3.0 and will be removed in 2.0.0. '
+            'Use `cartridge_failover_params` instead.'
+        )
+
+    return ModuleRes(success=True, changed=False, warnings=warnings)
 
 
 def main():
@@ -394,7 +402,7 @@ def main():
     res = validate_config(module.params)
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, meta=res.meta, warnings=res.warnings)
     else:
         module.fail_json(msg=res.msg)
 

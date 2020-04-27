@@ -15,7 +15,7 @@ from library.cartridge_manage_failover import manage_failover
 def call_manage_failover(control_sock, failover):
     return manage_failover({
         'control_sock': control_sock,
-        'failover': failover,
+        'failover_params': failover,
     })
 
 
