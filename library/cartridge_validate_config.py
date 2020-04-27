@@ -18,6 +18,7 @@ PARAMS_THE_SAME_FOR_ALL_HOSTS = [
     'cartridge_auth',
     'cartridge_bootstrap_vshard',
     'cartridge_failover',
+    'cartridge_failover_params',
     'cartridge_app_config',
 ]
 
@@ -36,6 +37,22 @@ REPLICASET_REQUIRED_PARAMS = ['roles']
 
 CLUSTER_COOKIE_MAX_LEN = 256
 CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX = r'[^a-zA-Z0-9_.~-]+'
+
+FALOVER_MODES = [
+    'stateful',
+    'eventual',
+    'disabled',
+]
+
+STATEFUL_FAILOVER_PARAMS = [
+    'state_provider',
+    'state_provider_uri',
+    'state_provider_password',
+]
+
+STATEFUL_FAILOVER_STATE_PROVIDERS = [
+    'tarantool'
+]
 
 
 def is_valid_advertise_uri(uri):
@@ -112,6 +129,12 @@ def validate_types(vars):
                 }
             ]
         },
+        'cartridge_failover_params': {
+            'enabled': bool,
+            'mode': str,
+            'state_provider_uri': str,
+            'state_provider_password': str
+        }
     }
 
     return check_schema(schema, vars)
@@ -134,7 +157,7 @@ def check_cluster_cookie_symbols(cluster_cookie):
 def check_required_params(host_vars, host):
     for p in INSTANCE_REQUIRED_PARAMS:
         if host_vars.get(p) is None:
-            errmsg = '"{}" must be specified (misseg for "{}")'.format(p, host)
+            errmsg = '"{}" must be specified (missed for "{}")'.format(p, host)
             return errmsg
 
     errmsg = check_cluster_cookie_symbols(host_vars['cartridge_cluster_cookie'])
@@ -257,6 +280,54 @@ def check_auth(found_common_params):
     return None
 
 
+def check_failover(found_common_params):
+    cartridge_failover = found_common_params.get('cartridge_failover')
+    cartridge_failover_params = found_common_params.get('cartridge_failover_params')
+
+    if cartridge_failover is not None and cartridge_failover_params is not None:
+        return 'Only one of "cartridge_failover" and "cartridge_failover_params" can be specified'
+
+    if cartridge_failover_params is not None:
+        if 'mode' not in cartridge_failover_params:
+            return'"mode" is required in "cartridge_failover_params"'
+
+        mode = cartridge_failover_params['mode']
+        if mode not in FALOVER_MODES:
+            return 'Failover Failover mode should be one of {}'.format(FALOVER_MODES)
+
+        if mode == 'disabled':  # don't check other parameters
+            return None
+
+        if mode == 'eventual':
+            for p in STATEFUL_FAILOVER_PARAMS:
+                if p in cartridge_failover_params:
+                    return '"{}" failover parameter is allowed only for "stateful" mode'.format(p)
+
+        if mode == 'stateful':
+            for p in STATEFUL_FAILOVER_PARAMS:
+                if p not in cartridge_failover_params:
+                    return '"{}" failover parameter is required for "stateful" mode'.format(p)
+
+            if cartridge_failover_params['state_provider'] not in STATEFUL_FAILOVER_STATE_PROVIDERS:
+                return "Stateful failover state provider should be one of {}".format(
+                    STATEFUL_FAILOVER_STATE_PROVIDERS
+                )
+
+            state_provider_uri = cartridge_failover_params['state_provider_uri']
+            if not is_valid_advertise_uri(state_provider_uri):
+                return 'Stateful failover provider URI must be specified as "<host>:<port>"'
+
+            state_provider_password = cartridge_failover_params['state_provider_password']
+
+            m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, state_provider_password)
+            if m is not None:
+                errmsg = 'Stateful failover provider password cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
+                    '("{}" found)'.format(m.group())
+                return errmsg
+
+    return None
+
+
 def validate_config(params):
     found_replicasets = {}
     found_common_params = {}
@@ -307,6 +378,11 @@ def validate_config(params):
 
     # Clusterwide config
     errmsg = check_app_config(found_common_params)
+    if errmsg is not None:
+        return ModuleRes(success=False, msg=errmsg)
+
+    # Failover
+    errmsg = check_failover(found_common_params)
     if errmsg is not None:
         return ModuleRes(success=False, msg=errmsg)
 

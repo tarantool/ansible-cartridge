@@ -41,6 +41,9 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_auth.users[0].email',
                 'roles[0]',
                 'failover_priority[0]',
+                'cartridge_failover_params.mode',
+                'cartridge_failover_params.state_provider_uri',
+                'cartridge_failover_params.state_provider_password',
             },
             bool: {
                 'cartridge_bootstrap_vshard',
@@ -55,6 +58,7 @@ class TestValidateConfig(unittest.TestCase):
             dict: {
                 'cartridge_defaults',
                 'cartridge_app_config',
+                'cartridge_failover_params'
             },
             int: {
                 'instance_start_timeout',
@@ -92,6 +96,10 @@ class TestValidateConfig(unittest.TestCase):
             if path.startswith('cartridge_auth.'):
                 p = path.split('.')[-1]
                 return {'cartridge_auth': {p: wrong_type_value}}
+
+            if path.startswith('cartridge_failover_params.'):
+                p = path.split('.')[-1]
+                return {'cartridge_failover_params': {p: wrong_type_value}}
 
             return {path: wrong_type_value}
 
@@ -529,6 +537,157 @@ class TestValidateConfig(unittest.TestCase):
         self.assertFalse(res.success)
         self.assertIn(
             'Flags "expelled" and "restarted" can not be set at the same time',
+            res.msg
+        )
+
+    def test_failover(self):
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_params': {
+                    'mode': 'disabled'
+                },
+                'cartridge_failover': True,
+            },
+        })
+        self.assertFalse(res.success)
+        self.assertIn(
+            'Only one of "cartridge_failover" and "cartridge_failover_params" can be specified',
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_params': {
+                    'mode': 'invalid',
+                },
+            },
+        })
+        self.assertFalse(res.success)
+        self.assertIn(
+            "Failover mode should be one of ['stateful', 'eventual', 'disabled']",
+            res.msg
+        )
+
+        STATEFUL_FAILOVER_PARAMS = [
+            'state_provider',
+            'state_provider_uri',
+            'state_provider_password',
+        ]
+
+        for p in STATEFUL_FAILOVER_PARAMS:
+            params = {
+                'instance-1': {
+                    'cartridge_app_name': 'app-name',
+                    'cartridge_cluster_cookie': 'cookie',
+                    'config': {'advertise_uri': 'localhost:3301'},
+
+                    'cartridge_failover_params': {
+                        'mode': 'eventual',
+                    },
+                }
+            }
+
+            params['instance-1']['cartridge_failover_params'].update({
+                p: 'value'
+            })
+
+            res = call_validate_config(params)
+            self.assertFalse(res.success)
+            self.assertIn(
+                '"{}" failover parameter is allowed only for "stateful" mode'.format(p),
+                res.msg
+            )
+
+        for p in STATEFUL_FAILOVER_PARAMS:
+            params = {
+                'instance-1': {
+                    'cartridge_app_name': 'app-name',
+                    'cartridge_cluster_cookie': 'cookie',
+                    'config': {'advertise_uri': 'localhost:3301'},
+
+                    'cartridge_failover_params': {
+                        'mode': 'stateful',
+                        'state_provider': 'tarantool',
+                        'state_provider_uri': 'localhost:3301',
+                        'state_provider_password': 'passwd',
+                    },
+                }
+            }
+
+            del params['instance-1']['cartridge_failover_params'][p]
+
+            res = call_validate_config(params)
+            self.assertFalse(res.success)
+            self.assertIn(
+                '"{}" failover parameter is required for "stateful" mode'.format(p),
+                res.msg
+            )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_params': {
+                    'mode': 'stateful',
+                    'state_provider': 'invalid',
+                    'state_provider_uri': 'localhost:3301',
+                    'state_provider_password': 'passwd',
+                },
+            },
+        })
+        self.assertFalse(res.success)
+        self.assertIn(
+            "Stateful failover state provider should be one of ['tarantool']",
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_params': {
+                    'mode': 'stateful',
+                    'state_provider': 'tarantool',
+                    'state_provider_uri': '3301',
+                    'state_provider_password': 'passwd',
+                },
+            },
+        })
+        self.assertFalse(res.success)
+        self.assertIn(
+            'Stateful failover provider URI must be specified as "<host>:<port>"',
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_params': {
+                    'mode': 'stateful',
+                    'state_provider': 'tarantool',
+                    'state_provider_uri': 'localhost:3301',
+                    'state_provider_password': '@@@passwd:',
+                },
+            },
+        })
+        self.assertFalse(res.success)
+        self.assertIn(
+            'Stateful failover provider password cannot contain symbols other than [a-zA-Z0-9_.~-]',
             res.msg
         )
 
