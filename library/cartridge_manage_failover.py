@@ -61,19 +61,22 @@ def manage_failover_new(control_console, failover_params):
     ]
 
     if mode == 'stateful':
-        if failover_params.get('state_provider') is not None:
-            lua_params.append('state_provider = "{}"'.format(failover_params.get('state_provider')))
+        state_provider = failover_params.get('state_provider')
+        if state_provider == 'stateboard':
+            lua_params.append('state_provider = "tarantool"')
 
-        tarantool_params = []
+            stateboard_params = failover_params.get('stateboard_params')
 
-        if failover_params.get('state_provider_uri') is not None:
-            tarantool_params.append('uri = "{}"'.format(failover_params.get('state_provider_uri')))
+            lua_stateboard_params = []
+            if stateboard_params is not None:
+                if stateboard_params.get('uri') is not None:
+                    lua_stateboard_params.append('uri = "{}"'.format(stateboard_params['uri']))
 
-        if failover_params.get('state_provider_password') is not None:
-            tarantool_params.append('password = "{}"'.format(failover_params.get('state_provider_password')))
+                if stateboard_params.get('password') is not None:
+                    lua_stateboard_params.append('password = "{}"'.format(stateboard_params['password']))
 
-        if tarantool_params:
-            lua_params.append('tarantool_params = {{ {} }}'.format(', '.join(tarantool_params)))
+            if lua_stateboard_params:
+                lua_params.append('tarantool_params = {{ {} }}'.format(', '.join(lua_stateboard_params)))
 
     res = control_console.eval('''
         local ok, err = require('cartridge').failover_set_params({{

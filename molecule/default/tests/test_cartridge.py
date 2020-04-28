@@ -312,13 +312,16 @@ def test_failover():
 
     assert failover_params['mode'] == configured_failover_params['mode']
     if configured_failover_params.get('state_provider') is not None:
-        assert failover_params['state_provider'] == configured_failover_params['state_provider']
-    if configured_failover_params.get('state_provider_uri') is not None:
-        assert 'tarantool_params' in failover_params
-        assert failover_params['tarantool_params']['uri'] == configured_failover_params['state_provider_uri']
-    if configured_failover_params.get('state_provider_password') is not None:
-        assert 'tarantool_params' in failover_params
-        assert failover_params['tarantool_params']['password'] == configured_failover_params['state_provider_password']
+        if configured_failover_params['state_provider'] == 'stateboard':
+            assert failover_params['state_provider'] == 'tarantool'
+
+            if configured_failover_params.get('stateboard_params') is not None:
+                assert 'tarantool_params' in failover_params
+                configured_stateboard_params = configured_failover_params['stateboard_params']
+                stateboard_params = failover_params['tarantool_params']
+                for p in ['uri', 'password']:
+                    if configured_stateboard_params.get(p) is not None:
+                        assert stateboard_params[p] == configured_stateboard_params[p]
 
 
 def test_auth_params():

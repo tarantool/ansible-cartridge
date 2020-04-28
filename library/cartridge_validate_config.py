@@ -46,12 +46,20 @@ FALOVER_MODES = [
 
 STATEFUL_FAILOVER_PARAMS = [
     'state_provider',
-    'state_provider_uri',
-    'state_provider_password',
+    'stateboard_params',
+]
+
+STATEFUL_FAILOVER_REQUIRED_PARAMS = [
+    'state_provider',
 ]
 
 STATEFUL_FAILOVER_STATE_PROVIDERS = [
-    'tarantool'
+    'stateboard',
+]
+
+STATEBOARD_PROVIDER_REQUIRED_PARAMS = [
+    'uri',
+    'password',
 ]
 
 
@@ -132,8 +140,11 @@ def validate_types(vars):
         'cartridge_failover_params': {
             'enabled': bool,
             'mode': str,
-            'state_provider_uri': str,
-            'state_provider_password': str
+            'state_provider': str,
+            'stateboard_params': {
+                'uri': str,
+                'password': str
+            }
         }
     }
 
@@ -288,7 +299,7 @@ def check_failover(found_common_params):
         return 'Only one of "cartridge_failover" and "cartridge_failover_params" can be specified'
 
     if cartridge_failover_params is not None:
-        if 'mode' not in cartridge_failover_params:
+        if cartridge_failover_params.get('mode') is None:
             return'"mode" is required in "cartridge_failover_params"'
 
         mode = cartridge_failover_params['mode']
@@ -304,7 +315,7 @@ def check_failover(found_common_params):
                     return '"{}" failover parameter is allowed only for "stateful" mode'.format(p)
 
         if mode == 'stateful':
-            for p in STATEFUL_FAILOVER_PARAMS:
+            for p in STATEFUL_FAILOVER_REQUIRED_PARAMS:
                 if p not in cartridge_failover_params:
                     return '"{}" failover parameter is required for "stateful" mode'.format(p)
 
@@ -313,17 +324,25 @@ def check_failover(found_common_params):
                     STATEFUL_FAILOVER_STATE_PROVIDERS
                 )
 
-            state_provider_uri = cartridge_failover_params['state_provider_uri']
-            if not is_valid_advertise_uri(state_provider_uri):
-                return 'Stateful failover provider URI must be specified as "<host>:<port>"'
+            if cartridge_failover_params['state_provider'] == 'stateboard':
+                if cartridge_failover_params.get('stateboard_params') is None:
+                    return '"stateboard_params" is required for "stateboard" state provider'
 
-            state_provider_password = cartridge_failover_params['state_provider_password']
+                for p in STATEBOARD_PROVIDER_REQUIRED_PARAMS:
+                    if p not in cartridge_failover_params['stateboard_params']:
+                        return '"stateboard_params.{}" is required for "stateboard" provider'.format(p)
 
-            m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, state_provider_password)
-            if m is not None:
-                errmsg = 'Stateful failover provider password cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
-                    '("{}" found)'.format(m.group())
-                return errmsg
+                state_provider_uri = cartridge_failover_params['stateboard_params']['uri']
+                if not is_valid_advertise_uri(state_provider_uri):
+                    return 'Stateboard URI must be specified as "<host>:<port>"'
+
+                state_provider_password = cartridge_failover_params['stateboard_params']['password']
+
+                m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, state_provider_password)
+                if m is not None:
+                    errmsg = 'Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
+                        '("{}" found)'.format(m.group())
+                    return errmsg
 
     return None
 

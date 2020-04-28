@@ -42,8 +42,9 @@ class TestValidateConfig(unittest.TestCase):
                 'roles[0]',
                 'failover_priority[0]',
                 'cartridge_failover_params.mode',
-                'cartridge_failover_params.state_provider_uri',
-                'cartridge_failover_params.state_provider_password',
+                'cartridge_failover_params.state_provider',
+                'cartridge_failover_params.stateboard_params.uri',
+                'cartridge_failover_params.stateboard_params.password',
             },
             bool: {
                 'cartridge_bootstrap_vshard',
@@ -58,7 +59,8 @@ class TestValidateConfig(unittest.TestCase):
             dict: {
                 'cartridge_defaults',
                 'cartridge_app_config',
-                'cartridge_failover_params'
+                'cartridge_failover_params',
+                'cartridge_failover_params.stateboard_params',
             },
             int: {
                 'instance_start_timeout',
@@ -96,6 +98,16 @@ class TestValidateConfig(unittest.TestCase):
             if path.startswith('cartridge_auth.'):
                 p = path.split('.')[-1]
                 return {'cartridge_auth': {p: wrong_type_value}}
+
+            if path.startswith('cartridge_failover_params.stateboard_params.'):
+                p = path.split('.')[-1]
+                return {
+                    'cartridge_failover_params': {
+                        'stateboard_params': {
+                            p: wrong_type_value
+                        }
+                    }
+                }
 
             if path.startswith('cartridge_failover_params.'):
                 p = path.split('.')[-1]
@@ -576,13 +588,12 @@ class TestValidateConfig(unittest.TestCase):
             res.msg
         )
 
-        STATEFUL_FAILOVER_PARAMS = [
-            'state_provider',
-            'state_provider_uri',
-            'state_provider_password',
-        ]
+        STATEFUL_FAILOVER_PARAMS = {
+            'state_provider': 'stateboard',
+            'stateboard_params': {},
+        }
 
-        for p in STATEFUL_FAILOVER_PARAMS:
+        for p, value in STATEFUL_FAILOVER_PARAMS.items():
             params = {
                 'instance-1': {
                     'cartridge_app_name': 'app-name',
@@ -596,7 +607,7 @@ class TestValidateConfig(unittest.TestCase):
             }
 
             params['instance-1']['cartridge_failover_params'].update({
-                p: 'value'
+                p: value
             })
 
             res = call_validate_config(params)
@@ -606,7 +617,11 @@ class TestValidateConfig(unittest.TestCase):
                 res.msg
             )
 
-        for p in STATEFUL_FAILOVER_PARAMS:
+        STATEFUL_FAILOVER_REQUIRED_PARAMS = [
+            'state_provider',
+        ]
+
+        for p in STATEFUL_FAILOVER_REQUIRED_PARAMS:
             params = {
                 'instance-1': {
                     'cartridge_app_name': 'app-name',
@@ -615,9 +630,7 @@ class TestValidateConfig(unittest.TestCase):
 
                     'cartridge_failover_params': {
                         'mode': 'stateful',
-                        'state_provider': 'tarantool',
-                        'state_provider_uri': 'localhost:3301',
-                        'state_provider_password': 'passwd',
+                        'state_provider': 'stateboard',
                     },
                 }
             }
@@ -640,14 +653,12 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover_params': {
                     'mode': 'stateful',
                     'state_provider': 'invalid',
-                    'state_provider_uri': 'localhost:3301',
-                    'state_provider_password': 'passwd',
                 },
             },
         })
         self.assertFalse(res.success)
         self.assertIn(
-            "Stateful failover state provider should be one of ['tarantool']",
+            "Stateful failover state provider should be one of ['stateboard']",
             res.msg
         )
 
@@ -659,15 +670,67 @@ class TestValidateConfig(unittest.TestCase):
 
                 'cartridge_failover_params': {
                     'mode': 'stateful',
-                    'state_provider': 'tarantool',
-                    'state_provider_uri': '3301',
-                    'state_provider_password': 'passwd',
+                    'state_provider': 'stateboard',
                 },
             },
         })
         self.assertFalse(res.success)
         self.assertIn(
-            'Stateful failover provider URI must be specified as "<host>:<port>"',
+            'stateboard_params" is required for "stateboard" state provider',
+            res.msg
+        )
+
+        STATEBOARD_PROVIDER_REQUIRED_PARAMS = [
+            'uri',
+            'password',
+        ]
+
+        for p in STATEBOARD_PROVIDER_REQUIRED_PARAMS:
+            params = {
+                'instance-1': {
+                    'cartridge_app_name': 'app-name',
+                    'cartridge_cluster_cookie': 'cookie',
+                    'config': {'advertise_uri': 'localhost:3301'},
+
+                    'cartridge_failover_params': {
+                        'mode': 'stateful',
+                        'state_provider': 'stateboard',
+                        'stateboard_params': {
+                            'uri': 'localhost:3310',
+                            'password': 'passwd',
+                        }
+                    },
+                },
+            }
+
+            del params['instance-1']['cartridge_failover_params']['stateboard_params'][p]
+
+            res = call_validate_config(params)
+            self.assertFalse(res.success)
+            self.assertIn(
+                'stateboard_params.{}" is required for "stateboard" provider'.format(p),
+                res.msg
+            )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_params': {
+                    'mode': 'stateful',
+                    'state_provider': 'stateboard',
+                    'stateboard_params': {
+                        'uri': '3301',
+                        'password': 'passwd',
+                    }
+                },
+            },
+        })
+        self.assertFalse(res.success)
+        self.assertIn(
+            'Stateboard URI must be specified as "<host>:<port>"',
             res.msg
         )
 
@@ -679,15 +742,17 @@ class TestValidateConfig(unittest.TestCase):
 
                 'cartridge_failover_params': {
                     'mode': 'stateful',
-                    'state_provider': 'tarantool',
-                    'state_provider_uri': 'localhost:3301',
-                    'state_provider_password': '@@@passwd:',
+                    'state_provider': 'stateboard',
+                    'stateboard_params': {
+                        'uri': 'localhost:3301',
+                        'password': '@@@passwd',
+                    }
                 },
             },
         })
         self.assertFalse(res.success)
         self.assertIn(
-            'Stateful failover provider password cannot contain symbols other than [a-zA-Z0-9_.~-]',
+            'Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-]',
             res.msg
         )
 
