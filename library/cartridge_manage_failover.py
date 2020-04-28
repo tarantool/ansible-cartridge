@@ -116,7 +116,9 @@ def manage_failover(params):
         return manage_failover_new(control_console, failover_params)
     else:
         if failover_params['mode'] == 'stateful':
-            errmsg = 'Stateful failover is supported since cartridge 2.1.0'
+            errmsg = 'Stateful failover is supported since cartridge {}'.format(
+                NEW_FAILOVER_API_CARTRIDGE_VERSION
+            )
             return ModuleRes(success=False, msg=errmsg)
         return manage_failover_old(control_console, failover_params)
 
