@@ -1,6 +1,6 @@
 ---
 variables:
-  BUNDLE_VERSION: 2.3.1-3-g889e0f5
+  BUNDLE_VERSION: 2.3.1-13-g882baf7
   CARTRIDGE_CLI_VERSION: 1.8.0
 
 stages:
