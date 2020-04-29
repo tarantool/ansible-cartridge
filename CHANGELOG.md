@@ -11,10 +11,18 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+### Added
+
+- `cartridge_failover_params` variable to manage new failover (cartridge >= 2.1.0)
+
 ### Changed
 
 - `any_errors_fatal: true` is set for package installation tasks
 - `falover_priority` parameter is optional
+
+### Deprecated
+
+- `cartridge_failover` variable
 
 ## [1.2.0] - 2020-04-08
 
