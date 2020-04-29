@@ -76,7 +76,7 @@ def get_configured_replicasets():
         if 'replicaset_alias' not in host_vars:
             continue
 
-        if instance_is_expelled(host_vars):
+        if instance_is_expelled(host_vars) or instance_is_stateboard(host_vars):
             continue
 
         replicaset_alias = host_vars['replicaset_alias']
@@ -97,7 +97,7 @@ def get_configured_replicasets():
 
 def get_any_instance_http_port(instances):
     for _, instance_vars in instances.items():
-        if not instance_is_expelled(instance_vars):
+        if not instance_is_expelled(instance_vars) and not instance_is_stateboard(instance_vars):
             return instance_vars['config']['http_port']
     assert False
 
@@ -121,6 +121,10 @@ def section_is_deleted(section):
 
 def instance_is_expelled(host_vars):
     return 'expelled' in host_vars and host_vars['expelled'] is True
+
+
+def instance_is_stateboard(host_vars):
+    return host_vars.get('stateboard') is True
 
 
 def aliases_in_priority_order(replicaset_servers):
@@ -147,6 +151,13 @@ def test_services_status_and_config(host):
 
         service = host.service('{}@{}'.format(APP_NAME, instance_name))
         conf_file_path = '/etc/tarantool/conf.d/{}.{}.yml'.format(APP_NAME, instance_name)
+        conf_section = '{}.{}'.format(APP_NAME, instance_name)
+
+        if instance_is_stateboard(instance_vars):
+            service = host.service('{}-stateboard'.format(APP_NAME))
+            conf_file_path = '/etc/tarantool/conf.d/{}-stateboard.yml'.format(APP_NAME)
+            conf_section = '{}-stateboard'.format(APP_NAME)
+
         conf_file = host.file(conf_file_path)
 
         if instance_is_expelled(instance_vars):
@@ -160,7 +171,6 @@ def test_services_status_and_config(host):
             assert service.is_running
             assert service.is_enabled
 
-            conf_section = '{}.{}'.format(APP_NAME, instance_name)
             check_conf_file(conf_file, conf_section, instance_conf)
 
     default_conf_file_path = '/etc/tarantool/conf.d/{}.yml'.format(APP_NAME)
@@ -192,10 +202,10 @@ def test_instances():
     started_instances = response.json()['data']['servers']
     started_instances = {i['alias']: i for i in started_instances}
 
-    # filter out expelled instances
+    # filter out expelled instances and stateboard
     configured_instances = {
         i: instance_vars for i, instance_vars in configured_instances.items()
-        if not instance_is_expelled(instance_vars)
+        if not instance_is_expelled(instance_vars) and not instance_is_stateboard(instance_vars)
     }
 
     # Check if all configured instances are started and avaliable

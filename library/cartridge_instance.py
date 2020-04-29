@@ -10,7 +10,7 @@ import os
 argument_spec = {
     'control_sock': {'required': True, 'type': 'str'},
     'config': {'required': True, 'type': 'dict'},
-    'cartridge_defaults': {'required': True, 'type': 'dict'},
+    'cartridge_defaults': {'required': False, 'type': 'dict', 'default': {}},
 }
 
 

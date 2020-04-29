@@ -11,10 +11,12 @@ argument_spec = {
     'restart_forced': {'required': True, 'type': 'bool'},
     'control_sock': {'required': True, 'type': 'str'},
     'appname': {'required': True, 'type': 'str'},
-    'instance_name': {'required': True, 'type': 'str'},
+    'instance_conf_file': {'required': True, 'type': 'str'},
+    'conf_section_name': {'required': True, 'type': 'str'},
     'cluster_cookie': {'required': True, 'type': 'str'},
     'cartridge_defaults': {'required': True, 'type': 'dict'},
     'config': {'required': True, 'type': 'dict'},
+    'stateboard': {'required': True, 'type': 'bool'}
 }
 
 
@@ -79,14 +81,18 @@ def needs_restart(params):
     if restart_forced:
         return ModuleRes(success=True, changed=True)
 
+    stateboard = params['stateboard']
+
     control_sock = params['control_sock']
     appname = params['appname']
-    instance_name = params['instance_name']
+    # instance_name = params['instance_name']
     new_default_conf = params['cartridge_defaults']
     new_instance_conf = params['config']
     cluster_cookie = params['cluster_cookie']
+    instance_conf_file = params['instance_conf_file']
+    conf_section_name = params['conf_section_name']
 
-    instance_conf_path = '/etc/tarantool/conf.d/{}.{}.yml'.format(appname, instance_name)
+    # instance_conf_path = '/etc/tarantool/conf.d/{}.{}.yml'.format(appname, instance_name)
     default_conf_path = '/etc/tarantool/conf.d/{}.yml'.format(appname)
     app_code_path = '/usr/share/tarantool/{}'.format(appname)
 
@@ -114,27 +120,28 @@ def needs_restart(params):
 
     # check if instance config was changed (except memtx_memory)
     current_instance_conf = read_yaml_file_section(
-        instance_conf_path,
+        instance_conf_file,
         control_console,
-        '{}.{}'.format(appname, instance_name)
+        conf_section_name
     )
     if check_conf_updated(new_instance_conf, current_instance_conf, ['memtx_memory']):
         return ModuleRes(success=True, changed=True)
 
-    # check if default config was changed (except memtx_memory)
-    current_default_conf = read_yaml_file_section(
-        default_conf_path,
-        control_console,
-        appname
-    )
-    new_default_conf.update({'cluster_cookie': cluster_cookie})
-    if check_conf_updated(new_default_conf, current_default_conf, ['memtx_memory']):
-        return ModuleRes(success=True, changed=True)
+    if not stateboard:
+        # check if default config was changed (except memtx_memory)
+        current_default_conf = read_yaml_file_section(
+            default_conf_path,
+            control_console,
+            appname
+        )
+        new_default_conf.update({'cluster_cookie': cluster_cookie})
+        if check_conf_updated(new_default_conf, current_default_conf, ['memtx_memory']):
+            return ModuleRes(success=True, changed=True)
 
     new_memtx_memory = None
     if 'memtx_memory' in new_instance_conf:
         new_memtx_memory = new_instance_conf['memtx_memory']
-    elif 'memtx_memory' in new_default_conf:
+    elif not stateboard and 'memtx_memory' in new_default_conf:
         new_memtx_memory = new_default_conf['memtx_memory']
 
     # This code is ran after attempt to change memtx_memory in runtime

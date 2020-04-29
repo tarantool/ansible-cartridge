@@ -17,18 +17,22 @@ from library.cartridge_needs_restart import needs_restart
 def call_needs_restart(control_sock,
                        restart_forced=False,
                        appname=Instance.APPNAME,
-                       instance_name=Instance.INSTANCE_NAME,
+                       instance_conf_file=Instance.INSTANCE_CONF_PATH,
+                       conf_section_name=Instance.CONF_SECTION,
                        config={},
                        cluster_cookie=Instance.COOKIE,
-                       cartridge_defaults={}):
+                       cartridge_defaults={},
+                       stateboard=False):
     return needs_restart({
         'restart_forced': restart_forced,
         'control_sock': control_sock,
         'appname': appname,
-        'instance_name': instance_name,
+        'instance_conf_file': instance_conf_file,
+        'conf_section_name': conf_section_name,
         'cluster_cookie': cluster_cookie,
         'cartridge_defaults': cartridge_defaults,
         'config': config,
+        'stateboard': stateboard,
     })
 
 
@@ -75,15 +79,12 @@ class TestNeedsRestart(unittest.TestCase):
         self.instance.set_path_mtime(self.instance.APP_CODE_PATH, self.instance.DATE_TODAY)
         self.instance.set_path_mtime(self.console_sock, self.instance.DATE_YESTERDAY)
 
-        res = call_needs_restart(
-            control_sock=self.console_sock,
-            instance_name=self.instance.INSTANCE_NAME
-        )
+        res = call_needs_restart(control_sock=self.console_sock)
 
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
-    def test_instance_config_changes(self):
+    def template_test_instance_config_changed(self, stateboard):
         param_name = 'param'
         param_current_value = 'current-value'
         param_new_value = 'new-value'
@@ -104,7 +105,8 @@ class TestNeedsRestart(unittest.TestCase):
             config={
                 param_name: param_current_value,
                 memtx_memory_param_name: memtx_memory_current_value
-            }
+            },
+            stateboard=stateboard,
         )
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
@@ -115,7 +117,8 @@ class TestNeedsRestart(unittest.TestCase):
             config={
                 param_name: param_new_value,
                 memtx_memory_param_name: memtx_memory_current_value
-            }
+            },
+            stateboard=stateboard
         )
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
@@ -129,7 +132,8 @@ class TestNeedsRestart(unittest.TestCase):
             config={
                 param_name: param_current_value,
                 memtx_memory_param_name: memtx_memory_new_value
-            }
+            },
+            stateboard=stateboard
         )
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
@@ -143,7 +147,8 @@ class TestNeedsRestart(unittest.TestCase):
             config={
                 param_name: param_current_value,
                 memtx_memory_param_name: memtx_memory_new_value
-            }
+            },
+            stateboard=stateboard
         )
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
@@ -157,12 +162,19 @@ class TestNeedsRestart(unittest.TestCase):
             config={
                 param_name: param_new_value,
                 memtx_memory_param_name: memtx_memory_new_value
-            }
+            },
+            stateboard=stateboard
         )
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
-    def test_app_config_changes(self):
+    def test_instance_config_changed(self):
+        self.template_test_instance_config_changed(stateboard=False)
+
+    def test_stateboard_config_changed(self):
+        self.template_test_instance_config_changed(stateboard=True)
+
+    def template_test_app_config_changed(self, stateboard):
         param_name = 'param'
         param_current_value = 'current-value'
         param_new_value = 'new-value'
@@ -183,7 +195,8 @@ class TestNeedsRestart(unittest.TestCase):
             cartridge_defaults={
                 param_name: param_current_value,
                 memtx_memory_param_name: memtx_memory_current_value
-            }
+            },
+            stateboard=stateboard
         )
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
@@ -194,10 +207,14 @@ class TestNeedsRestart(unittest.TestCase):
             cartridge_defaults={
                 param_name: param_new_value,
                 memtx_memory_param_name: memtx_memory_current_value
-            }
+            },
+            stateboard=stateboard
         )
         self.assertTrue(res.success, msg=res.msg)
-        self.assertTrue(res.changed)
+        if not stateboard:
+            self.assertTrue(res.changed)
+        else:
+            self.assertFalse(res.changed)
 
         # param isn't changed
         # memtx_memory is changed in config
@@ -208,10 +225,14 @@ class TestNeedsRestart(unittest.TestCase):
             cartridge_defaults={
                 param_name: param_current_value,
                 memtx_memory_param_name: memtx_memory_new_value
-            }
+            },
+            stateboard=stateboard
         )
         self.assertTrue(res.success, msg=res.msg)
-        self.assertTrue(res.changed)
+        if not stateboard:
+            self.assertTrue(res.changed)
+        else:
+            self.assertFalse(res.changed)
 
         # param isn't changed
         # memtx_memory is changed in config
@@ -222,7 +243,8 @@ class TestNeedsRestart(unittest.TestCase):
             cartridge_defaults={
                 param_name: param_current_value,
                 memtx_memory_param_name: memtx_memory_new_value
-            }
+            },
+            stateboard=stateboard
         )
         self.assertTrue(res.success, msg=res.msg)
         self.assertFalse(res.changed)
@@ -236,10 +258,20 @@ class TestNeedsRestart(unittest.TestCase):
             cartridge_defaults={
                 param_name: param_new_value,
                 memtx_memory_param_name: memtx_memory_new_value
-            }
+            },
+            stateboard=stateboard
         )
         self.assertTrue(res.success, msg=res.msg)
-        self.assertTrue(res.changed)
+        if not stateboard:
+            self.assertTrue(res.changed)
+        else:
+            self.assertFalse(res.changed)
+
+    def test_instance_app_config_changed(self):
+        self.template_test_app_config_changed(stateboard=False)
+
+    def test_stateboard_app_config_changed(self):
+        self.template_test_app_config_changed(stateboard=True)
 
     def test_both_app_and_instance_memtx_memory_changed(self):
         memtx_memory_param_name = 'memtx_memory'

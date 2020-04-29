@@ -38,7 +38,8 @@
 
 - name: Wait for instance to be started
   cartridge_check_instance_started:
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    control_sock: '{{ cartridge_app_name | instance_control_sock(inventory_hostname, stateboard) }}'
+    stateboard: '{{ stateboard }}'
   register: check_instance
   until: not check_instance.failed
   retries: '{{ instance_start_timeout // 5 }}'
@@ -48,14 +49,14 @@
 
 - name: Connect instance to membership
   cartridge_probe_instance:
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    control_sock: '{{ cartridge_app_name | instance_control_sock(inventory_hostname, stateboard) }}'
     hostvars: '{{ hostvars }}'
     play_hosts: '{{ play_hosts }}'
   register: probe
   until: not probe.failed
   retries: 3
   delay: 5
-  when: not expelled
+  when: not expelled and not stateboard
   tags: cartridge-instances
 
 - name: Set one control instance to join replicasets

@@ -62,6 +62,11 @@ STATEBOARD_PROVIDER_REQUIRED_PARAMS = [
     'password',
 ]
 
+STATEBOARD_CONFIG_REQUIRED_PARAMS = [
+    'listen',
+    'password',
+]
+
 
 def is_valid_advertise_uri(uri):
     rgx = re.compile(r'^\S+:\d+$')
@@ -111,6 +116,7 @@ def validate_types(vars):
         'cartridge_app_config': dict,
         'restarted': bool,
         'expelled': bool,
+        'stateboard': bool,
         'instance_start_timeout': int,
         'replicaset_alias': str,
         'failover_priority': [str],
@@ -291,6 +297,47 @@ def check_auth(found_common_params):
     return None
 
 
+def check_stateboard(stateboard_vars):
+    if stateboard_vars.get('expelled') is True:
+        return '"expelled" flag can\'t be used for stateboard instance'
+
+    for p in REPLICASET_PARAMS + ['replicaset_alias']:
+        if stateboard_vars.get(p) is not None:
+            return '"{}" flag can\'t be used for stateboard instance'.format(p)
+
+    if stateboard_vars.get('config') is None:
+        return '"config" parameter is required for stateboard instance'
+
+    if stateboard_vars.get('cartridge_app_name') is None:
+        return '"cartridge_app_name" parameter is required for stateboard instance'
+
+    # Check if all required params are specified
+    stateboard_config = stateboard_vars['config']
+    for p in STATEBOARD_CONFIG_REQUIRED_PARAMS:
+        if stateboard_config.get(p) is None:
+            return 'Missed required parameter "{}" in stateboard config'.format(p)
+
+    # Check if no forbidden params specified
+    for p in CONFIG_FORBIDDEN_PARAMS:
+        if stateboard_config.get(p) is not None:
+            return 'Specified forbidden parameter "{}" in stateboard config'.format(p)
+
+    # Check stateboard URI
+    stateboard_uri = stateboard_config['listen']
+    if not is_valid_advertise_uri(stateboard_uri):
+        return 'Stateboard listen URI must be specified as "<host>:<port>"'
+
+    # Check stateboard password
+    stateboard_password = stateboard_config['password']
+    m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, stateboard_password)
+    if m is not None:
+        errmsg = 'Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
+            '("{}" found)'.format(m.group())
+        return errmsg
+
+    return None
+
+
 def check_failover(found_common_params):
     cartridge_failover = found_common_params.get('cartridge_failover')
     cartridge_failover_params = found_common_params.get('cartridge_failover_params')
@@ -350,6 +397,7 @@ def check_failover(found_common_params):
 def validate_config(params):
     found_replicasets = {}
     found_common_params = {}
+    found_stateboard_vars = None
 
     warnings = []
 
@@ -360,6 +408,12 @@ def validate_config(params):
         errmsg = validate_types(host_vars)
         if errmsg is not None:
             return ModuleRes(success=False, msg=errmsg)
+
+        if host_vars.get('stateboard') is True:
+            if found_stateboard_vars is not None:
+                return ModuleRes(success=False, msg='Only one instance can be marked as a "stateboard"')
+            found_stateboard_vars = host_vars
+            continue
 
         # All required params should be specified
         errmsg = check_required_params(host_vars, host)
@@ -406,6 +460,12 @@ def validate_config(params):
     errmsg = check_failover(found_common_params)
     if errmsg is not None:
         return ModuleRes(success=False, msg=errmsg)
+
+    # Stateboard
+    if found_stateboard_vars is not None:
+        errmsg = check_stateboard(found_stateboard_vars)
+        if errmsg is not None:
+            return ModuleRes(success=False, msg=errmsg)
 
     if found_common_params.get('cartridge_failover') is not None:
         warnings.append(

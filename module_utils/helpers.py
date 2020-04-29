@@ -151,5 +151,9 @@ def get_all_cluster_instances(control_console):
     return servers
 
 
-def instance_expelled(host_vars):
-    return 'expelled' in host_vars and host_vars['expelled']
+def is_expelled(host_vars):
+    return host_vars.get('expelled') is True
+
+
+def is_stateboard(host_vars):
+    return host_vars.get('stateboard') is True

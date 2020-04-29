@@ -48,6 +48,7 @@ local calls = {
     auth_remove_user = {},
     admin_probe_server = {},
     box_cfg = {},
+    membership_myself = {},
 }
 
 local vars = {
@@ -599,6 +600,7 @@ end
 -- * ---------------------- Module membership ----------------------
 
 function membership.myself()
+    table.insert(calls.membership_myself, {})
     return vars.membership_myself
 end
 
