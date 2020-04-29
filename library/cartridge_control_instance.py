@@ -5,13 +5,13 @@ from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
-    'sock': {'requires': True, 'type': 'str'},
+    'control_sock': {'requires': True, 'type': 'str'},
     'allow_empty': {'requires': True, 'type': 'bool', 'default': True}
 }
 
 
 def get_control_instance(params):
-    control_console = get_control_console(params['sock'])
+    control_console = get_control_console(params['control_sock'])
     control_instance = ''
 
     members = control_console.eval('''

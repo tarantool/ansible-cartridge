@@ -61,7 +61,7 @@
 
 - name: Set one control instance to join replicasets
   cartridge_control_instance:
-    sock: '{{ cartridge_app_name | instance_control_sock(hostvars | one_not_expelled_instance(play_hosts)) }}'
+    control_sock: '{{ cartridge_app_name | instance_control_sock(hostvars | one_not_expelled_instance(play_hosts)) }}'
   register: control_instance
   run_once: true
   delegate_to: '{{ hostvars | one_not_expelled_instance(play_hosts) }}'
@@ -94,7 +94,7 @@
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
-    sock: '{{ cartridge_app_name | instance_control_sock(hostvars | one_not_expelled_instance(play_hosts)) }}'
+    control_sock: '{{ cartridge_app_name | instance_control_sock(hostvars | one_not_expelled_instance(play_hosts)) }}'
     allow_empty: false
   register: control_instance
   run_once: true

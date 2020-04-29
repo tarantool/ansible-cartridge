@@ -14,7 +14,7 @@ from library.cartridge_control_instance import get_control_instance
 
 def call_get_control_instance(control_sock, allow_empty=True):
     return get_control_instance({
-        'sock': control_sock,
+        'control_sock': control_sock,
         'allow_empty': allow_empty,
     })
 
