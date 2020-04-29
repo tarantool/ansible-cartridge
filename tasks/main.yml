@@ -103,6 +103,7 @@
     or cartridge_app_config is defined
     or cartridge_bootstrap_vshard is defined
     or cartridge_failover is defined
+    or cartridge_failover_params is defined
   tags: cartridge-config
 
 - name: Cartridge auth
@@ -137,9 +138,9 @@
 
 - name: Manage failover
   cartridge_manage_failover:
-    failover: '{{ cartridge_failover }}'
+    failover_params: '{{ cartridge_failover_params | default(cartridge_failover) }}'
     control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
   delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
-  when: cartridge_failover is defined
+  when: cartridge_failover is defined or cartridge_failover_params is defined
   tags: cartridge-config

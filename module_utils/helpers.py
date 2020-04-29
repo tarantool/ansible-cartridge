@@ -7,11 +7,12 @@ import os
 
 
 class ModuleRes:
-    def __init__(self, success, msg=None, changed=False, meta=None):
+    def __init__(self, success, msg=None, changed=False, meta=None, warnings=[]):
         self.success = success
         self.msg = msg
         self.changed = changed
         self.meta = meta
+        self.warnings = warnings
 
 
 class CartridgeErrorCodes:

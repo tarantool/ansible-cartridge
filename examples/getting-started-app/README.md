@@ -582,16 +582,23 @@ $ ansible-playbook -i hosts.yml playbook.yml
 Now you can check that the `Bootstrap vshard` button disappeared from the Web UI
 and the `Buckets` value in the `storage-1` replica set has been changed.
 
-### Manage failover
+### Failover
 
-If you want to manage (enable or disable) automatic failover, use the
-`cartridge_failover` variable:
+Cartridge supports two [failover](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md/)
+modes: eventual and stateful.
+It can be managed with `cartridge_failover_params` variable.
+
+### Eventual failover
+
+To set [eventual failover](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md/#eventual-failover)
+specify `eventual` mode:
 
 ```yaml
 ---
 all:
   vars:
-    cartridge_failover: true  # enable failover
+    cartridge_failover_params:
+      mode: eventual
     ...
 ```
 
@@ -601,10 +608,26 @@ Run the playbook:
 $ ansible-playbook -i hosts.yml playbook.yml
 ```
 
-Check the failover switcher in the Web UI.
+Check that failover mode has been changed in the Web UI.
 
-You can experiment with the `cartridge_failover` value.
+To disable failover just set it's mode to `disabled`:
+
+```yaml
+---
+all:
+  vars:
+    cartridge_failover_params:
+      mode: disabled
+    ...
+```
+
 If this value is unset, the failover status won't be affected.
+
+### Stateful failover
+
+The full example for [stateful failover](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md#stateful-failover)
+is coming soon.
+Now you can [read the doc](../../README.md#stateful).
 
 ### Manage authorization
 

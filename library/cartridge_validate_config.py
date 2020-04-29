@@ -18,6 +18,7 @@ PARAMS_THE_SAME_FOR_ALL_HOSTS = [
     'cartridge_auth',
     'cartridge_bootstrap_vshard',
     'cartridge_failover',
+    'cartridge_failover_params',
     'cartridge_app_config',
 ]
 
@@ -36,6 +37,30 @@ REPLICASET_REQUIRED_PARAMS = ['roles']
 
 CLUSTER_COOKIE_MAX_LEN = 256
 CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX = r'[^a-zA-Z0-9_.~-]+'
+
+FALOVER_MODES = [
+    'stateful',
+    'eventual',
+    'disabled',
+]
+
+STATEFUL_FAILOVER_PARAMS = [
+    'state_provider',
+    'stateboard_params',
+]
+
+STATEFUL_FAILOVER_REQUIRED_PARAMS = [
+    'state_provider',
+]
+
+STATEFUL_FAILOVER_STATE_PROVIDERS = [
+    'stateboard',
+]
+
+STATEBOARD_PROVIDER_REQUIRED_PARAMS = [
+    'uri',
+    'password',
+]
 
 
 def is_valid_advertise_uri(uri):
@@ -112,6 +137,15 @@ def validate_types(vars):
                 }
             ]
         },
+        'cartridge_failover_params': {
+            'enabled': bool,
+            'mode': str,
+            'state_provider': str,
+            'stateboard_params': {
+                'uri': str,
+                'password': str
+            }
+        }
     }
 
     return check_schema(schema, vars)
@@ -134,7 +168,7 @@ def check_cluster_cookie_symbols(cluster_cookie):
 def check_required_params(host_vars, host):
     for p in INSTANCE_REQUIRED_PARAMS:
         if host_vars.get(p) is None:
-            errmsg = '"{}" must be specified (misseg for "{}")'.format(p, host)
+            errmsg = '"{}" must be specified (missed for "{}")'.format(p, host)
             return errmsg
 
     errmsg = check_cluster_cookie_symbols(host_vars['cartridge_cluster_cookie'])
@@ -257,9 +291,67 @@ def check_auth(found_common_params):
     return None
 
 
+def check_failover(found_common_params):
+    cartridge_failover = found_common_params.get('cartridge_failover')
+    cartridge_failover_params = found_common_params.get('cartridge_failover_params')
+
+    if cartridge_failover is not None and cartridge_failover_params is not None:
+        return 'Only one of "cartridge_failover" and "cartridge_failover_params" can be specified'
+
+    if cartridge_failover_params is not None:
+        if cartridge_failover_params.get('mode') is None:
+            return'"mode" is required in "cartridge_failover_params"'
+
+        mode = cartridge_failover_params['mode']
+        if mode not in FALOVER_MODES:
+            return 'Failover Failover mode should be one of {}'.format(FALOVER_MODES)
+
+        if mode == 'disabled':  # don't check other parameters
+            return None
+
+        if mode == 'eventual':
+            for p in STATEFUL_FAILOVER_PARAMS:
+                if p in cartridge_failover_params:
+                    return '"{}" failover parameter is allowed only for "stateful" mode'.format(p)
+
+        if mode == 'stateful':
+            for p in STATEFUL_FAILOVER_REQUIRED_PARAMS:
+                if p not in cartridge_failover_params:
+                    return '"{}" failover parameter is required for "stateful" mode'.format(p)
+
+            if cartridge_failover_params['state_provider'] not in STATEFUL_FAILOVER_STATE_PROVIDERS:
+                return "Stateful failover state provider should be one of {}".format(
+                    STATEFUL_FAILOVER_STATE_PROVIDERS
+                )
+
+            if cartridge_failover_params['state_provider'] == 'stateboard':
+                if cartridge_failover_params.get('stateboard_params') is None:
+                    return '"stateboard_params" is required for "stateboard" state provider'
+
+                for p in STATEBOARD_PROVIDER_REQUIRED_PARAMS:
+                    if p not in cartridge_failover_params['stateboard_params']:
+                        return '"stateboard_params.{}" is required for "stateboard" provider'.format(p)
+
+                state_provider_uri = cartridge_failover_params['stateboard_params']['uri']
+                if not is_valid_advertise_uri(state_provider_uri):
+                    return 'Stateboard URI must be specified as "<host>:<port>"'
+
+                state_provider_password = cartridge_failover_params['stateboard_params']['password']
+
+                m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, state_provider_password)
+                if m is not None:
+                    errmsg = 'Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
+                        '("{}" found)'.format(m.group())
+                    return errmsg
+
+    return None
+
+
 def validate_config(params):
     found_replicasets = {}
     found_common_params = {}
+
+    warnings = []
 
     for host in params['hosts']:
         host_vars = params['hostvars'][host]
@@ -310,7 +402,18 @@ def validate_config(params):
     if errmsg is not None:
         return ModuleRes(success=False, msg=errmsg)
 
-    return ModuleRes(success=True, changed=False)
+    # Failover
+    errmsg = check_failover(found_common_params)
+    if errmsg is not None:
+        return ModuleRes(success=False, msg=errmsg)
+
+    if found_common_params.get('cartridge_failover') is not None:
+        warnings.append(
+            'Variable `cartridge_failover` is deprecated since 1.3.0 and will be removed in 2.0.0. '
+            'Use `cartridge_failover_params` instead.'
+        )
+
+    return ModuleRes(success=True, changed=False, warnings=warnings)
 
 
 def main():
@@ -318,7 +421,7 @@ def main():
     res = validate_config(module.params)
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, meta=res.meta, warnings=res.warnings)
     else:
         module.fail_json(msg=res.msg)
 

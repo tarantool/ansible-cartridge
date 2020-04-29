@@ -28,6 +28,7 @@ local fail_on = {
     bootstrap_vshard = false,
     config_patch_clusterwide = false,
     manage_failover = false,
+    failover_set_params = false,
     auth_set_params = false,
     auth_add_user = false,
     auth_edit_user = false,
@@ -40,6 +41,7 @@ local calls = {
     bootstrap_vshard = {},
     config_patch_clusterwide = {},
     manage_failover = {},
+    failover_set_params = {},
     auth_set_params = {},
     auth_add_user = {},
     auth_edit_user = {},
@@ -51,6 +53,7 @@ local calls = {
 local vars = {
     config = {},
     failover = false,
+    failover_params = {},
     can_bootstrap_vshard = true,
     auth_params = {},
     webui_auth_params = {},
@@ -155,6 +158,8 @@ function cartridge.internal.set_box_cfg(params)
 end
 
 -- * ------------------ Cartridge module functions ------------------
+
+cartridge.version = '2.1.2'
 
 function cartridge.cfg(opts)
     assert(type(opts.console_sock == 'string'))
@@ -408,6 +413,32 @@ end
 
 function cartridge.admin_disable_failover()
     return manage_failover('disable')
+end
+
+function cartridge.failover_get_params()
+    return vars.failover_params
+end
+
+function cartridge.failover_set_params(params)
+    table.insert(calls.failover_set_params, params)
+
+    if fail_on.failover_set_params then
+        return nil, {err = CARTRIDGE_ERR}
+    end
+
+    if params.mode ~= nil then
+        vars.failover_params.mode = params.mode
+    end
+
+    if params.state_provider ~= nil then
+        vars.failover_params.state_provider = params.state_provider
+    end
+
+    if params.tarantool_params ~= nil then
+        vars.failover_params.tarantool_params = params.tarantool_params
+    end
+
+    return true
 end
 
 -- * ---------------- Module cartridge.vshard-utils ---------------

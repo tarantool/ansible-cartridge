@@ -185,6 +185,11 @@ class Instance:
             require('cartridge').internal.set_box_cfg_function({})
         '''.format('true' if value else 'false'))
 
+    def set_cartridge_version(self, version):
+        self.eval('''
+            require('cartridge').VERSION = '{}'
+        '''.format(version))
+
     def set_fail_on(self, func, value=True):
         self.eval('''
             require('cartridge').internal.set_fail('{func}', {value})

@@ -162,8 +162,7 @@ Configuration format is described in detail in the
   parameters values for instances;
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean
   flag that indicates if vshard should be bootstrapped;
-* `cartridge_failover` (`boolean`, optional): boolean flag that indicates if
-  failover should be enabled or disabled;
+* `cartridge_failover_params` (`dict`, optional): [failover](#failover) parameters;
 * `cartridge_app_config` (`dict`, optional): application config sections to patch;
 * `cartridge_auth`: (`dict`, optional): [authorization configuration](#cartridge-authorization);
 * `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`):
@@ -178,6 +177,8 @@ Configuration format is described in detail in the
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
 * `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
 * `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled.
+* [DEPRECATED] `cartridge_failover` (`boolean`, optional): boolean flag that
+  indicates if eventual failover should be enabled or disabled;
 
 ### Role tags
 
@@ -190,9 +191,9 @@ Tasks are running in this order:
   * configure authorization (if `cartridge_auth` is defined);
   * patch application clusterwide config (if `cartridge_app_config` is defined);
   * bootstrap Vshard (if `cartridge_bootstrap_vshard` is defined);
-  * manage cartridge failover (if `cartridge_failover` is defined).
+  * manage cartridge failover (if `cartridge_failover_params` is defined).
 
-**Note**, that `cartridge-config` tasks would be skipped if no one of `cartridge_auth`, `cartridge_app_config`, `cartridge_bootstrap_vshard` and `cartridge_failover` variables is specified.
+**Note**, that `cartridge-config` tasks would be skipped if no one of `cartridge_auth`, `cartridge_app_config`, `cartridge_bootstrap_vshard` and `cartridge_failover_params` variables is specified.
 
 ### Example scenario
 
@@ -412,8 +413,59 @@ must have at least one `vshard-storage` replica set and at least one
 
 ### Failover
 
-If `cartridge_failover` is `true`, then failover will be enabled.
-If it is `false` - failover will be disabled.
+`cartridge_failover_params` is used to specify failover parameters:
+
+- `mode`(`string`, required) - failover mode. Possible values are `disabled`,
+  `eventual` and `stateful`.
+
+Other parameters are mode-specific.
+
+Read [the doc](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md/)
+to learn more about Cartridge failover.
+
+#### Eventual
+
+If `eventual` mode is specified, there is no additional parameters.
+
+Read [the doc](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md/#eventual-failover)
+to learn more about eventual failover.
+
+*Example:*
+
+```yaml
+cartridge_failover_params:
+  mode: eventual
+```
+
+#### Stateful
+
+**Note** that stateful failover is supported since `Cartridge` 2.1.0.
+
+`stateful` failover requires these parameters:
+
+- `state_provider`(`string`, required for `stateful` mode) - external state
+  provider type. Now there's only one supported type - `stateboard`.
+
+- `stateboard_params`(`dict`, required for `stateboard` state provider) -
+  configuration for stateboard:
+    - `uri`(`string`, required) - stateboard instance URI;
+
+    - `password`(`string`, required) - stateboard instance password;
+
+Read [the doc](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md/#stateful-failover)
+to learn more about stateful failover.
+
+*Example:*
+
+```yaml
+cartridge_failover_params:
+  mode: stateful
+  state_provider: stateboard
+  stateboard_params:
+    uri: localhost:3310
+    password: stateboard-secret
+
+```
 
 ### Cartridge authorization
 
