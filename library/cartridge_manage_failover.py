@@ -84,7 +84,7 @@ def manage_failover_new(control_console, failover_params):
         }})
 
         return {{
-            ok = ok or box.NULL,
+            ok = ok ~= nil and ok or box.NULL,
             err = err and err.err or box.NULL,
         }}
     '''.format(', '.join(lua_params)))
