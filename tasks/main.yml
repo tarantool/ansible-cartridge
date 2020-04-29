@@ -61,7 +61,7 @@
 
 - name: Set one control instance to join replicasets
   cartridge_control_instance:
-    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ hostvars | one_not_expelled_instance(play_hosts) }}.control
+    sock: '{{ cartridge_app_name | instance_control_sock(hostvars | one_not_expelled_instance(play_hosts)) }}'
   register: control_instance
   run_once: true
   delegate_to: '{{ hostvars | one_not_expelled_instance(play_hosts) }}'
@@ -94,7 +94,7 @@
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
-    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ hostvars | one_not_expelled_instance(play_hosts) }}.control
+    sock: '{{ cartridge_app_name | instance_control_sock(hostvars | one_not_expelled_instance(play_hosts)) }}'
     allow_empty: false
   register: control_instance
   run_once: true
@@ -110,7 +110,7 @@
 - name: Cartridge auth
   cartridge_auth:
     auth: '{{ cartridge_auth }}'
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+    control_sock: '{{ cartridge_app_name | instance_control_sock(control_instance.meta.host) }}'
   delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_auth is defined
@@ -119,7 +119,7 @@
 - name: Application config
   cartridge_app_config:
     app_config: '{{ cartridge_app_config }}'
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+    control_sock: '{{ cartridge_app_name | instance_control_sock(control_instance.meta.host) }}'
   delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_app_config is defined
@@ -127,7 +127,7 @@
 
 - name: Bootstrap vshard
   cartridge_bootstrap_vshard:
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+    control_sock: '{{ cartridge_app_name | instance_control_sock(control_instance.meta.host) }}'
   delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   register: bootstrap_vshard
@@ -140,7 +140,7 @@
 - name: Manage failover
   cartridge_manage_failover:
     failover_params: '{{ cartridge_failover_params | default(cartridge_failover) }}'
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
+    control_sock: '{{ cartridge_app_name | instance_control_sock(control_instance.meta.host) }}'
   delegate_to: '{{ control_instance.meta.host }}'
   run_once: true
   when: cartridge_failover is defined or cartridge_failover_params is defined

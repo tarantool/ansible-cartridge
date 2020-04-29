@@ -2,13 +2,13 @@
 - name: Expel instance from topology
   cartridge_expel_instance:
     alias: '{{ inventory_hostname }}'
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_host }}.control
+    control_sock: '{{ cartridge_app_name | instance_control_sock(control_host) }}'
   delegate_to: '{{ control_host }}'
   tags: cartridge-replicasets
 
 - name: Stop and disable systemd service
   systemd:
-    name: '{{ cartridge_app_name }}@{{ inventory_hostname }}'
+    name: '{{ cartridge_app_name | systemd_service_name(inventory_hostname) }}'
     state: stopped
     enabled: false
   tags: cartridge-replicasets
@@ -18,9 +18,9 @@
     path: '{{ filepath }}'
     state: absent
   with_items:
-    - /etc/tarantool/conf.d/{{ cartridge_app_name }}.{{ inventory_hostname }}.yml
-    - /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
-    - /var/lib/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}
+    - '{{ cartridge_app_name | instance_conf_file(inventory_hostname) }}'
+    - '{{ cartridge_app_name | instance_control_sock(inventory_hostname) }}'
+    - '{{ cartridge_app_name | instance_work_dir(inventory_hostname) }}'
   loop_control:
     loop_var: filepath
   tags: cartridge-replicasets

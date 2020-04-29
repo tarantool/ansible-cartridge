@@ -30,7 +30,7 @@
         { cartridge_app_name: cartridge_defaults | combine({"cluster_cookie": cartridge_cluster_cookie}) }
         | to_nice_yaml
       }}
-    dest: /etc/tarantool/conf.d/{{ cartridge_app_name }}.yml
+    dest: '{{ cartridge_app_name | app_conf_file }}'
     owner: tarantool
     group: tarantool
     mode: '644'

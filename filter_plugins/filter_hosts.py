@@ -53,8 +53,16 @@ def instance_conf_file(app_name, inventory_hostname, stateboard=False):
     return '/etc/tarantool/conf.d/{}.yml'.format(instance_fullname)
 
 
+def app_conf_file(app_name):
+    return '/etc/tarantool/conf.d/{}.yml'.format(app_name)
+
+
 def conf_section_name(app_name, inventory_hostname, stateboard=False):
     return get_instance_fullname(app_name, inventory_hostname, stateboard)
+
+
+def instance_work_dir(app_name, inventory_hostname):
+    return '/var/lib/tarantool/{}.{}'.format(app_name, inventory_hostname)
 
 
 def systemd_service_name(app_name, inventory_hostname, stateboard=False):
@@ -70,6 +78,8 @@ class FilterModule(object):
             'one_not_expelled_instance': one_not_expelled_instance,
             'instance_control_sock': instance_control_sock,
             'instance_conf_file': instance_conf_file,
+            'app_conf_file': app_conf_file,
             'conf_section_name': conf_section_name,
+            'instance_work_dir': instance_work_dir,
             'systemd_service_name': systemd_service_name,
         }
