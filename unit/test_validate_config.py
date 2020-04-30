@@ -335,7 +335,8 @@ class TestValidateConfig(unittest.TestCase):
                     'instance-21': replicaset2_params,
                 })
                 self.assertFalse(res.success)
-                errmsg = 'Replicaset parameters must be the same for all instances within one replicaset ("replicaset-1")'
+                errmsg = 'Replicaset parameters must be the same for all instances within one replicaset ' + \
+                    '("replicaset-1")'
                 self.assertIn(errmsg, res.msg)
 
     def test_app_config(self):

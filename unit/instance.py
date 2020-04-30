@@ -78,7 +78,8 @@ class Instance:
                 chunk = self.sock.recv(1024).decode()
                 # It is correct because of cmd structure: it always returns a value
                 if chunk == '':
-                    errmsg = 'Error: broken pipe. Probably, the instance was not bootstrapped yet to perform this operation'
+                    errmsg = 'Error: broken pipe. ' + \
+                        'Probably, the instance was not bootstrapped yet to perform this operation'
                     raise Exception(errmsg)
                 data = data + chunk
                 if data.endswith('\n...\n'):
