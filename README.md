@@ -173,7 +173,7 @@ Configuration format is described in detail in the
 * `restarted` (`boolean`, optional, default: `false`): indicates that instance must be forcedly restarted;
 * `expelled` (`boolean`, optional, default: `false`): boolean flag that indicates if instance must be expelled from topology;
 * `stateboard` (`boolean`, optional, default: `false`): boolean flag that indicates
-   that instance is a [stateboard](#stateboard-instance);
+   that the instance is a [stateboard](#stateboard-instance);
 * `instance_start_timeout` (`number`, optional, default: 60): time in seconds to wait for instance to be started;
 * `replicaset_alias` (`string`, optional): replicaset alias, will be displayed in Web UI;
 * `failover_priority` (`list-of-string`): failover priority;
@@ -565,31 +565,31 @@ section-2:
 
 ### Stateboard instance
 
-Stateboard is a tarantool state provider for stateful failover.
-It's delivered with an application RPM/DEB package - if application contains
-`stateboard.init.lua` file in it's root, the application package contains
-`/etc/systemd/system/<appname>-stateboard.service` unit faile.
+Stateboard is a Tarantool state provider for stateful failover.
+It is delivered within an application's RPM/DEB package, if the application contains the
+`stateboard.init.lua` file in its root. In this case, the application package contains the
+`/etc/systemd/system/<appname>-stateboard.service` unit file.
 
-It starts tarantool stateboard instance with an entry point
+It starts a Tarantool stateboard instance with an entry point
 `/usr/share/tarantool/<appname>/stateboard.init.lua`.
-This instance looks for it's configuration in `<appname>-stateboard` section
-across all files in `/etc/tarantool/conf.d` directory.
+This instance looks for its configuration in the `<appname>-stateboard` section
+across all files in the `/etc/tarantool/conf.d` directory.
 
-This instance can be started using this role.
-To mark instance as a stateboard `stateboard` flag is used.
+This instance can be started using the [Tarantool Cartridge Ansible role](https://github.com/tarantool/ansible-cartridge).
+To mark an instance as a stateboard, use the `stateboard` flag.
 
-Stateboard instance is started as `<app_name>-stateboard` systemd service.
+A stateboard instance is started as a systemd service named `<app_name>-stateboard`.
 
 Stateboard can be configured using the `config` variable.
 This variable describes stateboard parameters that would be passed to its
 configuration.
 
-**Note** that `cartridge_defaults` params don't affect stateboard instance.
+**Note:** `cartridge_defaults` params don't affect a stateboard instance.
 
 #### Required config parameters
 
 * `listen` - stateboard instance URI.
-  It must be specified in `<host>:<port>` format.
+  It must be specified in the `<host>:<port>` format.
 
 * `password` - stateboard instance password.
 
