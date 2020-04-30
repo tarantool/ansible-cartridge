@@ -164,10 +164,10 @@ def manage_auth(params):
     if not auth_params:
         return ModuleRes(success=True, changed=False)
 
-    # Check if auth backeng implements all functions for users managing
+    # Check if auth backend implements all functions for users management
     if auth_params.get('users') is not None:
         if not check_cluster_auth_implements_all(control_console):
-            errmsg = 'Cluster auth back-end must implement all user managing functions'
+            errmsg = 'Cluster auth backend must implement all user management functions'
             return ModuleRes(success=False, msg=errmsg)
 
     # Manage auth params

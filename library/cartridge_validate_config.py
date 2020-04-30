@@ -231,7 +231,7 @@ def check_replicaset(host_vars, found_replicasets):
     else:
         if replicaset != found_replicasets[replicaset_alias]:
             errmsg = 'Replicaset parameters must be the same for all instances' + \
-                ' from one replicaset ("{}")'.format(replicaset_alias)
+                ' within one replicaset ("{}")'.format(replicaset_alias)
             return errmsg
 
     return None
@@ -384,7 +384,7 @@ def validate_config(params):
 
         # Instance state
         if host_vars.get('expelled') is True and host_vars.get('restarted') is True:
-            errmsg = 'Flags "expelled" and "restarted" can not be set at the same time'
+            errmsg = 'Flags "expelled" and "restarted" cannot be set at the same time'
             return ModuleRes(success=False, msg=errmsg)
 
         # Replicasets

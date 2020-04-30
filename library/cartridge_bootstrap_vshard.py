@@ -28,7 +28,7 @@ def bootstrap_vshard(params):
     ''')
 
     if not res['ok']:
-        errmsg = 'Bootstrap vshard failed: {}'.format(res['err'])
+        errmsg = 'Vshard bootstrap failed: {}'.format(res['err'])
         return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=True)

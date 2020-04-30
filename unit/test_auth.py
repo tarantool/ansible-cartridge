@@ -109,7 +109,7 @@ class TestAuth(unittest.TestCase):
         self.instance.set_variable('webui_auth_params', {})
         res = call_manage_auth(self.console_sock, users=[USER])
         self.assertFalse(res.success)
-        self.assertIn('back-end must implement all user managing functions', res.msg)
+        self.assertIn('backend must implement all user management functions', res.msg)
 
         # check that all operations are required
         required_operations = [
@@ -124,7 +124,7 @@ class TestAuth(unittest.TestCase):
 
             res = call_manage_auth(self.console_sock, users=[USER])
             self.assertFalse(res.success)
-            self.assertIn('back-end must implement all user managing functions', res.msg)
+            self.assertIn('backend must implement all user management functions', res.msg)
 
     def test_add_user(self):
         # all required operations are implemented

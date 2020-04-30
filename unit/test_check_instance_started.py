@@ -46,7 +46,7 @@ class TestInstanceStarted(unittest.TestCase):
         res = call_check_instance_started(bad_socket_path)
 
         self.assertFalse(res.success)
-        self.assertIn('Failed to connect to socke', res.msg)
+        self.assertIn('Failed to connect to socket', res.msg)
 
     def test_alive(self):
         # require('membership').myself().status is 'active'

@@ -318,7 +318,7 @@ class TestValidateConfig(unittest.TestCase):
                 'instance-21': replicaset2_params,
             })
             self.assertFalse(res.success)
-            errmsg = 'Replicaset parameters must be the same for all instances from one replicaset ("replicaset-1")'
+            errmsg = 'Replicaset parameters must be the same for all instances within one replicaset ("replicaset-1")'
             self.assertIn(errmsg, res.msg)
 
             # passed only for one instance
@@ -335,7 +335,7 @@ class TestValidateConfig(unittest.TestCase):
                     'instance-21': replicaset2_params,
                 })
                 self.assertFalse(res.success)
-                errmsg = 'Replicaset parameters must be the same for all instances from one replicaset ("replicaset-1")'
+                errmsg = 'Replicaset parameters must be the same for all instances within one replicaset ("replicaset-1")'
                 self.assertIn(errmsg, res.msg)
 
     def test_app_config(self):
@@ -548,7 +548,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertFalse(res.success)
         self.assertIn(
-            'Flags "expelled" and "restarted" can not be set at the same time',
+            'Flags "expelled" and "restarted" cannot be set at the same time',
             res.msg
         )
 

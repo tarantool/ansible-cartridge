@@ -50,7 +50,7 @@ class TestBootstrapVshard(unittest.TestCase):
 
         res = call_bootstrap_vshard(self.console_sock)
         self.assertFalse(res.success)
-        self.assertIn('Bootstrap vshard failed', res.msg)
+        self.assertIn('Vshard bootstrap failed', res.msg)
         self.assertIn('cartridge err', res.msg)
 
         self.assertEqual(len(self.instance.get_calls('bootstrap_vshard')), 1)
