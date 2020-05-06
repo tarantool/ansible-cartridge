@@ -25,6 +25,7 @@ to learn how to set up topology using this role.
   * [Failover](#failover)
   * [Cartridge authorization](#cartridge-authorization)
   * [Application configuration](#application-configuration)
+  * [Stateboard instance](#stateboard-instance)
 
 
 ## Requirements
@@ -580,11 +581,11 @@ To mark an instance as a stateboard, use the `stateboard` flag.
 
 A stateboard instance is started as a systemd service named `<app_name>-stateboard`.
 
-Stateboard can be configured using the `config` variable.
+Stateboard can be configured using the `config` variable as well as other instances.
 This variable describes stateboard parameters that would be passed to its
 configuration.
 
-**Note:** `cartridge_defaults` params don't affect a stateboard instance.
+**Note:** `cartridge_defaults` doesn't affect a stateboard instance.
 
 #### Required config parameters
 
