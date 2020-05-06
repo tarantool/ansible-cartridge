@@ -7,13 +7,6 @@ set up the topology, and configure a cluster.
 
 * [What shall we do?](#what-shall-we-do)
 * [Setting up the environment](#setting-up-the-environment)
-* [Packing a test application](#packing-a-test-application)
-  * [Packing on Linux](#packing-on-linux)
-  * [Packing on OS X](#packing-on-os-x)
-* [What does Tarantool Cartridge role do?](#what-does-tarantool-cartridge-role-do)
-  * [Deploying the package](#deploying-the-package)
-  * [Starting instances](#starting-instances)
-  * [Setting up the topology](#setting-up-the-topology)
 * [Deploying with Ansible](#deploying-with-ansible)
   * [About Ansible](#about-ansible)
   * [Prepare to deploy](#prepare-to-deploy)
@@ -25,8 +18,11 @@ set up the topology, and configure a cluster.
   * [Manage authorization](#manage-authorization)
   * [Application configuration](#application-configuration)
 * [Final checks](#final-checks)
+* [What does Tarantool Cartridge role do?](#what-does-tarantool-cartridge-role-do)
+  * [Deploying the package](#deploying-the-package)
+  * [Starting instances](#starting-instances)
+  * [Setting up the topology](#setting-up-the-topology)
 * [Afterword](#afterword)
-* [Full inventory](#full-inventory)
 
 ## What shall we do?
 
@@ -34,6 +30,31 @@ We have a [getting started guide](https://github.com/tarantool/cartridge-cli/tre
 for *developing* a Tarantool Cartridge application.
 Now you will learn how to *deploy* this application on servers and
 *set up the topology* using Ansible.
+
+This example directory contains `getting-started-app-1.0.0-0.rpm` file.
+It's the RPM package with the example application, we will deploy in on two
+virtual machines described in the [`Vagrantfile`](./Vagrantfile).
+
+You can use your own Tarantool Cartridge application.
+Use [Cartridge CLI](https://github.com/tarantool/cartridge-cli) to create
+an RPM package.
+
+**Note:** Cartridge CLI version 1.6.0 or higher is required.
+
+In application directory:
+
+```bash
+cartridge pack rpm
+```
+
+If you use OS X to develop the application, specify `--use-docker` option
+to avoid packing executables and rock modules specific for this OS:
+
+```bash
+cartridge pack rpm --use-docker
+```
+
+### Target topology
 
 Our example application implements two roles:
 
@@ -45,32 +66,19 @@ We will set up a simple topology on 2 virtual machines, `vm1` and `vm2`:
 * replicaset `app-1`:
   * roles: `api` (+ `vshard-router`)
   * instances:
-    * `app-1` (`vm2`)
+    * `app-1` (`vm1`)
 
 * replicaset `storage-1`
   * roles: `storage` (+ `vshard-storage`)
   * instances:
-    * `storage-1` (`vm1`)
-    * `storage-1-replica` (`vm2`)
+    * `storage-1` (`vm2`)
+    * `storage-1-replica` (`vm1`)
 
 In the cluster Web UI, it will look like this:
 
 ![Topology](./images/topology.png)
 
 ## Setting up the environment
-
-To work with Tarantool Cartridge you need to install these tools:
-
-* `git` - a version control system (see details [here](https://git-scm.com/));
-* `npm`- a package manager for `node.js` (see details [here](https://www.npmjs.com/));
-* `cmake` version 2.8 or higher;
-* `tarantool` version 10.3 or higher;
-* `tarantool-devel` - developer package for `tarantool`;
-* `gcc` - a `C` compiler (see details [here](https://gcc.gnu.org/));
-* `unzip`- an archiving utility.
-
-Note that the minimal Tarantool Cartridge version for using the Ansible role is
-`1.2.0`.
 
 To run this guide example, you need:
 
@@ -84,139 +92,14 @@ You also need to install `vagrant-hosts`, `vagrant-vbguest` and `vagrant-scp` pl
 $ vagrant plugin install vagrant-hosts vagrant-vbguest vagrant-scp
 ```
 
-## Packing a test application
-
-We will use [`getting-started-app`](https://github.com/tarantool/cartridge-cli/tree/master/examples/getting-started-app)
-to show how to properly deploy a Tarantool Cartridge application.
-
-### Packing on Linux
-
-The easiest way to get the final version of `getting-started-app` is to clone it:
-
-```bash
-$ git clone https://github.com/tarantool/cartridge-cli
-$ cp -R cartridge-cli/examples/getting-started-app .
-$ rm -rf cartridge-cli
-```
-
-Now we have the `getting-started-app` directory containing our test application.
-
-Let's pack this application.
-First, install [Tarantool Cartridge CLI](https://github.com/tarantool/cartridge-cli):
-
-```bash
-$ tarantoolctl rocks install cartridge-cli
-```
-
-Then, just call:
-
-```bash
-.rocks/bin/cartridge pack rpm --version 1.0.0 ./getting-started-app
-```
-
-Now, we have the `getting-started-app-1.0.0-0.rpm` file in the current directory.
-The next step is to deploy this package on a server and set up a cluster.
-
-### Packing on OS X
-
-Unfortunately, if you use OS X to develop the application, you can't pack the
-application on your local machine and then deploy it on RHEL or Debian.
-The problem is that the package will contain rocks (and `tarantool` binaries
-in case of Tarantool Enterprise) specific for OS X.
-
-The workaround is to pack the application in a Vagrant VM:
-
-Create `Vagrantfile` from [this](#prepare-to-deploy) section and run:
-
-```bash
-$ vagrant up vm1
-$ vagrant ssh vm1
-[vagrant@vm1 ~]$ curl -s https://packagecloud.io/install/repositories/tarantool/1_10/script.rpm.sh | sudo bash
-[vagrant@vm1 ~]$ curl -sL https://rpm.nodesource.com/setup_8.x | sudo bash -
-[vagrant@vm1 ~]$ sudo yum -y install unzip git gcc cmake nodejs tarantool tarantool-devel
-```
-
-This will install Tarantool 1.10 and all the tools required for Tarantool Cartridge.
-
-Next:
-
-```bash
-[vagrant@vm1 ~]$ git clone https://github.com/tarantool/cartridge-cli
-[vagrant@vm1 ~]$ cp -R cartridge-cli/examples/getting-started-app .
-[vagrant@vm1 ~]$ rm -rf cartridge-cli
-[vagrant@vm1 ~]$ tarantoolctl rocks install cartridge-cli
-[vagrant@vm1 ~]$ .rocks/bin/cartridge pack rpm --version 1.0.0 ./getting-started-app
-[vagrant@vm1 ~]$ sudo yum -y remove tarantool
-[vagrant@vm1 ~]$ exit
-$ vagrant scp vm1:~/getting-started-app-1.0.0-0.rpm .
-```
-
-The last command copies RPM from VM on your local machine.
-
-Now, you can stop the VM:
-
-```bash
-$ vagrant halt vm1
-```
-
-Now, we have the `getting-started-app-1.0.0-0.rpm` file in the current directory.
-The next step is to deploy this package on servers and set up a cluster.
-
-## What does Tarantool Cartridge role do?
-
-Here follows a description of deploy steps, just to understand the way
-Tarantool Cartridge applications should be deployed.
-You can skip this section if you are not interested in understanding how it works
-under the hood, and proceed directly to [deployment steps](#deploying-with-ansible).
-
-### Deploying the package
-
-The first step is to install the application package on a deployment server.
-Here we will create a user `tarantool` with a group `tarantool` and some directories
-for our app:
-
-* `/etc/tarantool/conf.d/` - directory for instances configuration;
-* `/var/lib/tarantool/` - directory to store instances snapshots;
-* `/var/run/tarantool/` - directory to store PID-files and console sockets.
-
-Application code will be placed in the `/usr/share/tarantool/${app-name}` directory.
-If you use Tarantool Enterprise, `tarantool` and `tarantoolctl` binaries will be
-delivered with the package and placed there too.
-Otherwise, your RPM package has a Tarantool dependency and `yum` (RPM packages
-manager) will install open-source Tarantool.
-
-The package also contains `/etc/systemd/system/${app-name}.service` and
-`/etc/systemd/system/{app-name}@.service`
-[systemd unit files](https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files).
-
-### Starting instances
-
-When you call `systemctl start getting-started-app@storage-1`, systemd starts
-the `storage-1` instance of the `getting-started-app` service
-(see [systemd template units](https://fedoramagazine.org/systemd-template-unit-files/)).
-This instance will look up its configuration across all
-sections of the YAML file(s) stored in `/etc/tarantool/conf.d/*`.
-
-See [documentation](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_dev/#configuring-instances)
-for details on instance configuration.
-
-### Setting up the topology
-
-After the instances are started, you need to set up the cluster topology,
-manage authorization parameters, browse application configuration,
-enable automatic failover, and bootstrap vshard.
-
-All these actions can be performed using the cluster WebUI or the `cartridge`
-module API.
-
-To use the API, you can connect to the instance console using a socket:
-
-```bash
-$ tarantoolctl connect /var/run/tarantool/getting-started-app.storage-1.control
-tarantool> require('cartridge').is_healthy()
-```
-
 ## Deploying with Ansible
+
+Now, we will start 3 instances on 2 different servers, join them in 2 replica
+sets, bootstrap vshard, enable automatic failover, set up authorization and
+application configuration.
+
+If you want to understand what does this role do under the hood, you can
+find the explanation in [here](#what-does-tarantool-cartridge-role-do).
 
 ### About Ansible
 
@@ -229,58 +112,33 @@ check out some [Russian](https://habr.com/ru/post/305400/)
 [English](https://scotch.io/tutorials/getting-started-with-ansible))
 getting-started guides.
 
-### Prepare to deploy
-
-We packed our application in `getting-started-app-1.0.0-0.rpm`.
-
-Now, we will start 3 instances on 2 different servers, join them in 2 replica
-sets, bootstrap vshard, enable automatic failover, set up authorization and
-application configuration.
+### Prepare virtual machines
 
 First, use [vagrant](https://www.vagrantup.com/intro/index.html) to start two
 virtual machines on `172.19.0.2` and `172.19.0.3`.
+This machines are described in [`Vargantfile`](./Vagrantfile).
+Run in the example directory:
 
-`Vagrantfile`:
-
+```bash
+$ vagrant up
 ```
-boxes = [
-    {
-        :name     => "vm1",
-        :ip => "172.19.0.2",
-        :ports    => [8181],
-    },
-    {
-        :name     => "vm2",
-        :ip => "172.19.0.3",
-        :ports    => [8182, 8183],
-    },
-]
 
-Vagrant.configure("2") do |config|
-  config.vm.provider "virtualbox" do |v|
-    v.memory = 2048
-  end
+Check that machines started correctly:
 
-  # Base Vagrant VM configuration
-  config.vm.box = "centos/7"
-  config.ssh.insert_key = false
-  config.vm.synced_folder ".", "/vagrant", disabled: true
-
-  # Configure all VMs
-  boxes.each_with_index do |box, index|
-    config.vm.define box[:name] do |box_config|
-      box_config.vm.hostname = box[:hostname]
-      box_config.vm.network "private_network", ip: box[:ip]
-      box[:ports].each do |port|
-        box_config.vm.network "forwarded_port",
-                              guest: port,
-                              host: port,
-                              autocorrect: true
-      end
-    end
-  end
-end
+```bash
+$ vagrant status
 ```
+
+The output shold be like:
+
+```bash
+Current machine states:
+
+vm1                       running (virtualbox)
+vm2                       running (virtualbox)
+```
+
+### Install Tarantool Cartridge role
 
 Next, install the Tarantool Cartridge role using `ansible-galaxy` CLI:
 
@@ -288,10 +146,10 @@ Next, install the Tarantool Cartridge role using `ansible-galaxy` CLI:
 $ ansible-galaxy install tarantool.cartridge,1.2.0
 ```
 
-
-Then, create an
+Let's take a look at the `playbook.yml` file.
+It's an
 [Ansible playbook](https://docs.ansible.com/ansible/latest/user_guide/playbooks_intro.html)
-and import the Tarantool Cartridge role.
+that imports the Tarantool Cartridge role.
 
 `playbook.yml`:
 
@@ -308,35 +166,18 @@ and import the Tarantool Cartridge role.
       name: tarantool.cartridge
 ```
 
-Finally, create empty [inventory](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) file `hosts.yml`:
+The most important file is [`hosts.yml`](./hosts.yml).
+This is an [inventory file](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html)
+that contains cluster configuration.
 
-The resulting directory structure:
-
-```
-.
-├── Vagrantfile
-├── getting-started-app  # this dir is not required
-├── getting-started-app-1.0.0-0.rpm
-├── hosts.yml
-├── playbook.yml
-```
-
-### Start virtual machines
-
-First, start the virtual machines:
-
-```bash
-$ vagrant up
-```
-
-Further we'll be gradually upgrading the `hosts.yml` inventory file to deploy and
-configure our application step by step.
-We'll be showing only new sections of the inventory, but you can see the
-[full version](#full-inventory) anytime.
+All we need to do is learn how to manage instances and replica sets by modifying
+this file. Later on, we will add new sections to it.
+In order to avoid confusion while adding the sections, look at the final version of
+this file, or [hosts.updated.yml](./hosts.updated.yml).
 
 ### Start instances
 
-Specify this in your `hosts.yml`:
+Instances configuration is already described in the `hosts.yml` file:
 
 ```yaml
 ---
@@ -353,7 +194,8 @@ all:
     ansible_ssh_private_key_file: ~/.vagrant.d/insecure_private_key
     ansible_ssh_common_args: '-o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
 
-  hosts:  # instances configuration
+  # INSTANCES
+  hosts:
     storage-1:
       config:
         advertise_uri: '172.19.0.2:3301'
@@ -370,8 +212,8 @@ all:
         http_port: 8183
 
   children:
-    # group instances by machines
-    host1:  # first machine address and connection opts
+    # GROUP INSTANCES BY MACHINES
+    machine1:  # first machine address and connection opts
       vars:
         ansible_host: 172.19.0.2
         ansible_user: vagrant
@@ -379,7 +221,7 @@ all:
       hosts:  # instances to be started on this machine
         storage-1:
 
-    host2:  # second machine address and connection opts
+    machine2:  # second machine address and connection opts
       vars:
         ansible_host: 172.19.0.3
         ansible_user: vagrant
@@ -387,12 +229,53 @@ all:
       hosts:  # instances to be started on this machine
         app-1:
         storage-1-replica:
+
 ```
 
 Now, run the playbook:
 
 ```bash
 $ ansible-playbook -i hosts.yml playbook.yml
+```
+
+Go to http://localhost:8181/admin/cluster/dashboard to see our instances in the
+Web UI:
+
+![Unconfigured instances](./images/unconfiured-instances.png)
+
+#### Dive into inventory
+
+In Ansible terms, each instance is a host (not to be confused with a physical
+server), i.e. the infrastructure node that Ansible will manage.
+
+The inventory starts with `all` group definition.
+This is the default group that includes all hosts.
+Group is a dictionary with `vars`, `hosts` and `children` keys allowed:
+
+* `vars` is used to define group variales. These variables are applied to
+  all group hosts (instances, not physical machines). For example,
+  `cartridge_app_name` is common for all instances.
+
+* `hosts` contains hosts (instances) belonging to the group. Here we decribed
+  our instances and variables specific for this instances (variable `config`).
+
+* `children` section contains sub-groups of the `all` group. We group instances
+  by physical machines in `machine1` and `machine2` groups. It allows to
+  pass connection variables (such as `ansible_host`) to all instances belongs
+  to one physical machine.
+
+Read the [doc](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) for details.
+
+You can run playbook on one machine using `--limit` option:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml --limit machine1
+```
+
+Or you can update only one instance:
+
+```bash
+$ ansible-playbook -i hosts.yml playbook.yml --limit storage-1
 ```
 
 #### Check if package was installed
@@ -418,7 +301,7 @@ Tarantool be automatically installed with your application.
 If you want to install Tarantool yourself (e.g. from a package), you can set
 the `cartridge_enable_tarantool_repo` variable to `false`.
 
-#### Check if instances was started
+#### Check systemd services
 
 Connect to the machines and check that all the instances were started:
 
@@ -458,11 +341,6 @@ getting-started-app:
 
 You can also check `/var/run/tarantool/` and `/var/lib/tarantool/` content.
 
-Go to http://localhost:8181/admin/cluster/dashboard to see our instances in the
-Web UI:
-
-![Unconfigured instances](./images/unconfiured-instances.png)
-
 If you change instance configuration in `cartridge_instances` and run the
 playbook, this instance configuration file in `/etc/tarantool/conf.d/` will be
 changed and the `systemd` service will be restarted.
@@ -471,37 +349,15 @@ You can experiment with adding new instances and changing `cartridge_instances`,
 Note that the playbook will affect only the instances mentioned in the
 configuration.
 
-The instances *expelling* feature is not supported in the current version of the
-Tarantool Ansible role, but it's coming soon. For now, you can use the Web UI
-to expel instances.
-
-#### Ansible groups
-
-We grouped our hosts(instances) in two groups: `host1` and `host2`.
-For each group we specified connection options (`ansible_host` and `ansible_user`).
-Read the [doc](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) for details.
-
-You can run playbook on one machine using `--limit` option:
-
-```bash
-$ ansible-playbook -i hosts.yml playbook.yml --limit host1
-```
-
-Or you can update only one instance:
-
-```bash
-$ ansible-playbook -i hosts.yml playbook.yml --limit storage-1
-```
-
 ### Set up replicasets
 
-Now we have instances running on two hosts.
+Now we have instances running on two machines.
 It's time to join them to a replica set.
 
-Now we will group our hosts by replicasets.
+Now we will group our instances by replicasets.
 Don't delete anything from `hosts.yml`, just add `storage_1_replicaset` and `app_1_replicaset` groups.
 `...` means that section remains unchanged.
-You can look at [full inventory](#full-inventory) to understand where to add new sections.
+You can look at [full inventory](./hosts.updated.yml) to understand where to add new sections.
 
 ```yaml
 ---
@@ -512,13 +368,13 @@ all:
     ...
   children:
     # group instances by machines
-    host1:  # first machine address and connection opts
+    machine1:  # first machine address and connection opts
       ...
 
-    host2:  # second machine address and connection opts
+    machine2:  # second machine address and connection opts
       ...
 
-    # group instances by replicasets
+    # GROUP INSTANCES BY REPLICASETS
     storage_1_replicaset:  # replicaset storage-1
       vars:  # replicaset configuration
         replicaset_alias: storage-1
@@ -830,6 +686,58 @@ Don't forget to stop your VMs:
 $ vagrant halt
 ```
 
+## What does Tarantool Cartridge role do?
+
+Here follows a description of deploy steps, just to understand the way
+Tarantool Cartridge applications should be deployed.
+
+### Deploying the package
+
+The first step is to install the application package on a deployment server.
+Here we will create a user `tarantool` with a group `tarantool` and some directories
+for our app:
+
+* `/etc/tarantool/conf.d/` - directory for instances configuration;
+* `/var/lib/tarantool/` - directory to store instances snapshots;
+* `/var/run/tarantool/` - directory to store PID-files and console sockets.
+
+Application code will be placed in the `/usr/share/tarantool/${app-name}` directory.
+If you use Tarantool Enterprise, `tarantool` and `tarantoolctl` binaries will be
+delivered with the package and placed there too.
+Otherwise, your RPM package has a Tarantool dependency and `yum` (RPM packages
+manager) will install open-source Tarantool.
+
+The package also contains `/etc/systemd/system/${app-name}.service` and
+`/etc/systemd/system/{app-name}@.service`
+[systemd unit files](https://www.digitalocean.com/community/tutorials/understanding-systemd-units-and-unit-files).
+
+### Starting instances
+
+When you call `systemctl start getting-started-app@storage-1`, systemd starts
+the `storage-1` instance of the `getting-started-app` service
+(see [systemd template units](https://fedoramagazine.org/systemd-template-unit-files/)).
+This instance will look up its configuration across all
+sections of the YAML file(s) stored in `/etc/tarantool/conf.d/*`.
+
+See [documentation](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_dev/#configuring-instances)
+for details on instance configuration.
+
+### Setting up the topology
+
+After the instances are started, you need to set up the cluster topology,
+manage authorization parameters, browse application configuration,
+enable automatic failover, and bootstrap vshard.
+
+All these actions can be performed using the cluster WebUI or the `cartridge`
+module API.
+
+To use the API, you can connect to the instance console using a socket:
+
+```bash
+$ tarantoolctl connect /var/run/tarantool/getting-started-app.storage-1.control
+tarantool> require('cartridge').is_healthy()
+```
+
 ### Afterword
 
 For an exhaustive explanation of the configuration format, read the repository
@@ -840,107 +748,3 @@ If you have any problems with this guide or the role itself, please
 we will help you ASAP.
 
 Don't hesitate to experiment with the configuration, find and report bugs.
-
-### Full inventory
-
-```yaml
----
-all:
-  vars:
-    cartridge_app_name: getting-started-app  # application name
-    cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
-
-    cartridge_cluster_cookie: app-default-cookie  # cluster cookie
-    cartridge_defaults:  # default instance parameters
-      log_level: 5
-
-    cartridge_bootstrap_vshard: true  # bootstrap vshard
-    cartridge_failover: true  # enable failover
-
-    cartridge_auth:  # authorization parameters
-      enabled: true
-
-      cookie_max_age: 1000
-      cookie_renew_age: 100
-
-      users:
-        - username: first-user
-          password: first-user-password
-          fullname: First Cartridge User
-          email: user@cartridge.org
-          # deleted: true  # delete user
-
-    cartridge_app_config:  # application config sections
-      customers:
-        body:
-          max-age: 100
-          max-accounts-num: 5
-
-      accounts:
-        body:
-          max-balance: 10000000
-        # deleted: true  # delete section from config
-
-    # common ssh options
-    ansible_ssh_private_key_file: ~/.vagrant.d/insecure_private_key
-    ansible_ssh_common_args: '-o IdentitiesOnly=yes -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no'
-
-  hosts:  # instances configuration
-    storage-1:
-      config:
-        advertise_uri: '172.19.0.2:3301'
-        http_port: 8181
-
-    app-1:
-      config:
-        advertise_uri: '172.19.0.3:3301'
-        http_port: 8182
-
-    storage-1-replica:
-      config:
-        advertise_uri: '172.19.0.3:3302'
-        http_port: 8183
-
-  children:
-    # group instances by machines
-    host1:  # first machine address and connection opts
-      vars:
-        ansible_host: 172.19.0.2
-        ansible_user: vagrant
-
-      hosts:  # instances to be started on this machine
-        storage-1:
-
-    host2:  # second machine address and connection opts
-      vars:
-        ansible_host: 172.19.0.3
-        ansible_user: vagrant
-
-      hosts:  # instances to be started on this machine
-        app-1:
-        storage-1-replica:
-
-    # group instances by replicasets
-    storage_1_replicaset:  # replicaset storage-1
-      vars:  # replicaset configuration
-        replicaset_alias: storage-1
-        weight: 3
-        failover_priority:
-          - storage-1  # leader
-          - storage-1-replica
-        roles: ['storage']
-
-      hosts:  # instances
-        storage-1:
-        storage-1-replica:
-
-    app_1_replicaset:  # replicaset app-1
-      vars:  # replicaset configuration
-        replicaset_alias: app-1
-        failover_priority:
-          - app-1  # leader
-        roles: ['api']
-
-      hosts:  # instances
-        app-1:
-```
