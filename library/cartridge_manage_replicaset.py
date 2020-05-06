@@ -222,12 +222,12 @@ def create_replicaset(control_console, params):
     replicaset_leader = replicaset_failover_priority[0]
 
     if replicaset_leader not in cluster_instances:
-        errmsg = 'Leader "{}" (replicaset "{}") not found is cluster. Make sure it was started'.format(
+        errmsg = 'Leader "{}" (replicaset "{}") not found in cluster. Make sure it was started'.format(
             replicaset_leader, replicaset_alias
         )
         return ModuleRes(success=False, msg=errmsg)
 
-    # Cerate replicaset (join leader)
+    # Create replicaset (join leader)
     res, err = edit_replicaset(control_console, cluster_instances,
                                alias=replicaset_alias,
                                join_servers=[replicaset_leader],
@@ -258,7 +258,7 @@ def create_replicaset(control_console, params):
     # Join other instances
     for replicaset_instance in replicaset_instances:
         if replicaset_instance not in cluster_instances:
-            errmsg = 'Instance "{}" (replicaset "{}") not found is cluster. Make sure it was started'.format(
+            errmsg = 'Instance "{}" (replicaset "{}") not found in cluster. Make sure it was started'.format(
                 replicaset_instance, replicaset_alias
             )
             return ModuleRes(success=False, msg=errmsg)

@@ -40,7 +40,7 @@ class Console:
 
         if not os.path.exists(socket_path):
             errmsg = 'Instance socket not found: "{}". '.format(socket_path) + \
-                'Make sure instance was started correctly'
+                'Make sure the instance was started correctly'
             raise CartridgeException(cartridge_errcodes.SOCKET_NOT_FOUND, errmsg)
 
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -70,7 +70,8 @@ class Console:
                 chunk = self.sock.recv(1024).decode()
                 # It is correct because of cmd structure: it always returns a value
                 if chunk == '':
-                    errmsg = 'Error: broken pipe. Probably, instance was not bootsrapped yet to perform this operation'
+                    errmsg = 'Error: broken pipe. ' + \
+                        'Probably, the instance was not bootstrapped yet to perform this operation'
                     raise CartridgeException(cartridge_errcodes.BROKEN_PIPE, errmsg)
                 data = data + chunk
                 if data.endswith('\n...\n'):

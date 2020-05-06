@@ -57,7 +57,7 @@ class TestManageInstance(unittest.TestCase):
             roles=['role-1']
         )
         self.assertFalse(res.success, msg=res.msg)
-        self.assertIn('Leader "r1-master" (replicaset "r1") not found is cluster', res.msg)
+        self.assertIn('Leader "r1-master" (replicaset "r1") not found in cluster', res.msg)
         self.assertEqual(len(self.instance.get_calls('edit_topology')), 0)
 
         # add unjoined
