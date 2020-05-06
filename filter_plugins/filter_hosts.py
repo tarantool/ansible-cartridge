@@ -17,7 +17,7 @@ def get_instance_fullname(app_name, inventory_hostname, stateboard):
     return '{}.{}'.format(app_name, inventory_hostname)
 
 
-def one_not_expelled_instance_for_machine(hostvars, play_hosts):
+def get_one_not_expelled_instance_for_machine(hostvars, play_hosts):
     res = []
     added_machines = {}
 
@@ -33,7 +33,7 @@ def one_not_expelled_instance_for_machine(hostvars, play_hosts):
     return res
 
 
-def one_not_expelled_instance(hostvars, play_hosts):
+def get_one_not_expelled_instance(hostvars, play_hosts):
     for i in play_hosts:
         if is_expelled(hostvars[i]) or is_stateboard(hostvars[i]):
             continue
@@ -43,29 +43,30 @@ def one_not_expelled_instance(hostvars, play_hosts):
     raise Exception('At least one play host should be non-expelled and not stateboard')
 
 
-def instance_control_sock(app_name, inventory_hostname, stateboard=False):
+def get_instance_control_sock(app_name, inventory_hostname, stateboard=False):
     instance_fullname = get_instance_fullname(app_name, inventory_hostname, stateboard)
     return '/var/run/tarantool/{}.control'.format(instance_fullname)
 
 
-def instance_conf_file(app_name, inventory_hostname, stateboard=False):
+def get_instance_conf_file(app_name, inventory_hostname, stateboard):
     instance_fullname = get_instance_fullname(app_name, inventory_hostname, stateboard)
     return '/etc/tarantool/conf.d/{}.yml'.format(instance_fullname)
 
 
-def app_conf_file(app_name):
+def get_app_conf_file(app_name):
     return '/etc/tarantool/conf.d/{}.yml'.format(app_name)
 
 
-def conf_section_name(app_name, inventory_hostname, stateboard=False):
+def get_instance_conf_section(app_name, inventory_hostname, stateboard):
     return get_instance_fullname(app_name, inventory_hostname, stateboard)
 
 
-def instance_work_dir(app_name, inventory_hostname):
-    return '/var/lib/tarantool/{}.{}'.format(app_name, inventory_hostname)
+def get_instance_work_dir(app_name, inventory_hostname, stateboard):
+    instance_fullname = get_instance_fullname(app_name, inventory_hostname, stateboard)
+    return '/var/lib/tarantool/{}'.format(instance_fullname)
 
 
-def systemd_service_name(app_name, inventory_hostname, stateboard=False):
+def get_instance_systemd_service(app_name, inventory_hostname, stateboard):
     if stateboard:
         return '{}-stateboard'.format(app_name)
     return '{}@{}'.format(app_name, inventory_hostname)
@@ -74,12 +75,12 @@ def systemd_service_name(app_name, inventory_hostname, stateboard=False):
 class FilterModule(object):
     def filters(self):
         return {
-            'one_not_expelled_instance_for_machine': one_not_expelled_instance_for_machine,
-            'one_not_expelled_instance': one_not_expelled_instance,
-            'instance_control_sock': instance_control_sock,
-            'instance_conf_file': instance_conf_file,
-            'app_conf_file': app_conf_file,
-            'conf_section_name': conf_section_name,
-            'instance_work_dir': instance_work_dir,
-            'systemd_service_name': systemd_service_name,
+            'get_one_not_expelled_instance_for_machine': get_one_not_expelled_instance_for_machine,
+            'get_one_not_expelled_instance': get_one_not_expelled_instance,
+            'get_instance_control_sock': get_instance_control_sock,
+            'get_instance_conf_file': get_instance_conf_file,
+            'get_app_conf_file': get_app_conf_file,
+            'get_instance_conf_section': get_instance_conf_section,
+            'get_instance_work_dir': get_instance_work_dir,
+            'get_instance_systemd_service': get_instance_systemd_service,
         }
