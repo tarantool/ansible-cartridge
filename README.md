@@ -443,7 +443,7 @@ cartridge_failover_params:
 
 #### Stateful
 
-**Note** that stateful failover is supported since `Cartridge` 2.1.0.
+**Note** that stateful failover is supported since `Cartridge` 2.1.2.
 
 `stateful` failover requires these parameters:
 

@@ -78,7 +78,7 @@ We will set up a simple topology on 2 virtual machines, `vm1` and `vm2`:
 
 In the cluster Web UI, it will look like this:
 
-c
+![Topology](./images/topology.png)
 
 ## Setting up the environment
 
@@ -486,7 +486,7 @@ If this value is unset, the failover status won't be affected.
 
 ### Stateful failover
 
-**Note** that stateful failover is supported since `Cartridge` 2.1.0.
+**Note** that stateful failover is supported since `Cartridge` 2.1.2.
 
 [Read the doc](../../README.md#stateful) to learn more about stateful failover.
 
