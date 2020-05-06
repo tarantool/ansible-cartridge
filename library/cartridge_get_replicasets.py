@@ -2,7 +2,7 @@
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
-from ansible.module_utils.helpers import instance_expelled
+from ansible.module_utils.helpers import is_expelled, is_stateboard
 
 
 argument_spec = {
@@ -21,7 +21,7 @@ def get_replicasets(params):
         if i not in play_hosts:
             continue
 
-        if instance_expelled(instance_vars):
+        if is_expelled(instance_vars) or is_stateboard(instance_vars):
             continue
 
         if 'replicaset_alias' in instance_vars:

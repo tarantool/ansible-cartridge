@@ -1,7 +1,7 @@
 ---
 - name: Manage instance parameters in runtime
   cartridge_instance:
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    control_sock: '{{ instance_control_sock }}'
     config: '{{ config }}'
     cartridge_defaults: '{{ cartridge_defaults }}'
   when: >-
@@ -12,12 +12,14 @@
 - name: Check if instance restart is forced or required to apply changes
   cartridge_needs_restart:
     restart_forced: '{{ restarted }}'
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    control_sock: '{{ instance_control_sock }}'
     appname: '{{ cartridge_app_name }}'
-    instance_name: '{{ inventory_hostname }}'
+    instance_conf_file: '{{ instance_conf_file }}'
+    conf_section_name: '{{ instance_conf_section }}'
     cluster_cookie: '{{ cartridge_cluster_cookie }}'
     cartridge_defaults: '{{ cartridge_defaults }}'
     config: '{{ config }}'
+    stateboard: '{{ stateboard }}'
   notify: restart-instance
   tags: cartridge-instances
 
@@ -28,20 +30,21 @@
         { cartridge_app_name: cartridge_defaults | combine({"cluster_cookie": cartridge_cluster_cookie}) }
         | to_nice_yaml
       }}
-    dest: /etc/tarantool/conf.d/{{ cartridge_app_name }}.yml
+    dest: '{{ app_conf_file }}'
     owner: tarantool
     group: tarantool
     mode: '644'
+  when: not stateboard
   tags: cartridge-instances
 
 - name: Place instance config
   copy:
     content: >-
       {{
-        { cartridge_app_name + "." + inventory_hostname: config }
+        { instance_conf_section: config }
           | to_nice_yaml
       }}
-    dest: /etc/tarantool/conf.d/{{ cartridge_app_name }}.{{ inventory_hostname }}.yml
+    dest: '{{ instance_conf_file }}'
     owner: tarantool
     group: tarantool
     mode: '644'

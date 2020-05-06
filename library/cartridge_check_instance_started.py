@@ -7,15 +7,18 @@ from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
     'control_sock': {'required': True, 'type': 'str'},
+    'stateboard': {'required': True, 'type': 'bool'},
 }
 
 
 def check_instance_started(params):
     try:
         control_console = get_control_console(params['control_sock'])
-        ok = control_console.eval('''
-            return require('membership').myself().status == 'alive'
-        ''')
+        ok = True
+        if not params['stateboard']:
+            ok = control_console.eval('''
+                return require('membership').myself().status == 'alive'
+            ''')
     except CartridgeException as e:
         return ModuleRes(success=False, msg=str(e))
 

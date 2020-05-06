@@ -3,7 +3,7 @@
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
-from ansible.module_utils.helpers import instance_expelled
+from ansible.module_utils.helpers import is_expelled, is_stateboard
 
 
 argument_spec = {
@@ -22,7 +22,7 @@ def probe_server(params):
         if 'config' not in instance_vars:
             continue
 
-        if instance_expelled(instance_vars):
+        if is_expelled(instance_vars) or is_stateboard(instance_vars):
             continue
 
         res = control_console.eval('''

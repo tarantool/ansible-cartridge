@@ -20,12 +20,22 @@
   run_once: true
   tags: always
 
+- name: Set instance facts
+  set_fact:
+    instance_control_sock: '{{ cartridge_app_name | get_instance_control_sock(inventory_hostname, stateboard) }}'
+    instance_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, stateboard) }}'
+    app_conf_file: '{{ cartridge_app_name | get_app_conf_file }}'
+    instance_conf_section: '{{ cartridge_app_name | get_instance_conf_section(inventory_hostname, stateboard) }}'
+    instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard) }}'
+    instance_systemd_service: '{{ cartridge_app_name | get_instance_systemd_service(inventory_hostname, stateboard) }}'
+  tags: always
+
 # Rewrites cartridge_app_name from package info
 - name: Install package
   include_tasks: install_package.yml
   when: >-
     cartridge_package_path is defined and
-    inventory_hostname in hostvars | one_not_expelled_instance_for_machine(play_hosts)
+    inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
   tags: cartridge-instances
 
 - name: Start instance
@@ -38,7 +48,8 @@
 
 - name: Wait for instance to be started
   cartridge_check_instance_started:
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    control_sock: '{{ instance_control_sock }}'
+    stateboard: '{{ stateboard }}'
   register: check_instance
   until: not check_instance.failed
   retries: '{{ instance_start_timeout // 5 }}'
@@ -48,22 +59,29 @@
 
 - name: Connect instance to membership
   cartridge_probe_instance:
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ inventory_hostname }}.control
+    control_sock: '{{ instance_control_sock }}'
     hostvars: '{{ hostvars }}'
     play_hosts: '{{ play_hosts }}'
   register: probe
   until: not probe.failed
   retries: 3
   delay: 5
-  when: not expelled
+  when: not expelled and not stateboard
   tags: cartridge-instances
+
+- name: Select one not expelled instance
+  set_fact:
+    one_not_expelled_instance: '{{ hostvars | get_one_not_expelled_instance(play_hosts) }}'
+  tags:
+    - cartridge-replicasets
+    - cartridge-config
 
 - name: Set one control instance to join replicasets
   cartridge_control_instance:
-    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ hostvars | one_not_expelled_instance(play_hosts) }}.control
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
   register: control_instance
   run_once: true
-  delegate_to: '{{ hostvars | one_not_expelled_instance(play_hosts) }}'
+  delegate_to: '{{ one_not_expelled_instance }}'
   tags: cartridge-replicasets
 
 - name: Get replicasets
@@ -93,11 +111,23 @@
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
-    sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ hostvars | one_not_expelled_instance(play_hosts) }}.control
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
     allow_empty: false
   register: control_instance
   run_once: true
-  delegate_to: '{{ hostvars | one_not_expelled_instance(play_hosts) }}'
+  delegate_to: '{{ one_not_expelled_instance }}'
+  when: >-
+    cartridge_auth is defined
+    or cartridge_app_config is defined
+    or cartridge_bootstrap_vshard is defined
+    or cartridge_failover is defined
+    or cartridge_failover_params is defined
+  tags: cartridge-config
+
+- name: Set control instance facts
+  set_fact:
+    control_host: '{{ control_instance.meta.host }}'
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_instance.meta.host) }}'
   when: >-
     cartridge_auth is defined
     or cartridge_app_config is defined
@@ -109,8 +139,8 @@
 - name: Cartridge auth
   cartridge_auth:
     auth: '{{ cartridge_auth }}'
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
-  delegate_to: '{{ control_instance.meta.host }}'
+    control_sock: '{{ control_sock }}'
+  delegate_to: '{{ control_host }}'
   run_once: true
   when: cartridge_auth is defined
   tags: cartridge-config
@@ -118,16 +148,16 @@
 - name: Application config
   cartridge_app_config:
     app_config: '{{ cartridge_app_config }}'
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
-  delegate_to: '{{ control_instance.meta.host }}'
+    control_sock: '{{ control_sock }}'
+  delegate_to: '{{ control_host }}'
   run_once: true
   when: cartridge_app_config is defined
   tags: cartridge-config
 
 - name: Bootstrap vshard
   cartridge_bootstrap_vshard:
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
-  delegate_to: '{{ control_instance.meta.host }}'
+    control_sock: '{{ control_sock}}'
+  delegate_to: '{{ control_host }}'
   run_once: true
   register: bootstrap_vshard
   until: not bootstrap_vshard.failed
@@ -139,8 +169,8 @@
 - name: Manage failover
   cartridge_manage_failover:
     failover_params: '{{ cartridge_failover_params | default(cartridge_failover) }}'
-    control_sock: /var/run/tarantool/{{ cartridge_app_name }}.{{ control_instance.meta.host }}.control
-  delegate_to: '{{ control_instance.meta.host }}'
+    control_sock: '{{ control_sock }}'
+  delegate_to: '{{ control_host }}'
   run_once: true
   when: cartridge_failover is defined or cartridge_failover_params is defined
   tags: cartridge-config

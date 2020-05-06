@@ -22,6 +22,7 @@ class Instance:
     COOKIE = 'cookie'
 
     INSTANCE_CONF_PATH = '/etc/tarantool/conf.d/{}.{}.yml'.format(APPNAME, INSTANCE_NAME)
+    CONF_SECTION = '{}.{}'.format(APPNAME, INSTANCE_NAME)
     APP_CONF_PATH = '/etc/tarantool/conf.d/{}.yml'.format(APPNAME)
     APP_CODE_PATH = '/usr/share/tarantool/{}'.format(APPNAME)
 
@@ -144,17 +145,24 @@ class Instance:
             require('fio').path.remove_file('{}')
         '''.format(path))
 
-    def set_instance_config(self, config):
+    def set_instance_config(self, config,
+                            instance_conf_file=None,
+                            conf_section_name=None):
+        if instance_conf_file is None:
+            instance_conf_file = Instance.INSTANCE_CONF_PATH
+
+        if conf_section_name is None:
+            conf_section_name = Instance.CONF_SECTION
+
         params = ', '.join([
             '{}: {}'.format(k, v)
             for k, v in config.items()
         ])
-        conf = '{appname}.{instance_name}: {{ {params} }}'.format(
-            appname=self.APPNAME,
-            instance_name=self.INSTANCE_NAME,
+        conf = '{conf_section_name}: {{ {params} }}'.format(
+            conf_section_name=conf_section_name,
             params=params
         )
-        self.write_file(self.INSTANCE_CONF_PATH, conf)
+        self.write_file(instance_conf_file, conf)
 
     def set_app_config(self, config):
         config = config.copy()
