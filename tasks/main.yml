@@ -128,6 +128,12 @@
   set_fact:
     control_host: '{{ control_instance.meta.host }}'
     control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_instance.meta.host) }}'
+  when: >-
+    cartridge_auth is defined
+    or cartridge_app_config is defined
+    or cartridge_bootstrap_vshard is defined
+    or cartridge_failover is defined
+    or cartridge_failover_params is defined
   tags: cartridge-config
 
 - name: Cartridge auth
