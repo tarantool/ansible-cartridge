@@ -14,7 +14,7 @@ set up the topology, and configure a cluster.
   * [Start instances](#start-instances)
   * [Set up replica sets](#set-up-replica-sets)
   * [Bootstrap vshard](#bootstrap-vshard)
-  * [Manage failover](#manage-failover)
+  * [Failover](#failover)
   * [Manage authorization](#manage-authorization)
   * [Application configuration](#application-configuration)
 * [Final checks](#final-checks)
@@ -64,7 +64,9 @@ Our example application implements two roles:
 We will set up a simple topology on 2 virtual machines, `vm1` and `vm2`:
 
 * replicaset `app-1`:
-  * roles: `api` (+ `vshard-router`)
+  * roles:
+    * `api` (+ `vshard-router`)
+    * `failover-coordinator`
   * instances:
     * `app-1` (`vm1`)
 
@@ -76,7 +78,7 @@ We will set up a simple topology on 2 virtual machines, `vm1` and `vm2`:
 
 In the cluster Web UI, it will look like this:
 
-![Topology](./images/topology.png)
+c
 
 ## Setting up the environment
 
@@ -393,7 +395,9 @@ all:
         replicaset_alias: app-1
         failover_priority:
           - app-1  # leader
-        roles: ['api']
+        roles:
+          - api
+          - failover-coordinator
 
       hosts:  # instances
         app-1:
@@ -472,6 +476,7 @@ To disable failover just set it's mode to `disabled`:
 ---
 all:
   vars:
+    ...
     cartridge_failover_params:
       mode: disabled
     ...
@@ -481,9 +486,70 @@ If this value is unset, the failover status won't be affected.
 
 ### Stateful failover
 
-The full example for [stateful failover](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md#stateful-failover)
-is coming soon.
-Now you can [read the doc](../../README.md#stateful).
+**Note** that stateful failover is supported since `Cartridge` 2.1.0.
+
+[Read the doc](../../README.md#stateful) to learn more about stateful failover.
+
+First, let's set failover mode to stateful:
+
+```yaml
+---
+all:
+  vars:
+    ...
+    cartridge_failover_params:
+      mode: stateful
+      state_provider: stateboard
+      stateboard_params:
+        uri: 172.19.0.2:3310
+        password: secret-stateboard
+    ...
+```
+
+Now, check the `Failover` button in the Admin UI:
+
+![](./images/stateful-failover.png)
+
+Stateful failover was enabled, but we didn't start the Stateboard instance.
+If you click the `Issues` button, you can see that there are problems with
+state provider availability.
+
+![](./images/issues.png)
+
+Now we need to start [Stateboard instance](../../README.md#stateboard-instance).
+
+Add host marked as `stateboard` to the first machine:
+
+```yaml
+---
+all:
+  vars:
+  ...
+  hosts:
+    ...
+    my-stateboard:
+      config:
+        listen: 172.19.0.2:3310
+        password: secret-stateboard
+      stateboard: true
+  ...
+  children:
+    machine1:
+      vars:
+        ...
+      hosts:
+        ...
+        my-stateboard:
+```
+
+Check that there aren't any issues anymore.
+Additionally, you can check stateboard service status and logs:
+
+```bash
+vagrant ssh vm1
+[vagrant@vm1 ~]$ sudo systemctl status getting-started-app-stateboard
+[vagrant@vm1 ~]$ sudo journalctl -u getting-started-app-stateboard
+```
 
 ### Manage authorization
 
