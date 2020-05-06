@@ -85,14 +85,12 @@ def needs_restart(params):
 
     control_sock = params['control_sock']
     appname = params['appname']
-    # instance_name = params['instance_name']
     new_default_conf = params['cartridge_defaults']
     new_instance_conf = params['config']
     cluster_cookie = params['cluster_cookie']
     instance_conf_file = params['instance_conf_file']
     conf_section_name = params['conf_section_name']
 
-    # instance_conf_path = '/etc/tarantool/conf.d/{}.{}.yml'.format(appname, instance_name)
     default_conf_path = '/etc/tarantool/conf.d/{}.yml'.format(appname)
     app_code_path = '/usr/share/tarantool/{}'.format(appname)
 
