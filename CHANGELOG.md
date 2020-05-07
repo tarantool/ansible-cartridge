@@ -11,6 +11,8 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+## [1.3.0] - 2020-05-08
+
 ### Added
 
 - `cartridge_failover_params` variable to manage new failover (cartridge >= 2.1.0)

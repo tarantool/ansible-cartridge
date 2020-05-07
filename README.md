@@ -30,7 +30,7 @@ to learn how to set up topology using this role.
 
 ## Requirements
 
-* Tarantool Cartridge >=1.2.0, <2;
+* Tarantool Cartridge >=1.2.0, <3;
 * Ansible 2.8.4 or higher.
 
 Note that this role requires [root access](https://docs.ansible.com/ansible/2.4/become.html).
@@ -40,7 +40,7 @@ Note that this role requires [root access](https://docs.ansible.com/ansible/2.4/
 First, you need to install this role using `ansible-galaxy`:
 
 ```bash
-$ ansible-galaxy install tarantool.cartridge,1.2.0
+$ ansible-galaxy install tarantool.cartridge,1.3.0
 ```
 
 Example cluster topology:
