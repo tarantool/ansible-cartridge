@@ -16,6 +16,7 @@ to use the newest tag with new release
 ### Added
 
 - `cartridge_failover_params` variable to manage new failover (cartridge >= 2.1.0)
+- `stateboard` flag to start Tarantool Stateboard instance (cartridge >= 2.1.0)
 
 ### Changed
 
