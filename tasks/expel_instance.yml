@@ -2,7 +2,7 @@
 - name: Expel instance from topology
   cartridge_expel_instance:
     alias: '{{ inventory_hostname }}'
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_host) }}'
+    control_sock: '{{ hostvars[control_host] | get_instance_control_sock }}'
   delegate_to: '{{ control_host }}'
   tags: cartridge-replicasets
 

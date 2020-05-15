@@ -43,9 +43,15 @@ def get_one_not_expelled_instance(hostvars, play_hosts):
     raise Exception('At least one play host should be non-expelled and not stateboard')
 
 
-def get_instance_control_sock(app_name, inventory_hostname, stateboard=False):
-    instance_fullname = get_instance_fullname(app_name, inventory_hostname, stateboard)
-    return '/var/run/tarantool/{}.control'.format(instance_fullname)
+def get_instance_control_sock(instance_vars):
+    if instance_vars.get('control_sock_path'):
+        return instance_vars['control_sock_path']
+
+    return '/var/run/tarantool/{}.control'.format(
+        get_instance_fullname(
+            instance_vars['cartridge_app_name'],
+            instance_vars['inventory_hostname'],
+            instance_vars.get('stateboard')))
 
 
 def get_instance_conf_file(app_name, inventory_hostname, stateboard):

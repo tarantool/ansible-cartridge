@@ -2,6 +2,6 @@
 - name: Manage {{ replicaset.alias }} replicaset
   cartridge_manage_replicaset:
     replicaset: '{{ replicaset }}'
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(join_host) }}'
+    control_sock: '{{ hostvars[join_host] | get_instance_control_sock }}'
   delegate_to: '{{ join_host }}'
   tags: cartridge-replicasets
