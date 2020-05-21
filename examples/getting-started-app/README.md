@@ -189,8 +189,6 @@ all:
     cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
 
     cartridge_cluster_cookie: app-default-cookie  # cluster cookie
-    cartridge_defaults:  # default instance parameters
-      log_level: 5
 
     # common ssh options
     ansible_ssh_private_key_file: ~/.vagrant.d/insecure_private_key
@@ -338,7 +336,6 @@ getting-started-app.storage-1:
     http_port: '8181'
 getting-started-app:
     cluster_cookie: app-default-cookie
-    log_level: 5
 ```
 
 You can also check `/var/run/tarantool/` and `/var/lib/tarantool/` content.

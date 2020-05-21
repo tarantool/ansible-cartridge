@@ -5,8 +5,6 @@ all:
     cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
 
     cartridge_cluster_cookie: app-default-cookie  # cluster cookie
-    cartridge_defaults:  # default instance parameters
-      log_level: 5
 
     cartridge_bootstrap_vshard: true  # bootstrap vshard
 

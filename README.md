@@ -73,8 +73,6 @@ all:
     cartridge_app_name: myapp
     cartridge_package_path: ./myapp-1.0.0-0.rpm
     cartridge_cluster_cookie: secret-cookie
-    cartridge_defaults:
-      log_level: 1
 
   hosts:  # instances
     core-1:
