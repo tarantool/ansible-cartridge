@@ -73,8 +73,9 @@ all:
     cartridge_app_name: myapp
     cartridge_package_path: ./myapp-1.0.0-0.rpm
     cartridge_cluster_cookie: secret-cookie
-    cartridge_defaults:
-      some_option: 'default value'
+
+    # cartridge_defaults:  # default instance parameters
+    #   memtx_memory: 1024000000
 
   hosts:  # instances
     core-1:
