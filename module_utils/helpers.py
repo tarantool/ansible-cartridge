@@ -93,7 +93,7 @@ class Console:
             return string.hex(ret)
         '''.format(func_body)
 
-        lines = [l.strip() for l in cmd.split('\n') if l.strip()]
+        lines = [line.strip() for line in cmd.split('\n') if line.strip()]
         cmd = ' '.join(lines) + '\n'
 
         sendall(cmd)
