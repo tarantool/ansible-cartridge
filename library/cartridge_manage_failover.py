@@ -69,14 +69,33 @@ def manage_failover_new(control_console, failover_params):
 
             lua_stateboard_params = []
             if stateboard_params is not None:
-                if stateboard_params.get('uri') is not None:
-                    lua_stateboard_params.append('uri = "{}"'.format(stateboard_params['uri']))
-
-                if stateboard_params.get('password') is not None:
-                    lua_stateboard_params.append('password = "{}"'.format(stateboard_params['password']))
+                for string_param in ['uri', 'password']:
+                    if stateboard_params.get(string_param) is not None:
+                        lua_stateboard_params.append('{} = "{}"'.format(string_param, stateboard_params[string_param]))
 
             if lua_stateboard_params:
                 lua_params.append('tarantool_params = {{ {} }}'.format(', '.join(lua_stateboard_params)))
+        elif state_provider == 'etcd2':
+            lua_params.append('state_provider = "etcd2"')
+
+            etcd2_params = failover_params.get('etcd2_params')
+
+            lua_etcd2_params = []
+            if etcd2_params is not None:
+                for string_param in ['prefix', 'username', 'password']:
+                    if etcd2_params.get(string_param) is not None:
+                        lua_etcd2_params.append('{} = "{}"'.format(string_param, etcd2_params[string_param]))
+
+                if etcd2_params.get('lock_delay') is not None:
+                    lua_etcd2_params.append('lock_delay = {}'.format(etcd2_params['lock_delay']))
+
+                if etcd2_params.get('endpoints') is not None:
+                    lua_etcd2_params.append('endpoints = {{ {} }}'.format(
+                        ", ".join('"{}"'.format(endpoint) for endpoint in etcd2_params['endpoints'])
+                    ))
+
+            if lua_etcd2_params:
+                lua_params.append('etcd2_params = {{ {} }}'.format(', '.join(lua_etcd2_params)))
 
     res = control_console.eval('''
         local ok, err = require('cartridge').failover_set_params({{

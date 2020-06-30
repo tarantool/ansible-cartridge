@@ -439,6 +439,10 @@ function cartridge.failover_set_params(params)
         vars.failover_params.tarantool_params = params.tarantool_params
     end
 
+    if params.etcd2_params ~= nil then
+        vars.failover_params.etcd2_params = params.etcd2_params
+    end
+
     return true
 end
 
