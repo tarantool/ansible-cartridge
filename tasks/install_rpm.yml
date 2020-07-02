@@ -45,15 +45,14 @@
 # Get tarantool dependency <major>.<minor> version
 - name: Get tarantool dependency version
   set_fact:
-    tnt_version: "{{ deplist.stdout | regex_search('tarantool >= ([0-9]+).([0-9]+)', '\\1', '\\2') }}"
+    tnt_version: "{{ deplist.stdout | regex_search('tarantool >= ([0-9]+.[0-9]+)', '\\1') }}"
   when: cartridge_enable_tarantool_repo
   any_errors_fatal: true
 
 - name: Enable Tarantool repo
   include_tasks: enable_tarantool_repo.yml
   vars:
-    repository: 'tarantool/{{ tnt_version[0] }}_{{ tnt_version[1] }}'
-    package_type: rpm
+    version: '{{ tnt_version[0] }}'
   when: 'cartridge_enable_tarantool_repo and "tarantool" in deplist.stdout'
 
 - name: Install RPM
