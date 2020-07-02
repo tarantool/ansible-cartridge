@@ -90,10 +90,14 @@ prebuild-unit:
 packages-enterprise:
   extends: .packages
   before_script:
+    - curl -L https://tarantool.io/installer.sh | bash -s -- --repo-only
+    - yum install -y cartridge-cli ${CARTRIDGE_CLI_VERSION}
+
     - curl -O -L https://${SDK_DOWNLOAD_USER}:${SDK_DOWNLOAD_TOKEN}@download.tarantool.io/enterprise/tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
     - tar -xzf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
     - rm -rf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
     - source tarantool-enterprise/env.sh
+    - rm tarantool-enterprise/cartridge
 
 .packages-opensource:
   extends: .packages
