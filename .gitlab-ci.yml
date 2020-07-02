@@ -1,7 +1,7 @@
 ---
 variables:
   BUNDLE_VERSION: 2.3.1-13-g882baf7
-  CARTRIDGE_CLI_VERSION: 1.8.0
+  CARTRIDGE_CLI_VERSION: 2.0.0
 
 stages:
   - prebuild
@@ -77,7 +77,7 @@ prebuild-unit:
   image: $CI_REGISTRY_IMAGE:packages
   script:
     - tarantool --version
-    - cartridge --version
+    - cartridge version
 
     - ./create-packages.sh
   artifacts:
@@ -98,20 +98,19 @@ packages-enterprise:
 .packages-opensource:
   extends: .packages
   before_script:
-    - curl -s https://packagecloud.io/install/repositories/tarantool/${TARANTOOL_VERSION}/script.rpm.sh | bash
-    - yum install -y tarantool tarantool-devel
-    - tarantoolctl rocks install cartridge-cli ${CARTRIDGE_CLI_VERSION}
-    - PATH=$PWD/.rocks/bin/:$PATH
+    - curl -L https://tarantool.io/installer.sh | VER=${TARANTOOL_VERSION} bash
+    - yum install -y tarantool-devel
+    - yum install -y cartridge-cli ${CARTRIDGE_CLI_VERSION}
 
 packages-opensource-1.10:
   extends: .packages-opensource
   variables:
-    TARANTOOL_VERSION: '1_10'
+    TARANTOOL_VERSION: '1.10'
 
 packages-opensource-2.2:
   extends: .packages-opensource
   variables:
-    TARANTOOL_VERSION: '2_2'
+    TARANTOOL_VERSION: '2.2'
 
 
 unit:
