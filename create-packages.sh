@@ -30,8 +30,8 @@ cartridge create --name ${appname}
 
 sed -i '/cartridge.cfg({/a \ \ \ \ vshard_groups = {hot = { bucket_count = 20000 }},' myapp/init.lua
 
-cartridge pack rpm --version ${version} ${pack_flags} ${appname}
-cartridge pack deb --version ${version} ${pack_flags} ${appname}
+cartridge pack rpm --quiet --version ${version} ${pack_flags} ${appname}
+cartridge pack deb --quiet --version ${version} ${pack_flags} ${appname}
 
 rm -rf ${appname}
 
