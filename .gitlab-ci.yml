@@ -111,10 +111,10 @@ packages-opensource-1.10:
   variables:
     TARANTOOL_VERSION: '1.10'
 
-packages-opensource-2.2:
+packages-opensource-2.3:
   extends: .packages-opensource
   variables:
-    TARANTOOL_VERSION: '2.2'
+    TARANTOOL_VERSION: '2.3'
 
 
 unit:
@@ -162,7 +162,7 @@ test-opensource-1.10:
   dependencies:
     - packages-opensource-1.10
 
-test-opensource-2.2:
+test-opensource-2.3:
   extends: .test
   dependencies:
-    - packages-opensource-2.2
+    - packages-opensource-2.3
