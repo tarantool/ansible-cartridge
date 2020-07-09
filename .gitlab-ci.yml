@@ -145,7 +145,7 @@ unit:
 
     - docker network create
       --driver bridge
-      --opt com.docker.network.driver.mtu=1450
+      --opt com.docker.network.driver.mtu=1300
       cartridge-network
 
     - molecule test --destroy=never
