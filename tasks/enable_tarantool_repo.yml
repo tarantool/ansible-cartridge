@@ -1,7 +1,7 @@
 ---
 - name: Get repository setup script
   get_url:
-    url: https://tarantool.io/installer.sh
+    url: https://tarantool-io.hb.bizmrg.com/website-static/tarantool/downloads/tarantool_installer.sh
     dest: '/tmp/tarantool-installer.sh'
   register: get_script
   until: not get_script.failed
