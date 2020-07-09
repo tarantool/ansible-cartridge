@@ -1,7 +1,7 @@
 ---
 variables:
   BUNDLE_VERSION: 2.3.1-13-g882baf7
-  CARTRIDGE_CLI_VERSION: 1.8.0
+  CARTRIDGE_CLI_VERSION: 2.0.0
 
 stages:
   - prebuild
@@ -12,6 +12,7 @@ stages:
 .dind:
   tags:
     - dind
+    - openstack
   services:
     - name: docker:dind
       alias: localhost
@@ -77,7 +78,7 @@ prebuild-unit:
   image: $CI_REGISTRY_IMAGE:packages
   script:
     - tarantool --version
-    - cartridge --version
+    - cartridge version
 
     - ./create-packages.sh
   artifacts:
@@ -90,28 +91,31 @@ prebuild-unit:
 packages-enterprise:
   extends: .packages
   before_script:
+    - curl -L https://tarantool.io/installer.sh | bash -s -- --repo-only
+    - yum install -y cartridge-cli ${CARTRIDGE_CLI_VERSION}
+
     - curl -O -L https://${SDK_DOWNLOAD_USER}:${SDK_DOWNLOAD_TOKEN}@download.tarantool.io/enterprise/tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
     - tar -xzf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
     - rm -rf tarantool-enterprise-bundle-${BUNDLE_VERSION}.tar.gz
     - source tarantool-enterprise/env.sh
+    - rm tarantool-enterprise/cartridge
 
 .packages-opensource:
   extends: .packages
   before_script:
-    - curl -s https://packagecloud.io/install/repositories/tarantool/${TARANTOOL_VERSION}/script.rpm.sh | bash
-    - yum install -y tarantool tarantool-devel
-    - tarantoolctl rocks install cartridge-cli ${CARTRIDGE_CLI_VERSION}
-    - PATH=$PWD/.rocks/bin/:$PATH
+    - curl -L https://tarantool.io/installer.sh | VER=${TARANTOOL_VERSION} bash
+    - yum install -y tarantool-devel
+    - yum install -y cartridge-cli ${CARTRIDGE_CLI_VERSION}
 
 packages-opensource-1.10:
   extends: .packages-opensource
   variables:
-    TARANTOOL_VERSION: '1_10'
+    TARANTOOL_VERSION: '1.10'
 
-packages-opensource-2.2:
+packages-opensource-2.3:
   extends: .packages-opensource
   variables:
-    TARANTOOL_VERSION: '2_2'
+    TARANTOOL_VERSION: '2.3'
 
 
 unit:
@@ -141,7 +145,7 @@ unit:
 
     - docker network create
       --driver bridge
-      --opt com.docker.network.driver.mtu=1450
+      --opt com.docker.network.driver.mtu=1300
       cartridge-network
 
     - molecule test --destroy=never
@@ -159,7 +163,7 @@ test-opensource-1.10:
   dependencies:
     - packages-opensource-1.10
 
-test-opensource-2.2:
+test-opensource-2.3:
   extends: .test
   dependencies:
-    - packages-opensource-2.2
+    - packages-opensource-2.3

@@ -1,8 +1,8 @@
 ---
 - name: Get repository setup script
   get_url:
-    url: 'https://packagecloud.io/install/repositories/{{ repository }}/script.{{ package_type }}.sh'
-    dest: '/tmp/script.{{ package_type }}.sh'
+    url: https://tarantool-io.hb.bizmrg.com/website-static/tarantool/downloads/tarantool_installer.sh
+    dest: '/tmp/tarantool-installer.sh'
   register: get_script
   until: not get_script.failed
   retries: 3
@@ -10,6 +10,8 @@
   any_errors_fatal: true
 
 - name: Run repository setup script
-  command: bash /tmp/script.{{ package_type }}.sh
-  changed_when: false
+  command: bash /tmp/tarantool-installer.sh --repo-only
+  environment:
+    VER: '{{ version }}'
   any_errors_fatal: true
+  changed_when: false

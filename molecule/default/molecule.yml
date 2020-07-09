@@ -20,7 +20,7 @@ platforms:
       - name: cartridge-network
     purge_networks: true
   - name: vm2
-    image: jrei/systemd-ubuntu
+    image: jrei/systemd-ubuntu:18.04
     command: /lib/systemd/systemd
     tmpfs:
       - /run
