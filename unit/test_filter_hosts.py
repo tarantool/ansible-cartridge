@@ -25,7 +25,7 @@ class TestFilterHosts(unittest.TestCase):
         self.assertEqual(
             self.filter_table['get_instance_control_sock'](instance_hostvars),
             '/var/run/tarantool/{app_name}.{host_name}.control'.format(
-                instance_hostvars['cartridge_app_name'],
-                instance_hostvars['inventory_hostname']
+                app_name=instance_hostvars['cartridge_app_name'],
+                host_name=instance_hostvars['inventory_hostname']
             )
         )

@@ -23,11 +23,11 @@
 - name: Set instance facts
   set_fact:
     instance_control_sock: '{{ hostvars[inventory_hostname] | get_instance_control_sock }}'
-    instance_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, stateboard) }}'
-    app_conf_file: '{{ cartridge_app_name | get_app_conf_file }}'
-    instance_conf_section: '{{ cartridge_app_name | get_instance_conf_section(inventory_hostname, stateboard) }}'
-    instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard) }}'
-    instance_systemd_service: '{{ cartridge_app_name | get_instance_systemd_service(inventory_hostname, stateboard) }}'
+    instance_conf_file: '{{ hostvars[inventory_hostname] | get_instance_conf_file }}'
+    app_conf_file: '{{ hostvars[inventory_hostname] | get_app_conf_file }}'
+    instance_conf_section: '{{ hostvars[inventory_hostname] | get_instance_conf_section }}'
+    instance_work_dir: '{{ hostvars[inventory_hostname] | get_instance_work_dir }}'
+    instance_systemd_service: '{{ hostvars[inventory_hostname] | get_instance_systemd_service }}'
   tags: always
 
 # Rewrites cartridge_app_name from package info

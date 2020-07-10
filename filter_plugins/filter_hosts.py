@@ -10,11 +10,11 @@ def is_stateboard(instance_vars):
     return instance_vars.get('stateboard') is True
 
 
-def get_instance_fullname(app_name, inventory_hostname, stateboard):
-    if stateboard:
-        return '{}-stateboard'.format(app_name)
+def get_instance_fullname(instance_vars):
+    if instance_vars.get('stateboard'):
+        return '{}-stateboard'.format(instance_vars['app_name'])
 
-    return '{}.{}'.format(app_name, inventory_hostname)
+    return '{}.{}'.format(instance_vars['app_name'], instance_vars['inventory_hostname'])
 
 
 def get_one_not_expelled_instance_for_machine(hostvars, play_hosts):
@@ -47,35 +47,29 @@ def get_instance_control_sock(instance_vars):
     if instance_vars.get('control_sock_path'):
         return instance_vars['control_sock_path']
 
-    return '/var/run/tarantool/{}.control'.format(
-        get_instance_fullname(
-            instance_vars['cartridge_app_name'],
-            instance_vars['inventory_hostname'],
-            instance_vars.get('stateboard')))
+    return '/var/run/tarantool/{}.control'.format(get_instance_fullname(instance_vars))
 
 
-def get_instance_conf_file(app_name, inventory_hostname, stateboard):
-    instance_fullname = get_instance_fullname(app_name, inventory_hostname, stateboard)
-    return '/etc/tarantool/conf.d/{}.yml'.format(instance_fullname)
+def get_instance_conf_file(instance_vars):
+    return '/etc/tarantool/conf.d/{}.yml'.format(get_instance_fullname(instance_vars))
 
 
-def get_app_conf_file(app_name):
-    return '/etc/tarantool/conf.d/{}.yml'.format(app_name)
+def get_app_conf_file(instance_vars):
+    return '/etc/tarantool/conf.d/{}.yml'.format(instance_vars['app_name'])
 
 
-def get_instance_conf_section(app_name, inventory_hostname, stateboard):
-    return get_instance_fullname(app_name, inventory_hostname, stateboard)
+def get_instance_conf_section(instance_vars):
+    return get_instance_fullname(instance_vars)
 
 
-def get_instance_work_dir(app_name, inventory_hostname, stateboard):
-    instance_fullname = get_instance_fullname(app_name, inventory_hostname, stateboard)
-    return '/var/lib/tarantool/{}'.format(instance_fullname)
+def get_instance_work_dir(instance_vars):
+    return '/var/lib/tarantool/{}'.format(get_instance_fullname(instance_vars))
 
 
-def get_instance_systemd_service(app_name, inventory_hostname, stateboard):
-    if stateboard:
-        return '{}-stateboard'.format(app_name)
-    return '{}@{}'.format(app_name, inventory_hostname)
+def get_instance_systemd_service(instance_vars):
+    if instance_vars.get(stateboard):
+        return '{}-stateboard'.format(instance_vars['app_name'])
+    return '{}@{}'.format(instance_vars['app_name'], instance_vars['inventory_hostname'])
 
 
 class FilterModule(object):
