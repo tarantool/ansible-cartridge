@@ -184,6 +184,7 @@ Configuration format is described in detail in the
 * `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled.
 * [DEPRECATED] `cartridge_failover` (`boolean`, optional): boolean flag that
   indicates if eventual failover should be enabled or disabled;
+* `control_sock_path` (`string`, optional): custom instance socket path, only for managing replicasets if your instance socket is in another place. Does not work with rpm/deb from cli;
 
 ### Role tags
 
