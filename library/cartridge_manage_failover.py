@@ -94,8 +94,7 @@ def manage_failover_new(control_console, failover_params):
                         ", ".join('"{}"'.format(endpoint) for endpoint in etcd2_params['endpoints'])
                     ))
 
-            if lua_etcd2_params:
-                lua_params.append('etcd2_params = {{ {} }}'.format(', '.join(lua_etcd2_params)))
+            lua_params.append('etcd2_params = {{ {} }}'.format(', '.join(lua_etcd2_params)))
 
     res = control_console.eval('''
         local ok, err = require('cartridge').failover_set_params({{

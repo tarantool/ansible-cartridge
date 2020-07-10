@@ -459,9 +459,9 @@ cartridge_failover_params:
 
     - `password`(`string`, required) - stateboard instance password;
 
-- `etcd2_params`(`dict`, required for `etcd2` state provider) -
+- `etcd2_params`(`dict`, used for for `etcd2` state provider) -
   configuration for stateboard:
-    - `prefix`(`string`, required) - prefix used for etcd keys: `<prefix>/lock` and
+    - `prefix`(`string`, optional) - prefix used for etcd keys: `<prefix>/lock` and
       `<prefix>/leaders`;
 
     - `lock_delay`(`number`, optional) - timeout (in seconds), determines lock's

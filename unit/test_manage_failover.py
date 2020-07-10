@@ -276,6 +276,24 @@ class TestFailover(unittest.TestCase):
             'etcd2_params': ETCD2_PARAMS,
         })
 
+        # failover disabled
+        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.clear_calls('failover_set_params')
+
+        res = call_manage_failover(self.console_sock, mode='stateful',
+                                   state_provider='etcd2',
+                                   etcd2_params=None)
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertTrue(res.changed)
+
+        calls = self.instance.get_calls('failover_set_params')
+        self.assertEqual(len(calls), 1)
+        self.assertEqual(calls[0], {
+            'mode': 'stateful',
+            'state_provider': 'etcd2',
+            'etcd2_params': [],
+        })
+
         # stateful failover enabled - params aren't changed
         self.instance.set_variable('failover_params', {
             'mode': 'stateful',

@@ -798,41 +798,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
-        self.assertIn(
-            'etcd2_params" is required for "etcd2" state provider',
-            res.msg
-        )
-
-        ETCD2_PROVIDER_REQUIRED_PARAMS = [
-            'prefix',
-        ]
-
-        for p in ETCD2_PROVIDER_REQUIRED_PARAMS:
-            params = {
-                'instance-1': {
-                    'cartridge_app_name': 'app-name',
-                    'cartridge_cluster_cookie': 'cookie',
-                    'config': {'advertise_uri': 'localhost:3301'},
-
-                    'cartridge_failover_params': {
-                        'mode': 'stateful',
-                        'state_provider': 'etcd2',
-                        'etcd2_params': {
-                            'prefix': '/',
-                        }
-                    },
-                },
-            }
-
-            del params['instance-1']['cartridge_failover_params']['etcd2_params'][p]
-
-            res = call_validate_config(params)
-            self.assertFalse(res.success)
-            self.assertIn(
-                'etcd2_params.{}" is required for "etcd2" provider'.format(p),
-                res.msg
-            )
+        self.assertTrue(res.success)
 
         res = call_validate_config({
             'instance-1': {

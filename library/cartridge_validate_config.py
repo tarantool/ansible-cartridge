@@ -405,16 +405,8 @@ def check_failover(found_common_params):
                     return errmsg
 
             elif cartridge_failover_params['state_provider'] == 'etcd2':
-                if cartridge_failover_params.get('etcd2_params') is None:
-                    return '"etcd2_params" is required for "etcd2" state provider'
-
-                etcd2_params = cartridge_failover_params['etcd2_params']
-
-                for p in ETCD2_PROVIDER_REQUIRED_PARAMS:
-                    if p not in etcd2_params:
-                        return '"etcd2_params.{}" is required for "etcd2" provider'.format(p)
-
-                if etcd2_params.get('endpoints') is not None:
+                etcd2_params = cartridge_failover_params.get('etcd2_params')
+                if etcd2_params is not None and etcd2_params.get('endpoints') is not None:
                     for endpoint in etcd2_params['endpoints']:
                         if not is_valid_advertise_uri(endpoint):
                             return 'etcd2 endpoints must be specified as "<host>:<port>"'
