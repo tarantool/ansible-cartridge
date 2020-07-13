@@ -45,6 +45,9 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover_params.state_provider',
                 'cartridge_failover_params.stateboard_params.uri',
                 'cartridge_failover_params.stateboard_params.password',
+                'cartridge_failover_params.etcd2_params.prefix',
+                'cartridge_failover_params.etcd2_params.username',
+                'cartridge_failover_params.etcd2_params.password',
             },
             bool: {
                 'cartridge_bootstrap_vshard',
@@ -61,6 +64,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_app_config',
                 'cartridge_failover_params',
                 'cartridge_failover_params.stateboard_params',
+                'cartridge_failover_params.etcd2_params',
             },
             int: {
                 'instance_start_timeout',
@@ -68,11 +72,13 @@ class TestValidateConfig(unittest.TestCase):
                 'config.memtx_memory',
                 'cartridge_auth.cookie_max_age',
                 'cartridge_auth.cookie_renew_age',
+                'cartridge_failover_params.etcd2_params.lock_delay',
             },
             list: {
                 'roles',
                 'failover_priority',
                 'cartridge_auth.users',
+                'cartridge_failover_params.etcd2_params.endpoints',
             }
         }
 
@@ -104,6 +110,26 @@ class TestValidateConfig(unittest.TestCase):
                 return {
                     'cartridge_failover_params': {
                         'stateboard_params': {
+                            p: wrong_type_value
+                        }
+                    }
+                }
+
+            if path.startswith('cartridge_failover_params.etcd2_params.endpoints[0]'):
+                p = path.split('.')[-1]
+                return {
+                    'cartridge_failover_params': {
+                        'etcd2_params': {
+                            'endpoints': [wrong_type_value]
+                        }
+                    }
+                }
+
+            if path.startswith('cartridge_failover_params.etcd2_params.'):
+                p = path.split('.')[-1]
+                return {
+                    'cartridge_failover_params': {
+                        'etcd2_params': {
                             p: wrong_type_value
                         }
                     }
@@ -592,6 +618,7 @@ class TestValidateConfig(unittest.TestCase):
         STATEFUL_FAILOVER_PARAMS = {
             'state_provider': 'stateboard',
             'stateboard_params': {},
+            'etcd2_params': {},
         }
 
         for p, value in STATEFUL_FAILOVER_PARAMS.items():
@@ -659,10 +686,11 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertFalse(res.success)
         self.assertIn(
-            "Stateful failover state provider should be one of ['stateboard']",
+            "Stateful failover state provider should be one of ['stateboard', 'etcd2']",
             res.msg
         )
 
+    def test_stateboard_provider(self):
         res = call_validate_config({
             'instance-1': {
                 'cartridge_app_name': 'app-name',
@@ -756,6 +784,66 @@ class TestValidateConfig(unittest.TestCase):
             'Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-]',
             res.msg
         )
+
+    def test_etcd2_provider(self):
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_params': {
+                    'mode': 'stateful',
+                    'state_provider': 'etcd2',
+                },
+            },
+        })
+        self.assertTrue(res.success)
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_params': {
+                    'mode': 'stateful',
+                    'state_provider': 'etcd2',
+                    'etcd2_params': {
+                        'prefix': '/',
+                        'endpoints': [
+                            'localhost:2379',
+                            '2379',
+                        ]
+                    }
+                },
+            },
+        })
+        self.assertFalse(res.success)
+        self.assertIn(
+            'etcd2 endpoints must be specified as "<host>:<port>"',
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_params': {
+                    'mode': 'stateful',
+                    'state_provider': 'etcd2',
+                    'etcd2_params': {
+                        'prefix': '/',
+                        'endpoints': [
+                            'localhost:2379'
+                        ]
+                    }
+                },
+            },
+        })
+        self.assertTrue(res.success)
 
 
 if __name__ == '__main__':

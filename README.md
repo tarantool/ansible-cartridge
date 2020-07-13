@@ -446,16 +446,34 @@ cartridge_failover_params:
 
 **Note** that stateful failover is supported since `Cartridge` 2.1.2.
 
+**Note** that `etcd2` provider is supported since `Cartridge` 2.2.0.
+
 `stateful` failover requires these parameters:
 
 - `state_provider`(`string`, required for `stateful` mode) - external state
-  provider type. Now there's only one supported type - `stateboard`.
+  provider type. Supported `stateboard` and `etcd2` providers.
 
 - `stateboard_params`(`dict`, required for `stateboard` state provider) -
   configuration for stateboard:
     - `uri`(`string`, required) - stateboard instance URI;
 
     - `password`(`string`, required) - stateboard instance password;
+
+- `etcd2_params`(`dict`, used for for `etcd2` state provider) -
+  configuration for stateboard:
+    - `prefix`(`string`, optional) - prefix used for etcd keys: `<prefix>/lock` and
+      `<prefix>/leaders`;
+
+    - `lock_delay`(`number`, optional) - timeout (in seconds), determines lock's
+      time-to-live (default value in Cartridge is `10`);
+
+    - `entrypoints`(`string`, optional) - URIs that are used to discover and to access
+      `etcd` cluster instances (default value in Cartridge is
+      `['http://localhost:2379', 'http://localhost:4001']`);
+
+    - `username`(`string`, optional).
+
+    - `password`(`string`, optional).
 
 Read [the doc](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md/#stateful-failover)
 to learn more about stateful failover.
@@ -477,9 +495,9 @@ cartridge_failover_params:
 `cartridge_auth` parameter is used to specify authorization settings:
 
 - `enabled`(`boolean`, optional) - indicates if authorization is enabled;
-- `cookie_max_age`(`int`, optional) - number of seconds until the authorization
+- `cookie_max_age`(`number`, optional) - number of seconds until the authorization
   cookie expires;
-- `cookie_renew_age`(`int`, optional) - update the provided cookie if it's older
+- `cookie_renew_age`(`number`, optional) - update the provided cookie if it's older
   than this age.
 - `users`(`list-of-dicts`, optional) - list of users to be configured on the
   cluster (described below).

@@ -11,6 +11,10 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+### Added
+
+- `etcd2` state provider for stateful failover (cartridge >= 2.2.0)
+
 ## [1.3.0] - 2020-05-08
 
 ### Added
