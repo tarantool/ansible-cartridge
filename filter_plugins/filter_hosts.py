@@ -12,9 +12,9 @@ def is_stateboard(instance_vars):
 
 def get_instance_fullname(instance_vars):
     if instance_vars.get('stateboard'):
-        return '{}-stateboard'.format(instance_vars['app_name'])
+        return '{}-stateboard'.format(instance_vars['cartridge_app_name'])
 
-    return '{}.{}'.format(instance_vars['app_name'], instance_vars['inventory_hostname'])
+    return '{}.{}'.format(instance_vars['cartridge_app_name'], instance_vars['inventory_hostname'])
 
 
 def get_one_not_expelled_instance_for_machine(hostvars, play_hosts):
@@ -55,7 +55,7 @@ def get_instance_conf_file(instance_vars):
 
 
 def get_app_conf_file(instance_vars):
-    return '/etc/tarantool/conf.d/{}.yml'.format(instance_vars['app_name'])
+    return '/etc/tarantool/conf.d/{}.yml'.format(instance_vars['cartridge_app_name'])
 
 
 def get_instance_conf_section(instance_vars):
@@ -68,8 +68,8 @@ def get_instance_work_dir(instance_vars):
 
 def get_instance_systemd_service(instance_vars):
     if instance_vars.get(stateboard):
-        return '{}-stateboard'.format(instance_vars['app_name'])
-    return '{}@{}'.format(instance_vars['app_name'], instance_vars['inventory_hostname'])
+        return '{}-stateboard'.format(instance_vars['cartridge_app_name'])
+    return '{}@{}'.format(instance_vars['cartridge_app_name'], instance_vars['inventory_hostname'])
 
 
 class FilterModule(object):
