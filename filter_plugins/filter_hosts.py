@@ -67,7 +67,7 @@ def get_instance_work_dir(instance_vars):
 
 
 def get_instance_systemd_service(instance_vars):
-    if instance_vars.get(stateboard):
+    if instance_vars.get('stateboard'):
         return '{}-stateboard'.format(instance_vars['cartridge_app_name'])
     return '{}@{}'.format(instance_vars['cartridge_app_name'], instance_vars['inventory_hostname'])
 
