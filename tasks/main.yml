@@ -28,7 +28,33 @@
     instance_conf_section: '{{ cartridge_app_name | get_instance_conf_section(inventory_hostname, stateboard) }}'
     instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard) }}'
     instance_systemd_service: '{{ cartridge_app_name | get_instance_systemd_service(inventory_hostname, stateboard) }}'
+    instance_user: '{{ cartridge_app_user | default("tarantool") }}'
+    instance_group: '{{ cartridge_app_group | default("tarantool") }}'
   tags: always
+
+- name: Set instance facts (tarball)
+  set_fact:
+    app_work_dir: '{{ cartridge_app_root }}/workdir'
+    instance_name: '{{ cartridge_app_name }}.{{ inventory_hostname }}'
+    instance_run_path: '{{ cartridge_app_root }}/run'
+    instance_bin_path: '{{ cartridge_app_root }}/app'
+    instance_conf_path: '{{ cartridge_app_root }}/etc/conf.d'
+    instance_dist_path: '{{ cartridge_app_root }}/dist/{{ cartridge_package_path }}'
+    instance_systemd_path: '{{ cartridge_app_root }}/systemd'
+    instance_systemd_unit_file: '{{ cartridge_app_name  }}@.service'
+  tags: always
+  when: cartridge_package_path is regex('\.tar\.gz$') and cartridge_app_root is defined
+
+- name: Redefine facts (tarball)
+  set_fact:
+    instance_default_conf_file: '{{ instance_conf_path }}/{{ cartridge_app_name }}.yml'
+    instance_conf_file: '{{ instance_conf_path }}/{{ instance_name }}.yml'
+    app_conf_file: '{{ cartridge_app_name | get_app_conf_file(app_conf_path=instance_conf_path) }}'
+    instance_control_sock: '{{ cartridge_app_name | get_instance_control_sock(inventory_hostname, stateboard, app_run_path=instance_run_path) }}'
+    instance_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, stateboard, app_conf_path=instance_conf_path) }}'
+    instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard, app_work_path=app_work_dir) }}'
+  tags: always
+  when: cartridge_package_path is regex('\.tar\.gz$') and cartridge_app_root is defined
 
 # Rewrites cartridge_app_name from package info
 - name: Install package
@@ -78,7 +104,7 @@
 
 - name: Set one control instance to join replicasets
   cartridge_control_instance:
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance, app_run_path=instance_run_path) }}'
   register: control_instance
   run_once: true
   delegate_to: '{{ one_not_expelled_instance }}'
@@ -111,7 +137,7 @@
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance, app_run_path=instance_run_path) }}'
     allow_empty: false
   register: control_instance
   run_once: true
@@ -127,7 +153,7 @@
 - name: Set control instance facts
   set_fact:
     control_host: '{{ control_instance.meta.host }}'
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_instance.meta.host) }}'
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_instance.meta.host, app_run_path=instance_run_path) }}'
   when: >-
     cartridge_auth is defined
     or cartridge_app_config is defined

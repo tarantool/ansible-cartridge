@@ -1,0 +1,54 @@
+---
+#   Create folders
+    - name: Create userspace folders
+      file:
+        path: "{{ item.path }}"
+        state: directory
+        mode: "{{ item.mode | default('0755') }}"
+      loop:
+        - { path: "{{ instance_dist_path }}" }
+        - { path: "{{ app_work_dir }}" }
+        - { path: "{{ instance_conf_path }}" }
+        - { path: "{{ instance_run_path }}", mode: 777}
+        - { path: "{{ instance_systemd_path }}" }
+      any_errors_fatal: true
+
+    - name: Create a package directory
+      file:
+        path: "{{ instance_dist_path }}"
+        state: directory
+      any_errors_fatal: true
+
+    - name: Unpack a package
+      unarchive:
+        creates: "{{ instance_dist_path }}/{{ cartridge_app_name }}"
+        src: "{{ cartridge_package_path }}"
+        dest: "{{ instance_dist_path }}"
+        keep_newer: true
+      any_errors_fatal: true
+
+    - name: Create a symlink to the package folder
+      file:
+        src: "{{ instance_dist_path }}/{{ cartridge_app_name }}"
+        dest: "{{ instance_bin_path }}"
+        state: link
+        force: true
+      any_errors_fatal: true
+
+    - name: Create an app@.service file
+      template:
+        src: app@.service.j2
+        dest: "{{ instance_systemd_path }}/{{ instance_systemd_unit_file }}"
+      any_errors_fatal: true
+
+    - name: Copy an unit-file to /etc/systemd/system/
+      become: true
+      copy:
+        remote_src: true
+        src: "{{ instance_systemd_path }}/{{ instance_systemd_unit_file }}"
+        dest: "/etc/systemd/system/{{ instance_systemd_unit_file }}"
+        owner: root
+        group: root
+      any_errors_fatal: true
+      notify:
+        - reload-systemd-daemon

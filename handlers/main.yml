@@ -4,11 +4,14 @@
     daemon_reload: true
   listen: reload-systemd-daemon
   tags: cartridge-instances
+  become: true
 
 - name: Restart instance systemd service
+  become: true
   systemd:
     name: '{{ instance_systemd_service }}'
     state: restarted
     enabled: true
+  become: true
   listen: restart-instance
   tags: cartridge-instances
