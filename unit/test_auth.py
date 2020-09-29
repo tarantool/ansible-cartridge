@@ -249,6 +249,65 @@ class TestAuth(unittest.TestCase):
         self.assertFalse(res.success)
         self.assertIn('cartridge err', res.msg)
 
+    def test_edit_user_no_version(self):
+        # all required operations are implemented
+        set_user_functions_implemented(self.instance)
+        self.instance.set_variable('user_has_version', False)
+
+        USER = {
+            'username': 'dokshina',
+            'email': 'dokshina@tarantool.love',
+            'fullname': 'Elizaveta Dokshina',
+        }
+
+        new_params = {
+            'password': 'new-password',
+            'email': 'dokshina@tarantool.hate',
+            'fullname': 'The Princess',
+        }
+
+        for param, value in new_params.items():
+            self.instance.set_variable('users', [USER])
+
+            self.instance.clear_calls('auth_add_user')
+            self.instance.clear_calls('auth_edit_user')
+            self.instance.clear_calls('auth_remove_user')
+
+            user_patch = {
+                'username': USER['username'],
+                param: value,
+            }
+
+            res = call_manage_auth(self.console_sock, users=[user_patch])
+            self.assertTrue(res.success, msg=res.msg)
+            if param != 'password':
+                self.assertTrue(res.changed)
+            else:
+                self.assertFalse(res.changed)
+
+            calls = self.instance.get_calls('auth_add_user')
+            self.assertEqual(len(calls), 0)
+
+            calls = self.instance.get_calls('auth_edit_user')
+            self.assertEqual(len(calls), 1)
+            self.assertEqual(calls[0], user_patch)
+
+            calls = self.instance.get_calls('auth_remove_user')
+            self.assertEqual(len(calls), 0)
+
+        # fail on auth_edit_user
+        self.instance.set_fail_on('auth_edit_user')
+        self.instance.set_variable('users', [USER])
+
+        user_patch = {
+            'username': USER['username'],
+            'password': 'new-password',
+        }
+
+        res = call_manage_auth(self.console_sock, users=[user_patch])
+        self.assertFalse(res.success)
+        self.assertIn('cartridge err', res.msg)
+
     def test_delete_user(self):
         # all required operations are implemented
         set_user_functions_implemented(self.instance)

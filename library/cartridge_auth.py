@@ -157,6 +157,27 @@ def user_is_deleted(user):
     return 'deleted' in user and user['deleted'] is True
 
 
+def users_are_equal(user1, user2):
+    for key in user1:
+        if key == 'version':
+            continue
+
+        if key not in user2:
+            return False
+
+        if user1[key] != user2[key]:
+            return False
+
+    for key in user2:
+        if key == 'version':
+            continue
+
+        if key not in user1:
+            return False
+
+    return True
+
+
 def manage_auth(params):
     auth_params = params['auth']
     control_console = get_control_console(params['control_sock'])
@@ -236,7 +257,7 @@ def manage_auth(params):
         if not ok:
             return ModuleRes(success=False, msg=edited_user)
 
-        users_changed = users_changed or cluster_user != edited_user
+        users_changed = users_changed or not users_are_equal(cluster_user, edited_user)
 
     for user in users_to_delete:
         ok, err = delete_cluster_user(control_console, user)

@@ -63,6 +63,7 @@ local vars = {
     membership_members = {},
     known_servers = {},
     become_unhealthy_after_edit = false,
+    user_has_version = true,
 }
 
 local topology = {
@@ -523,6 +524,10 @@ function cartridge_auth.add_user(username, password, fullname, email)
         email = email,
     }
 
+    if vars.user_has_version then
+        user.version = 1
+    end
+
     table.insert(vars.users, user)
     return user
 end
@@ -573,6 +578,10 @@ function cartridge_auth.edit_user(username, password, fullname, email)
 
     if email ~= nil then
         user.email = email
+    end
+
+    if user.version ~= nil then
+        user.version = user.version + 1
     end
 
     return user
