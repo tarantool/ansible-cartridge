@@ -80,7 +80,7 @@
 
 - name: Set one control instance to join replicasets
   cartridge_control_instance:
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance, run_dir) }}'
   register: control_instance
   run_once: true
   delegate_to: '{{ one_not_expelled_instance }}'
@@ -113,7 +113,7 @@
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance, run_dir) }}'
     allow_empty: false
   register: control_instance
   run_once: true
@@ -129,7 +129,7 @@
 - name: Set control instance facts
   set_fact:
     control_host: '{{ control_instance.meta.host }}'
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_instance.meta.host) }}'
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_instance.meta.host, run_dir) }}'
   when: >-
     cartridge_auth is defined
     or cartridge_app_config is defined
