@@ -1,7 +1,7 @@
 ---
 variables:
-  BUNDLE_VERSION: 2.3.1-13-g882baf7
-  CARTRIDGE_CLI_VERSION: 2.0.0
+  BUNDLE_VERSION: 2.4.2-17-g5c752b1
+  CARTRIDGE_CLI_VERSION: 2.3.0
 
 stages:
   - prebuild
