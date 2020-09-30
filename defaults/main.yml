@@ -6,3 +6,6 @@ expelled: false
 stateboard: false
 instance_start_timeout: 60
 replicaset_healthy_timeout: 30
+data_dir: '/var/lib/tarantool/'
+conf_dir: '/etc/tarantool/conf.d/'
+run_dir: '/var/run/tarantool/'
