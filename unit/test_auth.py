@@ -262,7 +262,7 @@ class TestAuth(unittest.TestCase):
 
         new_params = {
             'password': 'new-password',
-            'email': 'dokshina@tarantool.hate',
+            'email': 'dokshina@tarantool.love_a_bit_more',
             'fullname': 'The Princess',
         }
 
