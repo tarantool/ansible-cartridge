@@ -11,7 +11,7 @@
 
 - name: Check if instance restart is forced or required to apply changes
   cartridge_needs_restart:
-    restart_forced: '{{ restarted }}'
+    restarted: '{{ restarted }}'
     control_sock: '{{ instance_control_sock }}'
     appname: '{{ cartridge_app_name }}'
     instance_conf_file: '{{ instance_conf_file }}'
