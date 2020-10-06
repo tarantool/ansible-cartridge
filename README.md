@@ -88,6 +88,7 @@ all:
         advertise_uri: '172.19.0.2:3302'
         http_port: 8082
       restarted: true  # force instance restart
+      # restarted: false  # disable instance restart
 
     storage-1:
       config:
@@ -172,7 +173,9 @@ Configuration format is described in detail in the
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency);
 * `config` (`dict`, required): [instance configuration](#instances);
-* `restarted` (`boolean`, optional, default: `false`): indicates that instance must be forcedly restarted;
+* `restarted` (`boolean`, optional): flag indicates if instance should be
+  restarted or not (if this flag isn't specified, instance will be restarted if
+  it's needed to apply configuration changes);
 * `expelled` (`boolean`, optional, default: `false`): boolean flag that indicates if instance must be expelled from topology;
 * `stateboard` (`boolean`, optional, default: `false`): boolean flag that indicates
    that the instance is a [stateboard](#stateboard-instance);
@@ -181,7 +184,7 @@ Configuration format is described in detail in the
 * `failover_priority` (`list-of-string`): failover priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
 * `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
-* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled.
+* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
 * [DEPRECATED] `cartridge_failover` (`boolean`, optional): boolean flag that
   indicates if eventual failover should be enabled or disabled;
 
