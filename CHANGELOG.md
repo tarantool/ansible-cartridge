@@ -11,6 +11,8 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+## [1.5.0] - 2020-10-06
+
 ### Added
 
 - `restarted: false` to disable instance restart
