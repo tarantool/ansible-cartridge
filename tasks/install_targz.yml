@@ -1,0 +1,64 @@
+---
+- name: Create instance group
+  group:
+    name: "{{ instance_group }}"
+
+- name: Create instance user and add to group
+  user:
+    name: "{{ instance_user }}"
+    groups: "{{ instance_group }}"
+    append: yes
+
+#   Create folders
+- name: Create userspace folders
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+  loop:
+    - {path: "{{ bin_dir }}{{ cartridge_app_name }}"}
+    - {path: "{{ data_dir }}"}
+    - {path: "{{ conf_dir }}"}
+    - {path: "{{ instance_run_path }}", mode: 777}
+    - {path: "{{ instance_systemd_path }}"}
+  any_errors_fatal: true
+
+- name: Create a package directory
+  file:
+    path: "{{ apps_dir }}"
+    state: directory
+  any_errors_fatal: true
+
+- name: Unpack a package
+  unarchive:
+    creates: "{{ apps_dir }}/{{ cartridge_app_name }}"
+    src: "{{ cartridge_package_path }}"
+    dest: "{{ apps_dir }}"
+    keep_newer: true
+  any_errors_fatal: true
+
+- name: Create a symlink to the package folder
+  file:
+    src: "{{ apps_dir }}/{{ cartridge_app_name }}"
+    dest: "{{ bin_dir }}{{ cartridge_app_name }}"
+    state: link
+    force: true
+  any_errors_fatal: true
+
+- name: Create an app@.service file
+  template:
+    src: app@.service.j2
+    dest: "{{ instance_systemd_path }}/{{ instance_systemd_unit_file }}"
+  any_errors_fatal: true
+
+- name: Copy an unit-file to /etc/systemd/system/
+  become: true
+  copy:
+    remote_src: true
+    src: "{{ instance_systemd_path }}/{{ instance_systemd_unit_file }}"
+    dest: "/etc/systemd/system/{{ instance_systemd_unit_file }}"
+    owner: root
+    group: root
+  any_errors_fatal: true
+  notify:
+    - reload-systemd-daemon

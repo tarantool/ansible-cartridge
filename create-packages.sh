@@ -32,6 +32,7 @@ sed -i '/cartridge.cfg({/a \ \ \ \ vshard_groups = {hot = { bucket_count = 20000
 
 cartridge pack rpm --version ${version} ${pack_flags} ${appname}
 cartridge pack deb --version ${version} ${pack_flags} ${appname}
+cartridge pack tgz --version ${version} ${pack_flags} ${appname}
 
 rm -rf ${appname}
 

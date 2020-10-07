@@ -19,6 +19,8 @@
     cartridge_defaults: '{{ cartridge_defaults }}'
     config: '{{ config }}'
     stateboard: '{{ stateboard }}'
+    app_conf_file: '{{ app_conf_file }}'
+    bin_dir: '{{ bin_dir }}'
   notify: restart-instance
   tags: cartridge-instances
 
@@ -30,8 +32,8 @@
         | to_nice_yaml
       }}
     dest: '{{ app_conf_file }}'
-    owner: tarantool
-    group: tarantool
+    owner: '{{ instance_user }}'
+    group: '{{ instance_group }}'
     mode: '644'
   when: not stateboard
   tags: cartridge-instances
@@ -44,7 +46,7 @@
           | to_nice_yaml
       }}
     dest: '{{ instance_conf_file }}'
-    owner: tarantool
-    group: tarantool
+    owner: '{{ instance_user }}'
+    group: '{{ instance_group }}'
     mode: '644'
   tags: cartridge-instances

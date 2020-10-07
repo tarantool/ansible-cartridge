@@ -1,7 +1,7 @@
 ---
 - name: Install RPM
   include_tasks: install_rpm.yml
-  when: ansible_os_family == 'RedHat'
+  when: ansible_os_family == 'RedHat' and cartridge_package_path is regex('\.rpm$')
   args:
     apply:
       tags: cartridge-instances
@@ -9,7 +9,15 @@
 
 - name: Install DEB
   include_tasks: install_deb.yml
-  when: ansible_os_family == 'Debian'
+  when: ansible_os_family == 'Debian' and cartridge_package_path is regex('\.deb$')
+  args:
+    apply:
+      tags: cartridge-instances
+  tags: cartridge-instances
+
+- name: Install tarball
+  include_tasks: install_targz.yml
+  when: cartridge_package_path is regex('\.tar\.gz$')
   args:
     apply:
       tags: cartridge-instances

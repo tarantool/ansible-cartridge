@@ -25,7 +25,9 @@ def call_needs_restart(control_sock,
                        config={},
                        cluster_cookie=Instance.COOKIE,
                        cartridge_defaults={},
-                       stateboard=False):
+                       stateboard=False,
+                       app_conf_file=Instance.APP_CONF_PATH,
+                       bin_dir=Instance.APP_CODE_PATH):
     return needs_restart({
         'restarted': restarted,
         'control_sock': control_sock,
@@ -36,6 +38,8 @@ def call_needs_restart(control_sock,
         'cartridge_defaults': cartridge_defaults,
         'config': config,
         'stateboard': stateboard,
+        'app_conf_file': app_conf_file,
+        'bin_dir': bin_dir,
     })
 
 
