@@ -28,7 +28,19 @@
     instance_conf_section: '{{ cartridge_app_name | get_instance_conf_section(inventory_hostname, stateboard) }}'
     instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard, data_dir) }}'
     instance_systemd_service: '{{ cartridge_app_name | get_instance_systemd_service(inventory_hostname, stateboard) }}'
+    app_bin_dir: ' {{ cartridge_app_name | get_app_bin_dir(bin_dir) }} '
   tags: always
+
+- name: Set instance facts (tarball)
+  set_fact:
+    instance_name: '{{ cartridge_app_name }}.{{ inventory_hostname }}'
+    instance_run_path: '{{ cartridge_app_name | get_instance_run_dir(inventory_hostname, stateboard, run_dir) }}'
+    instance_conf_path: '{{ conf_dir }}'
+    apps_dir: '{{ dist_dir }}{{ cartridge_package_path }}'
+    instance_systemd_path: '{{ systemd_dir }}'
+    instance_systemd_unit_file: '{{ cartridge_app_name  }}@.service'
+  tags: always
+  when: cartridge_package_path is regex('\.tar\.gz$')
 
 # Rewrites cartridge_app_name from package info
 - name: Install package

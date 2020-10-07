@@ -5,6 +5,12 @@ restarted: false
 expelled: false
 stateboard: false
 instance_start_timeout: 60
+app_code_path:
 data_dir: '/var/lib/tarantool/'
 conf_dir: '/etc/tarantool/conf.d/'
 run_dir: '/var/run/tarantool/'
+systemd_dir: '/app/systemd/'
+dist_dir: '/app/dist/'
+bin_dir: '/usr/share/tarantool/'
+instance_user: tarantool
+instance_group: tarantool

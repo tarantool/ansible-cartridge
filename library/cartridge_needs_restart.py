@@ -16,7 +16,9 @@ argument_spec = {
     'cluster_cookie': {'required': True, 'type': 'str'},
     'cartridge_defaults': {'required': True, 'type': 'dict'},
     'config': {'required': True, 'type': 'dict'},
-    'stateboard': {'required': True, 'type': 'bool'}
+    'stateboard': {'required': True, 'type': 'bool'},
+    'app_conf_file': {'required': True, 'type': 'str'},
+    'app_bin_dir': {'required': True, 'type': 'str'}
 }
 
 
@@ -91,8 +93,8 @@ def needs_restart(params):
     instance_conf_file = params['instance_conf_file']
     conf_section_name = params['conf_section_name']
 
-    default_conf_path = '/etc/tarantool/conf.d/{}.yml'.format(appname)
-    app_code_path = '/usr/share/tarantool/{}'.format(appname)
+    default_conf_path = params['app_conf_file']
+    app_code_path = params['app_bin_dir']
 
     # check if instance was not started yet
     if not os.path.exists(control_sock):
