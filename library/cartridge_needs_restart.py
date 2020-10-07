@@ -18,7 +18,7 @@ argument_spec = {
     'config': {'required': True, 'type': 'dict'},
     'stateboard': {'required': True, 'type': 'bool'},
     'app_conf_file': {'required': True, 'type': 'str'},
-    'app_bin_dir': {'required': True, 'type': 'str'}
+    'bin_dir': {'required': True, 'type': 'str'}
 }
 
 
@@ -94,7 +94,7 @@ def needs_restart(params):
     conf_section_name = params['conf_section_name']
 
     default_conf_path = params['app_conf_file']
-    app_code_path = params['app_bin_dir']
+    app_code_path = "{}{}/".format(params['bin_dir'], appname)
 
     # check if instance was not started yet
     if not os.path.exists(control_sock):

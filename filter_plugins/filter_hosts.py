@@ -59,10 +59,6 @@ def get_app_conf_file(app_name, conf_dir):
     return os.path.join(conf_dir,'{}.yml').format(app_name)
 
 
-def get_app_bin_dir(app_name, bin_dir):
-    return os.path.join(bin_dir, '{}').format(app_name)
-
-
 def get_instance_conf_section(app_name, inventory_hostname, stateboard):
     return get_instance_fullname(app_name, inventory_hostname, stateboard)
 
@@ -94,5 +90,4 @@ class FilterModule(object):
             'get_instance_work_dir': get_instance_work_dir,
             'get_instance_systemd_service': get_instance_systemd_service,
             'get_instance_run_dir': get_instance_run_dir,
-            'get_app_bin_dir': get_app_bin_dir,
         }

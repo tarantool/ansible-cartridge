@@ -16,7 +16,7 @@
     state: directory
     mode: "{{ item.mode | default('0755') }}"
   loop:
-    - {path: "{{ app_bin_dir }}"}
+    - {path: "{{ bin_dir }}{{ cartridge_app_name }}"}
     - {path: "{{ data_dir }}"}
     - {path: "{{ conf_dir }}"}
     - {path: "{{ instance_run_path }}", mode: 777}
@@ -40,7 +40,7 @@
 - name: Create a symlink to the package folder
   file:
     src: "{{ apps_dir }}/{{ cartridge_app_name }}"
-    dest: "{{ app_bin_dir }}"
+    dest: "{{ bin_dir }}{{ cartridge_app_name }}"
     state: link
     force: true
   any_errors_fatal: true

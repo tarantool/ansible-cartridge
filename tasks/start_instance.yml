@@ -21,7 +21,7 @@
     config: '{{ config }}'
     stateboard: '{{ stateboard }}'
     app_conf_file: '{{ app_conf_file }}'
-    app_bin_dir: '{{ app_bin_dir }}'
+    bin_dir: '{{ bin_dir }}'
   notify: restart-instance
   tags: cartridge-instances
 
