@@ -188,6 +188,14 @@ Configuration format is described in detail in the
 * `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
 * [DEPRECATED] `cartridge_failover` (`boolean`, optional): boolean flag that
   indicates if eventual failover should be enabled or disabled;
+* `data_dir` (`string`, optional, default: `/var/lib/tarantool/`):  a directory where application data files will be stored;
+* `conf_dir` (`string`, optional, default: `/etc/tarantool/conf.d/`): a directory where instance config files will be stored;
+* `run_dir` (`string`, optional, default: `/var/run/tarantool/`): a directory where application working files will be stored;
+* `systemd_dir` (`string`, optional, default: `/etc/systemd/system/`): a directory where application  systemd unit files will be created;
+* `dist_dir` (`string`, optional, default: `/usr/share/tarantool/`): a directory where application distributive files will be stored;
+* `bin_dir` (`string`, optional, default: `/usr/share/tarantool/`): a directory which linked to the current dist_dir;
+* `instance_user` (`string`, optional, default: `instance_user`): a name of user for running application (user will be created by ansible);
+* `instance_group` (`string`, optional, default: `instance_user`): a name of users group for running application (group will be created by ansible);
 
 ### Role tags
 
