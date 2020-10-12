@@ -94,7 +94,7 @@ def needs_restart(params):
     conf_section_name = params['conf_section_name']
 
     default_conf_path = params['app_conf_file']
-    app_code_path = "{}{}/".format(params['bin_dir'], appname)
+    app_code_path = params['bin_dir']
 
     # check if instance was not started yet
     if not os.path.exists(control_sock):
