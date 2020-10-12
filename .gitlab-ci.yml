@@ -85,6 +85,7 @@ prebuild-unit:
     paths:
       - ./packages/myapp-*.rpm
       - ./packages/myapp-*.deb
+      - ./packages/myapp-*.tar.gz
     when: always
   dependencies: []
 
