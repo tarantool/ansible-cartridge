@@ -44,6 +44,8 @@ platforms:
     networks:
       - name: cartridge-network
     purge_networks: true
+    env:
+      TARANTOOL_VERSION: $TARANTOOL_VERSION
 
 lint: |
   set -xe
