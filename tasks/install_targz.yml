@@ -48,14 +48,14 @@
 - name: Create an app@.service file
   template:
     src: app@.service.j2
-    dest: "{{ instance_systemd_path }}/{{ instance_systemd_unit_file }}"
+    dest: "{{ instance_systemd_path }}{{ instance_systemd_unit_file }}"
   any_errors_fatal: true
 
 - name: Copy an unit-file to /etc/systemd/system/
   become: true
   copy:
     remote_src: true
-    src: "{{ instance_systemd_path }}/{{ instance_systemd_unit_file }}"
+    src: "{{ instance_systemd_path }}{{ instance_systemd_unit_file }}"
     dest: "/etc/systemd/system/{{ instance_systemd_unit_file }}"
     owner: root
     group: root

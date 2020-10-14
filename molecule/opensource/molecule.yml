@@ -18,6 +18,7 @@ platforms:
       - 8081-8090:8081-8090/tcp
     networks:
       - name: cartridge-network
+    purge_networks: true
   - name: vm2
     image: jrei/systemd-ubuntu:18.04
     command: /lib/systemd/systemd
@@ -30,20 +31,8 @@ platforms:
       - 8091-8099:8091-8099/tcp
     networks:
       - name: cartridge-network
-    privileged: true
-  - name: vm3
-    image: centos:7
-    command: /sbin/init
-    tmpfs:
-      - /run
-      - /tmp
-    volumes:
-      - /sys/fs/cgroup:/sys/fs/cgroup:ro
-    published_ports:
-      - 8071-8080:8071-8080/tcp
-    networks:
-      - name: cartridge-network
     purge_networks: true
+    privileged: true
 
 lint: |
   set -xe

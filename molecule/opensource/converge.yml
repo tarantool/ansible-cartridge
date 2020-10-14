@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: cluster
+  roles:
+    - role: tarantool-cartridge
+  become: true
+  become_user: root
