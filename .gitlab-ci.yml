@@ -149,7 +149,7 @@ unit:
       --opt com.docker.network.driver.mtu=1300
       cartridge-network
 
-    - molecule test --destroy=never
+    - molecule test --destroy=never -s ${SCENARIO}
 
   after_script:
     - molecule destroy
@@ -158,17 +158,19 @@ test-enterprise:
   extends: .test
   dependencies:
     - packages-enterprise
+  variables:
+    SCENARIO: 'default'
 
 test-opensource-1.10:
   extends: .test
   dependencies:
     - packages-opensource-1.10
   variables:
-    TARANTOOL_VERSION: '1.10'
+    SCENARIO: 'opensource'
 
 test-opensource-2.3:
   extends: .test
   dependencies:
     - packages-opensource-2.3
   variables:
-    TARANTOOL_VERSION: '2.3'
+    SCENARIO: 'opensource'
