@@ -6,4 +6,4 @@
   tasks:
     - name: Import Tarantool Cartridge role
       import_role:
-        name: tarantool-cartridge
+        name: tarantool.cartridge
