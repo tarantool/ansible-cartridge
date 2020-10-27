@@ -52,6 +52,7 @@
   retries: '{{ instance_start_timeout // 5 }}'
   delay: 5
   when: not expelled
+  any_errors_fatal: true
   tags: cartridge-instances, supervisor
 
 - name: Connect instance to membership

@@ -1,0 +1,8 @@
+{
+    "operationName": "failoverPromote",
+    "variables": {
+        "replicaset_uuid": "{{ replicaset_uuid }}",
+        "instance_uuid": "{{ instance_uuid }}"
+    },
+    "query": "mutation failoverPromote($replicaset_uuid: String!, $instance_uuid: String!) {\n  promotionResponse: cluster { failover_promote(replicaset_uuid: $replicaset_uuid, instance_uuid: $instance_uuid) } \n}\n"
+}

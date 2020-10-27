@@ -1,0 +1,103 @@
+---
+- name: return from checks
+  block:
+    - fail:
+        msg: "Ansible limit must be defined when using master switch playbook"
+    - meta: end_play
+  run_once: true
+  when: ansible_limit is not defined
+
+- name: Setup facts
+  import_tasks: facts.yml
+
+- name: Wait for instance to be started
+  cartridge_check_instance_started:
+    control_sock: '{{ instance_control_sock }}'
+    stateboard: '{{ stateboard }}'
+  register: check_instance
+  until: not check_instance.failed
+  retries: '{{ instance_start_timeout // 5 }}'
+  delay: 5
+  when: not expelled
+  tags: cartridge-instances
+
+- name: Select one not expelled instance
+  set_fact:
+    one_not_expelled_instance: '{{ hostvars | get_one_not_expelled_instance(play_hosts) }}'
+  tags:
+    - cartridge-replicasets
+    - cartridge-config
+
+- name: Set control instance facts
+  set_fact:
+    control_host: '{{ one_not_expelled_instance }}'
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
+    control_http_port: '{{ hostvars[one_not_expelled_instance].config.http_port }}'
+  when: >-
+    cartridge_auth is defined
+    or cartridge_app_config is defined
+    or cartridge_bootstrap_vshard is defined
+    or cartridge_failover is defined
+    or cartridge_failover_params is defined
+  tags: cartridge-config
+
+- name: Get replicasets
+  cartridge_get_replicasets:
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+    control_host: '{{ control_host }}'
+  register: replicasets
+  run_once: true
+  tags: cartridge-replicasets
+
+- name: Manage replicasets (eventual failover)
+  include_tasks: manage_replicaset.yml
+  vars:
+    replicaset:
+      alias: '{{ item.alias }}'
+      failover_priority: '{{ item.instances | get_instances_in_dc(play_hosts) }}'
+      roles: '{{ item.roles }}'
+      instances: '{{ item.instances }}'
+    join_host: '{{ replicasets.meta.join_host }}'
+  loop: '{{ replicasets.meta.replicasets }}'
+  run_once: true
+  tags: cartridge-replicasets
+  when: cartridge_failover_params is defined and cartridge_failover_params.mode == 'eventual'
+
+- name: Find instances to promote (stateful failover)
+  cartridge_get_uuids:
+    replicasets: '{{ replicasets.meta.replicasets }}'
+    instances: '{{ play_hosts }}'
+    control_sock: '{{ control_sock }}'
+    hostvars: '{{ hostvars }}'
+  register: instances_to_promote
+  run_once: true
+  delegate_to: '{{ control_host }}'
+  tags: cartridge-replicasets
+  when: cartridge_failover_params is defined and cartridge_failover_params.mode == 'stateful'
+
+- name: Manage replicasets (stateful failover)
+  vars:
+    replicaset_uuid: '{{ item.replicaset_uuid }}'
+    instance_uuid: '{{ item.instance_uuid }}'
+  uri:
+    url: "http://127.0.0.1:{{ control_http_port }}/admin/api"
+    method: POST
+    status_code: 200
+    body_format: json
+    return_content: yes
+    timeout: 5
+    body: "{{ lookup('template', 'templates/promote.json.j2') }}"
+  delay: 1
+  retries: 2
+  register: result
+  until: >
+    result is defined and
+    result.json is defined and
+    'data' in result.json and
+    'promotionResponse' in result.json['data']
+  loop: '{{ instances_to_promote.meta }}'
+  run_once: true
+  delegate_to: '{{ control_host }}'
+  tags: cartridge-replicasets
+  when: cartridge_failover_params is defined and cartridge_failover_params.mode == 'stateful'

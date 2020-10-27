@@ -102,6 +102,18 @@ def config_reject_vars(config, reject):
 	return { k: v for k, v in config.items() if not k.startswith(tuple(reject)) }
 
 
+def get_instances_in_dc(instances, play_hosts):
+    i = 0
+    tmp = ''
+    res = instances.copy()
+    for name in instances:
+        if name in play_hosts:
+            tmp = res[0]
+            res[0] = name
+            res[i] = tmp
+        i = i + 1
+    return res
+
 class FilterModule(object):
     def filters(self):
         return {
@@ -117,5 +129,6 @@ class FilterModule(object):
             'is_stateboard_on_machine': is_stateboard_on_machine,
             'get_instances_on_machine': get_instances_on_machine,
             'accept_vars': config_accept_vars,
-            'reject_vars': config_reject_vars
+            'reject_vars': config_reject_vars,
+            'get_instances_in_dc': get_instances_in_dc
         }

@@ -1,0 +1,11 @@
+---
+- name: Deploy my Tarantool Cartridge app
+  hosts: all
+  become: true
+  become_user: root
+  gather_facts: no
+  tasks:
+    - name: Import Tarantool Cartridge role
+      include_role:
+        name: tarantool.cartridge
+        tasks_from: force_master
