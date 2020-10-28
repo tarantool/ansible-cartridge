@@ -8,7 +8,7 @@ import os
 
 
 argument_spec = {
-    'restart_forced': {'required': True, 'type': 'bool'},
+    'restarted': {'required': False, 'type': 'bool'},
     'control_sock': {'required': True, 'type': 'str'},
     'appname': {'required': True, 'type': 'str'},
     'instance_conf_file': {'required': True, 'type': 'str'},
@@ -79,9 +79,12 @@ def get_memtx_memory(control_console):
 
 
 def needs_restart(params):
-    restart_forced = params['restart_forced']
-    if restart_forced:
+    restarted = params['restarted']
+    if restarted is True:
         return ModuleRes(success=True, changed=True)
+
+    if restarted is False:
+        return ModuleRes(success=True, changed=False)
 
     stateboard = params['stateboard']
 

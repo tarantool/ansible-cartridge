@@ -15,7 +15,7 @@ from library.cartridge_needs_restart import needs_restart
 
 
 def call_needs_restart(control_sock,
-                       restart_forced=False,
+                       restarted=None,
                        appname=Instance.APPNAME,
                        instance_conf_file=Instance.INSTANCE_CONF_PATH,
                        conf_section_name=Instance.CONF_SECTION,
@@ -26,7 +26,7 @@ def call_needs_restart(control_sock,
                        app_conf_file=Instance.APP_CONF_PATH,
                        bin_dir=Instance.APP_CODE_PATH):
     return needs_restart({
-        'restart_forced': restart_forced,
+        'restarted': restarted,
         'control_sock': control_sock,
         'appname': appname,
         'instance_conf_file': instance_conf_file,
@@ -51,10 +51,18 @@ class TestNeedsRestart(unittest.TestCase):
     def test_restart_forced(self):
         res = call_needs_restart(
             control_sock=self.console_sock,
-            restart_forced=True
+            restarted=True
         )
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
+
+    def test_restart_disabled(self):
+        res = call_needs_restart(
+            control_sock=self.console_sock,
+            restarted=False
+        )
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.changed)
 
     def test_instance_not_started(self):
         # console sock doesn't exists
