@@ -1,0 +1,58 @@
+---
+# - name: Supervisor management role apply
+#   hosts: all
+#   gather_facts: no
+#   vars:
+#     supervisor_unit_path: "{{ supervisor_path }}/{{ app_name }}.conf"
+#     # install_dir: "{{ base_path }}/{{ app_name }}/instances"
+#     # data_dir: "{{ data_path }}"
+#     # run_dir: "{{ pid_path }}"
+#     # log_dir: "{{ log_path }}"
+#     app:
+#       name: "{{ cartridge_app_name }}"
+#       #cluster_cookie: "{{ cluster_cookie }}"
+#       environment: "{{ env|default({}) }}"
+#     programs: "{{ instances | accept_vars(['TARANTOOL_','ENV_']) }}"
+#
+#   tasks:
+    - name: Set instance facts
+      set_fact:
+        instance_control_sock: '{{ cartridge_app_name | get_instance_control_sock(inventory_hostname, run_dir, stateboard) }}'
+        instance_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, stateboard, conf_dir) }}'
+        log_dir: '/var/log/tarantool/{{ cartridge_app_name }}'
+        instance_log_file: '/var/log/tarantool/{{ cartridge_app_name }}/{{ inventory_hostname }}.log'
+        app_conf_file: '{{ cartridge_app_name | get_app_conf_file(conf_dir) }}'
+        instance_conf_section: '{{ cartridge_app_name | get_instance_conf_section(inventory_hostname, stateboard) }}'
+        instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard, data_dir) }}'
+        instance_systemd_service: '{{ cartridge_app_name | get_instance_systemd_service(inventory_hostname, stateboard) }}'
+      tags: always
+
+    - debug:
+        msg: "{{ hostvars[inventory_hostname] }}"
+
+    # - vars:
+    #     programs: '{{ hostvars.values() | list }}'
+    #   debug:
+    #     msg: "{{ lookup('template', 'supervisor.unit.j2') }}"
+
+    - name: Create an unit file
+      vars:
+        programs: '{{ hostvars.values() | list }}'
+      template:
+        src: supervisor.unit.j2
+        dest: "/etc/supervisord.d/{{ cartridge_app_name }}.ini"
+        owner: root
+        group: root
+      any_errors_fatal: true
+
+    # - name: Copy an unit-file to /etc/systemd/system/
+    #   become: true
+    #   copy:
+    #     remote_src: true
+    #     src: "{{ instance_systemd_path }}{{ instance_systemd_unit_file }}"
+    #     dest: "/etc/systemd/system/{{ instance_systemd_unit_file }}"
+    #     owner: root
+    #     group: root
+    #   any_errors_fatal: true
+    #   notify:
+    #     - reload-systemd-daemon

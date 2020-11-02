@@ -2,7 +2,7 @@
 all:
   vars:
     cartridge_app_name: getting-started-app  # application name
-    cartridge_package_path: ./getting-started-app-1.0.0-0.rpm  # path to package to deploy
+    cartridge_package_path: ./getting-started-app-1.1.0-0.tar.gz  # path to package to deploy
 
     cartridge_cluster_cookie: app-default-cookie  # cluster cookie
     cartridge_defaults:  # default instance parameters
@@ -10,8 +10,8 @@ all:
 
     cartridge_bootstrap_vshard: true  # bootstrap vshard
 
-    # cartridge_failover_params:
-    #   mode: eventual
+    cartridge_failover_params:
+      mode: eventual
 
     # cartridge_failover_params:
     #   mode: stateful

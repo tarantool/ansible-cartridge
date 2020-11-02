@@ -1,0 +1,10 @@
+---
+- name: Deploy my Tarantool Cartridge app
+  hosts: all
+  become: true
+  become_user: root
+  tasks:
+    - name: Import Tarantool Cartridge role
+      include_role:
+        name: tarantool-cartridge
+        tasks_from: supervisor_unit.yml

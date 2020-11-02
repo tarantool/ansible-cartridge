@@ -39,8 +39,33 @@
     instance_systemd_path: '{{ systemd_dir }}'
     instance_systemd_unit_file: '{{ cartridge_app_name  }}@.service'
     stateboard_on_machine: '{{ groups["all"] | is_stateboard_on_machine(hostvars, inventory_hostname) }}'
+    log_dir: '/var/log/tarantool/{{ cartridge_app_name }}'
+    instance_log_file: '/var/log/tarantool/{{ cartridge_app_name }}/{{ inventory_hostname }}.log'
+    bin_dir: '{{ bin_dir }}{{ cartridge_app_name }}'
   tags: always
   when: cartridge_package_path is regex('\.tar\.gz$')
+
+#   Create folders
+- name: Create userspace folders
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ instance_user }}"
+    group: "{{ instance_group }}"
+  loop:
+    - {path: "{{ bin_dir }}"}
+    - {path: "{{ data_dir }}"}
+    - {path: "{{ conf_dir }}"}
+    - {path: "{{ instance_run_path }}"}
+    - {path: "{{ instance_work_dir }}"}
+    - {path: "{{ instance_systemd_path }}"}
+    - {path: "{{ instance_work_dir }}"}
+    - {path: "{{ log_dir }}"}
+    - {path: "{{ run_dir }}/{{ cartridge_app_name }}"}
+  any_errors_fatal: true
+  notify:
+    - reload-supervisor-daemon
 
 # Rewrites cartridge_app_name from package info
 - name: Install package
@@ -58,16 +83,16 @@
 # Restart instances and reload systemd-daemon if required
 - meta: flush_handlers
 
-- name: Wait for instance to be started
-  cartridge_check_instance_started:
-    control_sock: '{{ instance_control_sock }}'
-    stateboard: '{{ stateboard }}'
-  register: check_instance
-  until: not check_instance.failed
-  retries: '{{ instance_start_timeout // 5 }}'
-  delay: 5
-  when: not expelled
-  tags: cartridge-instances
+# - name: Wait for instance to be started
+#   cartridge_check_instance_started:
+#     control_sock: '{{ instance_control_sock }}'
+#     stateboard: '{{ stateboard }}'
+#   register: check_instance
+#   until: not check_instance.failed
+#   retries: '{{ instance_start_timeout // 5 }}'
+#   delay: 5
+#   when: not expelled
+#   tags: cartridge-instances
 
 - name: Connect instance to membership
   cartridge_probe_instance:

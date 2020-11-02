@@ -1,0 +1,27 @@
+[group:{{ cartridge_app_name }}]
+programs={% for i in programs %}{{ cartridge_app_name }}_{{ i.inventory_hostname }}{% if not loop.last %},{% endif %}
+{% endfor %}
+
+
+{% for i in programs %}
+[program:{{ cartridge_app_name }}_{{ i.inventory_hostname }}]
+environment=
+    TARANTOOL_APP_NAME={{ cartridge_app_name }},
+    TARANTOOL_WORKDIR={{ i.instance_work_dir }},
+    TARANTOOL_CFG={{ i.instance_conf_file }},
+    TARANTOOL_LOG={{ i.instance_log_file }},
+    TARANTOOL_PID_FILE={{ run_dir }}{{ cartridge_app_name }}/{{ i.inventory_hostname }}.pid,
+    TARANTOOL_CONSOLE_SOCK={{ i.instance_control_sock }},
+    TARANTOOL_INSTANCE_NAME={{ i.inventory_hostname }}
+
+
+process_name={{ i.inventory_hostname }}
+numprocs=1
+directory={{ i.instance_work_dir }}
+command={{ i.bin_dir }}/tarantool {{ i.bin_dir}}/init.lua
+autorestart=true
+redirect_stderr=true
+stdout_logfile={{ i.log_dir }}/{{ i.inventory_hostname }}.supervisor.log
+stdout_logfile_maxbytes=10MB
+
+{% endfor %}
