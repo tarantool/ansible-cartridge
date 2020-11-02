@@ -23,7 +23,7 @@ package.loaded['membership'] = membership
 local CARTRIDGE_ERR = 'cartridge err'
 
 local fail_on = {
-    increase_memtx_memory = false,
+    increase_memory_size = false,
     edit_topology = false,
     bootstrap_vshard = false,
     config_patch_clusterwide = false,
@@ -36,7 +36,6 @@ local fail_on = {
 }
 
 local calls = {
-    increase_memtx_memory = {},
     edit_topology = {},
     bootstrap_vshard = {},
     config_patch_clusterwide = {},
@@ -112,27 +111,33 @@ local mt = {}
 mt.__call = function(self, opts)
     table.insert(calls.box_cfg, opts)
 
-    if opts.memtx_memory == nil then
-        return
+    for _, memory_size_param in ipairs({'memtx_memory', 'vinyl_memory'}) do
+        if opts[memory_size_param] ~= nil then
+            if self[memory_size_param] == nil then
+                self[memory_size_param] = opts[memory_size_param]
+            end
+
+            if opts[memory_size_param] == self[memory_size_param] then
+                return
+            end
+
+            if opts[memory_size_param] < self[memory_size_param] then
+                error("cannot decrease memory size at runtime")
+            end
+
+            if fail_on.increase_memory_size then
+                error("cannot decrease memory size at runtime")
+            end
+
+            self[memory_size_param] = opts[memory_size_param]
+        end
     end
 
-    if self.memtx_memory == nil then
-        self.memtx_memory = opts.memtx_memory
+    for k, v in pairs(opts) do
+        if k ~= 'memtx_memory' and k ~= 'vinyl_memory' then
+            self[k] = v
+        end
     end
-
-    if opts.memtx_memory == self.memtx_memory then
-        return
-    end
-
-    if opts.memtx_memory < self.memtx_memory then
-        error("cannot decrease memory size at runtime")
-    end
-
-    if fail_on.increase_memtx_memory then
-        error("cannot decrease memory size at runtime")
-    end
-
-    self.memtx_memory = opts.memtx_memory
 end
 
 local box_cfg_table = {}

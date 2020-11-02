@@ -3,6 +3,7 @@
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException, cartridge_errcodes
 from ansible.module_utils.helpers import get_control_console
+from ansible.module_utils.helpers import dynamic_box_cfg_params
 
 import os
 
@@ -70,9 +71,9 @@ def check_conf_updated(new_conf, old_conf, ignore_keys=[]):
     return False
 
 
-def get_memtx_memory(control_console):
+def get_current_cfg(control_console):
     return control_console.eval('''
-        return type(box.cfg) ~= 'function' and box.cfg.memtx_memory or box.NULL
+        return type(box.cfg) ~= 'function' and box.cfg or box.NULL
     ''')
 
 
@@ -125,7 +126,7 @@ def needs_restart(params):
         control_console,
         conf_section_name
     )
-    if check_conf_updated(new_instance_conf, current_instance_conf, ['memtx_memory']):
+    if check_conf_updated(new_instance_conf, current_instance_conf, dynamic_box_cfg_params):
         return ModuleRes(success=True, changed=True)
 
     if not stateboard:
@@ -136,22 +137,24 @@ def needs_restart(params):
             appname
         )
         new_default_conf.update({'cluster_cookie': cluster_cookie})
-        if check_conf_updated(new_default_conf, current_default_conf, ['memtx_memory']):
+        if check_conf_updated(new_default_conf, current_default_conf, dynamic_box_cfg_params):
             return ModuleRes(success=True, changed=True)
 
-    new_memtx_memory = None
-    if 'memtx_memory' in new_instance_conf:
-        new_memtx_memory = new_instance_conf['memtx_memory']
-    elif not stateboard and 'memtx_memory' in new_default_conf:
-        new_memtx_memory = new_default_conf['memtx_memory']
+    current_cfg = get_current_cfg(control_console)
 
-    # This code is ran after attempt to change memtx_memory in runtime
-    # If current memtx_memory wasn't changed to the new value,
-    # it mean that instance should be restarted to apply change
-    if new_memtx_memory is not None:
-        current_memtx_memory = get_memtx_memory(control_console)
-        if current_memtx_memory != new_memtx_memory:
-            return ModuleRes(success=True, changed=True)
+    for param_name in dynamic_box_cfg_params:
+        new_value = None
+        if param_name in new_instance_conf:
+            new_value = new_instance_conf[param_name]
+        elif not stateboard and param_name in new_default_conf:
+            new_value = new_default_conf[param_name]
+
+        # This code is ran after attempt to change parameter in runtime
+        # If current parameter wasn't changed to the new value,
+        # it mean that instance should be restarted to apply change
+        if new_value is not None:
+            if current_cfg[param_name] != new_value:
+                return ModuleRes(success=True, changed=True)
 
     return ModuleRes(success=True, changed=False)
 
