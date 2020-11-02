@@ -18,7 +18,6 @@ platforms:
       - 8081-8090:8081-8090/tcp
     networks:
       - name: cartridge-network
-    purge_networks: true
   - name: vm2
     image: jrei/systemd-ubuntu:18.04
     command: /lib/systemd/systemd
@@ -31,7 +30,6 @@ platforms:
       - 8091-8099:8091-8099/tcp
     networks:
       - name: cartridge-network
-    purge_networks: true
     privileged: true
 
 lint: |

@@ -1,0 +1,124 @@
+---
+name: Molecule tests
+
+on:
+  push:
+  pull_request:
+
+env:
+  CARTRIDGE_CLI_VERSION: '2.4.0'
+
+jobs:
+  molecule-tests-ce:
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login != 'tarantool'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tarantool-version: ["1.10", "2.5"]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: '${{ github.repository }}'
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install molecule requirements
+        run: |
+          pip3 install --upgrade \
+            ansible==2.8 \
+            molecule==3.0.2 \
+            docker \
+            flake8==3.8.1 \
+            testinfra
+
+      - name: Cache test packages
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: '${{ github.repository }}/packages'
+          key: ce-${{ matrix.tarantool-version }}-${{ env.CARTRIDGE_CLI_VERSION }}
+
+      - name: Create test packages
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        working-directory: '${{ github.repository }}'
+        run: |
+          sudo apt -y update
+          sudo apt -y install git gcc make cmake unzip
+          git config --global user.email "test@tarantool.io" \
+            && git config --global user.name "Tar Antool"
+
+          curl -L https://tarantool.io/release/${{ matrix.tarantool-version }}/installer.sh | bash
+          sudo apt install -y cartridge-cli ${{ env.CARTRIDGE_CLI_VERSION }}
+
+          tarantool --version
+          cartridge version
+
+          ./create-packages.sh
+
+      - name: Molecule tests
+        working-directory: '${{ github.repository }}'
+        run: molecule test
+
+  molecule-tests-ee:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        sdk-version: ["2.6.1-0-gcfe0d1a55-r356"]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          path: '${{ github.repository }}'
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install molecule requirements
+        run: |
+          pip3 install --upgrade \
+            ansible==2.8 \
+            molecule==3.0.2 \
+            docker \
+            flake8==3.8.1 \
+            testinfra
+
+      - name: Cache test packages
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: '${{ github.repository }}/packages'
+          key: sdk-${{ matrix.sdk-version }}
+
+      - name: Create test packages
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        working-directory: '${{ github.repository }}'
+        run: |
+          sudo apt -y update
+          sudo apt -y install git gcc make cmake unzip
+          git config --global user.email "test@tarantool.io" \
+            && git config --global user.name "Tar Antool"
+
+          ARCHIVE_NAME=tarantool-enterprise-bundle-${{ matrix.sdk-version }}.tar.gz
+          curl -O -L \
+            https://tarantool:${{ secrets.SDK_DOWNLOAD_TOKEN }}@download.tarantool.io/enterprise/${ARCHIVE_NAME}
+          tar -xzf ${ARCHIVE_NAME}
+          rm -f ${ARCHIVE_NAME}
+          source tarantool-enterprise/env.sh
+
+          tarantool --version
+          cartridge version
+
+          ./create-packages.sh
+
+      - name: Molecule tests
+        working-directory: '${{ github.repository }}'
+        run: molecule test
