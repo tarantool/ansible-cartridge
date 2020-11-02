@@ -20,6 +20,14 @@
   run_once: true
   tags: always
 
+- name: Set base folder facts (tarball)
+  set_fact:
+    conf_dir: '/data/tarantool/{{ cartridge_app_name }}/conf'
+    run_dir: '/data/tarantool/{{ cartridge_app_name }}/data'
+    data_dir: '/data/tarantool/{{ cartridge_app_name }}/data'
+  tags: always
+  when: cartridge_package_path is regex('\.tar\.gz$')
+
 - name: Set instance facts
   set_fact:
     instance_control_sock: '{{ cartridge_app_name | get_instance_control_sock(inventory_hostname, run_dir, stateboard) }}'
@@ -33,15 +41,18 @@
 - name: Set instance facts (tarball)
   set_fact:
     instance_name: '{{ cartridge_app_name }}.{{ inventory_hostname }}'
-    instance_run_path: '{{ cartridge_app_name | get_instance_run_dir(inventory_hostname, stateboard, run_dir) }}'
     instance_conf_path: '{{ conf_dir }}'
-    apps_dir: '{{ dist_dir }}{{ cartridge_package_path }}'
-    instance_systemd_path: '{{ systemd_dir }}'
-    instance_systemd_unit_file: '{{ cartridge_app_name  }}@.service'
     stateboard_on_machine: '{{ groups["all"] | is_stateboard_on_machine(hostvars, inventory_hostname) }}'
+    apps_dir: '/data/tarantool/{{ cartridge_app_name }}/releases/{{ cartridge_package_path }}'
+    bin_dir: '/data/tarantool/{{ cartridge_app_name }}/releases/current'
     log_dir: '/var/log/tarantool/{{ cartridge_app_name }}'
     instance_log_file: '/var/log/tarantool/{{ cartridge_app_name }}/{{ inventory_hostname }}.log'
-    bin_dir: '{{ bin_dir }}{{ cartridge_app_name }}'
+    instance_work_dir: '{{ run_dir }}/{{ inventory_hostname }}'
+    instance_run_dir: '{{ run_dir }}/{{ inventory_hostname }}'
+    supervisor_run: '{{ supervisor_home }}/run'
+    supervisor_log: '{{ supervisor_home }}/supervisord.log'
+    supervisor_socket: '{{ supervisor_home }}/run/supervisord.sock'
+    supervisor_unit_dir: '{{ supervisor_home }}/units'
   tags: always
   when: cartridge_package_path is regex('\.tar\.gz$')
 
@@ -54,15 +65,12 @@
     owner: "{{ instance_user }}"
     group: "{{ instance_group }}"
   loop:
-    - {path: "{{ bin_dir }}"}
     - {path: "{{ data_dir }}"}
     - {path: "{{ conf_dir }}"}
-    - {path: "{{ instance_run_path }}"}
-    - {path: "{{ instance_work_dir }}"}
-    - {path: "{{ instance_systemd_path }}"}
     - {path: "{{ instance_work_dir }}"}
     - {path: "{{ log_dir }}"}
-    - {path: "{{ run_dir }}/{{ cartridge_app_name }}"}
+    - {path: "{{ run_dir }}", mode: 644}
+    - {path: "{{ instance_run_dir }}", mode: 644}
   any_errors_fatal: true
   notify:
     - reload-supervisor-daemon
@@ -82,6 +90,7 @@
 
 # Restart instances and reload systemd-daemon if required
 - meta: flush_handlers
+  become: false
 
 # - name: Wait for instance to be started
 #   cartridge_check_instance_started:

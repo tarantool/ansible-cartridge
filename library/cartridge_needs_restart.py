@@ -28,7 +28,9 @@ def read_yaml_file_section(filepath, control_console, section):
     sections = control_console.eval('''
         local file = require('fio').open('{}')
         if file == nil then
-            error('Failed to open instance config file')
+            return {{
+                ['{}'] = {{}}
+            }}
         end
 
         local buf = {{}}
@@ -49,7 +51,7 @@ def read_yaml_file_section(filepath, control_console, section):
             error('Failed to decode instance config from YAML')
         end
         return ret
-    '''.format(filepath))
+    '''.format(filepath, section))
 
     if section not in sections:
         errmsg = 'File {} does not contain section: {}'.format(filepath, section)

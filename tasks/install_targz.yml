@@ -1,18 +1,25 @@
 ---
-- name: Create instance group
-  group:
-    name: "{{ instance_group }}"
-
-- name: Create instance user and add to group
-  user:
-    name: "{{ instance_user }}"
-    groups: "{{ instance_group }}"
-    append: yes
-
-- name: Create a package directory
+- name: Create userspace folders
   file:
-    path: "{{ apps_dir }}"
+    path: "{{ item.path }}"
     state: directory
+    mode: "{{ item.mode | default('0755') }}"
+  loop:
+    - {path: "{{ supervisor_home }}"}
+    - {path: "{{ supervisor_run }}"}
+    - {path: "{{ supervisor_unit_dir }}"}
+    - {path: "{{ apps_dir }}"}
+  any_errors_fatal: true
+
+- name: Create userspace folders
+  file:
+    path: "{{ item.path }}"
+    state: touch
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ instance_user }}"
+  loop:
+    - {path: "{{ supervisor_log }}", mode: "0644"}
+    - {path: "{{ supervisor_socket }}", mode: "0755"}
   any_errors_fatal: true
 
 - name: Unpack a package
@@ -75,20 +82,14 @@
 #    notify: reload-systemd-daemon
 #    check_mode: no
 
-- vars:
-    programs: '{{ hostvars.values() | list }}'
-  debug:
-    msg: "{{ lookup('template', 'supervisor.unit.j2') }}"
-
 - name: Create an unit file
   vars:
     programs: '{{ hostvars.values() | list | get_instances_on_machine(ansible_host) }}'
   template:
     src: supervisor.unit.j2
-    dest: "/etc/supervisord.d/{{ cartridge_app_name }}.ini"
-    owner: root
-    group: root
+    dest: "{{ supervisor_unit_dir }}/{{ cartridge_app_name }}.conf"
+    owner: "{{ instance_user }}"
+    group: "{{ instance_group }}"
   any_errors_fatal: true
-  # run_once: true
   notify:
     - reload-supervisor-daemon

@@ -2,7 +2,7 @@
 all:
   vars:
     cartridge_app_name: getting-started-app  # application name
-    cartridge_package_path: ./getting-started-app-1.1.0-0.tar.gz  # path to package to deploy
+    cartridge_package_path: ./getting-started-app-1.2.0-0.tar.gz  # path to package to deploy
 
     cartridge_cluster_cookie: app-default-cookie  # cluster cookie
     cartridge_defaults:  # default instance parameters
@@ -11,14 +11,11 @@ all:
     cartridge_bootstrap_vshard: true  # bootstrap vshard
 
     cartridge_failover_params:
-      mode: eventual
-
-    # cartridge_failover_params:
-    #   mode: stateful
-    #   state_provider: stateboard
-    #   stateboard_params:
-    #     uri: 172.19.0.2:3310
-    #     password: secret-stateboard
+      mode: stateful
+      state_provider: stateboard
+      stateboard_params:
+        uri: 172.19.0.2:3310
+        password: secret-stateboard
 
     # common ssh options
     ansible_ssh_private_key_file: ~/.vagrant.d/insecure_private_key
@@ -41,11 +38,11 @@ all:
         advertise_uri: '172.19.0.3:3302'
         http_port: 8183
 
-    # my-stateboard:
-    #   config:
-    #     listen: 172.19.0.2:3310
-    #     password: secret-stateboard
-    #   stateboard: true
+    stateboard:
+      config:
+        listen: 172.19.0.2:3310
+        password: secret-stateboard
+      stateboard: true
 
   children:
     # GROUP INSTANCES BY MACHINES
@@ -57,7 +54,7 @@ all:
 
       hosts:  # instances to be started on this machine
         storage-1:
-        # my-stateboard:
+        stateboard:
 
     machine2:
       vars:

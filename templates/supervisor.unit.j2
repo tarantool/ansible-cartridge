@@ -6,19 +6,29 @@ programs={% for i in programs %}{{ cartridge_app_name }}_{{ i.inventory_hostname
 {% for i in programs %}
 [program:{{ cartridge_app_name }}_{{ i.inventory_hostname }}]
 environment=
+{% if i.stateboard is defined and i.stateboard == true %}
+    TARANTOOL_APP_NAME={{ cartridge_app_name }}-stateboard,
+{% else %}
     TARANTOOL_APP_NAME={{ cartridge_app_name }},
+{% endif %}
     TARANTOOL_WORKDIR={{ i.instance_work_dir }},
     TARANTOOL_CFG={{ i.instance_conf_file }},
     TARANTOOL_LOG={{ i.instance_log_file }},
-    TARANTOOL_PID_FILE={{ run_dir }}{{ cartridge_app_name }}/{{ i.inventory_hostname }}.pid,
+    TARANTOOL_PID_FILE={{ i.instance_run_dir }}/{{ i.inventory_hostname }}.pid,
     TARANTOOL_CONSOLE_SOCK={{ i.instance_control_sock }},
-    TARANTOOL_INSTANCE_NAME={{ i.inventory_hostname }}
+    TARANTOOL_INSTANCE_NAME={{ i.inventory_hostname }},
+    TARANTOOL_ALIAS={{ i.inventory_hostname }},
+    TARANTOOL_CLUSTER_COOKIE={{ cartridge_app_name }}
 
 
 process_name={{ i.inventory_hostname }}
 numprocs=1
 directory={{ i.instance_work_dir }}
+{% if i.stateboard is defined and i.stateboard == true %}
+command={{ i.bin_dir }}/tarantool {{ i.bin_dir}}/stateboard.init.lua
+{% else %}
 command={{ i.bin_dir }}/tarantool {{ i.bin_dir}}/init.lua
+{% endif %}
 autorestart=true
 redirect_stderr=true
 stdout_logfile={{ i.log_dir }}/{{ i.inventory_hostname }}.supervisor.log
