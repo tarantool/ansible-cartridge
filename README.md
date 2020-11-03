@@ -470,7 +470,7 @@ cartridge_failover_params:
     - `lock_delay`(`number`, optional) - timeout (in seconds), determines lock's
       time-to-live (default value in Cartridge is `10`);
 
-    - `entrypoints`(`string`, optional) - URIs that are used to discover and to access
+    - `endpoints`(`list-of-strings`, optional) - URIs that are used to discover and to access
       `etcd` cluster instances (default value in Cartridge is
       `['http://localhost:2379', 'http://localhost:4001']`);
 
