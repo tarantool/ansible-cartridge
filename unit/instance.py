@@ -226,7 +226,7 @@ class Instance:
             encoded_value=json.dumps(value)
         ))
 
-    def set_box_cfd(self, new_box_cfg):
+    def set_box_cfg(self, new_box_cfg):
         self.eval('''
             local value = require('json').decode('{encoded_value}')
             require('cartridge').internal.set_box_cfg(value)

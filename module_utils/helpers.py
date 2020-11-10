@@ -23,9 +23,50 @@ class CartridgeErrorCodes:
         self.BROKEN_PIPE = 'BROKEN_PIPE'
         self.FUNCTION_ERROR = 'FUNCTION_ERROR'
         self.MISSED_SECTION = 'MISSED_SECTION'
+        self.BAD_VALUE_TYPE = 'BAD_VALUE_TYPE'
 
 
 cartridge_errcodes = CartridgeErrorCodes()
+
+
+# parameters of instance configuration that can be changed dynamically
+dynamic_box_cfg_params = set([
+    'memtx_memory',
+    'vinyl_memory',
+    'custom_proc_title',
+    'listen',
+    'read_only',
+    'sql_cache_size',
+    'vinyl_timeout',
+    'worker_pool_threads',
+    'vinyl_cache',
+    'checkpoint_interval',
+    'checkpoint_count',
+    'checkpoint_wal_threshold',
+    'snap_io_rate_limit',
+    'replication_connect_timeout',
+    'replication_connect_quorum',
+    'replication_skip_conflict',
+    'replication_sync_lag',
+    'replication_sync_timeout',
+    'replication_timeout',
+    'replication_synchro_quorum',
+    'replication_synchro_timeout',
+    'io_collect_interval',
+    'net_msg_max',
+    'readahead',
+    'log_level',
+    'too_long_threshold',
+    'log_format',
+    'feedback_enabled',
+    'feedback_host',
+    'feedback_interval',
+])
+
+memory_size_box_cfg_params = set([
+    'memtx_memory',
+    'vinyl_memory',
+])
 
 
 class CartridgeException(Exception):

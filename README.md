@@ -324,6 +324,19 @@ Environment=TARANTOOL_PID_FILE=/var/run/tarantool/${app_name}.{instance_name}.pi
 Environment=TARANTOOL_CONSOLE_SOCK=/var/run/tarantool/${app_name}.{instance_name}.control
 ```
 
+#### Managing dymanic `box.cfg` parameters without restart
+
+Some `box.cfg` options are dynamic, it means that it can be changed without
+instance restarting.
+See [parameters](https://www.tarantool.io/en/doc/latest/reference/configuration/#configuration-parameters)
+with "Dynamic: yes".
+
+Role changes this parameters without restarting the instance.
+If other parameters are changed, instance is restarted anyway.
+
+**Note**, that if `restarted` flag is set, instance will be restarted anyway without changing dynamic parameters in runtime.
+You can use this flag to force instance restarting.
+
 #### Increasing memtx_memory in runtime
 
 If you specified in `config.memtx_memory` value that increases current `memtx_memory`, this role will try to increase this value in runtime.
