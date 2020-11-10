@@ -1,5 +1,5 @@
 ---
-name: Push rockspec
+name: Publish to Ansible Galaxy
 
 on:
   push:
