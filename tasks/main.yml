@@ -38,6 +38,7 @@
     apps_dir: '{{ dist_dir }}{{ cartridge_package_path }}'
     instance_systemd_path: '{{ systemd_dir }}'
     instance_systemd_unit_file: '{{ cartridge_app_name  }}@.service'
+    stateboard_on_machine: '{{ groups["all"] | is_stateboard_on_machine(hostvars, inventory_hostname) }}'
   tags: always
   when: cartridge_package_path is regex('\.tar\.gz$')
 

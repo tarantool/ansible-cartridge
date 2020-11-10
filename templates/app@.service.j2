@@ -12,7 +12,7 @@
   Group={{ instance_group }}
 
   Environment=TARANTOOL_APP_NAME={{ cartridge_app_name }}
-  Environment=TARANTOOL_WORKDIR={{ run_dir }}{{ cartridge_app_name }}.%i
+  Environment=TARANTOOL_WORKDIR={{ data_dir }}{{ cartridge_app_name }}.%i
   Environment=TARANTOOL_CFG={{ instance_conf_path }}
   Environment=TARANTOOL_PID_FILE={{ run_dir }}{{ cartridge_app_name }}.%i.pid
   Environment=TARANTOOL_CONSOLE_SOCK={{ run_dir }}{{ cartridge_app_name }}.%i.control

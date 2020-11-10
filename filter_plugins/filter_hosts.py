@@ -78,6 +78,14 @@ def get_instance_systemd_service(app_name, inventory_hostname, stateboard):
     return '{}@{}'.format(app_name, inventory_hostname)
 
 
+def is_stateboard_on_machine(hosts, hostvars, inventory_hostname):
+    machine_id = get_machine_identifier(hostvars[inventory_hostname])
+    for i in hosts:
+        if get_machine_identifier(hostvars[i]) == machine_id and 'stateboard' in hostvars[i] and hostvars[i]['stateboard'] == True:
+            return True
+    return False
+
+
 class FilterModule(object):
     def filters(self):
         return {
@@ -90,4 +98,5 @@ class FilterModule(object):
             'get_instance_work_dir': get_instance_work_dir,
             'get_instance_systemd_service': get_instance_systemd_service,
             'get_instance_run_dir': get_instance_run_dir,
+            'is_stateboard_on_machine': is_stateboard_on_machine,
         }
