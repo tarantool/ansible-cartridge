@@ -15,12 +15,13 @@
     path: "{{ item.path }}"
     state: directory
     mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ instance_user }}"
+    group: "{{ instance_group }}"
   loop:
     - {path: "{{ bin_dir }}{{ cartridge_app_name }}"}
     - {path: "{{ data_dir }}"}
     - {path: "{{ conf_dir }}"}
-    - {path: "{{ instance_run_path }}", mode: 777}
-    - {path: "{{ instance_systemd_path }}"}
+    - {path: "{{ instance_run_path }}"}
   any_errors_fatal: true
 
 - name: Create a package directory
@@ -50,15 +51,20 @@
     src: app@.service.j2
     dest: "{{ instance_systemd_path }}{{ instance_systemd_unit_file }}"
   any_errors_fatal: true
+  notify:
+    - reload-systemd-daemon
 
-- name: Copy an unit-file to /etc/systemd/system/
-  become: true
-  copy:
-    remote_src: true
-    src: "{{ instance_systemd_path }}{{ instance_systemd_unit_file }}"
-    dest: "/etc/systemd/system/{{ instance_systemd_unit_file }}"
-    owner: root
-    group: root
+- name: Set stateboard facts
+  set_fact:
+    stateboard_name: '{{ cartridge_app_name }}-stateboard'
+    stateboard_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, True, data_dir) }}'
+    stateboard_run_dir: '{{ cartridge_app_name | get_instance_run_dir(inventory_hostname, True, run_dir) }}'
+    stateboard_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, True, conf_dir) }}'
+
+- name: Create a stateboard service file
+  template:
+    src: stateboard.service.j2
+    dest: "{{ instance_systemd_path }}{{ stateboard_name }}.service"
   any_errors_fatal: true
   notify:
     - reload-systemd-daemon
