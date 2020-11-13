@@ -1,0 +1,66 @@
+boxes = [
+    {
+        :name     => "vm1",
+        :ip => "172.19.0.2",
+        :ports    => [8181],
+    },
+    {
+        :name     => "vm2",
+        :ip => "172.19.0.3",
+        :ports    => [8182, 8183],
+    },
+]
+
+$script = <<SCRIPT
+
+yum -y install epel-release
+yum -y install supervisor
+systemctl start supervisord
+systemctl enable supervisord
+
+mkdir -p /data/tarantool/supervisor/run
+touch /data/tarantool/supervisor/supervisord.log
+mkdir -p /data/tarantool/supervisor/units
+
+sed -i "s#file=/var/run/supervisor/supervisor.sock#file=/data/tarantool/supervisor/run/supervisord.sock#g" /etc/supervisord.conf
+sed -i "s#serverurl=unix:///var/run/supervisor/supervisor.sock#serverurl=unix:///data/tarantool/supervisor/run/supervisord.sock#g" /etc/supervisord.conf
+sed -i "s#logfile=/var/log/supervisor/supervisord.log#logfile=/data/tarantool/supervisor/supervisord.log#g" /etc/supervisord.conf
+systemctl restart supervisord
+sed -i "s#supervisord.d/\*.ini#supervisord.d/*.ini /data/tarantool/supervisor/units/*.conf#g" /etc/supervisord.conf
+
+useradd -M tarantool
+usermod -d /data/tarantool tarantool
+groupadd tarantool
+usermod -a -G tarantool tarantool
+
+echo 'cd $HOME\n' > /data/tarantool/.bashrc
+echo "alias ll='ls -lh'\n" >> /data/tarantool/.bashrc
+
+SCRIPT
+
+Vagrant.configure("2") do |config|
+  config.vm.provider "virtualbox" do |v|
+    v.memory = 2048
+  end
+
+  # Base Vagrant VM configuration
+  config.vm.box = "centos/7"
+  config.ssh.insert_key = false
+  config.vm.synced_folder ".", "/vagrant", disabled: true
+
+  # Configure all VMs
+  boxes.each_with_index do |box, index|
+    config.vm.define box[:name] do |box_config|
+      box_config.vm.hostname = box[:hostname]
+      box_config.vm.network "private_network", ip: box[:ip]
+      box[:ports].each do |port|
+        box_config.vm.network "forwarded_port",
+                              guest: port,
+                              host: port,
+                              autocorrect: true
+      end
+    end
+  end
+
+  config.vm.provision "shell", inline: $script
+end

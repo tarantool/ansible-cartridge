@@ -11,33 +11,6 @@ boxes = [
     },
 ]
 
-$script = <<SCRIPT
-
-yum -y install epel-release
-yum -y install supervisor
-systemctl start supervisord
-systemctl enable supervisord
-
-mkdir -p /data/tarantool/supervisor/run
-touch /data/tarantool/supervisor/supervisord.log
-mkdir -p /data/tarantool/supervisor/units
-
-sed -i "s#file=/var/run/supervisor/supervisor.sock#file=/data/tarantool/supervisor/run/supervisord.sock#g" /etc/supervisord.conf
-sed -i "s#serverurl=unix:///var/run/supervisor/supervisor.sock#serverurl=unix:///data/tarantool/supervisor/run/supervisord.sock#g" /etc/supervisord.conf
-sed -i "s#logfile=/var/log/supervisor/supervisord.log#logfile=/data/tarantool/supervisor/supervisord.log#g" /etc/supervisord.conf
-systemctl restart supervisord
-sed -i "s#supervisord.d/\*.ini#supervisord.d/*.ini /data/tarantool/supervisor/units/*.conf#g" /etc/supervisord.conf
-
-useradd -M tarantool
-usermod -d /data/tarantool tarantool
-groupadd tarantool
-usermod -a -G tarantool tarantool
-
-echo 'cd $HOME\n' > /data/tarantool/.bashrc
-echo "alias ll='ls -lh'\n" >> /data/tarantool/.bashrc
-
-SCRIPT
-
 Vagrant.configure("2") do |config|
   config.vm.provider "virtualbox" do |v|
     v.memory = 2048
@@ -61,6 +34,4 @@ Vagrant.configure("2") do |config|
       end
     end
   end
-
-  config.vm.provision "shell", inline: $script
 end
