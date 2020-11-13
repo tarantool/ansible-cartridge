@@ -12,6 +12,7 @@ run_dir: '/var/run/tarantool/'
 systemd_dir: '/etc/systemd/system/'
 dist_dir: '/usr/share/tarantool/'
 bin_dir: '/usr/share/tarantool/'
+release_dir: '/usr/share/tarantool/'
 instance_user: tarantool
 instance_group: tarantool
 supervisor_home: '/data/tarantool/supervisor'

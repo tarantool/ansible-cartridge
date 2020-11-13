@@ -6,7 +6,9 @@
     cartridge_defaults: '{{ cartridge_defaults }}'
   when: >-
     not restarted and not expelled
-  tags: cartridge-instances
+  tags:
+    - cartridge-replicasets
+    - supervisor
 
 - name: Check if instance restart is forced or required to apply changes
   cartridge_needs_restart:
@@ -22,7 +24,9 @@
     app_conf_file: '{{ app_conf_file }}'
     bin_dir: '{{ bin_dir }}'
   notify: restart-instance
-  tags: cartridge-instances
+  tags:
+    - cartridge-replicasets
+    - supervisor
 
 - name: Place default config
   copy:
@@ -36,7 +40,9 @@
     group: '{{ instance_group }}'
     mode: '644'
   when: not stateboard
-  tags: cartridge-instances
+  tags:
+    - cartridge-replicasets
+    - supervisor
 
 - name: Place instance config
   copy:
@@ -49,4 +55,6 @@
     owner: '{{ instance_user }}'
     group: '{{ instance_group }}'
     mode: '644'
-  tags: cartridge-instances
+  tags:
+    - cartridge-replicasets
+    - supervisor

@@ -14,7 +14,7 @@ environment=
     TARANTOOL_WORKDIR={{ i.instance_work_dir }},
     TARANTOOL_CFG={{ i.instance_conf_file }},
     TARANTOOL_LOG={{ i.instance_log_file }},
-    TARANTOOL_PID_FILE={{ i.instance_run_dir }}/{{ i.inventory_hostname }}.pid,
+    TARANTOOL_PID_FILE={{ i.run_dir }}/{{ i.instance_name }}.pid,
     TARANTOOL_CONSOLE_SOCK={{ i.instance_control_sock }},
     TARANTOOL_INSTANCE_NAME={{ i.inventory_hostname }},
     TARANTOOL_ALIAS={{ i.inventory_hostname }},
@@ -25,9 +25,9 @@ process_name={{ i.inventory_hostname }}
 numprocs=1
 directory={{ i.instance_work_dir }}
 {% if i.stateboard is defined and i.stateboard == true %}
-command={{ i.bin_dir }}/tarantool {{ i.bin_dir}}/stateboard.init.lua
+command={{ i.bin_dir }}/tarantool {{ i.bin_dir }}/stateboard.init.lua
 {% else %}
-command={{ i.bin_dir }}/tarantool {{ i.bin_dir}}/init.lua
+command={{ i.bin_dir }}/tarantool {{ i.bin_dir }}/init.lua
 {% endif %}
 autorestart=true
 redirect_stderr=true

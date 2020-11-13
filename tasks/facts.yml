@@ -1,0 +1,49 @@
+---
+- name: Set base application folder
+  set_fact:
+    conf_dir: '{{ base_dir }}/{{ cartridge_app_name }}/conf'
+    data_dir: '{{ base_dir }}/{{ cartridge_app_name }}/data'
+    run_dir: '{{ base_dir }}/{{ cartridge_app_name }}/run'
+    log_dir: '{{ base_dir }}/{{ cartridge_app_name }}/log'
+    release_dir: '{{ base_dir }}/{{ cartridge_app_name }}/releases'
+  tags: always
+  when: base_dir is defined
+
+- name: Set instance facts
+  set_fact:
+    instance_control_sock: '{{ cartridge_app_name | get_instance_control_sock(inventory_hostname, run_dir, stateboard) }}'
+    instance_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, stateboard, conf_dir) }}'
+    app_conf_file: '{{ cartridge_app_name | get_app_conf_file(conf_dir) }}'
+    instance_conf_section: '{{ cartridge_app_name | get_instance_conf_section(inventory_hostname, stateboard) }}'
+    instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard, data_dir) }}'
+    instance_systemd_service: '{{ cartridge_app_name | get_instance_systemd_service(inventory_hostname, stateboard) }}'
+  tags: always
+
+- name: Set instance facts (tarball)
+  set_fact:
+    instance_name: '{{ cartridge_app_name }}.{{ inventory_hostname }}'
+    instance_conf_path: '{{ conf_dir }}'
+    stateboard_on_machine: '{{ groups["all"] | is_stateboard_on_machine(hostvars, inventory_hostname) }}'
+    apps_dir: '{{ release_dir }}/{{ cartridge_package_path }}'
+    bin_dir: '{{ release_dir }}/current'
+    instance_log_file: '{{ log_dir }}/{{ inventory_hostname }}.log'
+  tags: always
+  when: cartridge_package_path is regex('\.tar\.gz$')
+
+- name: Set supervisor facts (tarball)
+  set_fact:
+    supervisor_run: '{{ supervisor_home }}/run'
+    supervisor_log: '{{ supervisor_home }}/supervisord.log'
+    supervisor_socket: '{{ supervisor_home }}/run/supervisord.sock'
+    supervisor_unit_dir: '{{ supervisor_home }}/units'
+  tags: ['never', 'supervisor']
+  when: cartridge_package_path is regex('\.tar\.gz$')
+
+- name: Set stateboard facts
+  set_fact:
+    stateboard_name: '{{ cartridge_app_name }}-stateboard'
+    stateboard_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, True, data_dir) }}'
+    stateboard_run_dir: '{{ cartridge_app_name | get_instance_run_dir(inventory_hostname, True, run_dir) }}'
+    stateboard_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, True, conf_dir) }}'
+  tags: always
+  when: cartridge_package_path is regex('\.tar\.gz$') and stateboard_on_machine == true

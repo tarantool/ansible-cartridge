@@ -13,26 +13,16 @@
 #   listen: restart-instance
 #   tags: cartridge-instances
 
-# - name: Restart supervisor instances
-#   supervisorctl:
-#     name: "{{ cartridge_app_name }}:"
-#     state: present
-#   listen:
-#     - restart-instance
-#     - reload-supervisor-daemon
-#   tags: cartridge-instances
-#   when: >-
-#     inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
-
 - name: Ensure process group is updated
   shell:
     cmd: supervisorctl update
   listen:
     - reload-supervisor-daemon
-  tags: cartridge-instances
+  tags:
+    - never
+    - supervisor
   when: >-
     inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
-
 
 - name: Restart supervisor instances
   supervisorctl:
@@ -41,6 +31,6 @@
   listen:
     - restart-instance
     - reload-supervisor-daemon
-  tags: cartridge-instances
-  when: >-
-    inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
+  tags:
+    - never
+    - supervisor

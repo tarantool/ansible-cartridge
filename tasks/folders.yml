@@ -1,0 +1,46 @@
+---
+- name: Create userspace folders
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ instance_user }}"
+    group: "{{ instance_group }}"
+  loop:
+    - {path: "{{ data_dir }}"}
+    - {path: "{{ conf_dir }}"}
+    - {path: "{{ instance_work_dir }}"}
+    - {path: "{{ log_dir }}"}
+    - {path: "{{ run_dir }}", mode: 644}
+    - {path: "{{ release_dir }}"}
+    - {path: "{{ apps_dir }}"}
+  any_errors_fatal: true
+  tags: always
+
+- name: Create supervisor folders
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ item.owner | default(instance_user) }}"
+    group: "{{ item.group | default(instance_group) }}"
+  loop:
+    - {path: "{{ supervisor_home }}"}
+    - {path: "{{ supervisor_run }}"}
+    - {path: "{{ supervisor_unit_dir }}"}
+    - {path: "{{ apps_dir }}"}
+  any_errors_fatal: true
+  tags: ['never', 'supervisor']
+
+- name: Configure supervisor socket
+  file:
+    path: "{{ item.path }}"
+    state: touch
+    mode: "{{ item.mode | default('0755') }}"
+    owner: "{{ item.owner | default(instance_user) }}"
+    group: "{{ item.group | default(instance_group) }}"
+  loop:
+    - {path: "{{ supervisor_log }}", mode: "0644"}
+    - {path: "{{ supervisor_socket }}", mode: "0755"}
+  any_errors_fatal: true
+  tags: ['never', 'supervisor']

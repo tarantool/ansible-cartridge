@@ -1,27 +1,4 @@
 ---
-- name: Create userspace folders
-  file:
-    path: "{{ item.path }}"
-    state: directory
-    mode: "{{ item.mode | default('0755') }}"
-  loop:
-    - {path: "{{ supervisor_home }}"}
-    - {path: "{{ supervisor_run }}"}
-    - {path: "{{ supervisor_unit_dir }}"}
-    - {path: "{{ apps_dir }}"}
-  any_errors_fatal: true
-
-- name: Create userspace folders
-  file:
-    path: "{{ item.path }}"
-    state: touch
-    mode: "{{ item.mode | default('0755') }}"
-    owner: "{{ instance_user }}"
-  loop:
-    - {path: "{{ supervisor_log }}", mode: "0644"}
-    - {path: "{{ supervisor_socket }}", mode: "0755"}
-  any_errors_fatal: true
-
 - name: Unpack a package
   unarchive:
     creates: "{{ apps_dir }}/{{ cartridge_app_name }}"
@@ -82,7 +59,7 @@
 #    notify: reload-systemd-daemon
 #    check_mode: no
 
-- name: Create an unit file
+- name: Create a unit file
   vars:
     programs: '{{ hostvars.values() | list | get_instances_on_machine(ansible_host) }}'
   template:
@@ -91,5 +68,6 @@
     owner: "{{ instance_user }}"
     group: "{{ instance_group }}"
   any_errors_fatal: true
+  tags: ['never', 'supervisor']
   notify:
     - reload-supervisor-daemon

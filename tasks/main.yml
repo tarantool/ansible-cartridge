@@ -20,60 +20,11 @@
   run_once: true
   tags: always
 
-- name: Set base folder facts (tarball)
-  set_fact:
-    conf_dir: '/data/tarantool/{{ cartridge_app_name }}/conf'
-    run_dir: '/data/tarantool/{{ cartridge_app_name }}/data'
-    data_dir: '/data/tarantool/{{ cartridge_app_name }}/data'
-  tags: always
-  when: cartridge_package_path is regex('\.tar\.gz$')
+- name: Setup facts
+  import_tasks: facts.yml
 
-- name: Set instance facts
-  set_fact:
-    instance_control_sock: '{{ cartridge_app_name | get_instance_control_sock(inventory_hostname, run_dir, stateboard) }}'
-    instance_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, stateboard, conf_dir) }}'
-    app_conf_file: '{{ cartridge_app_name | get_app_conf_file(conf_dir) }}'
-    instance_conf_section: '{{ cartridge_app_name | get_instance_conf_section(inventory_hostname, stateboard) }}'
-    instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard, data_dir) }}'
-    instance_systemd_service: '{{ cartridge_app_name | get_instance_systemd_service(inventory_hostname, stateboard) }}'
-  tags: always
-
-- name: Set instance facts (tarball)
-  set_fact:
-    instance_name: '{{ cartridge_app_name }}.{{ inventory_hostname }}'
-    instance_conf_path: '{{ conf_dir }}'
-    stateboard_on_machine: '{{ groups["all"] | is_stateboard_on_machine(hostvars, inventory_hostname) }}'
-    apps_dir: '/data/tarantool/{{ cartridge_app_name }}/releases/{{ cartridge_package_path }}'
-    bin_dir: '/data/tarantool/{{ cartridge_app_name }}/releases/current'
-    log_dir: '/var/log/tarantool/{{ cartridge_app_name }}'
-    instance_log_file: '/var/log/tarantool/{{ cartridge_app_name }}/{{ inventory_hostname }}.log'
-    instance_work_dir: '{{ run_dir }}/{{ inventory_hostname }}'
-    instance_run_dir: '{{ run_dir }}/{{ inventory_hostname }}'
-    supervisor_run: '{{ supervisor_home }}/run'
-    supervisor_log: '{{ supervisor_home }}/supervisord.log'
-    supervisor_socket: '{{ supervisor_home }}/run/supervisord.sock'
-    supervisor_unit_dir: '{{ supervisor_home }}/units'
-  tags: always
-  when: cartridge_package_path is regex('\.tar\.gz$')
-
-#   Create folders
-- name: Create userspace folders
-  file:
-    path: "{{ item.path }}"
-    state: directory
-    mode: "{{ item.mode | default('0755') }}"
-    owner: "{{ instance_user }}"
-    group: "{{ instance_group }}"
-  loop:
-    - {path: "{{ data_dir }}"}
-    - {path: "{{ conf_dir }}"}
-    - {path: "{{ instance_work_dir }}"}
-    - {path: "{{ log_dir }}"}
-    - {path: "{{ run_dir }}", mode: 644}
-    - {path: "{{ instance_run_dir }}", mode: 644}
-  any_errors_fatal: true
-  notify:
-    - reload-supervisor-daemon
+- name: Create folders
+  import_tasks: folders.yml
 
 # Rewrites cartridge_app_name from package info
 - name: Install package
@@ -81,27 +32,27 @@
   when: >-
     cartridge_package_path is defined and
     inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
-  tags: cartridge-instances
+  tags: cartridge-instances, supervisor
 
 - name: Start instance
   include_tasks: start_instance.yml
   when: not expelled
-  tags: cartridge-instances
+  tags: cartridge-instances, supervisor
 
 # Restart instances and reload systemd-daemon if required
 - meta: flush_handlers
   become: false
 
-# - name: Wait for instance to be started
-#   cartridge_check_instance_started:
-#     control_sock: '{{ instance_control_sock }}'
-#     stateboard: '{{ stateboard }}'
-#   register: check_instance
-#   until: not check_instance.failed
-#   retries: '{{ instance_start_timeout // 5 }}'
-#   delay: 5
-#   when: not expelled
-#   tags: cartridge-instances
+- name: Wait for instance to be started
+  cartridge_check_instance_started:
+    control_sock: '{{ instance_control_sock }}'
+    stateboard: '{{ stateboard }}'
+  register: check_instance
+  until: not check_instance.failed
+  retries: '{{ instance_start_timeout // 5 }}'
+  delay: 5
+  when: not expelled
+  tags: cartridge-instances, supervisor
 
 - name: Connect instance to membership
   cartridge_probe_instance:
@@ -116,6 +67,7 @@
   tags:
     - cartridge-instances
     - cartridge-replicasets
+    - supervisor
 
 - name: Select one not expelled instance
   set_fact:
@@ -123,6 +75,7 @@
   tags:
     - cartridge-replicasets
     - cartridge-config
+    - supervisor
 
 - name: Set one control instance to join replicasets
   cartridge_control_instance:
@@ -130,7 +83,9 @@
   register: control_instance
   run_once: true
   delegate_to: '{{ one_not_expelled_instance }}'
-  tags: cartridge-replicasets
+  tags:
+    - cartridge-replicasets
+    - supervisor
 
 - name: Get replicasets
   cartridge_get_replicasets:
@@ -139,7 +94,9 @@
     control_host: '{{ control_instance.meta.host }}'
   register: replicasets
   run_once: true
-  tags: cartridge-replicasets
+  tags:
+    - cartridge-replicasets
+    - supervisor
 
 - name: Manage replicasets
   include_tasks: manage_replicaset.yml
@@ -148,14 +105,18 @@
     join_host: '{{ replicasets.meta.join_host }}'
   loop: '{{ replicasets.meta.replicasets }}'
   run_once: true
-  tags: cartridge-replicasets
+  tags:
+    - cartridge-replicasets
+    - supervisor
 
 - name: Expel instance
   include_tasks: expel_instance.yml
   vars:
     control_host: '{{ replicasets.meta.join_host }}'
   when: expelled
-  tags: cartridge-replicasets
+  tags:
+    - cartridge-replicasets
+    - supervisor
 
 - name: Set one control instance to rule them all
   cartridge_control_instance:
@@ -170,7 +131,9 @@
     or cartridge_bootstrap_vshard is defined
     or cartridge_failover is defined
     or cartridge_failover_params is defined
-  tags: cartridge-config
+  tags:
+    - cartridge-config
+    - supervisor
 
 - name: Set control instance facts
   set_fact:
@@ -182,7 +145,9 @@
     or cartridge_bootstrap_vshard is defined
     or cartridge_failover is defined
     or cartridge_failover_params is defined
-  tags: cartridge-config
+  tags:
+    - cartridge-config
+    - supervisor
 
 - name: Cartridge auth
   cartridge_auth:
@@ -193,6 +158,7 @@
   when: cartridge_auth is defined
   tags:
     - cartridge-config
+    - supervisor
     - molecule-idempotence-notest
 
 - name: Application config
@@ -202,7 +168,9 @@
   delegate_to: '{{ control_host }}'
   run_once: true
   when: cartridge_app_config is defined
-  tags: cartridge-config
+  tags:
+    - cartridge-config
+    - supervisor
 
 - name: Bootstrap vshard
   cartridge_bootstrap_vshard:
@@ -214,7 +182,9 @@
   retries: 3
   delay: 5
   when: cartridge_bootstrap_vshard is defined and cartridge_bootstrap_vshard
-  tags: cartridge-config
+  tags:
+    - cartridge-config
+    - supervisor
 
 - name: Manage failover
   cartridge_manage_failover:
@@ -223,4 +193,6 @@
   delegate_to: '{{ control_host }}'
   run_once: true
   when: cartridge_failover is defined or cartridge_failover_params is defined
-  tags: cartridge-config
+  tags:
+    - cartridge-config
+    - supervisor

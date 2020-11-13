@@ -16,9 +16,24 @@
   tags: cartridge-instances
 
 - name: Install tarball
-  include_tasks: install_targz.yml
-  when: cartridge_package_path is regex('\.tar\.gz$')
-  args:
-    apply:
-      tags: cartridge-instances
-  tags: cartridge-instances
+  block:
+    - name: Install tarball under systemd
+      include_tasks: install_targz.yml
+      args:
+        apply:
+          tags: cartridge-instances
+      when: >-
+        cartridge_package_path is regex('\.tar\.gz$') and
+        'supervisor' not in ansible_run_tags
+    - name: Install tarball under supervisord
+      include_tasks: install_targz.yml
+      when: cartridge_package_path is regex('\.tar\.gz$')
+      args:
+        apply:
+          tags:
+            - cartridge-instances
+            - supervisor
+      when: >-
+        cartridge_package_path is regex('\.tar\.gz$') and
+        'supervisor' in ansible_run_tags
+  tags: cartridge-instances, supervisor
