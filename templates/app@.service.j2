@@ -4,18 +4,17 @@
 
   [Service]
   Type=simple
-  ExecStartPre=/bin/sh -c 'mkdir -p {{ run_dir }}{{ cartridge_app_name }}.%i'
-  ExecStart={{ bin_dir }}{{ cartridge_app_name }}/tarantool {{ bin_dir }}{{ cartridge_app_name }}/init.lua
+  ExecStart={{ bin_dir }}/tarantool {{ bin_dir }}/init.lua
   Restart=on-failure
   RestartSec=2
   User={{ instance_user }}
   Group={{ instance_group }}
 
   Environment=TARANTOOL_APP_NAME={{ cartridge_app_name }}
-  Environment=TARANTOOL_WORKDIR={{ data_dir }}{{ cartridge_app_name }}.%i
+  Environment=TARANTOOL_WORKDIR={{ data_dir }}/{{ cartridge_app_name }}.%i
   Environment=TARANTOOL_CFG={{ instance_conf_path }}
-  Environment=TARANTOOL_PID_FILE={{ run_dir }}{{ cartridge_app_name }}.%i.pid
-  Environment=TARANTOOL_CONSOLE_SOCK={{ run_dir }}{{ cartridge_app_name }}.%i.control
+  Environment=TARANTOOL_PID_FILE={{ run_dir }}/{{ cartridge_app_name }}.%i.pid
+  Environment=TARANTOOL_CONSOLE_SOCK={{ run_dir }}/{{ cartridge_app_name }}.%i.control
   Environment=TARANTOOL_INSTANCE_NAME=%i
 
   LimitCORE=infinity

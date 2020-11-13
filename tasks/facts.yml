@@ -17,6 +17,7 @@
     instance_conf_section: '{{ cartridge_app_name | get_instance_conf_section(inventory_hostname, stateboard) }}'
     instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard, data_dir) }}'
     instance_systemd_service: '{{ cartridge_app_name | get_instance_systemd_service(inventory_hostname, stateboard) }}'
+    instance_systemd_unit_file: '{{ cartridge_app_name }}@.service'
   tags: always
 
 - name: Set instance facts (tarball)

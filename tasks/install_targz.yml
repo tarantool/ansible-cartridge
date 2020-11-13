@@ -15,49 +15,25 @@
     force: true
   any_errors_fatal: true
 
-# - name: Create an app@.service file
-#   template:
-#     src: app@.service.j2
-#     dest: "{{ instance_systemd_path }}{{ instance_systemd_unit_file }}"
-#   any_errors_fatal: true
-#   notify:
-#     - reload-systemd-daemon
-#
-# - name: Configure stateboard
-#   block:
-#     - name: Set stateboard facts
-#       set_fact:
-#         stateboard_name: '{{ cartridge_app_name }}-stateboard'
-#         stateboard_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, True, data_dir) }}'
-#         stateboard_run_dir: '{{ cartridge_app_name | get_instance_run_dir(inventory_hostname, True, run_dir) }}'
-#         stateboard_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, True, conf_dir) }}'
-#
-#     - name: Create stateboard folders
-#       file:
-#         path: "{{ item.path }}"
-#         state: directory
-#         mode: "{{ item.mode | default('0755') }}"
-#         owner: "{{ instance_user }}"
-#         group: "{{ instance_group }}"
-#       loop:
-#         - {path: "{{ stateboard_work_dir }}"}
-#         - {path: "{{ stateboard_run_dir }}"}
-#       any_errors_fatal: true
-#
-#     - name: Create a stateboard service file
-#       template:
-#         src: stateboard.service.j2
-#         dest: "{{ instance_systemd_path }}{{ stateboard_name }}.service"
-#       any_errors_fatal: true
-#       notify:
-#         - reload-systemd-daemon
-#   tags: always
-#   when: stateboard_on_machine == true
-#
-# -  name: trigger reload-systemd-daemon
-#    command: /bin/true
-#    notify: reload-systemd-daemon
-#    check_mode: no
+- name: Create an app@.service file
+  template:
+    src: app@.service.j2
+    dest: "{{ systemd_dir }}/{{ instance_systemd_unit_file }}"
+  any_errors_fatal: true
+
+- name: Configure stateboard
+  block:
+    - name: Set stateboard facts
+      set_fact:
+        stateboard_name: '{{ cartridge_app_name }}-stateboard'
+
+    - name: Create a stateboard service file
+      template:
+        src: stateboard.service.j2
+        dest: "{{ systemd_dir }}/{{ stateboard_name }}.service"
+      any_errors_fatal: true
+  tags: always
+  when: stateboard_on_machine == true
 
 - name: Create a unit file
   vars:
@@ -68,6 +44,23 @@
     owner: "{{ instance_user }}"
     group: "{{ instance_group }}"
   any_errors_fatal: true
-  tags: ['never', 'supervisor']
+  tags:
+    - never
+    - supervisor
   notify:
     - reload-supervisor-daemon
+
+- name: Notifications
+  block:
+    - name: Notify systemd daemon
+      command: /bin/true
+      when: "'supervisor' not in ansible_run_tags"
+      notify:
+        - reload-systemd-daemon
+
+    - name: Notify supervisord daemon
+      command: /bin/true
+      when: "'supervisor' in ansible_run_tags"
+      notify:
+        - reload-supervisor-daemon
+  tags: always

@@ -6,13 +6,14 @@ expelled: false
 stateboard: false
 instance_start_timeout: 60
 replicaset_healthy_timeout: 30
-data_dir: '/var/lib/tarantool/'
-conf_dir: '/etc/tarantool/conf.d/'
-run_dir: '/var/run/tarantool/'
-systemd_dir: '/etc/systemd/system/'
-dist_dir: '/usr/share/tarantool/'
-bin_dir: '/usr/share/tarantool/'
-release_dir: '/usr/share/tarantool/'
-instance_user: tarantool
-instance_group: tarantool
+data_dir: '/var/lib/tarantool'
+conf_dir: '/etc/tarantool/conf.d'
+run_dir: '/var/run/tarantool'
+systemd_dir: '/etc/systemd/system'
+dist_dir: '/usr/share/tarantool'
+bin_dir: '/usr/share/tarantool'
+log_dir: '/var/log/tarantool'
+release_dir: '/usr/share/tarantool'
+instance_user: '{{ become_user | default("root") }}'
+instance_group: '{{ become_user | default("root") }}'
 supervisor_home: '/data/tarantool/supervisor'

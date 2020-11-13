@@ -3,7 +3,7 @@
   file:
     path: "{{ item.path }}"
     state: directory
-    mode: "{{ item.mode | default('0755') }}"
+    mode: "{{ item.mode | default('0766') }}"
     owner: "{{ instance_user }}"
     group: "{{ instance_group }}"
   loop:
@@ -11,11 +11,12 @@
     - {path: "{{ conf_dir }}"}
     - {path: "{{ instance_work_dir }}"}
     - {path: "{{ log_dir }}"}
-    - {path: "{{ run_dir }}", mode: 644}
+    - {path: "{{ run_dir }}"}
     - {path: "{{ release_dir }}"}
     - {path: "{{ apps_dir }}"}
   any_errors_fatal: true
   tags: always
+  when: cartridge_package_path is regex('\.tar\.gz$')
 
 - name: Create supervisor folders
   file:

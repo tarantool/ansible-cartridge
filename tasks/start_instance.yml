@@ -11,19 +11,40 @@
     - supervisor
 
 - name: Check if instance restart is forced or required to apply changes
-  cartridge_needs_restart:
-    restarted: '{{ restarted }}'
-    control_sock: '{{ instance_control_sock }}'
-    appname: '{{ cartridge_app_name }}'
-    instance_conf_file: '{{ instance_conf_file }}'
-    conf_section_name: '{{ instance_conf_section }}'
-    cluster_cookie: '{{ cartridge_cluster_cookie }}'
-    cartridge_defaults: '{{ cartridge_defaults }}'
-    config: '{{ config }}'
-    stateboard: '{{ stateboard }}'
-    app_conf_file: '{{ app_conf_file }}'
-    bin_dir: '{{ bin_dir }}'
-  notify: restart-instance
+  block: Check instance restart (systemd)
+    - name:
+      cartridge_needs_restart:
+        restarted: '{{ restarted }}'
+        control_sock: '{{ instance_control_sock }}'
+        appname: '{{ cartridge_app_name }}'
+        instance_conf_file: '{{ instance_conf_file }}'
+        conf_section_name: '{{ instance_conf_section }}'
+        cluster_cookie: '{{ cartridge_cluster_cookie }}'
+        cartridge_defaults: '{{ cartridge_defaults }}'
+        config: '{{ config }}'
+        stateboard: '{{ stateboard }}'
+        app_conf_file: '{{ app_conf_file }}'
+        bin_dir: '{{ bin_dir }}'
+      notify:
+        - restart-instance
+      when: "'supervisor' not in ansible_run_tags"
+
+    - name: Check instance restart (supervisord)
+      cartridge_needs_restart:
+        restarted: '{{ restarted }}'
+        control_sock: '{{ instance_control_sock }}'
+        appname: '{{ cartridge_app_name }}'
+        instance_conf_file: '{{ instance_conf_file }}'
+        conf_section_name: '{{ instance_conf_section }}'
+        cluster_cookie: '{{ cartridge_cluster_cookie }}'
+        cartridge_defaults: '{{ cartridge_defaults }}'
+        config: '{{ config }}'
+        stateboard: '{{ stateboard }}'
+        app_conf_file: '{{ app_conf_file }}'
+        bin_dir: '{{ bin_dir }}'
+      notify:
+        - restart-supervisor-instance
+      when: "'supervisor' in ansible_run_tags"
   tags:
     - cartridge-replicasets
     - supervisor
