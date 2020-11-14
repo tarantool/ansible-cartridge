@@ -23,7 +23,8 @@ PARAMS_THE_SAME_FOR_ALL_HOSTS = [
 ]
 
 CONFIG_REQUIRED_PARAMS = ['advertise_uri']
-CONFIG_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir', 'cluster_cookie']
+CONFIG_FORBIDDEN_PARAMS = []
+# CONFIG_FORBIDDEN_PARAMS = ['alias', 'console_sock', 'pid_file', 'workdir', 'cluster_cookie']
 
 REPLICASET_PARAMS = [
     'replicaset_alias',

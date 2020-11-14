@@ -94,6 +94,14 @@ def is_stateboard_on_machine(hosts, hostvars, inventory_hostname):
     return False
 
 
+def config_accept_vars(config, accept):
+	return { k: v for k, v in config.items() if k.startswith(tuple(accept)) }
+
+
+def config_reject_vars(config, reject):
+	return { k: v for k, v in config.items() if not k.startswith(tuple(reject)) }
+
+
 class FilterModule(object):
     def filters(self):
         return {
@@ -108,4 +116,6 @@ class FilterModule(object):
             'get_instance_run_dir': get_instance_run_dir,
             'is_stateboard_on_machine': is_stateboard_on_machine,
             'get_instances_on_machine': get_instances_on_machine,
+            'accept_vars': config_accept_vars,
+            'reject_vars': config_reject_vars
         }

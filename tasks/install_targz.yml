@@ -1,39 +1,63 @@
 ---
-- name: Unpack a package
+- name: Download package
+  get_url:
+    url: "{{ cartridge_package_path }}"
+    dest: "{{ tmp_dir }}/{{ cartridge_app_name }}.tar.gz"
+    timeout: "{{ artifact_download_timeout | default(300) }}"
+  when: cartridge_package_path is match('http[s]*://.*')
+
+- name: Unpack a package (remote)
   unarchive:
-    creates: "{{ apps_dir }}/{{ cartridge_app_name }}"
+    src: "{{ tmp_dir }}/{{ cartridge_app_name }}.tar.gz"
+    dest: "{{ tmp_dir }}/{{ app_version }}"
+    keep_newer: true
+    remote_src: true
+  any_errors_fatal: true
+  when: cartridge_package_path is match('http[s]*://.*')
+
+- name: Unpack a package (local)
+  unarchive:
     src: "{{ cartridge_package_path }}"
-    dest: "{{ apps_dir }}"
+    dest: "{{ tmp_dir }}/{{ app_version }}"
     keep_newer: true
   any_errors_fatal: true
+  when: cartridge_package_path is not match('http[s]*://.*')
+
+- name: Copy application to release directory
+  copy:
+    src: "{{ tmp_dir }}/{{ app_version }}/{{ cartridge_app_name }}/"
+    dest: "{{ release_dir }}/{{ app_version }}"
+    remote_src: true
 
 - name: Create a symlink to the package folder
   file:
-    src: "{{ apps_dir }}/{{ cartridge_app_name }}"
+    src: "{{ release_dir }}/{{ app_version }}"
     dest: "{{ bin_dir }}"
     state: link
     force: true
   any_errors_fatal: true
+
+- name: Change file permissions on Tarantool binary
+  file:
+    path: "{{ bin_dir }}/tarantool"
+    mode: a+x
 
 - name: Create an app@.service file
   template:
     src: app@.service.j2
     dest: "{{ systemd_dir }}/{{ instance_systemd_unit_file }}"
   any_errors_fatal: true
+  when: "'supervisor' not in ansible_run_tags"
 
-- name: Configure stateboard
-  block:
-    - name: Set stateboard facts
-      set_fact:
-        stateboard_name: '{{ cartridge_app_name }}-stateboard'
-
-    - name: Create a stateboard service file
-      template:
-        src: stateboard.service.j2
-        dest: "{{ systemd_dir }}/{{ stateboard_name }}.service"
-      any_errors_fatal: true
+- name: Create a stateboard service file
+  template:
+    src: stateboard.service.j2
+    dest: "{{ systemd_dir }}/{{ stateboard_name }}.service"
+  any_errors_fatal: true
   tags: always
-  when: stateboard_on_machine == true
+  when: >-
+    'supervisor' not in ansible_run_tags and
+    stateboard_on_machine == true
 
 - name: Create a unit file
   vars:
@@ -41,8 +65,8 @@
   template:
     src: supervisor.unit.j2
     dest: "{{ supervisor_unit_dir }}/{{ cartridge_app_name }}.conf"
-    owner: "{{ instance_user }}"
-    group: "{{ instance_group }}"
+    # owner: "{{ instance_user }}"
+    # group: "{{ instance_group }}"
   any_errors_fatal: true
   tags:
     - never

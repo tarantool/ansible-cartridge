@@ -27,7 +27,6 @@
         'supervisor' not in ansible_run_tags
     - name: Install tarball under supervisord
       include_tasks: install_targz.yml
-      when: cartridge_package_path is regex('\.tar\.gz$')
       args:
         apply:
           tags:

@@ -3,9 +3,9 @@
   file:
     path: "{{ item.path }}"
     state: directory
-    mode: "{{ item.mode | default('0766') }}"
-    owner: "{{ instance_user }}"
-    group: "{{ instance_group }}"
+    mode: "{{ item.mode | default('0755') }}"
+    # owner: "{{ instance_user }}"
+    # group: "{{ instance_group }}"
   loop:
     - {path: "{{ data_dir }}"}
     - {path: "{{ conf_dir }}"}
@@ -13,35 +13,36 @@
     - {path: "{{ log_dir }}"}
     - {path: "{{ run_dir }}"}
     - {path: "{{ release_dir }}"}
-    - {path: "{{ apps_dir }}"}
+    - {path: "{{ release_dir }}/{{ app_version }}"}
+    - {path: "{{ tmp_dir }}/{{ app_version }}"}
   any_errors_fatal: true
   tags: always
   when: cartridge_package_path is regex('\.tar\.gz$')
 
-- name: Create supervisor folders
-  file:
-    path: "{{ item.path }}"
-    state: directory
-    mode: "{{ item.mode | default('0755') }}"
-    owner: "{{ item.owner | default(instance_user) }}"
-    group: "{{ item.group | default(instance_group) }}"
-  loop:
-    - {path: "{{ supervisor_home }}"}
-    - {path: "{{ supervisor_run }}"}
-    - {path: "{{ supervisor_unit_dir }}"}
-    - {path: "{{ apps_dir }}"}
-  any_errors_fatal: true
-  tags: ['never', 'supervisor']
+- block:
+    - name: Create supervisor folders
+      file:
+        path: "{{ item.path }}"
+        state: directory
+        mode: "{{ item.mode | default('0755') }}"
+        # owner: "{{ item.owner | default(instance_user) }}"
+        # group: "{{ item.group | default(instance_group) }}"
+      loop:
+        - {path: "{{ supervisor_home }}"}
+        - {path: "{{ supervisor_run }}"}
+        - {path: "{{ supervisor_unit_dir }}"}
+      any_errors_fatal: true
 
-- name: Configure supervisor socket
-  file:
-    path: "{{ item.path }}"
-    state: touch
-    mode: "{{ item.mode | default('0755') }}"
-    owner: "{{ item.owner | default(instance_user) }}"
-    group: "{{ item.group | default(instance_group) }}"
-  loop:
-    - {path: "{{ supervisor_log }}", mode: "0644"}
-    - {path: "{{ supervisor_socket }}", mode: "0755"}
-  any_errors_fatal: true
+    - name: Configure supervisor socket
+      file:
+        path: "{{ item.path }}"
+        state: touch
+        mode: "{{ item.mode | default('0755') }}"
+        # owner: "{{ item.owner | default(instance_user) }}"
+        # group: "{{ item.group | default(instance_group) }}"
+      loop:
+        - {path: "{{ supervisor_log }}", mode: "0644"}
+        - {path: "{{ supervisor_socket }}", mode: "0755"}
+      any_errors_fatal: true
+  when: inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
   tags: ['never', 'supervisor']

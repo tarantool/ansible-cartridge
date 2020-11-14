@@ -11,8 +11,8 @@
     - supervisor
 
 - name: Check if instance restart is forced or required to apply changes
-  block: Check instance restart (systemd)
-    - name:
+  block:
+    - name: Check instance restart (systemd)
       cartridge_needs_restart:
         restarted: '{{ restarted }}'
         control_sock: '{{ instance_control_sock }}'
@@ -57,8 +57,8 @@
         | to_nice_yaml
       }}
     dest: '{{ app_conf_file }}'
-    owner: '{{ instance_user }}'
-    group: '{{ instance_group }}'
+    # owner: '{{ instance_user }}'
+    # group: '{{ instance_group }}'
     mode: '644'
   when: not stateboard
   tags:
@@ -69,12 +69,12 @@
   copy:
     content: >-
       {{
-        { instance_conf_section: config }
+        { instance_conf_section: config | reject_vars(['alias', 'console_sock', 'pid_file', 'workdir', 'cluster_cookie'])}
           | to_nice_yaml
       }}
     dest: '{{ instance_conf_file }}'
-    owner: '{{ instance_user }}'
-    group: '{{ instance_group }}'
+    # owner: '{{ instance_user }}'
+    # group: '{{ instance_group }}'
     mode: '644'
   tags:
     - cartridge-replicasets

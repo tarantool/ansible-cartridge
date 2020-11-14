@@ -6,6 +6,7 @@
     run_dir: '{{ base_dir }}/{{ cartridge_app_name }}/run'
     log_dir: '{{ base_dir }}/{{ cartridge_app_name }}/log'
     release_dir: '{{ base_dir }}/{{ cartridge_app_name }}/releases'
+    tmp_dir: '{{ system_tmp_dir }}/{{ cartridge_app_name }}'
   tags: always
   when: base_dir is defined
 
@@ -25,7 +26,6 @@
     instance_name: '{{ cartridge_app_name }}.{{ inventory_hostname }}'
     instance_conf_path: '{{ conf_dir }}'
     stateboard_on_machine: '{{ groups["all"] | is_stateboard_on_machine(hostvars, inventory_hostname) }}'
-    apps_dir: '{{ release_dir }}/{{ cartridge_package_path }}'
     bin_dir: '{{ release_dir }}/current'
     instance_log_file: '{{ log_dir }}/{{ inventory_hostname }}.log'
   tags: always
