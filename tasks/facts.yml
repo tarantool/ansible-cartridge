@@ -1,10 +1,12 @@
 ---
 - name: Set base application folder
   set_fact:
+    instance_user: 'tarantool'
+    instance_group: 'tarantool'
     conf_dir: '{{ base_dir }}/{{ cartridge_app_name }}/conf'
     data_dir: '{{ base_dir }}/{{ cartridge_app_name }}/data'
     run_dir: '{{ base_dir }}/{{ cartridge_app_name }}/run'
-    log_dir: '{{ base_dir }}/{{ cartridge_app_name }}/log'
+    log_dir: '/data/logs/tarantool/{{ cartridge_app_name }}'
     release_dir: '{{ base_dir }}/{{ cartridge_app_name }}/releases'
     tmp_dir: '{{ system_tmp_dir }}/{{ cartridge_app_name }}'
   tags: always
@@ -27,7 +29,8 @@
     instance_conf_path: '{{ conf_dir }}'
     stateboard_on_machine: '{{ groups["all"] | is_stateboard_on_machine(hostvars, inventory_hostname) }}'
     bin_dir: '{{ release_dir }}/current'
-    instance_log_file: '{{ log_dir }}/{{ inventory_hostname }}.log'
+    instance_log_file: '{{ log_dir }}/{{ inventory_hostname }}.jsonl'
+    instance_work_dir: '{{ data_dir }}/{{ inventory_hostname }}'
   tags: always
   when: cartridge_package_path is regex('\.tar\.gz$')
 
