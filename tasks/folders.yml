@@ -15,7 +15,6 @@
     - {path: "{{ release_dir }}/{{ app_version }}"}
     - {path: "{{ tmp_dir }}/{{ app_version }}"}
   any_errors_fatal: true
-  tags: always
   when: >
     cartridge_package_path is regex('\.tar\.gz$') and
     inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
@@ -30,7 +29,6 @@
   loop:
     - {path: "{{ instance_work_dir }}"}
   any_errors_fatal: true
-  tags: always
   when: cartridge_package_path is regex('\.tar\.gz$')
 
 - block:

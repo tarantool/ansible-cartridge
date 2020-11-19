@@ -25,6 +25,9 @@
 
 - name: Create folders
   import_tasks: folders.yml
+  tags:
+    - cartridge-instances
+    - supervisor
 
 # Rewrites cartridge_app_name from package info
 - name: Install package
