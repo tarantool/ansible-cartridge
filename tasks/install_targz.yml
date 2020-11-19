@@ -29,6 +29,11 @@
     dest: "{{ release_dir }}/{{ app_version }}"
     remote_src: true
 
+- name: Clean tmp directory
+  file:
+    dest: "{{ tmp_dir }}"
+    state: absent
+
 - name: Create a symlink to the package folder
   file:
     src: "{{ release_dir }}/{{ app_version }}"
