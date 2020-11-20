@@ -23,11 +23,26 @@
 - name: Setup facts
   import_tasks: facts.yml
 
-- name: Create folders
-  import_tasks: folders.yml
+- name: Create machine-wide folders
+  include_tasks: folders.yml
+  when: >
+    cartridge_package_path is regex('\.tar\.gz$') and
+    inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
   tags:
     - cartridge-instances
     - supervisor
+
+- name: Create instance folders
+  file:
+    path: "{{ item.path }}"
+    state: directory
+    mode: "{{ item.mode | default('0755') }}"
+    # owner: "{{ instance_user }}"
+    # group: "{{ instance_group }}"
+  loop:
+    - {path: "{{ instance_work_dir }}"}
+  any_errors_fatal: true
+  when: cartridge_package_path is regex('\.tar\.gz$')
 
 # Rewrites cartridge_app_name from package info
 - name: Install package

@@ -31,7 +31,7 @@
 - name: Set control instance facts
   set_fact:
     control_host: '{{ one_not_expelled_instance }}'
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance, run_dir) }}'
     control_http_port: '{{ hostvars[one_not_expelled_instance].config.http_port }}'
   when: >-
     cartridge_auth is defined

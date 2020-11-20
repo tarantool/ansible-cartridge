@@ -15,21 +15,9 @@
     - {path: "{{ release_dir }}/{{ app_version }}"}
     - {path: "{{ tmp_dir }}/{{ app_version }}"}
   any_errors_fatal: true
-  when: >
-    cartridge_package_path is regex('\.tar\.gz$') and
-    inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
-
-- name: Create instance folders
-  file:
-    path: "{{ item.path }}"
-    state: directory
-    mode: "{{ item.mode | default('0755') }}"
-    # owner: "{{ instance_user }}"
-    # group: "{{ instance_group }}"
-  loop:
-    - {path: "{{ instance_work_dir }}"}
-  any_errors_fatal: true
-  when: cartridge_package_path is regex('\.tar\.gz$')
+  tags:
+    - cartridge-instances
+    - supervisor
 
 - block:
     - name: Create supervisor folders
@@ -56,5 +44,4 @@
         - {path: "{{ supervisor_log }}", mode: "0644"}
         - {path: "{{ supervisor_socket }}", mode: "0755"}
       any_errors_fatal: true
-  when: inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
   tags: ['never', 'supervisor']

@@ -105,7 +105,7 @@ def config_reject_vars(config, reject):
 def get_instances_in_dc(instances, play_hosts):
     i = 0
     tmp = ''
-    res = instances.copy()
+    res = instances[:]
     for name in instances:
         if name in play_hosts:
             tmp = res[0]
