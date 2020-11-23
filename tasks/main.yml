@@ -32,6 +32,16 @@
     - cartridge-instances
     - supervisor
 
+# Rewrites cartridge_app_name from package info
+- name: Install package
+  include_tasks: install_package.yml
+  when: >-
+    cartridge_package_path is defined and
+    inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
+  tags:
+    - cartridge-instances
+    - supervisor
+
 - name: Create instance folders
   file:
     path: "{{ item.path }}"
@@ -43,19 +53,28 @@
     - {path: "{{ instance_work_dir }}"}
   any_errors_fatal: true
   when: cartridge_package_path is regex('\.tar\.gz$')
+  tags:
+    - cartridge-instances
+    - supervisor
 
-# Rewrites cartridge_app_name from package info
-- name: Install package
-  include_tasks: install_package.yml
-  when: >-
-    cartridge_package_path is defined and
-    inventory_hostname in hostvars | get_one_not_expelled_instance_for_machine(play_hosts)
-  tags: cartridge-instances, supervisor
+- name: Create a symlink to the package folder
+  file:
+    src: "{{ release_dir }}/{{ app_version }}"
+    dest: "{{ instance_bin_dir }}"
+    state: link
+    force: true
+  any_errors_fatal: true
+  when: cartridge_package_path is regex('\.tar\.gz$')
+  tags:
+    - cartridge-instances
+    - supervisor
 
 - name: Start instance
   include_tasks: start_instance.yml
   when: not expelled
-  tags: cartridge-instances, supervisor
+  tags:
+    - cartridge-instances
+    - supervisor
 
 # Restart instances and reload systemd-daemon if required
 - meta: flush_handlers

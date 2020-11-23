@@ -34,17 +34,9 @@
     dest: "{{ tmp_dir }}"
     state: absent
 
-- name: Create a symlink to the package folder
-  file:
-    src: "{{ release_dir }}/{{ app_version }}"
-    dest: "{{ bin_dir }}"
-    state: link
-    force: true
-  any_errors_fatal: true
-
 - name: Change file permissions on Tarantool binary
   file:
-    path: "{{ bin_dir }}/tarantool"
+    path: "{{ release_dir }}/{{ app_version }}/tarantool"
     mode: a+x
 
 - name: Create an app@.service file

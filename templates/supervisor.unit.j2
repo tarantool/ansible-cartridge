@@ -25,9 +25,9 @@ process_name={{ i.inventory_hostname }}
 numprocs=1
 directory={{ i.instance_work_dir }}
 {% if i.stateboard is defined and i.stateboard == true %}
-command={{ i.bin_dir }}/tarantool {{ i.bin_dir }}/stateboard.init.lua
+command={{ i.instance_bin_dir }}/tarantool {{ i.instance_bin_dir }}/stateboard.init.lua
 {% else %}
-command={{ i.bin_dir }}/tarantool {{ i.bin_dir }}/init.lua
+command={{ i.instance_bin_dir }}/tarantool {{ i.instance_bin_dir }}/init.lua
 {% endif %}
 autorestart=true
 redirect_stderr=true

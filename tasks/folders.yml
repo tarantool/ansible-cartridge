@@ -11,6 +11,7 @@
     - {path: "{{ conf_dir }}"}
     - {path: "{{ log_dir }}"}
     - {path: "{{ run_dir }}"}
+    - {path: "{{ bin_dir }}"}
     - {path: "{{ release_dir }}"}
     - {path: "{{ release_dir }}/{{ app_version }}"}
     - {path: "{{ tmp_dir }}/{{ app_version }}"}

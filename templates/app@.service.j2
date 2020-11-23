@@ -4,7 +4,7 @@
 
   [Service]
   Type=simple
-  ExecStart={{ bin_dir }}/tarantool {{ bin_dir }}/init.lua
+  ExecStart={{ bin_dir }}/%i/tarantool {{ bin_dir }}/%i/init.lua
   Restart=on-failure
   RestartSec=2
   User={{ instance_user }}
