@@ -11,6 +11,11 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+### Added
+
+- `replicaset_healthy_timeout` parameter to wait for replicaset to be
+  healthy after editing it
+
 ## [1.6.0] - 2020-11-10
 
 ### Added

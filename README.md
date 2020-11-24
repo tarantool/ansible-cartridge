@@ -180,6 +180,7 @@ Configuration format is described in detail in the
 * `stateboard` (`boolean`, optional, default: `false`): boolean flag that indicates
    that the instance is a [stateboard](#stateboard-instance);
 * `instance_start_timeout` (`number`, optional, default: 60): time in seconds to wait for instance to be started;
+* `replicaset_healthy_timeout` (`number`, optional, default: 30): time in seconds to wait for replicaset to be healthy after editing it;
 * `replicaset_alias` (`string`, optional): replicaset alias, will be displayed in Web UI;
 * `failover_priority` (`list-of-string`): failover priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
