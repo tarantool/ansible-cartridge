@@ -4,6 +4,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException, cartridge_errcodes
 from ansible.module_utils.helpers import get_control_console
 from ansible.module_utils.helpers import dynamic_box_cfg_params
+from ansible.module_utils.helpers import box_cfg_was_called
 
 import os
 
@@ -120,7 +121,7 @@ def needs_restart(params):
     if last_restart_time < package_update_time:
         return ModuleRes(success=True, changed=True)
 
-    # check if instance config was changed (except memtx_memory)
+    # check if instance config was changed (except dynamic params)
     current_instance_conf = read_yaml_file_section(
         instance_conf_file,
         control_console,
@@ -130,7 +131,7 @@ def needs_restart(params):
         return ModuleRes(success=True, changed=True)
 
     if not stateboard:
-        # check if default config was changed (except memtx_memory)
+        # check if default config was changed (except dynamic params)
         current_default_conf = read_yaml_file_section(
             default_conf_path,
             control_console,
@@ -140,7 +141,13 @@ def needs_restart(params):
         if check_conf_updated(new_default_conf, current_default_conf, dynamic_box_cfg_params):
             return ModuleRes(success=True, changed=True)
 
+    # if box.cfg wasn't called,
+    if not box_cfg_was_called(control_console):
+        return ModuleRes(success=True, changed=True)
+
     current_cfg = get_current_cfg(control_console)
+    if current_cfg is None:
+        return ModuleRes(success=True, changed=True)
 
     for param_name in dynamic_box_cfg_params:
         new_value = None
@@ -153,7 +160,7 @@ def needs_restart(params):
         # If current parameter wasn't changed to the new value,
         # it mean that instance should be restarted to apply change
         if new_value is not None:
-            if current_cfg[param_name] != new_value:
+            if current_cfg.get(param_name) != new_value:
                 return ModuleRes(success=True, changed=True)
 
     return ModuleRes(success=True, changed=False)
