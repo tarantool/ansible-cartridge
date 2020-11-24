@@ -11,6 +11,12 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+## [1.7.0] - 2020-11-24
+
+### Fixed
+
+- needs_restart task error for non-bootstrapped instance
+
 ### Added
 
 - `replicaset_healthy_timeout` parameter to wait for replicaset to be

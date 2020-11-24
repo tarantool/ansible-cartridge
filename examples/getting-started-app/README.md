@@ -145,7 +145,7 @@ vm2                       running (virtualbox)
 Next, install the Tarantool Cartridge role using `ansible-galaxy` CLI:
 
 ```bash
-$ ansible-galaxy install tarantool.cartridge,1.6.0
+$ ansible-galaxy install tarantool.cartridge,1.7.0
 ```
 
 Let's take a look at the `playbook.yml` file.
