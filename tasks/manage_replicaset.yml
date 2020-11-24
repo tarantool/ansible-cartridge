@@ -3,5 +3,6 @@
   cartridge_manage_replicaset:
     replicaset: '{{ replicaset }}'
     control_sock: '{{ cartridge_app_name | get_instance_control_sock(join_host) }}'
+    healthy_timeout: '{{ replicaset_healthy_timeout }}'
   delegate_to: '{{ join_host }}'
   tags: cartridge-replicasets

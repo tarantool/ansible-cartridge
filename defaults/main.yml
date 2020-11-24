@@ -5,3 +5,4 @@ restarted: null
 expelled: false
 stateboard: false
 instance_start_timeout: 60
+replicaset_healthy_timeout: 30
