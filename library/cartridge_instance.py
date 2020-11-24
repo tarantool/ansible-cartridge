@@ -4,6 +4,7 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException, cartridge_errcodes
 from ansible.module_utils.helpers import get_control_console
 from ansible.module_utils.helpers import dynamic_box_cfg_params, memory_size_box_cfg_params
+from ansible.module_utils.helpers import box_cfg_was_called
 
 import os
 
@@ -35,12 +36,6 @@ def serialize_dict(d):
         parts.append("%s = %s" % (k, value_str))
 
     return '{ %s }' % ', '.join(parts)
-
-
-def box_cfg_was_called(control_console):
-    return control_console.eval('''
-        return type(box.cfg) ~= 'function'
-    ''')
 
 
 def get_box_cfg(control_console):

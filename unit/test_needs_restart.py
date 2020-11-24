@@ -85,6 +85,39 @@ class TestNeedsRestart(unittest.TestCase):
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
 
+    def test_box_cfg_is_function(self):
+        param_name = 'some-param'
+        old_value = 'old-value'
+        new_value = 'new-value'
+
+        self.instance.set_box_cfg_function()
+
+        self.instance.set_instance_config({
+            param_name: old_value,
+        })
+
+        # nothing changed
+        res = call_needs_restart(
+            control_sock=self.console_sock,
+            config={
+                param_name: old_value,
+            },
+        )
+
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertTrue(res.changed)
+
+        # param was changed
+        res = call_needs_restart(
+            control_sock=self.console_sock,
+            config={
+                param_name: new_value,
+            },
+        )
+
+        self.assertTrue(res.success, msg=res.msg)
+        self.assertTrue(res.changed)
+
     def test_code_was_updated(self):
         # code was updated today, socket yesterday - needs restart
         self.instance.set_path_mtime(self.instance.APP_CODE_PATH, self.instance.DATE_TODAY)
@@ -290,7 +323,7 @@ class TestNeedsRestart(unittest.TestCase):
         ["memtx_memory"],
         ["vinyl_memory"],
     ])
-    def test_both_app_and_instance_memtx_memory_changed(self, memory_param_name):
+    def test_memory_size_changed(self, memory_param_name):
         current_memory_size = 100
         new_memory_size_instance = 200
         new_memory_size_app = 300

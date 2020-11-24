@@ -198,3 +198,9 @@ def is_expelled(host_vars):
 
 def is_stateboard(host_vars):
     return host_vars.get('stateboard') is True
+
+
+def box_cfg_was_called(control_console):
+    return control_console.eval('''
+        return type(box.cfg) ~= 'function'
+    ''')
