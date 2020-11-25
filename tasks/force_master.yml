@@ -9,6 +9,8 @@
 
 - name: Setup facts
   import_tasks: facts.yml
+  vars:
+    tarball_deploy: cartridge_package_path is not defined or cartridge_package_path is regex('\.tar\.gz$')
 
 - name: Waiting for instances to be ready
   vars:
@@ -18,16 +20,10 @@
     retries: "{{ state_check_retries | default(250) }}"
     delay: "{{ state_check_delay | default(5) }}"
   import_tasks: instance_state.yml
-  tags:
-    - cartridge-instances
-    - supervisor
 
 - name: Select one not expelled instance
   set_fact:
     one_not_expelled_instance: '{{ hostvars | get_one_not_expelled_instance(play_hosts) }}'
-  tags:
-    - cartridge-replicasets
-    - cartridge-config
 
 - name: Set control instance facts
   set_fact:
@@ -40,7 +36,6 @@
     or cartridge_bootstrap_vshard is defined
     or cartridge_failover is defined
     or cartridge_failover_params is defined
-  tags: cartridge-config
 
 - name: Get replicasets
   cartridge_get_replicasets:
@@ -49,7 +44,6 @@
     control_host: '{{ control_host }}'
   register: replicasets
   run_once: true
-  tags: cartridge-replicasets
 
 - name: Manage replicasets (eventual failover)
   include_tasks: manage_replicaset.yml
@@ -62,7 +56,6 @@
     join_host: '{{ replicasets.meta.join_host }}'
   loop: '{{ replicasets.meta.replicasets }}'
   run_once: true
-  tags: cartridge-replicasets
   when: cartridge_failover_params is defined and cartridge_failover_params.mode == 'eventual'
 
 - name: Find instances to promote (stateful failover)
@@ -74,7 +67,6 @@
   register: instances_to_promote
   run_once: true
   delegate_to: '{{ control_host }}'
-  tags: cartridge-replicasets
   when: cartridge_failover_params is defined and cartridge_failover_params.mode == 'stateful'
 
 - name: Manage replicasets (stateful failover)

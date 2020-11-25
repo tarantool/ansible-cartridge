@@ -22,6 +22,8 @@
 
 - name: Setup facts
   import_tasks: facts.yml
+  vars:
+    tarball_deploy: cartridge_package_path is regex('\.tar\.gz$')
 
 - name: Create machine-wide folders
   include_tasks: folders.yml

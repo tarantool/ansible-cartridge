@@ -33,7 +33,7 @@
     instance_work_dir: '{{ data_dir }}/{{ inventory_hostname }}'
     instance_bin_dir: '{{ bin_dir }}/{{ inventory_hostname }}'
   tags: always
-  when: cartridge_package_path is regex('\.tar\.gz$')
+  when: tarball_deploy == true
 
 - name: Set supervisor facts (tarball)
   set_fact:
@@ -42,7 +42,7 @@
     supervisor_socket: '{{ supervisor_home }}/run/supervisord.sock'
     supervisor_unit_dir: '{{ supervisor_home }}/units'
   tags: ['never', 'supervisor']
-  when: cartridge_package_path is regex('\.tar\.gz$')
+  when: tarball_deploy == true
 
 - name: Set stateboard facts
   set_fact:
@@ -51,4 +51,4 @@
     stateboard_run_dir: '{{ cartridge_app_name | get_instance_run_dir(inventory_hostname, True, run_dir) }}'
     stateboard_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, True, conf_dir) }}'
   tags: always
-  when: cartridge_package_path is regex('\.tar\.gz$') and stateboard_on_machine == true
+  when: tarball_deploy == true and stateboard_on_machine == true
