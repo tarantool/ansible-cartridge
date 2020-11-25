@@ -1,29 +1,19 @@
-- name: Wait for instances to be ready
-  vars:
-  uri:
-    url: "http://{{ ansible_host }}:{{ hostvars[inventory_hostname].config.http_port }}/admin/api"
-    method: POST
-    body_format: json
-    status_code: 200
-    return_content: yes
-    timeout: 5
-    body: "{{ lookup('template', 'templates/instance_state.json.j2') }}"
-  retries: "{{ retries }}"
-  delay: "{{ delay }}"
-  register: result
-  until: >
-    result is defined and
-    result.json is defined and
-    'data' in result.json and
-    'cluster' in result.json['data'] and
-    'self' in result.json['data']['cluster'] and
-    'state' in result.json['data']['cluster']['self'] and
-    result.json['data']['cluster']['self']['state'] in waiting_for_state
-  when: stateboard is undefined or stateboard == false
+- name: Wait for instance to be started
+  cartridge_check_instance_started:
+    control_sock: '{{ instance_control_sock }}'
+    stateboard: '{{ stateboard }}'
+    waiting_for_state: '{{ states }}'
+  register: check_instance
+  until: not check_instance.failed
+  retries: '{{ retries }}'
+  delay: '{{ delay }}'
+  any_errors_fatal: true
+  when: not expelled and (stateboard is not defined or stateboard == false)
 
 - name: Wait for stateboard instance to be ready
   shell:
     cmd: supervisorctl status "{{ cartridge_app_name }}:{{ inventory_hostname }}"
   register: output
   failed_when: '"RUNNING" not in output.stdout'
+  any_errors_fatal: true
   when: stateboard is defined and stateboard == true
