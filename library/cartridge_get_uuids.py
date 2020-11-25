@@ -16,25 +16,29 @@ argument_spec = {
 
 def get_uuids(control_console, instances_to_find, replicasets, hostvars):
     res = []
+    found_replicasets = []
+
     for instance_name in instances_to_find:
         if is_expelled(hostvars[instance_name]) or is_stateboard(hostvars[instance_name]):
             continue
-        res.append(
-            control_console.eval('''
-                local replicasets = require('cartridge').admin_get_replicasets()
-                for _, r in ipairs(replicasets) do
-                    for _, s in ipairs(r.servers) do
-                        if s.alias == '{}' then
-                            return {{
-                                replicaset_uuid = r.uuid,
-                                instance_uuid = s.uuid
-                            }}
-                        end
+        response = control_console.eval('''
+            local replicasets = require('cartridge').admin_get_replicasets()
+            for _, r in ipairs(replicasets) do
+                for _, s in ipairs(r.servers) do
+                    if s.alias == '{}' then
+                        return {{
+                            replicaset_uuid = r.uuid,
+                            instance_uuid = s.uuid
+                        }}
                     end
                 end
-                return
-            '''.format(instance_name))
-        )
+            end
+            return
+        '''.format(instance_name))
+
+        if response['replicaset_uuid'] not in found_replicasets:
+            found_replicasets.append(response['replicaset_uuid'])
+            res.append(response)
 
     return ModuleRes(success=True, changed=False, meta=res)
 
