@@ -3,7 +3,7 @@
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
-from ansible.module_utils.helpers import is_expelled, is_stateboard
+from ansible.module_utils.helpers import is_expelled, is_stateboard, is_healthy
 
 
 argument_spec = {
@@ -19,6 +19,10 @@ def get_uuids(control_console, instances_to_find, replicasets, hostvars):
     found_replicasets = []
 
     for instance_name in sorted(instances_to_find):
+        try:
+            ok = is_healthy(hostvars[instance_name]['instance_control_sock'])
+        except CartridgeException as e:
+            continue
         if is_expelled(hostvars[instance_name]) or is_stateboard(hostvars[instance_name]):
             continue
         response = control_console.eval('''

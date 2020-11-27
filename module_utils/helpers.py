@@ -204,3 +204,10 @@ def box_cfg_was_called(control_console):
     return control_console.eval('''
         return type(box.cfg) ~= 'function'
     ''')
+
+
+def is_healthy(socket_path):
+    console = get_control_console(socket_path)
+    return console.eval('''
+        return require('cartridge').is_healthy()
+    ''')
