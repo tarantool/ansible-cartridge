@@ -50,7 +50,7 @@
   vars:
     replicaset:
       alias: '{{ item.alias }}'
-      failover_priority: '{{ item.instances | get_instances_in_dc(play_hosts) }}'
+      failover_priority: '{{ item.instances | get_sorted_instances_in_dc(play_hosts) }}'
       roles: '{{ item.roles }}'
       instances: '{{ item.instances }}'
     join_host: '{{ replicasets.meta.join_host }}'

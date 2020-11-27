@@ -18,7 +18,7 @@ def get_uuids(control_console, instances_to_find, replicasets, hostvars):
     res = []
     found_replicasets = []
 
-    for instance_name in instances_to_find:
+    for instance_name in sorted(instances_to_find):
         if is_expelled(hostvars[instance_name]) or is_stateboard(hostvars[instance_name]):
             continue
         response = control_console.eval('''

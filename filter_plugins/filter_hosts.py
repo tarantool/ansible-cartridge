@@ -102,7 +102,7 @@ def config_reject_vars(config, reject):
 	return { k: v for k, v in config.items() if not k.startswith(tuple(reject)) }
 
 
-def get_instances_in_dc(instances, play_hosts):
+def get_sorted_instances_in_dc(instances, play_hosts):
     i = 0
     tmp = ''
     res = instances[:]
@@ -112,7 +112,7 @@ def get_instances_in_dc(instances, play_hosts):
             res[0] = name
             res[i] = tmp
         i = i + 1
-    return res
+    return sorted(res)
 
 class FilterModule(object):
     def filters(self):
@@ -130,5 +130,5 @@ class FilterModule(object):
             'get_instances_on_machine': get_instances_on_machine,
             'accept_vars': config_accept_vars,
             'reject_vars': config_reject_vars,
-            'get_instances_in_dc': get_instances_in_dc
+            'get_sorted_instances_in_dc': get_sorted_instances_in_dc
         }
