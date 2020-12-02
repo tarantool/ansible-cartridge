@@ -12,6 +12,10 @@ def is_stateboard(instance_vars):
     return instance_vars.get('stateboard') is True
 
 
+def is_started(instance_vars):
+    return instance_vars.get('instance_is_started') is True
+
+
 def get_instance_fullname(app_name, inventory_hostname, stateboard):
     if stateboard:
         return '{}-stateboard'.format(app_name)
@@ -45,7 +49,7 @@ def get_instances_on_machine(hostvars, ansible_host):
 
 def get_one_not_expelled_instance(hostvars, play_hosts):
     for i in play_hosts:
-        if is_expelled(hostvars[i]) or is_stateboard(hostvars[i]):
+        if is_expelled(hostvars[i]) or is_stateboard(hostvars[i]) or not is_started(hostvars[i]):
             continue
 
         return i

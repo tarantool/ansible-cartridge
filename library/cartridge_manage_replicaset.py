@@ -225,7 +225,7 @@ def create_replicaset(control_console, params):
         errmsg = 'Leader "{}" (replicaset "{}") not found in cluster. Make sure it was started'.format(
             replicaset_leader, replicaset_alias
         )
-        return ModuleRes(success=False, msg=errmsg)
+        return ModuleRes(success=False, skipped=True, msg=errmsg)
 
     # Create replicaset (join leader)
     res, err = edit_replicaset(control_console, cluster_instances,
@@ -385,6 +385,9 @@ def main():
         res = manage_replicaset(module.params)
     except CartridgeException as e:
         module.fail_json(msg=str(e))
+
+    if res.skipped is True:
+        module.exit_json(skipped=res.skipped, msg=res.msg)
 
     if res.success is True:
         module.exit_json(changed=res.changed, meta=res.meta)

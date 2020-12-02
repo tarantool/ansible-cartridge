@@ -17,3 +17,8 @@
   failed_when: '"RUNNING" not in output.stdout'
   any_errors_fatal: true
   when: stateboard is defined and stateboard == true
+
+- name: Set instance state
+  set_fact:
+    instance_is_started: "{{ not check_instance.failed }}"
+  when: not expelled and (stateboard is not defined or stateboard == false)

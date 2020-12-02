@@ -7,12 +7,13 @@ import os
 
 
 class ModuleRes:
-    def __init__(self, success, msg=None, changed=False, meta=None, warnings=[]):
+    def __init__(self, success, msg=None, changed=False, meta=None, warnings=[], skipped=False):
         self.success = success
         self.msg = msg
         self.changed = changed
         self.meta = meta
         self.warnings = warnings
+        self.skipped = skipped
 
 
 class CartridgeErrorCodes:
@@ -208,6 +209,10 @@ def box_cfg_was_called(control_console):
 
 def is_healthy(socket_path):
     console = get_control_console(socket_path)
-    return console.eval('''
-        return require('cartridge').is_healthy()
-    ''')
+    try:
+        ok = console.eval('''
+            return require('cartridge').is_healthy()
+        ''')
+    except CartridgeException as e:
+        return False
+    return ok
