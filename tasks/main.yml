@@ -92,6 +92,8 @@
   import_tasks: instance_state.yml
   tags:
     - cartridge-instances
+    - cartridge-replicasets
+    - cartridge-config
     - supervisor
 
 - name: Connect instance to membership
