@@ -67,7 +67,9 @@
   retries: 3
   delay: 5
   when: not expelled and not stateboard
-  tags: cartridge-instances
+  tags:
+    - cartridge-instances
+    - cartridge-replicasets
 
 - name: Select one not expelled instance
   set_fact:
