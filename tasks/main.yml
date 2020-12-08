@@ -50,10 +50,14 @@
   cartridge_check_instance_started:
     control_sock: '{{ instance_control_sock }}'
     stateboard: '{{ stateboard }}'
+    waiting_for_state:
+      - Unconfigured
+      - RolesConfigured
   register: check_instance
   until: not check_instance.failed
   retries: '{{ instance_start_timeout // 5 }}'
   delay: 5
+  any_errors_fatal: true
   when: not expelled
   tags: cartridge-instances
 
