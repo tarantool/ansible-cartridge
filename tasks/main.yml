@@ -1,10 +1,4 @@
 ---
-- name: Check distribution
-  fail:
-    msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
-  when: ansible_os_family not in ["RedHat", "Debian"]
-  tags: always
-
 - name: Set remote_user for delegated tasks
   set_fact:
     remote_user: '{{ ansible_user }}'
