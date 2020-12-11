@@ -195,7 +195,7 @@ This role tasks have special tags that allows to perform only secified actions.
 Tasks are running in this order:
 
 * `cartridge-instances` - install package, update instances config and restart instances;
-* `cartridge-replicasets` - configure replicasets, expel instances;
+* `cartridge-replicasets` - probe instances, configure replicasets, expel instances;
 * `cartridge-config` - configure cluster, contains this tasks:
   * configure authorization (if `cartridge_auth` is defined);
   * patch application clusterwide config (if `cartridge_app_config` is defined);

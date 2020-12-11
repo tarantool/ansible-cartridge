@@ -11,6 +11,10 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+### Added
+
+- `cartridge-replicasets` tag to the membership stage
+
 ## [1.7.0] - 2020-11-24
 
 ### Fixed
