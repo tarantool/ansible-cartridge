@@ -19,9 +19,7 @@ def get_uuids(control_console, instances_to_find, replicasets, hostvars):
     found_replicasets = []
 
     for instance_name in sorted(instances_to_find):
-        if is_expelled(hostvars[instance_name])
-            or is_stateboard(hostvars[instance_name])
-            or not is_healthy(hostvars[instance_name]['instance_control_sock']):
+        if is_expelled(hostvars[instance_name]) or is_stateboard(hostvars[instance_name]) or not is_healthy(hostvars[instance_name]['instance_control_sock']):
             continue
         response = control_console.eval('''
             local replicasets = require('cartridge').admin_get_replicasets()
