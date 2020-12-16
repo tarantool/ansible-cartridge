@@ -54,6 +54,8 @@
       failover_priority: '{{ item.instances | get_sorted_instances_in_dc(play_hosts) }}'
       roles: '{{ item.roles }}'
       instances: '{{ item.instances }}'
+      vshard_group: '{{ vshard_group }}'
+      weight: '{{ item.weight }}'
     join_host: '{{ replicasets.meta.join_host }}'
   loop: '{{ replicasets.meta.replicasets }}'
   run_once: true
