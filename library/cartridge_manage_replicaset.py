@@ -16,7 +16,7 @@ argument_spec = {
 
 def get_cluster_replicaset(control_console, name):
     # Get all replicasets
-    replicasets = control_console.eval('''
+    func_body = '''
         local replicasets = require('cartridge').admin_get_replicasets()
         local res = {}
         for _, r in ipairs(replicasets) do
@@ -37,7 +37,9 @@ def get_cluster_replicaset(control_console, name):
             })
         end
         return res
-    ''')
+    '''
+
+    replicasets, _ = control_console.eval_res_err(func_body)
 
     # Find by name
     for replicaset in replicasets:
@@ -108,67 +110,66 @@ def edit_replicaset(control_console, cluster_instances,
     }
     """
 
-    replicaset_params = []
+    edit_replicaset_params = {}
     if alias is not None:
-        replicaset_params.append('alias = "{}"'.format(alias))
+        edit_replicaset_params['alias'] = alias
 
     if uuid is not None:
-        replicaset_params.append('uuid = "{}"'.format(uuid))
+        edit_replicaset_params['uuid'] = uuid
 
-    if join_servers:
-        replicaset_params.append('join_servers = {{ {} }}'.format(
-            ', '.join([
-                '{{ uri = "{}" }}'.format(cluster_instances[i]['uri'])
-                for i in join_servers
-                if i in cluster_instances
-            ])
-        ))
-
-    if failover_priority:
-        replicaset_params.append('failover_priority = {{ {} }}'.format(
-            ', '.join([
-                '"{}"'.format(cluster_instances[i]['uuid'])
-                for i in failover_priority
-                if i in cluster_instances
-            ])
-        ))
-
-    if roles:
-        replicaset_params.append('roles = {{ {} }}'.format(', '.join('"{}"'.format(role) for role in roles)))
+    if roles is not None:
+        edit_replicaset_params['roles'] = roles
 
     if all_rw is not None:
-        replicaset_params.append('all_rw = {}'.format('true' if all_rw else 'false'))
+        edit_replicaset_params['all_rw'] = all_rw
 
     if weight is not None:
-        replicaset_params.append('weight = {}'.format(weight))
+        edit_replicaset_params['weight'] = weight
 
     if vshard_group is not None:
-        replicaset_params.append('vshard_group = "{}"'.format(vshard_group))
+        edit_replicaset_params['vshard_group'] = vshard_group
 
-    res = control_console.eval('''
-        local res, err = require('cartridge').admin_edit_topology({{
-            replicasets = {{
-                {{
-                    {}
-                }},
-            }}
-        }})
-        if not res then
-            return {{
-                ret = box.NULL,
-                err = err and err.err or box.NULL,
-            }}
+    if join_servers:
+        edit_replicaset_params['join_servers'] = [
+            {'uri': cluster_instances[i]['uri']}
+            for i in join_servers
+            if i in cluster_instances
+        ]
+
+    if failover_priority:
+        edit_replicaset_params['failover_priority'] = [
+            cluster_instances[i]['uuid']
+            for i in failover_priority
+            if i in cluster_instances
+        ]
+
+    edit_topology_params = {
+        'replicasets': [
+            edit_replicaset_params
+        ]
+    }
+
+    func_body = '''
+        local edit_topology_params = ...
+        local res, err = require('cartridge').admin_edit_topology(edit_topology_params)
+        if err ~= nil then
+            return nil, err
         end
-        local ret = {{
-            replicasets = {{ }},
-            servers = {{ }},
-        }}
-        for _, r in ipairs(res.replicasets or {{}}) do
-            local servers = {{}}
+
+        local ret = {
+            replicasets = {},
+            servers = {},
+        }
+        for _, r in ipairs(res.replicasets or {}) do
+            local servers = {}
             for _, s in ipairs(r.servers) do
-                table.insert(servers, {{ alias = s.alias, priority = s.priority, uuid = s.uuid }})
+                table.insert(servers, {
+                    alias = s.alias,
+                    priority = s.priority,
+                    uuid = s.uuid
+                })
             end
-            table.insert(ret.replicasets, {{
+            table.insert(ret.replicasets, {
                 uuid = r.uuid or box.NULL,
                 alias = r.alias or box.NULL,
                 status = r.status or box.NULL,
@@ -177,32 +178,34 @@ def edit_replicaset(control_console, cluster_instances,
                 roles = r.roles or box.NULL,
                 vshard_group = r.vshard_group or box.NULL,
                 servers = servers,
-            }})
+            })
         end
-        for _, s in ipairs(res.servers or {{}}) do
+        for _, s in ipairs(res.servers or {}) do
             local replicaset = box.NULL
             if s.replicaset then
-                replicaset = {{
+                replicaset = {
                     uuid = s.replicaset.uuid or box.NULL,
                     alias = s.replicaset.alias or box.NULL,
                     roles = s.replicaset.roles or box.NULL,
-                }}
+                }
             end
-            table.insert(ret.servers, {{
+            table.insert(ret.servers, {
                 uuid = s.uuid or box.NULL,
                 uri = s.uri or box.NULL,
                 alias = s.alias or box.NULL,
                 status = s.status or box.NULL,
                 replicaset = replicaset or box.NULL,
-            }})
+            })
         end
-        return {{
-            ret = ret,
-            err = box.NULL,
-         }}
-    '''.format(', '.join(replicaset_params)))
+        return ret
+    '''
 
-    return res['ret'], res['err']
+    ret, err = control_console.eval_res_err(func_body, edit_topology_params)
+
+    if err is not None:
+        return None, err
+
+    return ret, None
 
 
 def create_replicaset(control_console, params):

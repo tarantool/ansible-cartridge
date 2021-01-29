@@ -98,7 +98,7 @@ class TestExpelInstance(unittest.TestCase):
 
         res = call_expel_intstance(self.console_sock, 'r1-master')
         self.assertFalse(res.success)
-        self.assertIn('Failed to expel instance', res.msg)
+        self.assertIn('Failed to expel', res.msg)
 
     def tearDown(self):
         self.instance.stop()

@@ -25,16 +25,16 @@ def probe_server(params):
         if is_expelled(instance_vars) or is_stateboard(instance_vars):
             continue
 
-        res = control_console.eval('''
-            local ok, err = require('cartridge').admin_probe_server('{}')
-            return {{
-                ok = ok and true or false,
-                err = err and err.err or box.NULL
-            }}
-        '''.format(instance_vars['config']['advertise_uri']))
+        advertise_uri = instance_vars['config']['advertise_uri']
+        func_body = '''
+            local advertise_uri = ...
+            return require('cartridge').admin_probe_server(advertise_uri)
+        '''
 
-        if not res['ok'] and i in play_hosts:
-            return ModuleRes(success=False, msg=res['err'])
+        ok, err = control_console.eval_res_err(func_body, advertise_uri)
+
+        if not ok and i in play_hosts:
+            return ModuleRes(success=False, msg=err)
 
     return ModuleRes(success=True)
 

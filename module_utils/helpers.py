@@ -101,7 +101,7 @@ class Console:
         if self.sock is not None:
             self.sock.close()
 
-    def eval(self, func_body):
+    def eval(self, func_body, *args):
         def sendall(msg):
             return self.sock.sendall(msg.encode())
 
@@ -119,20 +119,25 @@ class Console:
                     break
             return data
 
-        cmd = '''
-            local ok, ret = pcall(function()
-                local function f()
-                    require('fiber').self().storage.console = nil
-                    {}
-                end
-                return f()
-            end)
-            ret = require("json").encode({{
-                ok = ok,
-                ret = ret,
-            }})
-            return string.hex(ret)
-        '''.format(func_body)
+        if not args:
+            args = []
+        args_encoded = json.dumps(args)
+
+        cmd_fmt = '''
+local function func(...)
+    {func_body}
+end
+local args = require('json').decode('{args_encoded}')
+local ret = {{
+    load(
+        'local func, args = ... return func(unpack(args))',
+        '@eval'
+    )(func, args)
+}}
+return string.hex(require('json').encode(ret))
+'''
+
+        cmd = cmd_fmt.format(func_body=func_body, args_encoded=args_encoded)
 
         lines = [line.strip() for line in cmd.split('\n') if line.strip()]
         cmd = ' '.join(lines) + '\n'
@@ -145,17 +150,35 @@ class Console:
         hex_output = re.sub(r"'?\n...\n$", '', hex_output)
         hex_output = re.sub(r"\n\s*", '', hex_output)
 
-        try:
-            output = bytearray.fromhex(hex_output).decode('utf-8')
-        except Exception:
-            raise Exception(hex_output)
+        if hex_output.startswith("error:"):
+            err = re.sub(r"error:\s+", '', hex_output)
+            raise CartridgeException(cartridge_errcodes.FUNCTION_ERROR, err)
 
-        ret = json.loads(output)
-        if not ret['ok']:
-            errmsg = 'Error while running function: {}. (Function: {})'.format(ret['ret'], func_body)
-            raise CartridgeException(cartridge_errcodes.FUNCTION_ERROR, errmsg)
+        output = bytearray.fromhex(hex_output).decode('utf-8')
 
-        return ret['ret']
+        data = json.loads(output)
+        return data
+
+    def eval_res_err(self, func_body, *args):
+        data = self.eval(func_body, *args)
+
+        assert len(data) <= 2
+
+        if len(data) == 0:
+            # return nil
+            data.append(None)
+
+        if len(data) == 1:
+            # return res
+            data.append(None)
+
+        # return res, err
+
+        # err can be tarantool/errors instance
+        if isinstance(data[1], dict) and data[1].get('err') is not None:
+            data[1] = data[1].get('err')
+
+        return data
 
     def __del__(self):
         self.close()
@@ -166,7 +189,7 @@ def get_control_console(socket_path):
 
 
 def get_all_cluster_instances(control_console):
-    servers = control_console.eval('''
+    data = control_console.eval('''
         local instances = require('cartridge').admin_get_servers()
         local res = {}
         for _, i in ipairs(instances) do
@@ -189,7 +212,7 @@ def get_all_cluster_instances(control_console):
         return res
     ''')
 
-    return servers
+    return data[0]
 
 
 def is_expelled(host_vars):
@@ -201,6 +224,20 @@ def is_stateboard(host_vars):
 
 
 def box_cfg_was_called(control_console):
-    return control_console.eval('''
+    data = control_console.eval('''
         return type(box.cfg) ~= 'function'
     ''')
+    return data[0]
+
+
+def get_box_cfg(control_console):
+    cfg, _ = control_console.eval_res_err('''
+        return type(box.cfg) ~= 'function' and box.cfg or box.NULL
+    ''')
+    return cfg
+
+
+def filter_none_values(d):
+    return {
+        k: v for k, v in d.items() if v is not None
+    }

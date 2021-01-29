@@ -3,6 +3,7 @@
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
+from ansible.module_utils.helpers import filter_none_values
 
 
 argument_spec = {
@@ -12,50 +13,33 @@ argument_spec = {
 
 
 def get_cluster_auth_params(control_console):
-    auth_params = control_console.eval('''
+    auth_params, _ = control_console.eval_res_err('''
         local auth = require('cartridge.auth')
         return auth.get_params()
     ''')
-    return True, auth_params
+    return auth_params
 
 
-def edit_cluster_auth_params(control_console, enabled=None,
-                             cookie_max_age=None, cookie_renew_age=None):
+def edit_cluster_auth_params(control_console, auth_params):
     # Set params
-    auth_params_lua = []
 
-    if enabled is not None:
-        auth_params_lua.append('enabled = {}'.format('true' if enabled else 'false'))
-
-    if cookie_max_age is not None:
-        auth_params_lua.append('cookie_max_age = {}'.format(cookie_max_age))
-
-    if cookie_renew_age is not None:
-        auth_params_lua.append('cookie_renew_age = {}'.format(cookie_renew_age))
-
-    res = control_console.eval('''
+    func_body = '''
         local auth = require('cartridge.auth')
-        local ok, err = auth.set_params({{
-            {}
-        }})
-        return {{
-            ok = ok and true or false,
-            err = err and err.err or box.NULL
-        }}
-    '''.format(
-        ', '.join(auth_params_lua)
-    ))
+        local auth_params = ...
+        return auth.set_params(auth_params)
+    '''
+    ok, err = control_console.eval_res_err(func_body, filter_none_values(auth_params))
 
-    if not res['ok']:
-        return False, res['err']
+    if not ok:
+        return None, err
 
     # Get new params
-    ok, new_cluster_auth_params = get_cluster_auth_params(control_console)
-    return ok, new_cluster_auth_params
+    new_cluster_auth_params = get_cluster_auth_params(control_console)
+    return new_cluster_auth_params, None
 
 
 def check_cluster_auth_implements_all(control_console):
-    auth_params = control_console.eval('''
+    auth_params, _ = control_console.eval_res_err('''
         local auth = require('cartridge.webui.api-auth')
         return auth.get_auth_params()
     ''')
@@ -70,87 +54,76 @@ def check_cluster_auth_implements_all(control_console):
 
 
 def get_cluster_users(control_console):
-    res = control_console.eval('''
+    users, err = control_console.eval_res_err('''
         local auth = require('cartridge.auth')
-        local users, err = auth.list_users()
-        return {
-            ok = users ~= nil,
-            users = users ~= nil and users or err.err
-        }
+        return auth.list_users()
     ''')
 
-    return res['ok'], res['users']
+    return users, err
 
 
 def add_cluster_user(control_console, user):
-    add_user_params_lua = [
-        '"{}"'.format(user['username']),
-    ]
-    add_user_params_lua.append('"{}"'.format(user['password']) if 'password' in user else 'nil')
-    add_user_params_lua.append('"{}"'.format(user['fullname']) if 'fullname' in user else 'nil')
-    add_user_params_lua.append('"{}"'.format(user['email']) if 'email' in user else 'nil')
-
-    res = control_console.eval('''
+    func_body = '''
         local auth = require('cartridge.auth')
-        local user, err = auth.add_user({})
-        return {{
-            ok = user ~= nil,
-            err = err and err.err or box.NULL
-        }}
-    '''.format(', '.join(add_user_params_lua)))
+        local user = ...
 
-    return res['ok'], res['err']
+        for param_name in pairs(user) do
+            if user[param_name] == nil then
+                user[param_name] = nil
+            end
+        end
+
+        return auth.add_user(user.username, user.password, user.fullname, user.email)
+    '''
+
+    user, err = control_console.eval_res_err(func_body, user)
+
+    return user, err
 
 
 def delete_cluster_user(control_console, user):
-    res = control_console.eval('''
+    func_body = '''
         local auth = require('cartridge.auth')
-        local user, err = auth.remove_user('{}')
-        return {{
-            ok = user ~= nil,
-            err = err and err.err or box.NULL
-        }}
-    '''.format(user['username']))
+        local username = ...
+        return auth.remove_user(username)
+    '''
 
-    return res['ok'], res['err']
+    user, err = control_console.eval_res_err(func_body, user['username'])
+    return user, err
 
 
 def edit_cluster_user(control_console, user):
-    edit_user_params_lua = [
-        '"{}"'.format(user['username']),
-    ]
-    edit_user_params_lua.append('"{}"'.format(user['password']) if 'password' in user else 'nil')
-    edit_user_params_lua.append('"{}"'.format(user['fullname']) if 'fullname' in user else 'nil')
-    edit_user_params_lua.append('"{}"'.format(user['email']) if 'email' in user else 'nil')
-
-    res = control_console.eval('''
+    func_body = '''
         local auth = require('cartridge.auth')
-        local user, err = auth.edit_user({})
-        return {{
-            ok = user ~= nil,
-            err = err and err.err or box.NULL
-        }}
-    '''.format(', '.join(edit_user_params_lua)))
+        local user = ...
 
-    if not res['ok']:
-        return False, res['err']
+        for param_name in pairs(user) do
+            if user[param_name] == nil then
+                user[param_name] = nil
+            end
+        end
+
+        return auth.edit_user(user.username, user.password, user.fullname, user.email)
+    '''
+    user, err = control_console.eval_res_err(func_body, user)
+
+    if err is not None:
+        return None, err
 
     # Get user
-    res = control_console.eval('''
+    func_body = '''
         local auth = require('cartridge.auth')
-        local user, err = auth.get_user('{}')
-        return {{
-            ok = user ~= nil,
-            user = user ~= nil and user or err.err
-        }}
-    '''.format(user['username']))
+        local username = ...
+        return auth.get_user(username)
+    '''
+    user, err = control_console.eval_res_err(
+        func_body, user['username']
+    )
 
-    if not res['ok']:
-        return False, res['err']
+    if err is not None:
+        return None, err
 
-    edited_user = res['user']
-
-    return True, edited_user
+    return user, None
 
 
 def user_is_deleted(user):
@@ -192,29 +165,28 @@ def manage_auth(params):
             return ModuleRes(success=False, msg=errmsg)
 
     # Manage auth params
-    ok, cluster_auth_params = get_cluster_auth_params(control_console)
-    if not ok:
-        return ModuleRes(success=False, msg=cluster_auth_params)
+    common_auth_params = auth_params.copy()
+    del common_auth_params['users']
 
-    ok, new_cluster_auth_params = edit_cluster_auth_params(
+    current_auth_params = get_cluster_auth_params(control_console)
+
+    new_cluster_auth_params, err = edit_cluster_auth_params(
         control_console,
-        enabled=auth_params.get('enabled'),
-        cookie_max_age=auth_params.get('cookie_max_age'),
-        cookie_renew_age=auth_params.get('cookie_renew_age'),
+        common_auth_params,
     )
-    if not ok:
-        return ModuleRes(success=False, msg=new_cluster_auth_params)
+    if err is not None:
+        return ModuleRes(success=False, msg=err)
 
-    params_changed = new_cluster_auth_params != cluster_auth_params
+    params_changed = new_cluster_auth_params != current_auth_params
 
     # Manage users
     if auth_params.get('users') is None:
         return ModuleRes(success=True, changed=params_changed)
 
     users = auth_params['users']
-    ok, cluster_users = get_cluster_users(control_console)
-    if not ok:
-        return ModuleRes(success=False, msg=cluster_users)
+    cluster_users, err = get_cluster_users(control_console)
+    if err is not None:
+        return ModuleRes(success=False, msg=err)
 
     # find new users
     new_usernames = set(u['username'] for u in users).difference(
@@ -244,8 +216,8 @@ def manage_auth(params):
     users_changed = False
 
     for user in users_to_add:
-        ok, err = add_cluster_user(control_console, user)
-        if not ok:
+        _, err = add_cluster_user(control_console, user)
+        if err is not None:
             return ModuleRes(success=False, msg=err)
 
         users_changed = True
@@ -253,15 +225,15 @@ def manage_auth(params):
     for user in users_to_edit:
         cluster_user = [u for u in cluster_users if u['username'] == user['username']][0]
 
-        ok, edited_user = edit_cluster_user(control_console, user)
-        if not ok:
-            return ModuleRes(success=False, msg=edited_user)
+        edited_user, err = edit_cluster_user(control_console, user)
+        if err is not None:
+            return ModuleRes(success=False, msg=err)
 
         users_changed = users_changed or not users_are_equal(cluster_user, edited_user)
 
     for user in users_to_delete:
-        ok, err = delete_cluster_user(control_console, user)
-        if not ok:
+        _, err = delete_cluster_user(control_console, user)
+        if err is not None:
             return ModuleRes(success=False, msg=err)
 
         users_changed = True

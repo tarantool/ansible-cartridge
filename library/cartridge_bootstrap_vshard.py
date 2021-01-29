@@ -12,23 +12,19 @@ argument_spec = {
 
 def bootstrap_vshard(params):
     control_console = get_control_console(params['control_sock'])
-    can_bootstrap = control_console.eval('''
+    can_bootstrap, _ = control_console.eval_res_err('''
         return require('cartridge.vshard-utils').can_bootstrap()
     ''')
 
     if not can_bootstrap:
         return ModuleRes(success=True, changed=False)
 
-    res = control_console.eval('''
-        local ok, err = require('cartridge.admin').bootstrap_vshard()
-        return {
-            ok = ok or box.NULL,
-            err = err and err.err or box.NULL
-        }
+    ok, err = control_console.eval_res_err('''
+        return require('cartridge.admin').bootstrap_vshard()
     ''')
 
-    if not res['ok']:
-        errmsg = 'Vshard bootstrap failed: {}'.format(res['err'])
+    if not ok:
+        errmsg = 'Vshard bootstrap failed: {}'.format(err)
         return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=True)

@@ -291,7 +291,6 @@ class TestFailover(unittest.TestCase):
         self.assertEqual(calls[0], {
             'mode': 'stateful',
             'state_provider': 'etcd2',
-            'etcd2_params': [],
         })
 
         # stateful failover enabled - params aren't changed
@@ -380,6 +379,7 @@ class TestFailover(unittest.TestCase):
             'mode': 'stateful',
             'state_provider': 'tarantool',
             'tarantool_params': STATEBOARD_PARAMS,
+            'etcd2_params': ETCD2_PARAMS,
         })
 
         # failover disabled -> enable etcd2
@@ -398,6 +398,7 @@ class TestFailover(unittest.TestCase):
         self.assertEqual(calls[0], {
             'mode': 'stateful',
             'state_provider': 'etcd2',
+            'tarantool_params': STATEBOARD_PARAMS,
             'etcd2_params': ETCD2_PARAMS,
         })
 
@@ -406,6 +407,7 @@ class TestFailover(unittest.TestCase):
             'mode': 'stateful',
             'state_provider': 'tarantool',
             'tarantool_params': STATEBOARD_PARAMS,
+            'etcd2_params': ETCD2_PARAMS,
         })
         self.instance.clear_calls('failover_set_params')
 
@@ -421,6 +423,7 @@ class TestFailover(unittest.TestCase):
         self.assertEqual(calls[0], {
             'mode': 'stateful',
             'state_provider': 'etcd2',
+            'tarantool_params': STATEBOARD_PARAMS,
             'etcd2_params': ETCD2_PARAMS,
         })
 

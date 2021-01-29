@@ -5,6 +5,7 @@ from ansible.module_utils.helpers import ModuleRes, CartridgeException, cartridg
 from ansible.module_utils.helpers import get_control_console
 from ansible.module_utils.helpers import dynamic_box_cfg_params
 from ansible.module_utils.helpers import box_cfg_was_called
+from ansible.module_utils.helpers import get_box_cfg
 
 import os
 
@@ -23,13 +24,14 @@ argument_spec = {
 
 
 def read_yaml_file_section(filepath, control_console, section):
-    sections = control_console.eval('''
-        local file = require('fio').open('{}')
+    func_body = '''
+        local filepath = ...
+        local file = require('fio').open(filepath)
         if file == nil then
-            error('Failed to open instance config file')
+            return nil, 'Failed to open instance config file'
         end
 
-        local buf = {{}}
+        local buf = {}
         while true do
             local val = file:read(1024)
             if val == nil then
@@ -44,16 +46,19 @@ def read_yaml_file_section(filepath, control_console, section):
         local data = table.concat(buf, '')
         local ok, ret = pcall(require('yaml').decode, data)
         if not ok then
-            error('Failed to decode instance config from YAML')
+            return nil, 'Failed to decode instance config from YAML'
         end
         return ret
-    '''.format(filepath))
+    '''
+
+    sections, err = control_console.eval_res_err(func_body, filepath)
+    if err is not None:
+        return None, err
 
     if section not in sections:
-        errmsg = 'File {} does not contain section: {}'.format(filepath, section)
-        raise CartridgeException(cartridge_errcodes.MISSED_SECTION, errmsg)
+        return None, 'File {} does not contain section: {}'.format(filepath, section)
 
-    return sections[section]
+    return sections[section], None
 
 
 def check_conf_updated(new_conf, old_conf, ignore_keys=[]):
@@ -70,12 +75,6 @@ def check_conf_updated(new_conf, old_conf, ignore_keys=[]):
                 return True
 
     return False
-
-
-def get_current_cfg(control_console):
-    return control_console.eval('''
-        return type(box.cfg) ~= 'function' and box.cfg or box.NULL
-    ''')
 
 
 def needs_restart(params):
@@ -122,21 +121,27 @@ def needs_restart(params):
         return ModuleRes(success=True, changed=True)
 
     # check if instance config was changed (except dynamic params)
-    current_instance_conf = read_yaml_file_section(
+    current_instance_conf, err = read_yaml_file_section(
         instance_conf_file,
         control_console,
         conf_section_name
     )
+    if err is not None:
+        return ModuleRes(success=False, msg="Failed to read current instance config: %s" % err)
+
     if check_conf_updated(new_instance_conf, current_instance_conf, dynamic_box_cfg_params):
         return ModuleRes(success=True, changed=True)
 
     if not stateboard:
         # check if default config was changed (except dynamic params)
-        current_default_conf = read_yaml_file_section(
+        current_default_conf, err = read_yaml_file_section(
             default_conf_path,
             control_console,
             appname
         )
+        if err is not None:
+            return ModuleRes(success=False, msg="Failed to read current default config: %s" % err)
+
         new_default_conf.update({'cluster_cookie': cluster_cookie})
         if check_conf_updated(new_default_conf, current_default_conf, dynamic_box_cfg_params):
             return ModuleRes(success=True, changed=True)
@@ -145,7 +150,7 @@ def needs_restart(params):
     if not box_cfg_was_called(control_console):
         return ModuleRes(success=True, changed=True)
 
-    current_cfg = get_current_cfg(control_console)
+    current_cfg = get_box_cfg(control_console)
     if current_cfg is None:
         return ModuleRes(success=True, changed=True)
 
