@@ -5,6 +5,7 @@ from ansible.module_utils.helpers import ModuleRes, CartridgeException, cartridg
 from ansible.module_utils.helpers import get_control_console
 from ansible.module_utils.helpers import dynamic_box_cfg_params, memory_size_box_cfg_params
 from ansible.module_utils.helpers import box_cfg_was_called
+from ansible.module_utils.helpers import get_box_cfg
 
 import os
 
@@ -16,34 +17,6 @@ argument_spec = {
 }
 
 
-def serialize_dict(d):
-    parts = []
-
-    for k, v in d.items():
-        value_str = None
-        if type(v) == str:
-            value_str = "'%s'" % v
-        elif type(v) == float or type(v) == int:
-            value_str = "%s" % v
-        elif type(v) == bool:
-            value_str = 'true' if v else 'false'
-        else:
-            raise CartridgeException(
-                cartridge_errcodes.BAD_VALUE_TYPE,
-                "Unknown value type: {}" % type(v)
-            )
-
-        parts.append("%s = %s" % (k, value_str))
-
-    return '{ %s }' % ', '.join(parts)
-
-
-def get_box_cfg(control_console):
-    return control_console.eval('''
-        return type(box.cfg) == 'table' and box.cfg or box.NULL
-    ''')
-
-
 def is_dynamic_param(param_name):
     return param_name in dynamic_box_cfg_params
 
@@ -52,47 +25,46 @@ def is_memory_size_param(param_name):
     return param_name in memory_size_box_cfg_params
 
 
-def change_memory_size(param_name, cartridge_defaults, config, control_console):
+def change_memory_size(current_box_cfg, param_name, cartridge_defaults, config, control_console):
     new_memory_size = config.get(param_name, cartridge_defaults.get(param_name))
 
     if new_memory_size is None:
-        return False
+        return False, None
 
     # Get current memory size
-    current_memory_size = control_console.eval('''
-        return type(box.cfg) ~= 'function' and box.cfg.{} or box.NULL
-    '''.format(param_name))
+    current_memory_size = current_box_cfg.get(param_name)
 
     if current_memory_size is None:
         # box.cfg wasn't called
-        return False
+        return False, None
 
     if new_memory_size <= current_memory_size:
-        return False
+        return False, None
 
     # try to increase memory size
-    increased = control_console.eval('''
+    func_body = '''
+        local param_name, new_memory_size = ...
         local ok, err = pcall(function()
-            box.cfg {{ {param_name} = {new_memory_size} }}
+            box.cfg {
+                [param_name] = new_memory_size
+            }
         end)
         if not ok then
             if tostring(err):find("cannot decrease memory size at runtime") == nil then
-                error('failed to set {param_name}: ' .. tostring(err))
+                return nil, string.format('failed to set %s: %s', param_name, err)
             end
         end
         return ok
-    '''.format(param_name=param_name, new_memory_size=new_memory_size))
+    '''
+    ok, err = control_console.eval_res_err(func_body, param_name, new_memory_size)
+    if not ok:
+        return False, err
 
-    return increased
+    return True, None
 
 
-def change_dynamic_params(cartridge_defaults, config, control_console):
+def change_dynamic_params(current_box_cfg, cartridge_defaults, config, control_console):
     params = dict()
-
-    # Get current values
-    current_box_cfg = get_box_cfg(control_console)
-    if current_box_cfg is None:
-        return False
 
     for param_name, param_value in config.items():
         if is_dynamic_param(param_name) and not is_memory_size_param(param_name):
@@ -107,12 +79,11 @@ def change_dynamic_params(cartridge_defaults, config, control_console):
     if not params:
         return False
 
-    serialized_params = serialize_dict(params)
-
-    new_box_cfg = control_console.eval('''
-        box.cfg({serialized_params})
+    func_body = '''
+        box.cfg(...)
         return box.cfg
-    '''.format(serialized_params=serialized_params))
+    '''
+    new_box_cfg, _ = control_console.eval_res_err(func_body, params)
 
     changed = new_box_cfg != current_box_cfg
     return changed
@@ -143,17 +114,24 @@ def manage_instance(params):
     if not box_cfg_was_called(control_console):
         return ModuleRes(success=True, changed=False)
 
+    current_box_cfg = get_box_cfg(control_console)
+
     # Change memory size
     memory_size_changed = False
 
     for param_name in memory_size_box_cfg_params:
         if param_name in config or param_name in cartridge_defaults:
-            memory_size_changed = memory_size_changed or change_memory_size(
-                param_name, cartridge_defaults, config, control_console
+            memory_param_changed, err = change_memory_size(
+                current_box_cfg, param_name, cartridge_defaults, config, control_console
             )
 
+            if err is not None:
+                return ModuleRes(success=False, msg="Failed to change memory size in runtime: %s" % err)
+
+            memory_size_changed = memory_size_changed or memory_param_changed
+
     # Change dynamic params
-    dynamic_params_changed = change_dynamic_params(cartridge_defaults, config, control_console)
+    dynamic_params_changed = change_dynamic_params(current_box_cfg, cartridge_defaults, config, control_console)
 
     changed = memory_size_changed or dynamic_params_changed
 

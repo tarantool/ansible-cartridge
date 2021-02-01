@@ -14,7 +14,7 @@ def get_control_instance(params):
     control_console = get_control_console(params['control_sock'])
     control_instance = ''
 
-    members = control_console.eval('''
+    members, _ = control_console.eval_res_err('''
         return require('membership').members()
     ''')
 

@@ -16,8 +16,8 @@ DEFAULT_STATE_PROVIDER = 'tarantool'
 
 
 def get_tarantool_version(control_console):
-    version = control_console.eval('''
-        return require('cartridge').VERSION or box.NULL
+    version, _ = control_console.eval_res_err('''
+        return require('cartridge').VERSION
     ''')
     return version
 
@@ -25,7 +25,7 @@ def get_tarantool_version(control_console):
 def manage_failover_old(control_console, failover_params):
     failover_enabled = failover_params['mode'] == 'eventual'
 
-    current_failover = control_console.eval('''
+    current_failover, _ = control_console.eval_res_err('''
         return require('cartridge').admin_get_failover()
     ''')
 
@@ -34,84 +34,55 @@ def manage_failover_old(control_console, failover_params):
 
     function_name = 'admin_enable_failover' if failover_enabled else 'admin_disable_failover'
 
-    res = control_console.eval('''
-        local failover, err = require('cartridge').{}()
-        return {{
-            ok = failover ~= nil,
-            err = err and err.err or box.NULL
-        }}
-    '''.format(function_name))
+    func_body = '''
+        local function_name = ...
+        return require('cartridge')[function_name]()
+    '''
+    _, err = control_console.eval_res_err(func_body, function_name)
 
-    if not res['ok']:
-        errmsg = 'Failed {}: {}'.format(function_name, res['err'])
+    if err is not None:
+        errmsg = 'Failed {}: {}'.format(function_name, err)
         return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=True)
 
 
-def manage_failover_new(control_console, failover_params):
-    current_failover_params = control_console.eval('''
+def manage_failover_new(control_console, passed_failover_params):
+    current_failover_params, _ = control_console.eval_res_err('''
         return require('cartridge').failover_get_params()
     ''')
 
-    mode = failover_params['mode']
+    mode = passed_failover_params['mode']
 
-    lua_params = [
-        'mode = "{}"'.format(mode)
-    ]
+    failover_params = {
+        'mode': mode,
+    }
 
     if mode == 'stateful':
-        state_provider = failover_params.get('state_provider')
+        state_provider = passed_failover_params.get('state_provider')
         if state_provider == 'stateboard':
-            lua_params.append('state_provider = "tarantool"')
+            failover_params['state_provider'] = 'tarantool'
+        else:
+            failover_params['state_provider'] = state_provider
 
-            stateboard_params = failover_params.get('stateboard_params')
+    stateboard_params = passed_failover_params.get('stateboard_params')
+    if stateboard_params:
+        failover_params['tarantool_params'] = stateboard_params
 
-            lua_stateboard_params = []
-            if stateboard_params is not None:
-                for string_param in ['uri', 'password']:
-                    if stateboard_params.get(string_param) is not None:
-                        lua_stateboard_params.append('{} = "{}"'.format(string_param, stateboard_params[string_param]))
+    etcd2_params = passed_failover_params.get('etcd2_params')
+    if etcd2_params:
+        failover_params['etcd2_params'] = etcd2_params
 
-            if lua_stateboard_params:
-                lua_params.append('tarantool_params = {{ {} }}'.format(', '.join(lua_stateboard_params)))
-        elif state_provider == 'etcd2':
-            lua_params.append('state_provider = "etcd2"')
+    func_body = '''
+        return require('cartridge').failover_set_params(...)
+    '''
+    res, err = control_console.eval_res_err(func_body, failover_params)
 
-            etcd2_params = failover_params.get('etcd2_params')
-
-            lua_etcd2_params = []
-            if etcd2_params is not None:
-                for string_param in ['prefix', 'username', 'password']:
-                    if etcd2_params.get(string_param) is not None:
-                        lua_etcd2_params.append('{} = "{}"'.format(string_param, etcd2_params[string_param]))
-
-                if etcd2_params.get('lock_delay') is not None:
-                    lua_etcd2_params.append('lock_delay = {}'.format(etcd2_params['lock_delay']))
-
-                if etcd2_params.get('endpoints') is not None:
-                    lua_etcd2_params.append('endpoints = {{ {} }}'.format(
-                        ", ".join('"{}"'.format(endpoint) for endpoint in etcd2_params['endpoints'])
-                    ))
-
-            lua_params.append('etcd2_params = {{ {} }}'.format(', '.join(lua_etcd2_params)))
-
-    res = control_console.eval('''
-        local ok, err = require('cartridge').failover_set_params({{
-            {}
-        }})
-
-        return {{
-            ok = ok ~= nil and ok or box.NULL,
-            err = err and err.err or box.NULL,
-        }}
-    '''.format(', '.join(lua_params)))
-
-    if not res['ok']:
-        errmsg = 'Failed to set failover params: {}'.format(res['err'])
+    if err is not None:
+        errmsg = 'Failed to set failover params: {}'.format(err)
         return ModuleRes(success=False, msg=errmsg)
 
-    new_failover_params = control_console.eval('''
+    new_failover_params, _ = control_console.eval_res_err('''
         return require('cartridge').failover_get_params()
     ''')
 

@@ -1,7 +1,5 @@
 #!/usr/bin/python
 
-import json
-
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
@@ -30,19 +28,13 @@ def config_app(params):
     }
 
     # Get current config
-    res = control_console.eval('''
-        local cartridge = require('cartridge')
-        local config = cartridge.config_get_readonly()
-        return {
-            ok = config ~= nil,
-            config = config ~= nil and config or "Cluster isn't bootstrapped yet",
-        }
+    current_config, _ = control_console.eval_res_err('''
+        local config = require('cartridge').config_get_readonly()
+        return config
     ''')
-    if not res['ok']:
-        errmsg = 'Config patch failed: {}'.format(res['config'])
-        return ModuleRes(success=False, msg=errmsg)
 
-    current_config = res['config']
+    if config is None:
+        return ModuleRes(success=False, msg="Cluster isn't bootstrapped yet")
 
     # Patch it
     patch = {}
@@ -65,18 +57,14 @@ def config_app(params):
     if not changed:
         return ModuleRes(success=True, changed=False)
 
-    res = control_console.eval('''
-        local cartridge = require('cartridge')
-        local patch = require('json').decode('{}')
-        local ok, err = cartridge.config_patch_clusterwide(patch)
-        return {{
-            ok = ok == true,
-            err = err and err.err or box.NULL
-        }}
-    '''.format(json.dumps(patch)))
+    func_body = '''
+        local patch = ...
+        return require('cartridge').config_patch_clusterwide(patch)
+    '''
+    ok, err = control_console.eval_res_err(func_body, patch)
 
-    if not res['ok']:
-        errmsg = 'Config patch failed: {}'.format(res['err'])
+    if not ok:
+        errmsg = 'Config patch failed: {}'.format(err)
         return ModuleRes(success=False, msg=errmsg)
 
     return ModuleRes(success=True, changed=True)

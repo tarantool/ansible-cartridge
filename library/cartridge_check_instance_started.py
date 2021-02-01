@@ -14,15 +14,15 @@ argument_spec = {
 def check_instance_started(params):
     try:
         control_console = get_control_console(params['control_sock'])
-        ok = True
+        instance_is_alive = True
         if not params['stateboard']:
-            ok = control_console.eval('''
+            instance_is_alive, _ = control_console.eval_res_err('''
                 return require('membership').myself().status == 'alive'
             ''')
     except CartridgeException as e:
         return ModuleRes(success=False, msg=str(e))
 
-    return ModuleRes(success=ok)
+    return ModuleRes(success=instance_is_alive)
 
 
 def main():

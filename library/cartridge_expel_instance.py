@@ -28,24 +28,24 @@ def expel_intstance(params):
     if cluster_instance is None or cluster_instance.get('uuid') is None:
         return ModuleRes(success=True, changed=False)
 
-    res = control_console.eval('''
-        local res, err = require('cartridge').admin_edit_topology({{
-            servers = {{
-                {{
-                    uuid = "{}",
-                    expelled = true,
-                }}
-            }}
-        }})
-        return {{
-            ok = err == nil,
-            err = err ~= nil and err.err or box.NULL
-        }}
-    '''.format(cluster_instance['uuid']))
+    edit_instance_params = {
+        'uuid': cluster_instance['uuid'],
+        'expelled': True,
+    }
+    edit_topology_params = {
+        'servers': [
+            edit_instance_params,
+        ]
+    }
 
-    if not res['ok']:
-        errmsg = 'Failed to expel instance {}: {}'.format(instance_alias, res['err'])
-        return ModuleRes(success=False, msg=errmsg)
+    func_body = '''
+        local uuid = ...
+        return require('cartridge').admin_edit_topology(...)
+    '''
+    _, err = control_console.eval_res_err(func_body, edit_topology_params)
+
+    if err is not None:
+        return ModuleRes(success=False, msg='Failed to expel: %s' % err)
 
     return ModuleRes(success=True, changed=True)
 
