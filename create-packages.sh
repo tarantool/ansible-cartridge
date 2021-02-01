@@ -19,8 +19,12 @@ appname=myapp
 version=1.0.0-0
 
 pack_flags=''
-if [[ `tarantool -V` == *"Target: Darwin"* ]]; then
-    pack_flags+='--use-docker'
+if [[ $(tarantool -V) == *"Target: Darwin"* ]]; then
+    pack_flags+=' --use-docker'
+    if [ -z "${TARANTOOL_SDK_PATH}" ]; then
+        echo "Set the path to Linux Tarantool SDK using the TARANTOOL_SDK_PATH environment variable!"
+        exit 1
+    fi
 fi
 
 mkdir ${packages_dirname}
@@ -28,7 +32,9 @@ pushd ${packages_dirname}
 
 cartridge create --name ${appname}
 
-sed -i '/cartridge.cfg({/a \ \ \ \ vshard_groups = {hot = { bucket_count = 20000 }},' myapp/init.lua
+awk '{gsub(/cartridge.cfg\({/, "&\n    vshard_groups = { hot = { bucket_count = 20000 } },")}1' \
+    ${appname}/init.lua >${appname}/temp.lua
+mv ${appname}/temp.lua ${appname}/init.lua
 
 cartridge pack rpm --version ${version} ${pack_flags} ${appname}
 cartridge pack deb --version ${version} ${pack_flags} ${appname}

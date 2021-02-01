@@ -24,7 +24,7 @@ jobs:
       - name: Install requirements
         run: |
           curl -L https://tarantool.io/JRceXH/release/2.4/installer.sh | bash
-          pip3 install -r unit/requirements.txt
+          pip3 install --upgrade -r requirements.txt
 
       - name: Run linter
         run: python3 -m flake8 library unit

@@ -7,4 +7,6 @@ RUN set -x \
         musl-dev libffi-dev openssl-dev openssh bash
 
 RUN apk add py3-virtualenv
-RUN virtualenv activate && pip3 install --upgrade ansible==2.8 molecule==3.0.2 docker flake8==3.8.1 testinfra
+
+COPY requirements.txt /tmp/
+RUN virtualenv activate && pip3 install --upgrade -r /tmp/requirements.txt
