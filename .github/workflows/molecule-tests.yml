@@ -20,8 +20,6 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
-        with:
-          path: '${{ github.repository }}'
 
       - name: Setup python
         uses: actions/setup-python@v2
@@ -30,23 +28,17 @@ jobs:
 
       - name: Install molecule requirements
         run: |
-          pip3 install --upgrade \
-            ansible==2.8 \
-            molecule==3.0.2 \
-            docker \
-            flake8==3.8.1 \
-            testinfra
+          pip3 install --upgrade -r requirements.txt
 
       - name: Cache test packages
         id: cache-packages
         uses: actions/cache@v2
         with:
-          path: '${{ github.repository }}/packages'
+          path: 'packages'
           key: ce-${{ matrix.tarantool-version }}-${{ env.CARTRIDGE_CLI_VERSION }}
 
       - name: Create test packages
         if: steps.cache-packages.outputs.cache-hit != 'true'
-        working-directory: '${{ github.repository }}'
         run: |
           sudo apt -y update
           sudo apt -y install git gcc make cmake unzip
@@ -62,7 +54,6 @@ jobs:
           ./create-packages.sh
 
       - name: Molecule tests
-        working-directory: '${{ github.repository }}'
         run: molecule test
 
   molecule-tests-ee:
@@ -74,8 +65,6 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
-        with:
-          path: '${{ github.repository }}'
 
       - name: Setup python
         uses: actions/setup-python@v2
@@ -84,23 +73,17 @@ jobs:
 
       - name: Install molecule requirements
         run: |
-          pip3 install --upgrade \
-            ansible==2.8 \
-            molecule==3.0.2 \
-            docker \
-            flake8==3.8.1 \
-            testinfra
+          pip3 install --upgrade -r requirements.txt
 
       - name: Cache test packages
         id: cache-packages
         uses: actions/cache@v2
         with:
-          path: '${{ github.repository }}/packages'
+          path: 'packages'
           key: sdk-${{ matrix.sdk-version }}
 
       - name: Create test packages
         if: steps.cache-packages.outputs.cache-hit != 'true'
-        working-directory: '${{ github.repository }}'
         run: |
           sudo apt -y update
           sudo apt -y install git gcc make cmake unzip
@@ -120,5 +103,4 @@ jobs:
           ./create-packages.sh
 
       - name: Molecule tests
-        working-directory: '${{ github.repository }}'
         run: molecule test

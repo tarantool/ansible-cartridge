@@ -1,4 +1,0 @@
-tenacity
-ansible
-flake8==3.8.1
-parameterized==0.7.4

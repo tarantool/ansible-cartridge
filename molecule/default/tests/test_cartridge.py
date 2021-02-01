@@ -15,7 +15,7 @@ ansible_runner = testinfra.utils.ansible_runner.AnsibleRunner(
 testinfra_hosts = ansible_runner.get_hosts('all')
 
 APP_NAME = 'myapp'
-
+HOSTS_PATH = os.path.join('molecule', 'default', 'hosts.yml')
 
 __authorized_session = None
 
@@ -41,12 +41,12 @@ def check_conf_file(conf_file, conf_section, conf):
 
 
 def get_cluster_cookie():
-    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
     return inventory.groups['cluster'].get_vars()['cartridge_cluster_cookie']
 
 
 def get_configured_instances():
-    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
     configured_instances = {
         inventory.hosts[i].get_vars()['inventory_hostname']: inventory.hosts[i].get_vars()
         for i in inventory.hosts
@@ -55,18 +55,18 @@ def get_configured_instances():
 
 
 def get_instance_vars(instance):
-    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
     return inventory.hosts[instance].get_vars()
 
 
 def get_variable_vaule(name, default=None):
-    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
     all_group_vars = inventory.groups['cluster'].get_vars()
     return all_group_vars[name] if name in all_group_vars else default
 
 
 def get_configured_replicasets():
-    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
     variable_manager = VariableManager(loader=DataLoader(), inventory=inventory)
 
     replicasets = {}
@@ -133,7 +133,7 @@ def aliases_in_priority_order(replicaset_servers):
 
 def test_services_status_and_config(host):
     hostname = host.check_output('hostname -s')
-    inventory = InventoryManager(loader=DataLoader(), sources='hosts.yml')
+    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
 
     host_instances = [
         i for i in inventory.hosts

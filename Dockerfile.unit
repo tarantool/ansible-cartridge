@@ -9,5 +9,5 @@ RUN set -x \
     && curl -s https://packagecloud.io/install/repositories/tarantool/${TARANTOOL_BRANCH}/script.rpm.sh | bash \
     && yum -y install tarantool
 
-COPY unit/requirements.txt /tmp/unit/
-RUN pip3 install -r /tmp/unit/requirements.txt
+COPY requirements.txt /tmp/
+RUN pip3 install --upgrade -r /tmp/requirements.txt
