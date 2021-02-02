@@ -43,6 +43,18 @@ def get_one_not_expelled_instance(hostvars, play_hosts):
     raise Exception('At least one play host should be non-expelled and not stateboard')
 
 
+def get_control_host(control_host, hostvars, play_hosts):
+    if control_host:
+        return control_host
+
+    for istance_name in play_hosts:
+        instance_vars = hostvars[istance_name]
+        if instance_vars.get('replicaset_alias'):
+            return istance_name
+
+    return None
+
+
 def get_instance_control_sock(app_name, inventory_hostname, stateboard=False):
     instance_fullname = get_instance_fullname(app_name, inventory_hostname, stateboard)
     return '/var/run/tarantool/{}.control'.format(instance_fullname)
@@ -77,6 +89,7 @@ class FilterModule(object):
         return {
             'get_one_not_expelled_instance_for_machine': get_one_not_expelled_instance_for_machine,
             'get_one_not_expelled_instance': get_one_not_expelled_instance,
+            'get_control_host': get_control_host,
             'get_instance_control_sock': get_instance_control_sock,
             'get_instance_conf_file': get_instance_conf_file,
             'get_app_conf_file': get_app_conf_file,

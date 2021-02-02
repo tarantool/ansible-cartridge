@@ -91,7 +91,7 @@
     - cartridge-replicasets
     - cartridge-config
 
-- name: Set one control instance to join replicasets
+- name: Find some instance that is already in cluster
   cartridge_control_instance:
     control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
   register: control_instance
@@ -100,30 +100,19 @@
   delegate_to: '{{ one_not_expelled_instance }}'
   tags: cartridge-replicasets
 
-- name: Get replicasets
-  cartridge_get_replicasets:
-    hostvars: '{{ hostvars }}'
-    play_hosts: '{{ play_hosts }}'
-    control_host: '{{ control_instance.meta.host }}'
-  register: replicasets
-  run_once: true
+- name: Set one control instance to edit topology
+  set_fact:
+    control_host: '{{ control_instance.meta.host | get_control_host(hostvars, play_hosts) }}'
   check_mode: false
   tags: cartridge-replicasets
 
-- name: Manage replicasets
-  include_tasks: manage_replicaset.yml
-  vars:
-    replicaset: '{{ item }}'
-    join_host: '{{ replicasets.meta.join_host }}'
-  loop: '{{ replicasets.meta.replicasets }}'
+- name: Edit topology
+  cartridge_edit_topology:
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+    control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_host) }}'
   run_once: true
-  tags: cartridge-replicasets
-
-- name: Expel instance
-  include_tasks: expel_instance.yml
-  vars:
-    control_host: '{{ replicasets.meta.join_host }}'
-  when: expelled
+  delegate_to: '{{ control_host }}'
   tags: cartridge-replicasets
 
 - name: Set one control instance to rule them all
