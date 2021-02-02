@@ -30,7 +30,7 @@ cartridge_errcodes = CartridgeErrorCodes()
 
 
 # parameters of instance configuration that can be changed dynamically
-dynamic_box_cfg_params = set([
+dynamic_box_cfg_params = {
     'memtx_memory',
     'vinyl_memory',
     'custom_proc_title',
@@ -61,12 +61,12 @@ dynamic_box_cfg_params = set([
     'feedback_enabled',
     'feedback_host',
     'feedback_interval',
-])
+}
 
-memory_size_box_cfg_params = set([
+memory_size_box_cfg_params = {
     'memtx_memory',
     'vinyl_memory',
-])
+}
 
 
 class CartridgeException(Exception):
