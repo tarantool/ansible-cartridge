@@ -152,7 +152,7 @@ to learn how to set up topology using this role.
 ## Role variables
 
 Role variables are used to configure started instances, cluster topology,
-vhsard bootstrapping, and failover.
+vshard bootstrapping, and failover.
 
 Configuration format is described in detail in the
 [configuration format](#configuration-format) section.
@@ -191,12 +191,12 @@ Configuration format is described in detail in the
 
 ### Role tags
 
-This role tasks have special tags that allows to perform only secified actions.
+This role tasks have special tags that allows to perform only specified actions.
 Tasks are running in this order:
 
 * `cartridge-instances` - install package, update instances config and restart instances;
 * `cartridge-replicasets` - probe instances, configure replicasets, expel instances;
-* `cartridge-config` - configure cluster, contains this tasks:
+* `cartridge-config` - configuring a cluster contains this tasks:
   * configure authorization (if `cartridge_auth` is defined);
   * patch application clusterwide config (if `cartridge_app_config` is defined);
   * bootstrap Vshard (if `cartridge_bootstrap_vshard` is defined);
@@ -282,13 +282,13 @@ to avoid collisions.
 
 ### Application
 
-You can specify path to the rpm package to be installed using
+You can specify a path to the rpm package to be installed using
 `cartridge_package_path`.
 Note, that `cartridge_package_path` must be the same for instances on one machine.
 
 This role does not allow package downgrades because this may drive the cluster
 inoperative.
-If you are sure that you need to downgrade package and you are aware of the risks,
+If you are sure that you need to downgrade package, and you are aware of the risks,
 you can perform this action manually (for example, using Ansible
 [yum](https://docs.ansible.com/ansible/latest/modules/yum_module.html) module).
 
@@ -301,11 +301,11 @@ Each instance of application is started as `<app_name>@<instance_name>` systemd 
 
 Instance can be configured using the `config` variable.
 This variable describes instance parameters that would be passed to cartridge configuration.
-It can contain [cluster-specific](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/rocks/cartridge/1.0/modules/cartridge.argparse) module).
+It can contain [cluster-specific](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/modules/cartridge.argparse) module).
 
 #### Required parameters
 
-`advertise_uri` is required parameter for instance configuraion.
+`advertise_uri` is required for instance configuration.
 It must be specified in `<host>:<port>` format.
 
 #### Forbidden parameters
@@ -325,14 +325,14 @@ Environment=TARANTOOL_PID_FILE=/var/run/tarantool/${app_name}.{instance_name}.pi
 Environment=TARANTOOL_CONSOLE_SOCK=/var/run/tarantool/${app_name}.{instance_name}.control
 ```
 
-#### Managing dymanic `box.cfg` parameters without restart
+#### Managing dynamic `box.cfg` parameters without restart
 
 Some `box.cfg` options are dynamic, it means that it can be changed without
 instance restarting.
 See [parameters](https://www.tarantool.io/en/doc/latest/reference/configuration/#configuration-parameters)
 with "Dynamic: yes".
 
-Role changes this parameters without restarting the instance.
+Role changes these parameters without restarting the instance.
 If other parameters are changed, instance is restarted anyway.
 
 **Note**, that if `restarted` flag is set, instance will be restarted anyway without changing dynamic parameters in runtime.
@@ -348,26 +348,26 @@ You can use this flag to force instance restarting.
 
 ### Replica sets
 
-You can find more details about replicasets and automatic failover in [Tarantool Cartridge administrator’s guide](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_admin/#enabling-automatic-failover).
+You can find more details about replicasets and automatic failover in [Tarantool Cartridge administrator’s guide](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_admin/#enabling-automatic-failover).
 
 To configure replicasets you need to specify replicaset parameters for each instance in replicaset:
 
 * `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
-* `failover_priority` (`list-of-strings`, optional) - failover prioriry order.
+* `failover_priority` (`list-of-strings`, optional) - failover priority order.
   First instance will be replicaset leader.
   It isn't required to specify all instances here, you can specify only one or more.
   Other instances will have lower priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
 * `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
-* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled;
-* `vshard_group` (`string`, optional): vshard group (plase, read [this](#specifying-vshard-group) section before using this parameter);
+* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
+* `vshard_group` (`string`, optional): vshard group (please, read [this](#specifying-vshard-group) section before using this parameter);
 
 The easiest way to configure replicaset is to [group instances](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) and set replicaset parameters for all instances in a group.
 
 #### Specifying vshard group
 
 If your application is designed to use multiple independent vshard groups (see cartridge
-[documentation](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_dev/#using-multiple-vshard-storage-groups)), you can specify vshard group for `vshard-storage` repicaset `vshard_group`
+[documentation](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_dev/#using-multiple-vshard-storage-groups)), you can specify vshard group for `vshard-storage` replicaset `vshard_group`
 parameter.
 This parameter will be ignored for replicaset with other roles.
 By default, all `vshard-storage` replicasets belong to group `default`
@@ -442,14 +442,14 @@ must have at least one `vshard-storage` replica set and at least one
 
 Other parameters are mode-specific.
 
-Read [the doc](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md/)
+Read [the doc](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/topics/failover.md/)
 to learn more about Cartridge failover.
 
 #### Eventual
 
 If `eventual` mode is specified, there is no additional parameters.
 
-Read [the doc](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md/#eventual-failover)
+Read [the doc](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/topics/failover.md/#eventual-failover)
 to learn more about eventual failover.
 
 *Example:*
@@ -476,7 +476,7 @@ cartridge_failover_params:
 
     - `password`(`string`, required) - stateboard instance password;
 
-- `etcd2_params`(`dict`, used for for `etcd2` state provider) -
+- `etcd2_params`(`dict`, used for `etcd2` state provider) -
   configuration for stateboard:
     - `prefix`(`string`, optional) - prefix used for etcd keys: `<prefix>/lock` and
       `<prefix>/leaders`;
@@ -492,7 +492,7 @@ cartridge_failover_params:
 
     - `password`(`string`, optional).
 
-Read [the doc](https://www.tarantool.io/en/doc/2.2/book/cartridge/cartridge_api/topics/failover.md/#stateful-failover)
+Read [the doc](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/topics/failover.md/#stateful-failover)
 to learn more about stateful failover.
 
 *Example:*
@@ -551,7 +551,7 @@ cartridge_auth:
 ### Application configuration
 
 `cartridge_app_config` variable is used to edit cluster configuration.
-It allows to define configuration sections in a special format:
+It allows defining configuration sections in a special format:
 
 ```yaml
 cartridge_app_config:
