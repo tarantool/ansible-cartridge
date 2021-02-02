@@ -3,6 +3,7 @@ extends: default
 
 ignore: |
   .gitlab-ci.yml
+  venv
 
 rules:
   line-length: {max: 120}
