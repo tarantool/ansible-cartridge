@@ -76,7 +76,7 @@ class TestControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(self.console_sock)
         self.assertTrue(res.success, msg=res.msg)
-        self.assertEqual(res.meta, {'host': ''})
+        self.assertEqual(res.meta, {'host': None})
 
         # without UUID, allow_empty=False
         set_membership_members(self.instance, [
@@ -121,7 +121,7 @@ class TestControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(self.console_sock)
         self.assertTrue(res.success, msg=res.msg)
-        self.assertEqual(res.meta, {'host': ''})
+        self.assertEqual(res.meta, {'host': None})
 
         # both without UUID, allow_empty=False
         set_membership_members(self.instance, [

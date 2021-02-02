@@ -1,5 +1,5 @@
 def add_replicaset(instance, alias, roles, servers,
-                   status='healthy', all_rw=False, weight=None):
+                   status='healthy', all_rw=False, weight=None, vshard_group=None):
     r_uuid = '{}-uuid'.format(alias)
     r_servers = []
     for s in servers:  # servers = ['alias-1', 'alias-2']
@@ -24,6 +24,7 @@ def add_replicaset(instance, alias, roles, servers,
         'roles': roles,
         'weight': weight,
         'all_rw': all_rw,
+        'vshard_group': vshard_group,
         'servers': [{'alias': s, 'priority': i + 1} for i, s in enumerate(servers)]
     }
     instance.add_topology_replicaset(replicaset)

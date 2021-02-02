@@ -282,6 +282,10 @@ class Instance:
         if 'weight' in r and r['weight'] is not None:
             weight = r['weight']
 
+        vshard_group = 'nil'
+        if 'vshard_group' in r and r['vshard_group'] is not None:
+            vshard_group = "'%s'" % r['vshard_group']
+
         all_rw = 'nil'
         if 'all_rw' in r and r['all_rw'] is not None:
             all_rw = 'true' if r['all_rw'] else 'false'
@@ -294,6 +298,7 @@ class Instance:
                 roles = {roles},
                 weight = {weight},
                 all_rw = {all_rw},
+                vshard_group = {vshard_group},
                 servers = {servers},
             }})
         '''.format(
@@ -305,6 +310,7 @@ class Instance:
             ])),
             weight=weight,
             all_rw=all_rw,
+            vshard_group=vshard_group,
             servers=r_servers
         ))
 
