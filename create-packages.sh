@@ -21,7 +21,8 @@ version=1.0.0-0
 pack_flags=''
 if [[ $(tarantool -V) == *"Target: Darwin"* ]]; then
     pack_flags+=' --use-docker'
-    if [ -z "${TARANTOOL_SDK_PATH}" ]; then
+
+    if [[ $(tarantool -V) == "Tarantool Enterprise"* && -z "${TARANTOOL_SDK_PATH}" ]]; then
         echo "Set the path to Linux Tarantool SDK using the TARANTOOL_SDK_PATH environment variable!"
         exit 1
     fi
