@@ -3,13 +3,19 @@
   fail:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
   when: ansible_os_family not in ["RedHat", "Debian"]
-  tags: always
+  tags:
+    - cartridge-instances
+    - cartridge-replicasets
+    - cartridge-config
 
 - name: Set remote_user for delegated tasks
   set_fact:
     remote_user: '{{ ansible_user }}'
   when: remote_user is not defined and ansible_user is defined
-  tags: always
+  tags:
+    - cartridge-instances
+    - cartridge-replicasets
+    - cartridge-config
 
 - name: Validate config
   cartridge_validate_config:
@@ -18,7 +24,10 @@
   delegate_to: localhost
   become: false
   run_once: true
-  tags: always
+  tags:
+    - cartridge-instances
+    - cartridge-replicasets
+    - cartridge-config
 
 - name: Set instance facts
   set_fact:
@@ -28,7 +37,10 @@
     instance_conf_section: '{{ cartridge_app_name | get_instance_conf_section(inventory_hostname, stateboard) }}'
     instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard) }}'
     instance_systemd_service: '{{ cartridge_app_name | get_instance_systemd_service(inventory_hostname, stateboard) }}'
-  tags: always
+  tags:
+    - cartridge-instances
+    - cartridge-replicasets
+    - cartridge-config
 
 # Rewrites cartridge_app_name from package info
 - name: Install package
@@ -43,8 +55,9 @@
   when: not expelled
   tags: cartridge-instances
 
-# Restart instances and reload systemd-daemon if required
-- meta: flush_handlers
+- name: Restart instances and reload systemd-daemon
+  meta: flush_handlers
+  tags: cartridge-instances
 
 - name: Wait for instance to be started
   cartridge_check_instance_started:

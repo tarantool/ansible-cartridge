@@ -11,6 +11,11 @@ README.md and examples/getting-started-app/README.md
 to use the newest tag with new release
 -->
 
+### Fixed
+
+- Role installation will be completely skipped
+  if you specify a tag other than the tags for this role
+
 ### Added
 
 - `cartridge-replicasets` tag to the membership stage
