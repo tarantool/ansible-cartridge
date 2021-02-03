@@ -16,6 +16,7 @@
     warn: false
   register: deb_info
   changed_when: false
+  check_mode: false
   any_errors_fatal: true
 
 - name: Get package name

@@ -83,6 +83,7 @@
     control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
   register: control_instance
   run_once: true
+  check_mode: false
   delegate_to: '{{ one_not_expelled_instance }}'
   tags: cartridge-replicasets
 
@@ -93,6 +94,7 @@
     control_host: '{{ control_instance.meta.host }}'
   register: replicasets
   run_once: true
+  check_mode: false
   tags: cartridge-replicasets
 
 - name: Manage replicasets
@@ -117,6 +119,7 @@
     allow_empty: false
   register: control_instance
   run_once: true
+  check_mode: false
   delegate_to: '{{ one_not_expelled_instance }}'
   when: >-
     cartridge_auth is defined

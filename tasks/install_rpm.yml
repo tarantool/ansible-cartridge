@@ -16,6 +16,7 @@
     warn: false
   register: rpm_info
   changed_when: false
+  check_mode: false
   any_errors_fatal: true
 
 - name: Get package name
@@ -40,6 +41,7 @@
   register: deplist
   changed_when: false
   when: cartridge_enable_tarantool_repo
+  check_mode: false
   any_errors_fatal: true
 
 # Get tarantool dependency <major>.<minor> version
