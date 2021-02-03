@@ -47,3 +47,27 @@ verifier:
   name: testinfra
   options:
     v: true
+
+scenario:
+  create_sequence:
+    - create
+  converge_sequence:
+    - create
+    - converge
+  destroy_sequence:
+    - destroy
+  test_sequence:
+    - lint
+    - destroy
+    - syntax
+    - create
+    - converge
+    - idempotence
+    - verify
+    - destroy
+  check_sequence:
+    - destroy
+    - create
+    - converge
+    - check
+    - destroy
