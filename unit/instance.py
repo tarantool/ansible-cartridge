@@ -38,6 +38,19 @@ class Instance:
         self.process = None
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
+        self.__original_exists = os.path.exists
+        self.__original_getmtime = os.path.getmtime
+
+        os.path.exists = OsPathExistsMock()
+        os.path.getmtime = OsPathGetMtimeMock()
+
+    def __del__(self):
+        os.path.exists = self.__original_exists
+        os.path.getmtime = self.__original_getmtime
+
+        if os.path.exists(self.console_sock):
+            os.remove(self.console_sock)
+
     @tenacity.retry(wait=tenacity.wait_fixed(0.1),
                     stop=tenacity.stop_after_delay(5))
     def _connect(self):
@@ -54,9 +67,6 @@ class Instance:
             self.process = Popen(command, env=env, stdout=FNULL, stderr=FNULL)
 
         self._connect()
-
-        os.path.exists = OsPathExistsMock()
-        os.path.getmtime = OsPathGetMtimeMock()
 
         files = {
             self.console_sock: '',
