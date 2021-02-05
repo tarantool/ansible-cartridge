@@ -250,13 +250,13 @@ local function __edit_replicaset(params)
     end
 
     if params.join_servers ~= nil then
-        for i, join_server in ipairs(params.join_servers) do
+        for _, join_server in ipairs(params.join_servers) do
             -- find unjoined server
             local unjoined_server
-            for _, server in ipairs(unjoined_servers) do
+            for j, server in ipairs(unjoined_servers) do
                 if server.uri == join_server.uri then
                     unjoined_server = table.deepcopy(server)
-                    table.remove(unjoined_servers, i)
+                    table.remove(unjoined_servers, j)
                     break
                 end
             end

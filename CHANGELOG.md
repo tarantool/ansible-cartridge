@@ -20,6 +20,13 @@ to use the newest tag with new release
 
 - `cartridge-replicasets` tag to the membership stage
 
+### Changed
+
+- `cartridge.admin_edit_topology` is called once for all replicasets and instances
+  to expel. It can be called second time to set up failover priority for
+  replicasets where new instances were joined.
+  As a result, `replicaset_healthy_timeout` is removed as unused.
+
 ## [1.7.0] - 2020-11-24
 
 ### Fixed

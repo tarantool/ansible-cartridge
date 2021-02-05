@@ -51,10 +51,9 @@ class TestTags(unittest.TestCase):
             'Wait for instance to be started',
             'Connect instance to membership',
             'Select one not expelled instance',
-            'Set one control instance to join replicasets',
-            'Get replicasets',
-            'Manage replicasets',
-            'Expel instance',
+            'Find some instance that is already in cluster',
+            'Set one control instance to edit topology',
+            'Edit topology',
             'Set one control instance to rule them all',
             'Set control instance facts',
             'Cartridge auth',
@@ -89,10 +88,9 @@ class TestTags(unittest.TestCase):
             'Restart instances and reload systemd-daemon',
             'Connect instance to membership',
             'Select one not expelled instance',
-            'Set one control instance to join replicasets',
-            'Get replicasets',
-            'Manage replicasets',
-            'Expel instance',
+            'Find some instance that is already in cluster',
+            'Set one control instance to edit topology',
+            'Edit topology',
         ])
 
     def test_tag_cartridge_config(self):

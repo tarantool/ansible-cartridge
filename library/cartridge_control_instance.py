@@ -12,7 +12,7 @@ argument_spec = {
 
 def get_control_instance(params):
     control_console = get_control_console(params['control_sock'])
-    control_instance = ''
+    control_instance = None
 
     members, _ = control_console.eval_res_err('''
         return require('membership').members()
