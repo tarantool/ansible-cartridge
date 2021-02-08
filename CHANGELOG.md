@@ -26,6 +26,9 @@ to use the newest tag with new release
   to expel. It can be called second time to set up failover priority for
   replicasets where new instances were joined.
   As a result, `replicaset_healthy_timeout` is removed as unused.
+- Now list of instances for installing a package is selected once for all.
+  Before this patch, the complexity of calculating the list of instances was O(N^2),
+  now it is O(N). For 100 instances, it gives a 10x time reduction (60s -> 5s).
 
 ## [1.7.0] - 2020-11-24
 

@@ -57,7 +57,7 @@
     version: '{{ tnt_version[0] }}'
   when: 'cartridge_enable_tarantool_repo and "tarantool" in deplist.stdout'
 
-- name: Install RPM
+- name: Install RPM package
   yum:
     name: '/tmp/{{ rpm_filename }}'
     state: present
