@@ -11,6 +11,8 @@ from ansible.vars.manager import VariableManager
 
 class TestTags(unittest.TestCase):
     def setUp(self):
+        self.maxDiff = None
+
         loader = DataLoader()
         inventory = InventoryManager(loader=loader, sources='localhost,')
         variable_manager = VariableManager(loader=loader, inventory=inventory)
@@ -55,6 +57,7 @@ class TestTags(unittest.TestCase):
             'Find some instance that is already in cluster',
             'Set one control instance to edit topology',
             'Edit topology',
+            'Cleanup expelled instance files and services',
             'Set one control instance to rule them all',
             'Set control instance facts',
             'Cartridge auth',
@@ -94,6 +97,7 @@ class TestTags(unittest.TestCase):
             'Find some instance that is already in cluster',
             'Set one control instance to edit topology',
             'Edit topology',
+            'Cleanup expelled instance files and services',
         ])
 
     def test_tag_cartridge_config(self):
