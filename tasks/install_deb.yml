@@ -52,7 +52,7 @@
     version: '{{ tnt_version[0] }}'
   when: '"tarantool" in deplist and cartridge_enable_tarantool_repo'
 
-- name: Install DEB
+- name: Install DEB package
   apt:
     deb: /tmp/{{ deb_filename }}
     update_cache: true

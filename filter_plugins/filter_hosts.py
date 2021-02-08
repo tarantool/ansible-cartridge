@@ -1,5 +1,8 @@
-def get_machine_identifier(v):
-    return v['ansible_host'] if 'ansible_host' in v else v['inventory_hostname']
+def get_machine_hostname(v):
+    if 'ansible_host' in v:
+        return v['ansible_host']
+
+    raise Exception(f'Instance {v["inventory_hostname"]} has not "ansible_host" option!')
 
 
 def is_expelled(instance_vars):
@@ -18,19 +21,19 @@ def get_instance_fullname(app_name, inventory_hostname, stateboard):
 
 
 def get_one_not_expelled_instance_for_machine(hostvars, play_hosts):
-    res = []
-    added_machines = {}
+    machine_hostnames = set()
+    instance_names = []
 
-    for i in play_hosts:
-        if is_expelled(hostvars[i]):
+    for instance_name in play_hosts:
+        if is_expelled(hostvars[instance_name]):
             continue
 
-        machine_id = get_machine_identifier(hostvars[i])
-        if machine_id not in added_machines:
-            added_machines[machine_id] = True
-            res.append(i)
+        machine_hostname = get_machine_hostname(hostvars[instance_name])
+        if machine_hostname not in machine_hostnames:
+            machine_hostnames.add(machine_hostname)
+            instance_names.append(instance_name)
 
-    return res
+    return instance_names
 
 
 def get_one_not_expelled_instance(hostvars, play_hosts):
