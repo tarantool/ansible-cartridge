@@ -1,4 +1,12 @@
 ---
+- name: Forced facts gathering
+  setup:
+  when: ansible_os_family is not defined
+  tags:
+    - cartridge-instances
+    - cartridge-replicasets
+    - cartridge-config
+
 - name: Check distribution
   fail:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
