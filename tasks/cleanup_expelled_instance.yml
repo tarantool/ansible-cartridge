@@ -1,19 +1,12 @@
 ---
-- name: Expel instance from topology
-  cartridge_expel_instance:
-    alias: '{{ inventory_hostname }}'
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_host) }}'
-  delegate_to: '{{ control_host }}'
-  tags: cartridge-replicasets
-
-- name: Stop and disable systemd service
+- name: Stop and disable instance systemd service
   systemd:
     name: '{{ instance_systemd_service }}'
     state: stopped
     enabled: false
   tags: cartridge-replicasets
 
-- name: Delete instance files
+- name: Cleanup instance files
   file:
     path: '{{ filepath }}'
     state: absent

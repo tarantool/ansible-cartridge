@@ -115,6 +115,11 @@
   delegate_to: '{{ control_host }}'
   tags: cartridge-replicasets
 
+- name: Cleanup expelled instance files and services
+  include_tasks: cleanup_expelled_instance.yml
+  when: expelled
+  tags: cartridge-replicasets
+
 - name: Set one control instance to rule them all
   cartridge_control_instance:
     control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
