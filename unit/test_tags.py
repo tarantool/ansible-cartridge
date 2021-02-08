@@ -41,6 +41,7 @@ class TestTags(unittest.TestCase):
     def test_without_tags(self):
         names = self.get_tasks_by_tags({})
         self.assertEqual(names, [
+            'Forced facts gathering',
             'Check distribution',
             'Set remote_user for delegated tasks',
             'Validate config',
@@ -65,6 +66,7 @@ class TestTags(unittest.TestCase):
     def test_tag_cartridge_instances(self):
         names = self.get_tasks_by_tags({'cartridge-instances'})
         self.assertEqual(names, [
+            'Forced facts gathering',
             'Check distribution',
             'Set remote_user for delegated tasks',
             'Validate config',
@@ -79,6 +81,7 @@ class TestTags(unittest.TestCase):
     def test_tag_cartridge_replicasets(self):
         names = self.get_tasks_by_tags({'cartridge-replicasets'})
         self.assertEqual(names, [
+            'Forced facts gathering',
             'Check distribution',
             'Set remote_user for delegated tasks',
             'Validate config',
@@ -96,6 +99,7 @@ class TestTags(unittest.TestCase):
     def test_tag_cartridge_config(self):
         names = self.get_tasks_by_tags({'cartridge-config'})
         self.assertEqual(names, [
+            'Forced facts gathering',
             'Check distribution',
             'Set remote_user for delegated tasks',
             'Validate config',
