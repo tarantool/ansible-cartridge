@@ -471,3 +471,39 @@ def test_app_config():
         else:
             assert section_name in app_config
             assert app_config[section_name] == section['body']
+
+
+def test_cluster_has_no_issues():
+    # Get all configured instances
+    configured_instances = get_configured_instances()
+    if not configured_instances:
+        return
+
+    # Select one instance to be control
+    admin_api_url = get_admin_api_url(configured_instances)
+
+    # Get cluster cookie
+    cluster_cookie = get_cluster_cookie()
+
+    # Get cluster auth params
+    query = '''
+        query {
+            cluster {
+                issues {
+                    topic
+                    message
+                }
+            }
+        }
+    '''
+
+    session = get_authorized_session(cluster_cookie)
+    response = session.post(admin_api_url, json={'query': query})
+    assert response.status_code == 200
+
+    issues = response.json()['data']['cluster']['issues']
+
+    assert len(issues) == 0, 'Found issues: %s' % ', '.join([
+        '%s: %s' % (issue['topic'], issue['message'])
+        for issue in issues
+    ])
