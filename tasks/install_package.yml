@@ -1,16 +1,45 @@
 ---
+- name: Copy package
+  copy:
+    src: '{{ cartridge_package_path }}'
+    dest: /tmp/
+  any_errors_fatal: true
+  register: copied_package
+
+- name: Get package meta info
+  cartridge_get_package_info:
+    package_path: '{{ copied_package.dest }}'
+    app_name: '{{ cartridge_app_name }}'
+  register: package_info
+  any_errors_fatal: true
+
+- name: Set cartridge_app_name from package info
+  set_fact:
+    cartridge_app_name: '{{ package_info.meta.name }}'
+
+- name: Enable Tarantool repo
+  include_tasks: enable_tarantool_repo.yml
+  vars:
+    version: '{{ package_info.meta.tnt_version }}'
+  when: 'cartridge_enable_tarantool_repo and package_info.meta.tnt_version'
+
 - name: Install RPM
-  include_tasks: install_rpm.yml
-  when: ansible_os_family == 'RedHat'
-  args:
-    apply:
-      tags: cartridge-instances
-  tags: cartridge-instances
+  yum:
+    name: '{{ copied_package.dest }}'
+    state: present
+    update_cache: true
+  register: install_rpm
+  failed_when: install_rpm.rc != 0 and "does not update installed package" not in install_rpm.results[0]
+  notify:
+    - reload-systemd-daemon
+  when: package_info.meta.package_type == 'rpm'
+  any_errors_fatal: true
 
 - name: Install DEB
-  include_tasks: install_deb.yml
-  when: ansible_os_family == 'Debian'
-  args:
-    apply:
-      tags: cartridge-instances
-  tags: cartridge-instances
+  apt:
+    deb: '{{ copied_package.dest }}'
+    update_cache: true
+  notify:
+    - reload-systemd-daemon
+  when: package_info.meta.package_type == 'deb'
+  any_errors_fatal: true
