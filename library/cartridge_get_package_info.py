@@ -48,7 +48,7 @@ def get_rpm_info(package_path):
     if rc != 0:
         raise Exception("failed to get RPM package info: %s" % output)
 
-    m = re.search(r'Name\s*:\s*(\S+)\s+', output)
+    m = re.search(r'Name\s*:\s*([^\n]+)\n', output)
     if m is None:
         raise Exception("Failed to find package name in package info: %s" % output)
 
@@ -79,7 +79,7 @@ def get_deb_info(package_path):
         raise Exception("failed to get DEB package info: %s" % output)
 
     # package name
-    m = re.search(r'Package\s*:\s*(\S+)\s+', output)
+    m = re.search(r'Package\s*:\s*([^\n]+)\n', output)
     if m is None:
         raise Exception("Failed to find package name in package info: %s" % output)
 
@@ -88,7 +88,7 @@ def get_deb_info(package_path):
     # Tarantool dependency
     tnt_version = None
 
-    m = re.search(r'Depends\s*:\s*([^\n]+)', output)
+    m = re.search(r'Depends\s*:\s*([^\n]+)\n', output)
     if m is not None:
         deplist = m.groups()[0]
         m = re.search(r'tarantool\s+\(\s*>=\s*([0-9]+.[0-9]+)', deplist)
