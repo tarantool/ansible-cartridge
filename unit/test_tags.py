@@ -64,6 +64,7 @@ class TestTags(unittest.TestCase):
             'Cartridge auth',
             'Application config',
             'Bootstrap vshard',
+            'Wait for instance to be started and buckets are discovered',
             'Manage failover',
         ])
 
@@ -119,6 +120,7 @@ class TestTags(unittest.TestCase):
             'Cartridge auth',
             'Application config',
             'Bootstrap vshard',
+            'Wait for instance to be started and buckets are discovered',
             'Manage failover',
         ])
 

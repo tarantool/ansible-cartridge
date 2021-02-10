@@ -19,6 +19,12 @@ local membership = {}
 membership.internal = {}
 package.loaded['membership'] = membership
 
+local cartridge_confapplier = {}
+package.loaded['cartridge.confapplier'] = cartridge_confapplier
+
+local cartridge_roles_vshard_router = {}
+package.loaded['cartridge.roles.vshard-router'] = cartridge_roles_vshard_router
+
 
 local CARTRIDGE_ERR = 'cartridge err'
 
@@ -55,6 +61,7 @@ local vars = {
     failover = false,
     failover_params = {},
     can_bootstrap_vshard = true,
+    vshard_groups = {},
     auth_params = {},
     webui_auth_params = {},
     users = {},
@@ -63,6 +70,8 @@ local vars = {
     known_servers = {},
     become_unhealthy_after_edit = false,
     user_has_version = true,
+    cartridge_confapplier_state = '',
+    unknown_buckets = {},
 }
 
 local topology = {
@@ -458,6 +467,10 @@ function cartridge_vshard_utils.can_bootstrap()
     return vars.can_bootstrap_vshard
 end
 
+function cartridge_vshard_utils.get_known_groups()
+    return vars.vshard_groups
+end
+
 -- * ------------------- Module cartridge.admin -------------------
 
 function cartridge_admin.bootstrap_vshard()
@@ -615,6 +628,12 @@ function cartridge_webui_auth.get_auth_params()
     return vars.webui_auth_params
 end
 
+-- * --------------- Module cartridge.confapplier ------------------
+
+function cartridge_confapplier.get_state()
+    return vars.cartridge_confapplier_state
+end
+
 -- * ---------------------- Module membership ----------------------
 
 function membership.myself()
@@ -624,6 +643,27 @@ end
 
 function membership.members()
     return vars.membership_members
+end
+
+-- * ---------------------- Vshard router --------------------------
+
+local function vshard_router_info(self)
+    return {
+        bucket = {
+            unknown = vars.unknown_buckets[self.group_name]
+        }
+    }
+end
+
+function cartridge_roles_vshard_router.get(group_name)
+    if vars.unknown_buckets[group_name] == nil then
+        return nil
+    end
+
+    return {
+        group_name = group_name,
+        info = vshard_router_info,
+    }
 end
 
 -- * ----------------------- Internal helpers ----------------------

@@ -31,6 +31,9 @@ to use the newest tag with new release
   now it is O(N). For 100 instances, it gives a 10x time reduction (60s -> 5s).
 - Refactored package installing. Getting package info is performed in a library module,
   all tasks except installing package itself are common for RPM and DEB.
+- Now `check_instance_started` function: check all instances, including the stateboard;
+  wait `Unconfigured` or `RolesConfigured` status instead `alive` state; check that
+  all buckets are discovered by routers if cluster was bootstrapped.
 
 ## [1.7.0] - 2020-11-24
 
