@@ -314,7 +314,7 @@ def check_stateboard(stateboard_vars):
     if stateboard_vars.get('expelled') is True:
         return '"expelled" flag can\'t be used for stateboard instance'
 
-    for p in REPLICASET_PARAMS + ['replicaset_alias']:
+    for p in REPLICASET_PARAMS:
         if stateboard_vars.get(p) is not None:
             return '"{}" flag can\'t be used for stateboard instance'.format(p)
 

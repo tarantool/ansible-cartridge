@@ -182,7 +182,7 @@
 
 - name: Bootstrap vshard
   cartridge_bootstrap_vshard:
-    control_sock: '{{ control_sock}}'
+    control_sock: '{{ control_sock }}'
   delegate_to: '{{ control_host }}'
   run_once: true
   register: bootstrap_vshard
@@ -190,6 +190,17 @@
   retries: 3
   delay: 5
   when: cartridge_bootstrap_vshard is defined and cartridge_bootstrap_vshard
+  tags: cartridge-config
+
+- name: Wait for instance to be started and buckets are discovered
+  cartridge_check_instance_started:
+    control_sock: '{{ instance_control_sock }}'
+    stateboard: '{{ stateboard }}'
+  register: check_instance
+  until: not check_instance.failed
+  retries: '{{ instance_start_timeout // 5 }}'
+  delay: 5
+  when: not expelled and cartridge_bootstrap_vshard is defined and cartridge_bootstrap_vshard
   tags: cartridge-config
 
 - name: Manage failover
