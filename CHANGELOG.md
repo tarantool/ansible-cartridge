@@ -29,6 +29,8 @@ to use the newest tag with new release
 - Now list of instances for installing a package is selected once for all.
   Before this patch, the complexity of calculating the list of instances was O(N^2),
   now it is O(N). For 100 instances, it gives a 10x time reduction (60s -> 5s).
+- Refactored package installing. Getting package info is performed in a library module,
+  all tasks except installing package itself are common for RPM and DEB.
 
 ## [1.7.0] - 2020-11-24
 
