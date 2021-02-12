@@ -19,6 +19,10 @@ def get_uuids(control_console, instances_to_find, replicasets, hostvars):
     found_replicasets = []
 
     for instance_name in sorted(instances_to_find):
+        try:
+            get_control_console(hostvars[instance_name]['instance_control_sock'])
+        except CartridgeException as e:
+            continue
         if is_expelled(hostvars[instance_name]) or is_stateboard(hostvars[instance_name]) or not is_healthy(hostvars[instance_name]['instance_control_sock']):
             continue
         response = control_console.eval('''
