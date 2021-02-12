@@ -1,0 +1,13 @@
+---
+
+- name: 'Wait for the instance to start and discover buckets'
+  cartridge_check_instance_state:
+    console_sock: '{{ instance_info.console_sock }}'
+    stateboard: '{{ stateboard }}'
+    check_buckets_are_discovered: '{{ cartridge_wait_buckets_discovery }}'
+  register: check_instance
+  until: not check_instance.failed
+  retries: '{{ instance_start_timeout // 5 }}'
+  delay: 5
+  when: not expelled
+  tags: cartridge-instances

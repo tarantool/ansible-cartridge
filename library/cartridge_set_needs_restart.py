@@ -76,7 +76,7 @@ def check_conf_updated(new_conf, old_conf, ignore_keys):
 def needs_restart(params):
     restarted = params['restarted']
     if restarted is True:
-        return helpers.ModuleRes()
+        return helpers.ModuleRes(facts={'needs_restart': True})
 
     if restarted is False:
         return helpers.ModuleRes(changed=False)
@@ -93,7 +93,7 @@ def needs_restart(params):
 
     # check if instance was not started yet
     if not os.path.exists(console_sock):
-        return helpers.ModuleRes()
+        return helpers.ModuleRes(facts={'needs_restart': True})
 
     try:
         control_console = helpers.get_control_console(console_sock)
@@ -104,7 +104,7 @@ def needs_restart(params):
             helpers.cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
         ]
         if e.code in allowed_errcodes:
-            return helpers.ModuleRes()
+            return helpers.ModuleRes(facts={'needs_restart': True})
 
         raise e
 
@@ -114,7 +114,7 @@ def needs_restart(params):
     instance_code_dir = instance_info['instance_code_dir']
     package_update_time = os.path.getmtime(instance_code_dir)
     if last_restart_time < package_update_time:
-        return helpers.ModuleRes()
+        return helpers.ModuleRes(facts={'needs_restart': True})
 
     # check if instance config was changed (except dynamic params)
     current_instance_conf, err = read_yaml_file_section(
@@ -126,7 +126,7 @@ def needs_restart(params):
         return helpers.ModuleRes(failed=True, msg="Failed to read current instance config: %s" % err)
 
     if check_conf_updated(new_instance_conf, current_instance_conf, helpers.dynamic_box_cfg_params):
-        return helpers.ModuleRes()
+        return helpers.ModuleRes(facts={'needs_restart': True})
 
     if not stateboard:
         # check if default config was changed (except dynamic params)
@@ -140,15 +140,15 @@ def needs_restart(params):
 
         new_default_conf.update({'cluster_cookie': cluster_cookie})
         if check_conf_updated(new_default_conf, current_default_conf, helpers.dynamic_box_cfg_params):
-            return helpers.ModuleRes()
+            return helpers.ModuleRes(facts={'needs_restart': True})
 
     # if box.cfg wasn't called,
     if not helpers.box_cfg_was_called(control_console):
-        return helpers.ModuleRes()
+        return helpers.ModuleRes(facts={'needs_restart': True})
 
     current_cfg = helpers.get_box_cfg(control_console)
     if current_cfg is None:
-        return helpers.ModuleRes()
+        return helpers.ModuleRes(facts={'needs_restart': True})
 
     for param_name in helpers.dynamic_box_cfg_params:
         new_value = None
@@ -162,7 +162,7 @@ def needs_restart(params):
         # it mean that instance should be restarted to apply change
         if new_value is not None:
             if current_cfg.get(param_name) != new_value:
-                return helpers.ModuleRes()
+                return helpers.ModuleRes(facts={'needs_restart': True})
 
     return helpers.ModuleRes(changed=False)
 

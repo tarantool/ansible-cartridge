@@ -1,0 +1,9 @@
+---
+
+- name: 'Restart instance systemd service'
+  systemd:
+    name: '{{ instance_info.systemd_service }}'
+    state: restarted
+    enabled: true
+  when: needs_restart is defined and needs_restart
+  tags: cartridge-instances

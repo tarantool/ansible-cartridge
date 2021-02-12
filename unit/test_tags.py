@@ -3,6 +3,7 @@ from pathlib import Path
 
 from ansible.inventory.manager import InventoryManager
 from ansible.parsing.dataloader import DataLoader
+from ansible.playbook.block import Block
 from ansible.playbook.play import Play
 from ansible.vars.manager import VariableManager
 
@@ -28,99 +29,81 @@ class TestTags(unittest.TestCase):
 
     def get_tasks_by_tags(self, tags_set):
         self.play.only_tags = tags_set
-        tasks = self.play.get_tasks()[0]
-        self.assertTrue(len(tasks) == 1, 'Expected one task in playbook with role import!')
-        tasks = tasks[0].filter_tagged_tasks(self.all_vars).block
+        import_block = self.play.get_tasks()[0][0]
+
+        def get_block_tasks(block: Block):
+            tasks = []
+            block = block.filter_tagged_tasks(self.all_vars)
+            block_tasks = block.block + block.rescue + block.always
+            for block_task in block_tasks:
+                if isinstance(block_task, Block):
+                    tasks += get_block_tasks(block_task)
+                else:
+                    tasks.append(block_task)
+            return tasks
 
         names = []
-        for task in tasks:
-            _, name = task.get_name().split(' : ')
+        for task in get_block_tasks(import_block):
+            _, name = task.get_name().split(' : ', maxsplit=1)
             names.append(name)
         return names
 
     def test_without_tags(self):
         names = self.get_tasks_by_tags({})
         self.assertEqual(names, [
-            'Forced facts gathering',
-            'Check distribution',
-            'Set remote_user for delegated tasks',
+            'Forced gathering facts',
             'Validate config',
+            'Validate OS Family',
+            "Set 'remote_user' for delegated tasks",
             'Collect instance info',
-            'Get one instance from each physical machine',
-            'Install package',
-            'Start instance',
-            'Restart instances and reload systemd-daemon',
-            'Wait for instance to be started',
-            'Connect instance to membership',
+            'Collect steps',
+            'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'Select control instance to manage topology and configuration',
-            'Edit topology',
-            'Cleanup expelled instance files and services',
-            'Cartridge auth',
-            'Application config',
-            'Bootstrap vshard',
-            'Wait for buckets discovering',
-            'Manage failover',
+            'BLOCK : Import tasks by scenario',
         ])
 
     def test_tag_cartridge_instances(self):
         names = self.get_tasks_by_tags({'cartridge-instances'})
         self.assertEqual(names, [
-            'Forced facts gathering',
-            'Check distribution',
-            'Set remote_user for delegated tasks',
+            'Forced gathering facts',
             'Validate config',
+            'Validate OS Family',
+            "Set 'remote_user' for delegated tasks",
             'Collect instance info',
-            'Get one instance from each physical machine',
-            'Install package',
-            'Start instance',
-            'Restart instances and reload systemd-daemon',
-            'Wait for instance to be started',
-            'Connect instance to membership',
+            'Collect steps',
+            'Select one instance for each physical machine',
+            'Select one not expelled instance',
+            'BLOCK : Import tasks by scenario',
         ])
 
     def test_tag_cartridge_replicasets(self):
         names = self.get_tasks_by_tags({'cartridge-replicasets'})
         self.assertEqual(names, [
-            'Forced facts gathering',
-            'Check distribution',
-            'Set remote_user for delegated tasks',
+            'Forced gathering facts',
             'Validate config',
+            'Validate OS Family',
+            "Set 'remote_user' for delegated tasks",
             'Collect instance info',
-            # TODO: Remove 'Restart instances and reload systemd-daemon' when Ansible will be updated to 2.11 or higher
-            # Ref: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/meta_module.html#notes
-            'Restart instances and reload systemd-daemon',
-            'Connect instance to membership',
+            'Collect steps',
+            'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'Select control instance to manage topology and configuration',
-            'Edit topology',
-            'Cleanup expelled instance files and services',
+            'BLOCK : Import tasks by scenario',
         ])
 
     def test_tag_cartridge_config(self):
         names = self.get_tasks_by_tags({'cartridge-config'})
         self.assertEqual(names, [
-            'Forced facts gathering',
-            'Check distribution',
-            'Set remote_user for delegated tasks',
+            'Forced gathering facts',
             'Validate config',
+            'Validate OS Family',
+            "Set 'remote_user' for delegated tasks",
             'Collect instance info',
-            # TODO: Remove 'Restart instances and reload systemd-daemon' when Ansible will be updated to 2.11 or higher
-            # Ref: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/meta_module.html#notes
-            'Restart instances and reload systemd-daemon',
+            'Collect steps',
+            'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'Select control instance to manage topology and configuration',
-            'Cartridge auth',
-            'Application config',
-            'Bootstrap vshard',
-            'Wait for buckets discovering',
-            'Manage failover',
+            'BLOCK : Import tasks by scenario',
         ])
 
     def test_not_cartridge_tag(self):
         names = self.get_tasks_by_tags({'test'})
-        self.assertEqual(names, [
-            # TODO: Remove 'Restart instances and reload systemd-daemon' when Ansible will be updated to 2.11 or higher
-            # Ref: https://docs.ansible.com/ansible/latest/collections/ansible/builtin/meta_module.html#notes
-            'Restart instances and reload systemd-daemon',
-        ])
+        self.assertEqual(names, [])

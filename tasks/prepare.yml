@@ -1,0 +1,40 @@
+---
+
+- name: "Set 'remote_user' for delegated tasks"
+  set_fact:
+    remote_user: '{{ ansible_user }}'
+  when: remote_user is not defined and ansible_user is defined
+
+- name: 'Collect instance info'
+  cartridge_set_instance_info:
+    app_name: '{{ cartridge_app_name }}'
+    instance_name: '{{ inventory_hostname }}'
+    instance_vars:
+      cartridge_package_path: '{{ cartridge_package_path }}'
+      cartridge_dist_dir: '{{ cartridge_dist_dir }}'
+      cartridge_conf_dir: '{{ cartridge_conf_dir }}'
+      cartridge_run_dir: '{{ cartridge_run_dir }}'
+      cartridge_data_dir: '{{ cartridge_data_dir }}'
+      stateboard: '{{ stateboard }}'
+
+- name: 'Collect steps'
+  cartridge_set_scenario_steps:
+    scenario: '{{ cartridge_scenario }}'
+    role_path: '{{ role_path }}'
+    custom_steps_dir: '{{ cartridge_custom_steps_dir }}'
+    custom_steps: '{{ cartridge_custom_steps }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+
+- name: 'Select one instance for each physical machine'
+  cartridge_set_single_instances_for_each_machine:
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+  run_once: true
+
+- name: 'Select one not expelled instance'
+  cartridge_set_one_not_expelled_instance:
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+  run_once: true

@@ -1,186 +1,33 @@
 ---
-- name: Forced facts gathering
+
+- name: 'Forced gathering facts'
   setup:
-  when: ansible_os_family is not defined
+  when: module_setup is not defined
   tags:
     - cartridge-instances
     - cartridge-replicasets
     - cartridge-config
 
-- name: Check distribution
-  fail:
-    msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
-  when: ansible_os_family not in ["RedHat", "Debian"]
+- name: 'Validate config and hosts'
+  import_tasks: 'validate.yml'
   tags:
     - cartridge-instances
     - cartridge-replicasets
     - cartridge-config
 
-- name: Set remote_user for delegated tasks
-  set_fact:
-    remote_user: '{{ ansible_user }}'
-  when: remote_user is not defined and ansible_user is defined
+- name: 'Prepare facts'
+  import_tasks: 'prepare.yml'
   tags:
     - cartridge-instances
     - cartridge-replicasets
     - cartridge-config
 
-- name: Validate config
-  cartridge_validate_config:
-    hosts: '{{ play_hosts }}'
-    hostvars: '{{ hostvars }}'
-  delegate_to: localhost
-  become: false
-  run_once: true
+- name: 'BLOCK : Import tasks by scenario'
+  include_tasks: "{{ item.path }}"
+  loop_control:
+    label: "{{ item.name }}"
+  with_items: "{{ scenario_steps }}"
   tags:
     - cartridge-instances
     - cartridge-replicasets
     - cartridge-config
-
-- name: Collect instance info
-  cartridge_set_instance_info:
-    app_name: '{{ cartridge_app_name }}'
-    instance_name: '{{ inventory_hostname }}'
-    instance_vars:
-      cartridge_package_path: '{{ cartridge_package_path }}'
-      cartridge_dist_dir: '{{ cartridge_dist_dir }}'
-      cartridge_conf_dir: '{{ cartridge_conf_dir }}'
-      cartridge_run_dir: '{{ cartridge_run_dir }}'
-      cartridge_data_dir: '{{ cartridge_data_dir }}'
-      stateboard: '{{ stateboard }}'
-  tags:
-    - cartridge-instances
-    - cartridge-replicasets
-    - cartridge-config
-
-- name: Get one instance from each physical machine
-  cartridge_set_single_instances_for_each_machine:
-    hostvars: '{{ hostvars }}'
-    play_hosts: '{{ play_hosts }}'
-  run_once: true
-  tags: cartridge-instances
-
-- name: Install package
-  include_tasks: install_package.yml
-  when: >-
-    cartridge_package_path is not none and
-    inventory_hostname in single_instances_for_each_machine
-  tags: cartridge-instances
-
-- name: Start instance
-  include_tasks: start_instance.yml
-  when: not expelled
-  tags: cartridge-instances
-
-- name: Restart instances and reload systemd-daemon
-  meta: flush_handlers
-  tags: cartridge-instances
-
-- name: Wait for instance to be started
-  cartridge_check_instance_state:
-    console_sock: '{{ instance_info.console_sock }}'
-    stateboard: '{{ stateboard }}'
-  register: check_instance
-  until: not check_instance.failed
-  retries: '{{ instance_start_timeout // 5 }}'
-  delay: 5
-  when: not expelled
-  tags: cartridge-instances
-
-- name: Connect instance to membership
-  cartridge_probe_instance:
-    console_sock: '{{ instance_info.console_sock }}'
-    hostvars: '{{ hostvars }}'
-    play_hosts: '{{ play_hosts }}'
-  register: probe
-  until: not probe.failed
-  retries: 3
-  delay: 5
-  when: not expelled and not stateboard
-  tags:
-    - cartridge-instances
-    - cartridge-replicasets
-
-- name: Select one not expelled instance
-  cartridge_set_one_not_expelled_instance:
-    hostvars: '{{ hostvars }}'
-    play_hosts: '{{ play_hosts }}'
-  tags:
-    - cartridge-replicasets
-    - cartridge-config
-
-- name: Select control instance to manage topology and configuration
-  cartridge_set_control_instance:
-    hostvars: '{{ hostvars }}'
-    play_hosts: '{{ play_hosts }}'
-    console_sock: '{{ not_expelled_instance.console_sock }}'
-  run_once: true
-  check_mode: false
-  delegate_to: '{{ not_expelled_instance.name }}'
-  tags:
-    - cartridge-replicasets
-    - cartridge-config
-
-- name: Edit topology
-  cartridge_edit_topology:
-    hostvars: '{{ hostvars }}'
-    play_hosts: '{{ play_hosts }}'
-    console_sock: '{{ control_instance.console_sock }}'
-  run_once: true
-  delegate_to: '{{ control_instance.name }}'
-  tags: cartridge-replicasets
-
-- name: Cleanup expelled instance files and services
-  include_tasks: cleanup_expelled_instance.yml
-  when: expelled
-  tags: cartridge-replicasets
-
-- name: Cartridge auth
-  cartridge_auth:
-    auth: '{{ cartridge_auth }}'
-    console_sock: '{{ control_instance.console_sock }}'
-  delegate_to: '{{ control_instance.name }}'
-  run_once: true
-  when: cartridge_auth is not none
-  tags: cartridge-config
-
-- name: Application config
-  cartridge_app_config:
-    app_config: '{{ cartridge_app_config }}'
-    console_sock: '{{ control_instance.console_sock }}'
-  delegate_to: '{{ control_instance.name }}'
-  run_once: true
-  when: cartridge_app_config is not none
-  tags: cartridge-config
-
-- name: Bootstrap vshard
-  cartridge_bootstrap_vshard:
-    console_sock: '{{ control_instance.console_sock }}'
-  delegate_to: '{{ control_instance.name }}'
-  run_once: true
-  register: bootstrap_vshard
-  until: not bootstrap_vshard.failed
-  retries: 3
-  delay: 5
-  when: cartridge_bootstrap_vshard and not expelled
-  tags: cartridge-config
-
-- name: Wait for buckets discovering
-  cartridge_check_instance_state:
-    console_sock: '{{ instance_info.console_sock }}'
-    stateboard: '{{ stateboard }}'
-  register: check_instance
-  until: not check_instance.failed
-  retries: '{{ instance_start_timeout // 5 }}'
-  delay: 5
-  when: cartridge_bootstrap_vshard and not expelled
-  tags: cartridge-config
-
-- name: Manage failover
-  cartridge_manage_failover:
-    failover_params: '{{ cartridge_failover_params | default(cartridge_failover) }}'
-    console_sock: '{{ control_instance.console_sock }}'
-  delegate_to: '{{ control_instance.name }}'
-  run_once: true
-  when: cartridge_failover is not none or cartridge_failover_params is not none
-  tags: cartridge-config

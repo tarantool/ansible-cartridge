@@ -1,0 +1,16 @@
+---
+
+- name: 'BLOCK : Setup failover'
+  when: cartridge_failover is not none or cartridge_failover_params is not none
+  tags: cartridge-config
+  block:
+    - name: 'Check "control_instance" variable'
+      import_tasks: 'blocks/select_control_instance.yml'
+      when: control_instance is not defined
+
+    - name: 'Setup failover'
+      cartridge_manage_failover:
+        failover_params: '{{ cartridge_failover_params | default(cartridge_failover) }}'
+        console_sock: '{{ control_instance.console_sock }}'
+      run_once: true
+      delegate_to: '{{ control_instance.name }}'
