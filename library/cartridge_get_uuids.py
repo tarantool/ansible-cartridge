@@ -19,13 +19,14 @@ def get_uuids(control_console, instances_to_find, replicasets, hostvars):
     found_replicasets = []
 
     for instance_name in sorted(instances_to_find):
-        try:
-            get_control_console(hostvars[instance_name]['instance_control_sock'])
-        except CartridgeException as e:
-            continue
-        if is_expelled(hostvars[instance_name]) or is_stateboard(hostvars[instance_name]) or not is_healthy(hostvars[instance_name]['instance_control_sock']):
+        if is_expelled(hostvars[instance_name]) or is_stateboard(hostvars[instance_name]):
             continue
         response = control_console.eval('''
+            local membership = require('membership')
+            local member = membership.get_member('{}')
+            if member.status ~= 'alive' or member.payload.state ~= 'RolesConfigured' then
+                return box.NULL
+            end
             local replicasets = require('cartridge').admin_get_replicasets()
             for _, r in ipairs(replicasets) do
                 for _, s in ipairs(r.servers) do
@@ -37,8 +38,11 @@ def get_uuids(control_console, instances_to_find, replicasets, hostvars):
                     end
                 end
             end
-            return
-        '''.format(instance_name))
+            return box.NULL
+        '''.format(hostvars[instance_name]['config']['advertise_uri'], instance_name))
+
+        if response is None:
+            continue
 
         if response['replicaset_uuid'] not in found_replicasets:
             found_replicasets.append(response['replicaset_uuid'])
