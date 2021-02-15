@@ -8,7 +8,7 @@ from ansible.module_utils.helpers import filter_none_values
 
 argument_spec = {
     'auth': {'required': True, 'type': 'dict'},
-    'control_sock': {'required': True, 'type': 'str'},
+    'console_sock': {'required': True, 'type': 'str'},
 }
 
 
@@ -153,7 +153,7 @@ def users_are_equal(user1, user2):
 
 def manage_auth(params):
     auth_params = params['auth']
-    control_console = get_control_console(params['control_sock'])
+    control_console = get_control_console(params['console_sock'])
 
     if not auth_params:
         return ModuleRes(success=True, changed=False)
@@ -249,7 +249,7 @@ def main():
         module.fail_json(msg=str(e))
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, **res.meta)
     else:
         module.fail_json(msg=res.msg)
 

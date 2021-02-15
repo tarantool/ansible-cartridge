@@ -7,14 +7,14 @@ from ansible.module_utils.helpers import is_expelled, is_stateboard
 
 
 argument_spec = {
-    'control_sock': {'required': True, 'type': 'str'},
+    'console_sock': {'required': True, 'type': 'str'},
     'hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
 }
 
 
 def probe_server(params):
-    control_console = get_control_console(params['control_sock'])
+    control_console = get_control_console(params['console_sock'])
     hostvars = params['hostvars']
     play_hosts = params['play_hosts']
 
@@ -48,7 +48,7 @@ def main():
         module.fail_json(msg=str(e))
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, **res.meta)
     else:
         module.fail_json(msg=res.msg)
 

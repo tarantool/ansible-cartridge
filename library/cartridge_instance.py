@@ -11,7 +11,7 @@ import os
 
 
 argument_spec = {
-    'control_sock': {'required': True, 'type': 'str'},
+    'console_sock': {'required': True, 'type': 'str'},
     'config': {'required': True, 'type': 'dict'},
     'cartridge_defaults': {'required': False, 'type': 'dict', 'default': {}},
 }
@@ -92,14 +92,14 @@ def change_dynamic_params(current_box_cfg, cartridge_defaults, config, control_c
 def manage_instance(params):
     config = params['config']
     cartridge_defaults = params['cartridge_defaults']
-    control_sock = params['control_sock']
+    console_sock = params['console_sock']
 
     # Check if instance isn't started yet
-    if not os.path.exists(control_sock):
+    if not os.path.exists(console_sock):
         return ModuleRes(success=True, changed=False)
 
     try:
-        control_console = get_control_console(control_sock)
+        control_console = get_control_console(console_sock)
     except CartridgeException as e:
         allowed_errcodes = [
             cartridge_errcodes.SOCKET_NOT_FOUND,
@@ -146,7 +146,7 @@ def main():
         module.fail_json(msg=str(e))
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, **res.meta)
     else:
         module.fail_json(msg=res.msg)
 

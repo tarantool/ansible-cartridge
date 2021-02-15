@@ -6,12 +6,12 @@ from ansible.module_utils.helpers import get_control_console
 
 
 argument_spec = {
-    'control_sock': {'required': True, 'type': 'str'},
+    'console_sock': {'required': True, 'type': 'str'},
 }
 
 
 def bootstrap_vshard(params):
-    control_console = get_control_console(params['control_sock'])
+    control_console = get_control_console(params['console_sock'])
     can_bootstrap, _ = control_console.eval_res_err('''
         return require('cartridge.vshard-utils').can_bootstrap()
     ''')
@@ -38,7 +38,7 @@ def main():
         module.fail_json(msg=str(e))
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, **res.meta)
     else:
         module.fail_json(msg=res.msg)
 

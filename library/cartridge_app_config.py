@@ -7,7 +7,7 @@ from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
     'app_config': {'required': True, 'type': 'dict'},
-    'control_sock': {'required': True, 'type': 'str'},
+    'console_sock': {'required': True, 'type': 'str'},
 }
 
 
@@ -16,7 +16,7 @@ def section_is_deleted(section):
 
 
 def config_app(params):
-    control_console = get_control_console(params['control_sock'])
+    control_console = get_control_console(params['console_sock'])
     config = params['app_config']
 
     system_sections = {
@@ -78,7 +78,7 @@ def main():
         module.fail_json(msg=str(e))
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, **res.meta)
     else:
         module.fail_json(msg=res.msg)
 
