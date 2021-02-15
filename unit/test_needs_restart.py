@@ -17,25 +17,35 @@ import itertools
 from library.cartridge_needs_restart import needs_restart
 
 
-def call_needs_restart(control_sock,
+def call_needs_restart(console_sock,
                        restarted=None,
-                       appname=Instance.APPNAME,
+                       app_name=Instance.APPNAME,
                        instance_conf_file=Instance.INSTANCE_CONF_PATH,
-                       conf_section_name=Instance.CONF_SECTION,
+                       app_conf_file=Instance.APP_CONF_PATH,
+                       instance_code_dir=Instance.APP_CODE_PATH,
+                       conf_section=Instance.CONF_SECTION,
                        config={},
                        cluster_cookie=Instance.COOKIE,
                        cartridge_defaults={},
                        stateboard=False):
+
+    instance_info = {
+        'console_sock': console_sock,
+        'app_conf_file': app_conf_file,
+        'conf_file': instance_conf_file,
+        'conf_section': conf_section,
+        'app_conf_file': app_conf_file,
+        'instance_code_dir': instance_code_dir,
+    }
+
     return needs_restart({
-        'restarted': restarted,
-        'control_sock': control_sock,
-        'appname': appname,
-        'instance_conf_file': instance_conf_file,
-        'conf_section_name': conf_section_name,
-        'cluster_cookie': cluster_cookie,
-        'cartridge_defaults': cartridge_defaults,
+        'app_name': app_name,
         'config': config,
+        'cartridge_defaults': cartridge_defaults,
+        'cluster_cookie': cluster_cookie,
+        'restarted': restarted,
         'stateboard': stateboard,
+        'instance_info': instance_info,
     })
 
 
@@ -49,7 +59,7 @@ class TestNeedsRestart(unittest.TestCase):
 
     def test_restart_forced(self):
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             restarted=True
         )
         self.assertTrue(res.success, msg=res.msg)
@@ -57,7 +67,7 @@ class TestNeedsRestart(unittest.TestCase):
 
     def test_restart_disabled(self):
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             restarted=False
         )
         self.assertTrue(res.success, msg=res.msg)
@@ -68,7 +78,7 @@ class TestNeedsRestart(unittest.TestCase):
         self.instance.remove_file(self.console_sock)
 
         res = call_needs_restart(
-            control_sock=self.console_sock
+            console_sock=self.console_sock
         )
 
         self.assertTrue(res.success, msg=res.msg)
@@ -79,7 +89,7 @@ class TestNeedsRestart(unittest.TestCase):
         self.instance.write_file(bad_socket_path)
 
         res = call_needs_restart(
-            control_sock=bad_socket_path
+            console_sock=bad_socket_path
         )
 
         self.assertTrue(res.success, msg=res.msg)
@@ -98,7 +108,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # nothing changed
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 param_name: old_value,
             },
@@ -109,7 +119,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # param was changed
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 param_name: new_value,
             },
@@ -123,7 +133,7 @@ class TestNeedsRestart(unittest.TestCase):
         self.instance.set_path_mtime(self.instance.APP_CODE_PATH, self.instance.DATE_TODAY)
         self.instance.set_path_mtime(self.console_sock, self.instance.DATE_YESTERDAY)
 
-        res = call_needs_restart(control_sock=self.console_sock)
+        res = call_needs_restart(console_sock=self.console_sock)
 
         self.assertTrue(res.success, msg=res.msg)
         self.assertTrue(res.changed)
@@ -152,7 +162,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # nothing changed
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 param_name: param_current_value,
                 memory_param_name: current_memory_size
@@ -164,7 +174,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # param changed, memory size not
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 param_name: param_new_value,
                 memory_param_name: current_memory_size
@@ -179,7 +189,7 @@ class TestNeedsRestart(unittest.TestCase):
         # but isn't changed on instance
         set_box_cfg(self.instance, **{memory_param_name: current_memory_size})
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 param_name: param_current_value,
                 memory_param_name: memtx_memory_new_value
@@ -194,7 +204,7 @@ class TestNeedsRestart(unittest.TestCase):
         # and changed on instance
         set_box_cfg(self.instance, **{memory_param_name: memtx_memory_new_value})
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 param_name: param_current_value,
                 memory_param_name: memtx_memory_new_value
@@ -209,7 +219,7 @@ class TestNeedsRestart(unittest.TestCase):
         # and changed on instance
         set_box_cfg(self.instance, **{memory_param_name: memtx_memory_new_value})
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 param_name: param_new_value,
                 memory_param_name: memtx_memory_new_value
@@ -243,7 +253,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # nothing changed
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             cartridge_defaults={
                 param_name: param_current_value,
                 memory_param_name: current_memory_size
@@ -255,7 +265,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # param changed, memory size not
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             cartridge_defaults={
                 param_name: param_new_value,
                 memory_param_name: current_memory_size
@@ -273,7 +283,7 @@ class TestNeedsRestart(unittest.TestCase):
         # but isn't changed on instance
         set_box_cfg(self.instance, **{memory_param_name: current_memory_size})
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             cartridge_defaults={
                 param_name: param_current_value,
                 memory_param_name: memtx_memory_new_value
@@ -291,7 +301,7 @@ class TestNeedsRestart(unittest.TestCase):
         # and changed on instance
         set_box_cfg(self.instance, **{memory_param_name: memtx_memory_new_value})
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             cartridge_defaults={
                 param_name: param_current_value,
                 memory_param_name: memtx_memory_new_value
@@ -306,7 +316,7 @@ class TestNeedsRestart(unittest.TestCase):
         # and changed on instance
         set_box_cfg(self.instance, **{memory_param_name: memtx_memory_new_value})
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             cartridge_defaults={
                 param_name: param_new_value,
                 memory_param_name: memtx_memory_new_value
@@ -338,7 +348,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # nothing changed
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 memory_param_name: current_memory_size
             },
@@ -351,7 +361,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # memory size changed only in cartridge_defaults
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 memory_param_name: current_memory_size
             },
@@ -364,7 +374,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         # memory size changed both in cartridge_defaults and config
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 memory_param_name: new_memory_size_instance
             },
@@ -379,7 +389,7 @@ class TestNeedsRestart(unittest.TestCase):
         # memory size on instance is equal to value from cartridge_defaults
         set_box_cfg(self.instance, **{memory_param_name: new_memory_size_app})
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 memory_param_name: new_memory_size_instance
             },
@@ -394,7 +404,7 @@ class TestNeedsRestart(unittest.TestCase):
         # memory size on instance is equal to value from config
         set_box_cfg(self.instance, **{memory_param_name: new_memory_size_instance})
         res = call_needs_restart(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             config={
                 memory_param_name: new_memory_size_instance
             },

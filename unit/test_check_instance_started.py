@@ -15,9 +15,9 @@ from instance import Instance
 from library.cartridge_check_instance_started import check_started
 
 
-def call_check_instance_started(control_sock, stateboard=False, check_buckets_are_discovered=False):
+def call_check_instance_started(console_sock, stateboard=False, check_buckets_are_discovered=False):
     return check_started({
-        'control_sock': control_sock,
+        'console_sock': console_sock,
         'stateboard': stateboard,
         'expected_states': ['Unconfigured', 'RolesConfigured'],
         'check_buckets_are_discovered': check_buckets_are_discovered,

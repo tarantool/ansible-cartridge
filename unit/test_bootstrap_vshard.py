@@ -12,9 +12,9 @@ from instance import Instance
 from library.cartridge_bootstrap_vshard import bootstrap_vshard
 
 
-def call_bootstrap_vshard(control_sock):
+def call_bootstrap_vshard(console_sock):
     return bootstrap_vshard({
-        'control_sock': control_sock,
+        'console_sock': console_sock,
     })
 
 

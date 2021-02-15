@@ -12,10 +12,10 @@ from instance import Instance
 from library.cartridge_manage_failover import manage_failover
 
 
-def call_manage_failover(control_sock, mode,
+def call_manage_failover(console_sock, mode,
                          state_provider=None, stateboard_params=None, etcd2_params=None):
     return manage_failover({
-        'control_sock': control_sock,
+        'console_sock': console_sock,
         'failover_params': {
             'mode': mode,
             'state_provider': state_provider,
