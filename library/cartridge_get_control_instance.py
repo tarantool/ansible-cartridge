@@ -30,8 +30,7 @@ def get_control_instance(params):
                 errmsg = 'Unable to get instance alias for "{}"'.format(member['payload']['uuid'])
                 return ModuleRes(success=False, msg=errmsg)
 
-            instance_name = member['payload']['alias']
-            control_instance_name = instance_name
+            control_instance_name = member['payload']['alias']
             break
 
     if control_instance_name is None:

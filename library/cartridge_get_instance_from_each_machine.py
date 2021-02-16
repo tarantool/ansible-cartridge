@@ -37,11 +37,9 @@ def get_one_not_expelled_instance_for_machine(params):
             machine_hostnames.add(machine_hostname)
             instance_names.append(instance_name)
 
-    instances = {
+    return ModuleRes(success=True, meta={
         'names': instance_names,
-    }
-
-    return ModuleRes(success=True, meta=instances)
+    })
 
 
 def main():
