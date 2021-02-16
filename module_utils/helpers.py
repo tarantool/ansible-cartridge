@@ -7,11 +7,11 @@ import os
 
 
 class ModuleRes:
-    def __init__(self, success, msg=None, changed=False, meta=dict(), warnings=[]):
+    def __init__(self, success, msg=None, changed=False, meta=None, warnings=None):
         self.success = success
         self.msg = msg
         self.changed = changed
-        self.meta = meta
+        self.meta = meta if meta is not None else dict()
         self.warnings = warnings
 
 
