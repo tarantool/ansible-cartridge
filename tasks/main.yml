@@ -79,7 +79,7 @@
   tags: cartridge-instances
 
 - name: Wait for instance to be started
-  cartridge_check_instance_started:
+  cartridge_check_instance_state:
     console_sock: '{{ instance_info.console_sock }}'
     stateboard: '{{ stateboard }}'
   register: check_instance
@@ -169,8 +169,8 @@
   when: cartridge_bootstrap_vshard is defined and cartridge_bootstrap_vshard
   tags: cartridge-config
 
-- name: Wait for instance to be started and buckets are discovered
-  cartridge_check_instance_started:
+- name: Wait for buckets discovering
+  cartridge_check_instance_state:
     console_sock: '{{ instance_info.console_sock }}'
     stateboard: '{{ stateboard }}'
   register: check_instance

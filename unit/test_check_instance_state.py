@@ -12,11 +12,11 @@ sys.path.append(os.path.dirname(__file__))
 import unittest
 from instance import Instance
 
-from library.cartridge_check_instance_started import check_started
+from library.cartridge_check_instance_state import check_state
 
 
-def call_check_instance_started(console_sock, stateboard=False, check_buckets_are_discovered=False):
-    return check_started({
+def call_check_instance_state(console_sock, stateboard=False, check_buckets_are_discovered=False):
+    return check_state({
         'console_sock': console_sock,
         'stateboard': stateboard,
         'expected_states': ['Unconfigured', 'RolesConfigured'],
@@ -49,7 +49,7 @@ class TestInstanceStarted(unittest.TestCase):
     def template_test_instance_not_started(self, stateboard):
         # console sock doesn't exists
         self.instance.remove_file(self.console_sock)
-        res = call_check_instance_started(self.console_sock, stateboard)
+        res = call_check_instance_state(self.console_sock, stateboard)
         self.assertFalse(res.success)
         self.assertIn('Instance socket not found', res.msg)
 
@@ -57,7 +57,7 @@ class TestInstanceStarted(unittest.TestCase):
         bad_socket_path = 'bad-socket-path'
         self.instance.write_file(bad_socket_path)
 
-        res = call_check_instance_started(bad_socket_path, stateboard)
+        res = call_check_instance_state(bad_socket_path, stateboard)
         self.assertFalse(res.success)
         self.assertIn('Failed to connect to socket', res.msg)
 
@@ -68,7 +68,7 @@ class TestInstanceStarted(unittest.TestCase):
         # box.cfg == function
 
         self.instance.set_box_cfg_function(True)
-        res = call_check_instance_started(self.console_sock, stateboard=True)
+        res = call_check_instance_state(self.console_sock, stateboard=True)
         self.assertFalse(res.success)
         self.assertIn("Stateboard is not running: box hasn't been configured", res.msg)
 
@@ -76,7 +76,7 @@ class TestInstanceStarted(unittest.TestCase):
         # box.cfg.listen == nil
 
         self.instance.set_box_cfg({})
-        res = call_check_instance_started(self.console_sock, stateboard=True)
+        res = call_check_instance_state(self.console_sock, stateboard=True)
         self.assertFalse(res.success)
         self.assertIn("Stateboard is not running: box hasn't been configured", res.msg)
 
@@ -84,7 +84,7 @@ class TestInstanceStarted(unittest.TestCase):
         # box.cfg.listen ~= nil
 
         self.instance.set_box_cfg({'listen': 3333})
-        res = call_check_instance_started(self.console_sock, stateboard=True)
+        res = call_check_instance_state(self.console_sock, stateboard=True)
         self.assertTrue(res.success)
 
     def test_instance_not_started(self):
@@ -94,7 +94,7 @@ class TestInstanceStarted(unittest.TestCase):
         # require('cartridge.confapplier').get_state() == 'OperationError'
 
         set_confapplier_state(self.instance, 'OperationError')
-        res = call_check_instance_started(self.console_sock)
+        res = call_check_instance_state(self.console_sock)
         self.assertFalse(res.success)
         self.assertIn("Instance is not in one of states: ['Unconfigured', 'RolesConfigured'], "
                       "it's in 'OperationError' state", res.msg)
@@ -109,14 +109,14 @@ class TestInstanceStarted(unittest.TestCase):
             'hot': {'bucket_count': 2000, 'bootstrapped': False},
             'cold': {'bucket_count': 30000, 'bootstrapped': False},
         })
-        res = call_check_instance_started(self.console_sock, check_buckets_are_discovered=True)
+        res = call_check_instance_state(self.console_sock, check_buckets_are_discovered=True)
         self.assertTrue(res.success)
 
         set_vshard_groups(self.instance, {
             'hot': {'bucket_count': 2000, 'bootstrapped': True},
             'cold': {'bucket_count': 30000, 'bootstrapped': False},
         })
-        res = call_check_instance_started(self.console_sock, check_buckets_are_discovered=True)
+        res = call_check_instance_state(self.console_sock, check_buckets_are_discovered=True)
         self.assertFalse(res.success)
         self.assertIn("1000 out of 2000 buckets are not discovered in group 'hot'", res.msg)
 
@@ -124,7 +124,7 @@ class TestInstanceStarted(unittest.TestCase):
             'hot': {'bucket_count': 2000, 'bootstrapped': False},
             'cold': {'bucket_count': 30000, 'bootstrapped': True},
         })
-        res = call_check_instance_started(self.console_sock, check_buckets_are_discovered=True)
+        res = call_check_instance_state(self.console_sock, check_buckets_are_discovered=True)
         self.assertFalse(res.success)
         self.assertIn("1000 out of 30000 buckets are not discovered in group 'cold'", res.msg)
 
@@ -138,12 +138,12 @@ class TestInstanceStarted(unittest.TestCase):
         })
 
         set_vshard_router_unknown_buckets(self.instance, {'hot': 1000})
-        res = call_check_instance_started(self.console_sock, check_buckets_are_discovered=True)
+        res = call_check_instance_state(self.console_sock, check_buckets_are_discovered=True)
         self.assertFalse(res.success)
         self.assertIn("1000 out of 2000 buckets are not discovered in group 'hot'", res.msg)
 
         set_vshard_router_unknown_buckets(self.instance, {'cold': 1000})
-        res = call_check_instance_started(self.console_sock, check_buckets_are_discovered=True)
+        res = call_check_instance_state(self.console_sock, check_buckets_are_discovered=True)
         self.assertFalse(res.success)
         self.assertIn("1000 out of 30000 buckets are not discovered in group 'cold'", res.msg)
 
@@ -157,12 +157,12 @@ class TestInstanceStarted(unittest.TestCase):
         })
 
         set_vshard_router_unknown_buckets(self.instance, {'hot': 1000, 'cold': 0})
-        res = call_check_instance_started(self.console_sock, check_buckets_are_discovered=True)
+        res = call_check_instance_state(self.console_sock, check_buckets_are_discovered=True)
         self.assertFalse(res.success)
         self.assertIn("1000 out of 2000 buckets are not discovered in group 'hot'", res.msg)
 
         set_vshard_router_unknown_buckets(self.instance, {'hot': 0, 'cold': 1000})
-        res = call_check_instance_started(self.console_sock, check_buckets_are_discovered=True)
+        res = call_check_instance_state(self.console_sock, check_buckets_are_discovered=True)
         self.assertFalse(res.success)
         self.assertIn("1000 out of 30000 buckets are not discovered in group 'cold'", res.msg)
 
@@ -173,7 +173,7 @@ class TestInstanceStarted(unittest.TestCase):
             'cold': {'bucket_count': 30000, 'bootstrapped': True},
         })
         set_vshard_router_unknown_buckets(self.instance, {'cold': 0, 'hot': 0})
-        res = call_check_instance_started(self.console_sock, check_buckets_are_discovered=True)
+        res = call_check_instance_state(self.console_sock, check_buckets_are_discovered=True)
         self.assertTrue(res.success)
 
     def tearDown(self):

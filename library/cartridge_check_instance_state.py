@@ -12,7 +12,7 @@ argument_spec = {
 }
 
 
-def check_stateboard_started(control_console):
+def check_stateboard_state(control_console):
     box_status, err = control_console.eval_res_err('''
         if type(box.cfg) == 'function' or box.cfg.listen == nil then
             return nil, "box hasn't been configured"
@@ -25,7 +25,7 @@ def check_stateboard_started(control_console):
     return ModuleRes(success=True)
 
 
-def check_instance_started(control_console, expected_states, check_buckets_are_discovered):
+def check_instance_state(control_console, expected_states, check_buckets_are_discovered):
     instance_state, err = control_console.eval_res_err('''
         return require('cartridge.confapplier').get_state()
     ''')
@@ -84,14 +84,14 @@ def check_instance_started(control_console, expected_states, check_buckets_are_d
     return ModuleRes(success=True)
 
 
-def check_started(params):
+def check_state(params):
     try:
         control_console = get_control_console(params['console_sock'])
 
         if params['stateboard']:
-            return check_stateboard_started(control_console)
+            return check_stateboard_state(control_console)
         else:
-            return check_instance_started(
+            return check_instance_state(
                 control_console,
                 params['expected_states'],
                 params['check_buckets_are_discovered'],
@@ -105,7 +105,7 @@ def main():
     module = AnsibleModule(argument_spec=argument_spec)
 
     try:
-        res = check_started(module.params)
+        res = check_state(module.params)
     except CartridgeException as e:
         module.fail_json(msg=str(e))
 
