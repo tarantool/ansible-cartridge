@@ -79,7 +79,7 @@
   tags: cartridge-instances
 
 - name: Wait for instance to be started
-  cartridge_check_instance_started:
+  cartridge_check_instance_state:
     console_sock: '{{ instance_info.console_sock }}'
     stateboard: '{{ stateboard }}'
   register: check_instance
@@ -145,7 +145,7 @@
     console_sock: '{{ control_instance.console_sock }}'
   delegate_to: '{{ control_instance.name }}'
   run_once: true
-  when: cartridge_auth is defined
+  when: cartridge_auth is not none
   tags: cartridge-config
 
 - name: Application config
@@ -154,7 +154,7 @@
     console_sock: '{{ control_instance.console_sock }}'
   delegate_to: '{{ control_instance.name }}'
   run_once: true
-  when: cartridge_app_config is defined
+  when: cartridge_app_config is not none
   tags: cartridge-config
 
 - name: Bootstrap vshard
@@ -166,18 +166,18 @@
   until: not bootstrap_vshard.failed
   retries: 3
   delay: 5
-  when: cartridge_bootstrap_vshard is defined and cartridge_bootstrap_vshard
+  when: cartridge_bootstrap_vshard and not expelled
   tags: cartridge-config
 
-- name: Wait for instance to be started and buckets are discovered
-  cartridge_check_instance_started:
+- name: Wait for buckets discovering
+  cartridge_check_instance_state:
     console_sock: '{{ instance_info.console_sock }}'
     stateboard: '{{ stateboard }}'
   register: check_instance
   until: not check_instance.failed
   retries: '{{ instance_start_timeout // 5 }}'
   delay: 5
-  when: not expelled and cartridge_bootstrap_vshard is defined and cartridge_bootstrap_vshard
+  when: cartridge_bootstrap_vshard and not expelled
   tags: cartridge-config
 
 - name: Manage failover
@@ -186,5 +186,5 @@
     console_sock: '{{ control_instance.console_sock }}'
   delegate_to: '{{ control_instance.name }}'
   run_once: true
-  when: cartridge_failover is defined or cartridge_failover_params is defined
+  when: cartridge_failover is not none or cartridge_failover_params is not none
   tags: cartridge-config

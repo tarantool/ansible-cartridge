@@ -3,6 +3,12 @@ cartridge_package_path: null
 cartridge_defaults: {}
 cartridge_enable_tarantool_repo: true
 
+cartridge_bootstrap_vshard: false
+cartridge_app_config: null
+cartridge_auth: null
+cartridge_failover: null
+cartridge_failover_params: null
+
 restarted: null
 expelled: false
 stateboard: false
