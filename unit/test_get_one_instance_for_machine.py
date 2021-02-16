@@ -64,4 +64,7 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
             'expelled-1', 'expelled-2', 'instance-1', 'instance-2', 'stateboard-1', 'stateboard-2',
         ])
         self.assertTrue(res.success, res.msg)
-        self.assertEqual(res.meta['names'], ['instance-1', 'instance-2'])
+
+        self.assertEqual(len(res.meta['names']), 2)
+        self.assertTrue('instance-1' in res.meta['names'] or 'stateboard-1' in res.meta['names'])
+        self.assertTrue('instance-2' in res.meta['names'] or 'stateboard-2' in res.meta['names'])

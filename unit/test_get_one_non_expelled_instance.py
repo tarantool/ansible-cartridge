@@ -47,7 +47,10 @@ class TestGetOneNotExpelledInstance(unittest.TestCase):
             'expelled-1', 'my-stateboard', 'expelled-2', 'instance-1', 'instance-2', 'instance-3',
         ])
         self.assertTrue(res.success, res.msg)
-        self.assertEqual(res.meta, {
-            'name': 'instance-1',
-            'console_sock': 'sock-1',
-        })
+
+        possible_meta = [
+            {'name': 'instance-1', 'console_sock': 'sock-1'},
+            {'name': 'instance-2', 'console_sock': 'sock-2'},
+        ]
+
+        self.assertIn(res.meta, possible_meta)
