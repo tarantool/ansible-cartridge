@@ -12,10 +12,10 @@ from instance import Instance
 from library.cartridge_auth import manage_auth
 
 
-def call_manage_auth(control_sock, enabled=None, cookie_max_age=None,
+def call_manage_auth(console_sock, enabled=None, cookie_max_age=None,
                      cookie_renew_age=None, users=None):
     return manage_auth({
-        'control_sock': control_sock,
+        'console_sock': console_sock,
         'auth': {
             'enabled': enabled,
             'cookie_max_age': cookie_max_age,

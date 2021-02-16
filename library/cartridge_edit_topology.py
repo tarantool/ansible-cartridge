@@ -9,7 +9,7 @@ from ansible.module_utils.helpers import is_expelled, is_stateboard
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
-    'control_sock': {'required': True, 'type': 'str'},
+    'console_sock': {'required': True, 'type': 'str'},
 }
 
 
@@ -337,7 +337,7 @@ def get_edit_failover_priority_params(replicasets, cluster_replicasets, cluster_
 
 
 def edit_topology(params):
-    control_sock = params['control_sock']
+    console_sock = params['console_sock']
     hostvars = params['hostvars']
     play_hosts = params['play_hosts']
 
@@ -347,7 +347,7 @@ def edit_topology(params):
     if not replicasets and not instances_to_expel:
         return ModuleRes(success=True, changed=False)
 
-    control_console = get_control_console(control_sock)
+    control_console = get_control_console(console_sock)
     cluster_instances = get_cluster_instances(control_console)
 
     # call edit_topology once
@@ -398,7 +398,7 @@ def main():
         module.fail_json(msg=str(e))
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, **res.meta)
     else:
         module.fail_json(msg=res.msg)
 

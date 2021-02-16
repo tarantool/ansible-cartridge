@@ -37,31 +37,36 @@
     - cartridge-replicasets
     - cartridge-config
 
-- name: Set instance facts
-  set_fact:
-    instance_control_sock: '{{ cartridge_app_name | get_instance_control_sock(inventory_hostname, stateboard) }}'
-    instance_conf_file: '{{ cartridge_app_name | get_instance_conf_file(inventory_hostname, stateboard) }}'
-    app_conf_file: '{{ cartridge_app_name | get_app_conf_file }}'
-    instance_conf_section: '{{ cartridge_app_name | get_instance_conf_section(inventory_hostname, stateboard) }}'
-    instance_work_dir: '{{ cartridge_app_name | get_instance_work_dir(inventory_hostname, stateboard) }}'
-    instance_systemd_service: '{{ cartridge_app_name | get_instance_systemd_service(inventory_hostname, stateboard) }}'
+- name: Collect instance info
+  cartridge_get_instance_info:
+    app_name: '{{ cartridge_app_name }}'
+    instance_name: '{{ inventory_hostname }}'
+    instance_vars:
+      cartridge_package_path: '{{ cartridge_package_path }}'
+      cartridge_dist_dir: '{{ cartridge_dist_dir }}'
+      cartridge_conf_dir: '{{ cartridge_conf_dir }}'
+      cartridge_run_dir: '{{ cartridge_run_dir }}'
+      cartridge_data_dir: '{{ cartridge_data_dir }}'
+      stateboard: '{{ stateboard }}'
+  register: instance_info
   tags:
     - cartridge-instances
     - cartridge-replicasets
     - cartridge-config
 
 - name: Get one instance from each physical machine
-  set_fact:
-    single_instances_for_each_machine: '{{ hostvars | get_one_not_expelled_instance_for_machine(play_hosts) }}'
+  cartridge_get_instance_from_each_machine:
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+  register: single_instances_for_each_machine
   run_once: true
   tags: cartridge-instances
 
-# Rewrites cartridge_app_name from package info
 - name: Install package
   include_tasks: install_package.yml
   when: >-
-    cartridge_package_path is defined and
-    inventory_hostname in single_instances_for_each_machine
+    cartridge_package_path is not none and
+    inventory_hostname in single_instances_for_each_machine.names
   tags: cartridge-instances
 
 - name: Start instance
@@ -75,7 +80,7 @@
 
 - name: Wait for instance to be started
   cartridge_check_instance_started:
-    control_sock: '{{ instance_control_sock }}'
+    console_sock: '{{ instance_info.console_sock }}'
     stateboard: '{{ stateboard }}'
   register: check_instance
   until: not check_instance.failed
@@ -86,7 +91,7 @@
 
 - name: Connect instance to membership
   cartridge_probe_instance:
-    control_sock: '{{ instance_control_sock }}'
+    console_sock: '{{ instance_info.console_sock }}'
     hostvars: '{{ hostvars }}'
     play_hosts: '{{ play_hosts }}'
   register: probe
@@ -99,34 +104,34 @@
     - cartridge-replicasets
 
 - name: Select one not expelled instance
-  set_fact:
-    one_not_expelled_instance: '{{ hostvars | get_one_not_expelled_instance(play_hosts) }}'
+  cartridge_get_one_not_expelled_instance:
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+  register: not_expelled_instance
   tags:
     - cartridge-replicasets
     - cartridge-config
 
-- name: Find some instance that is already in cluster
-  cartridge_control_instance:
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
+- name: Select control instance to manage topology and configuration
+  cartridge_get_control_instance:
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+    console_sock: '{{ not_expelled_instance.console_sock }}'
   register: control_instance
   run_once: true
   check_mode: false
-  delegate_to: '{{ one_not_expelled_instance }}'
-  tags: cartridge-replicasets
-
-- name: Set one control instance to edit topology
-  set_fact:
-    control_host: '{{ control_instance.meta.host | get_control_host(hostvars, play_hosts) }}'
-  check_mode: false
-  tags: cartridge-replicasets
+  delegate_to: '{{ not_expelled_instance.name }}'
+  tags:
+    - cartridge-replicasets
+    - cartridge-config
 
 - name: Edit topology
   cartridge_edit_topology:
     hostvars: '{{ hostvars }}'
     play_hosts: '{{ play_hosts }}'
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_host) }}'
+    console_sock: '{{ control_instance.console_sock }}'
   run_once: true
-  delegate_to: '{{ control_host }}'
+  delegate_to: '{{ control_instance.name }}'
   tags: cartridge-replicasets
 
 - name: Cleanup expelled instance files and services
@@ -134,39 +139,11 @@
   when: expelled
   tags: cartridge-replicasets
 
-- name: Set one control instance to rule them all
-  cartridge_control_instance:
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(one_not_expelled_instance) }}'
-    allow_empty: false
-  register: control_instance
-  run_once: true
-  check_mode: false
-  delegate_to: '{{ one_not_expelled_instance }}'
-  when: >-
-    cartridge_auth is defined
-    or cartridge_app_config is defined
-    or cartridge_bootstrap_vshard is defined
-    or cartridge_failover is defined
-    or cartridge_failover_params is defined
-  tags: cartridge-config
-
-- name: Set control instance facts
-  set_fact:
-    control_host: '{{ control_instance.meta.host }}'
-    control_sock: '{{ cartridge_app_name | get_instance_control_sock(control_instance.meta.host) }}'
-  when: >-
-    cartridge_auth is defined
-    or cartridge_app_config is defined
-    or cartridge_bootstrap_vshard is defined
-    or cartridge_failover is defined
-    or cartridge_failover_params is defined
-  tags: cartridge-config
-
 - name: Cartridge auth
   cartridge_auth:
     auth: '{{ cartridge_auth }}'
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
+    console_sock: '{{ control_instance.console_sock }}'
+  delegate_to: '{{ control_instance.name }}'
   run_once: true
   when: cartridge_auth is defined
   tags: cartridge-config
@@ -174,16 +151,16 @@
 - name: Application config
   cartridge_app_config:
     app_config: '{{ cartridge_app_config }}'
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
+    console_sock: '{{ control_instance.console_sock }}'
+  delegate_to: '{{ control_instance.name }}'
   run_once: true
   when: cartridge_app_config is defined
   tags: cartridge-config
 
 - name: Bootstrap vshard
   cartridge_bootstrap_vshard:
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
+    console_sock: '{{ control_instance.console_sock }}'
+  delegate_to: '{{ control_instance.name }}'
   run_once: true
   register: bootstrap_vshard
   until: not bootstrap_vshard.failed
@@ -194,7 +171,7 @@
 
 - name: Wait for instance to be started and buckets are discovered
   cartridge_check_instance_started:
-    control_sock: '{{ instance_control_sock }}'
+    console_sock: '{{ instance_info.console_sock }}'
     stateboard: '{{ stateboard }}'
   register: check_instance
   until: not check_instance.failed
@@ -206,8 +183,8 @@
 - name: Manage failover
   cartridge_manage_failover:
     failover_params: '{{ cartridge_failover_params | default(cartridge_failover) }}'
-    control_sock: '{{ control_sock }}'
-  delegate_to: '{{ control_host }}'
+    console_sock: '{{ control_instance.console_sock }}'
+  delegate_to: '{{ control_instance.name }}'
   run_once: true
   when: cartridge_failover is defined or cartridge_failover_params is defined
   tags: cartridge-config

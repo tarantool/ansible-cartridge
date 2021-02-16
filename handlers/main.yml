@@ -7,7 +7,7 @@
 
 - name: Restart instance systemd service
   systemd:
-    name: '{{ instance_systemd_service }}'
+    name: '{{ instance_info.systemd_service }}'
     state: restarted
     enabled: true
   listen: restart-instance

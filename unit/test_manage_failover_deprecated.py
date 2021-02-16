@@ -12,9 +12,9 @@ from instance import Instance
 from library.cartridge_manage_failover import manage_failover
 
 
-def call_manage_failover_deprecated(control_sock, failover):
+def call_manage_failover_deprecated(console_sock, failover):
     return manage_failover({
-        'control_sock': control_sock,
+        'console_sock': console_sock,
         'failover_params': failover,
     })
 

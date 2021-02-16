@@ -5,7 +5,7 @@ from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
-    'control_sock': {'required': True, 'type': 'str'},
+    'console_sock': {'required': True, 'type': 'str'},
     'stateboard': {'required': True, 'type': 'bool'},
     'expected_states': {'required': False, 'type': 'list', 'default': ['Unconfigured', 'RolesConfigured']},
     'check_buckets_are_discovered': {'required': False, 'type': 'bool', 'default': True},
@@ -86,7 +86,7 @@ def check_instance_started(control_console, expected_states, check_buckets_are_d
 
 def check_started(params):
     try:
-        control_console = get_control_console(params['control_sock'])
+        control_console = get_control_console(params['console_sock'])
 
         if params['stateboard']:
             return check_stateboard_started(control_console)
@@ -110,7 +110,7 @@ def main():
         module.fail_json(msg=str(e))
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, **res.meta)
     else:
         module.fail_json(msg=res.msg)
 

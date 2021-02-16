@@ -7,11 +7,11 @@ import os
 
 
 class ModuleRes:
-    def __init__(self, success, msg=None, changed=False, meta=None, warnings=[]):
+    def __init__(self, success, msg=None, changed=False, meta=None, warnings=None):
         self.success = success
         self.msg = msg
         self.changed = changed
-        self.meta = meta
+        self.meta = meta if meta is not None else dict()
         self.warnings = warnings
 
 
@@ -194,6 +194,18 @@ def is_expelled(host_vars):
 
 def is_stateboard(host_vars):
     return host_vars.get('stateboard') is True
+
+
+def get_instance_id(app_name, instance_name, stateboard=False):
+    if stateboard:
+        return '{}-stateboard'.format(app_name)
+
+    return '{}.{}'.format(app_name, instance_name)
+
+
+def get_instance_console_sock(run_dir, app_name, instance_name, stateboard=False):
+    instance_fullname = get_instance_id(app_name, instance_name, stateboard)
+    return os.path.join(run_dir, '%s.control' % instance_fullname)
 
 
 def box_cfg_was_called(control_console):

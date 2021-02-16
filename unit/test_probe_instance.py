@@ -12,12 +12,12 @@ from instance import Instance
 from library.cartridge_probe_instance import probe_server
 
 
-def call_probe_instance(control_sock, hostvars, play_hosts=None):
+def call_probe_instance(console_sock, hostvars, play_hosts=None):
     if play_hosts is None:
         play_hosts = hostvars.keys()
 
     return probe_server({
-        'control_sock': control_sock,
+        'console_sock': console_sock,
         'hostvars': hostvars,
         'play_hosts': play_hosts,
     })
@@ -47,7 +47,7 @@ class TestProbeInstance(unittest.TestCase):
         # one instance
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             hostvars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
@@ -63,7 +63,7 @@ class TestProbeInstance(unittest.TestCase):
         # two instances
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             hostvars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
@@ -86,7 +86,7 @@ class TestProbeInstance(unittest.TestCase):
         # probe not known server
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             hostvars={
                 'instance-2': {
                     'config': {'advertise_uri': URI2},
@@ -102,7 +102,7 @@ class TestProbeInstance(unittest.TestCase):
         # probe both known and not known server
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             hostvars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
@@ -129,7 +129,7 @@ class TestProbeInstance(unittest.TestCase):
         # probe only expelled
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             hostvars={
                 'instance-2': {
                     'expelled': True,
@@ -145,7 +145,7 @@ class TestProbeInstance(unittest.TestCase):
         # probe both expelled and not
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             hostvars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
@@ -168,7 +168,7 @@ class TestProbeInstance(unittest.TestCase):
 
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             hostvars={
                 'instance-2': {
                     'restarted': True,
@@ -190,7 +190,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
 
         res = call_probe_instance(
-            control_sock=self.console_sock,
+            console_sock=self.console_sock,
             hostvars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},

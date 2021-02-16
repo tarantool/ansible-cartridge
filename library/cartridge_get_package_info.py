@@ -132,7 +132,7 @@ def main():
         module.fail_json(msg=str(e))
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, **res.meta)
     else:
         module.fail_json(msg=res.msg)
 

@@ -1,7 +1,7 @@
 ---
 - name: Stop and disable instance systemd service
   systemd:
-    name: '{{ instance_systemd_service }}'
+    name: '{{ instance_info.systemd_service }}'
     state: stopped
     enabled: false
   tags: cartridge-replicasets
@@ -11,9 +11,9 @@
     path: '{{ filepath }}'
     state: absent
   with_items:
-    - '{{ instance_conf_file }}'
-    - '{{ instance_control_sock }}'
-    - '{{ instance_work_dir }}'
+    - '{{ instance_info.conf_file }}'
+    - '{{ instance_info.console_sock }}'
+    - '{{ instance_info.work_dir }}'
   loop_control:
     loop_var: filepath
   tags: cartridge-replicasets

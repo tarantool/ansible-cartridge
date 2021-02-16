@@ -13,12 +13,12 @@ from helpers import add_replicaset
 from library.cartridge_edit_topology import edit_topology
 
 
-def call_edit_topology(control_sock, hostvars, play_hosts=None):
+def call_edit_topology(console_sock, hostvars, play_hosts=None):
     if play_hosts is None:
         play_hosts = hostvars.keys()
 
     return edit_topology({
-        'control_sock': control_sock,
+        'console_sock': console_sock,
         'hostvars': hostvars,
         'play_hosts': play_hosts,
     })

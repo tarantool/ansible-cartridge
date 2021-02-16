@@ -6,7 +6,7 @@ from ansible.module_utils.helpers import get_control_console
 
 
 argument_spec = {
-    'control_sock': {'required': True, 'type': 'str'},
+    'console_sock': {'required': True, 'type': 'str'},
     'failover_params': {'required': False, 'type': 'raw'},
 }
 
@@ -98,7 +98,7 @@ def manage_failover(params):
             'mode': 'eventual' if failover_params is True else 'disabled'
         }
 
-    control_console = get_control_console(params['control_sock'])
+    control_console = get_control_console(params['console_sock'])
     version = get_tarantool_version(control_console)
 
     if version is not None and version >= NEW_FAILOVER_API_CARTRIDGE_VERSION:
@@ -120,7 +120,7 @@ def main():
         module.fail_json(msg=str(e))
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, **res.meta)
     else:
         module.fail_json(msg=res.msg)
 

@@ -15,13 +15,13 @@
 
 - name: Set cartridge_app_name from package info
   set_fact:
-    cartridge_app_name: '{{ package_info.meta.name }}'
+    cartridge_app_name: '{{ package_info.name }}'
 
 - name: Enable Tarantool repo
   include_tasks: enable_tarantool_repo.yml
   vars:
-    version: '{{ package_info.meta.tnt_version }}'
-  when: 'cartridge_enable_tarantool_repo and package_info.meta.tnt_version'
+    version: '{{ package_info.tnt_version }}'
+  when: 'cartridge_enable_tarantool_repo and package_info.tnt_version'
 
 - name: Install RPM
   yum:
@@ -32,7 +32,7 @@
   failed_when: install_rpm.rc != 0 and "does not update installed package" not in install_rpm.results[0]
   notify:
     - reload-systemd-daemon
-  when: package_info.meta.package_type == 'rpm'
+  when: package_info.package_type == 'rpm'
   any_errors_fatal: true
 
 - name: Install DEB
@@ -41,5 +41,5 @@
     update_cache: true
   notify:
     - reload-systemd-daemon
-  when: package_info.meta.package_type == 'deb'
+  when: package_info.package_type == 'deb'
   any_errors_fatal: true

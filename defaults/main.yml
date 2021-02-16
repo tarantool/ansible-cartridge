@@ -1,7 +1,15 @@
 ---
+cartridge_package_path: null
 cartridge_defaults: {}
 cartridge_enable_tarantool_repo: true
+
 restarted: null
 expelled: false
 stateboard: false
+
 instance_start_timeout: 60
+
+cartridge_dist_dir: /usr/share/tarantool
+cartridge_conf_dir: /etc/tarantool/conf.d
+cartridge_run_dir: /var/run/tarantool
+cartridge_data_dir: /var/lib/tarantool

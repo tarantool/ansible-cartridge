@@ -12,9 +12,9 @@ from instance import Instance
 from library.cartridge_app_config import config_app
 
 
-def call_config_app(control_sock, config):
+def call_config_app(console_sock, config):
     return config_app({
-        'control_sock': control_sock,
+        'console_sock': console_sock,
         'app_config': config,
     })
 

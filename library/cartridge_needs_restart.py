@@ -11,19 +11,17 @@ import os
 
 
 argument_spec = {
-    'restarted': {'required': False, 'type': 'bool'},
-    'control_sock': {'required': True, 'type': 'str'},
-    'appname': {'required': True, 'type': 'str'},
-    'instance_conf_file': {'required': True, 'type': 'str'},
-    'conf_section_name': {'required': True, 'type': 'str'},
-    'cluster_cookie': {'required': True, 'type': 'str'},
-    'cartridge_defaults': {'required': True, 'type': 'dict'},
+    'app_name': {'required': True, 'type': 'str'},
     'config': {'required': True, 'type': 'dict'},
-    'stateboard': {'required': True, 'type': 'bool'}
+    'cartridge_defaults': {'required': True, 'type': 'dict'},
+    'cluster_cookie': {'required': True, 'type': 'str'},
+    'restarted': {'required': False, 'type': 'bool'},
+    'stateboard': {'required': True, 'type': 'bool'},
+    'instance_info': {'required': True, 'type': 'dict'},
 }
 
 
-def read_yaml_file_section(filepath, control_console, section):
+def read_yaml_file_section(control_console, filepath, section):
     func_body = '''
         local filepath = ...
         local file = require('fio').open(filepath)
@@ -87,23 +85,20 @@ def needs_restart(params):
 
     stateboard = params['stateboard']
 
-    control_sock = params['control_sock']
-    appname = params['appname']
-    new_default_conf = params['cartridge_defaults']
+    app_name = params['app_name']
     new_instance_conf = params['config']
+    new_default_conf = params['cartridge_defaults']
     cluster_cookie = params['cluster_cookie']
-    instance_conf_file = params['instance_conf_file']
-    conf_section_name = params['conf_section_name']
+    instance_info = params['instance_info']
 
-    default_conf_path = '/etc/tarantool/conf.d/{}.yml'.format(appname)
-    app_code_path = '/usr/share/tarantool/{}'.format(appname)
+    console_sock = instance_info['console_sock']
 
     # check if instance was not started yet
-    if not os.path.exists(control_sock):
+    if not os.path.exists(console_sock):
         return ModuleRes(success=True, changed=True)
 
     try:
-        control_console = get_control_console(control_sock)
+        control_console = get_control_console(console_sock)
     except CartridgeException as e:
         allowed_errcodes = [
             cartridge_errcodes.SOCKET_NOT_FOUND,
@@ -113,18 +108,19 @@ def needs_restart(params):
         if e.code in allowed_errcodes:
             return ModuleRes(success=True, changed=True)
 
-    last_restart_time = os.path.getmtime(control_sock)
+    last_restart_time = os.path.getmtime(console_sock)
 
     # check if application code was updated
-    package_update_time = os.path.getmtime(app_code_path)
+    instance_code_dir = instance_info['instance_code_dir']
+    package_update_time = os.path.getmtime(instance_code_dir)
     if last_restart_time < package_update_time:
         return ModuleRes(success=True, changed=True)
 
     # check if instance config was changed (except dynamic params)
     current_instance_conf, err = read_yaml_file_section(
-        instance_conf_file,
         control_console,
-        conf_section_name
+        instance_info['conf_file'],
+        instance_info['conf_section']
     )
     if err is not None:
         return ModuleRes(success=False, msg="Failed to read current instance config: %s" % err)
@@ -135,9 +131,9 @@ def needs_restart(params):
     if not stateboard:
         # check if default config was changed (except dynamic params)
         current_default_conf, err = read_yaml_file_section(
-            default_conf_path,
             control_console,
-            appname
+            instance_info['app_conf_file'],
+            app_name
         )
         if err is not None:
             return ModuleRes(success=False, msg="Failed to read current default config: %s" % err)
@@ -179,7 +175,7 @@ def main():
         module.fail_json(msg=str(e))
 
     if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta)
+        module.exit_json(changed=res.changed, **res.meta)
     else:
         module.fail_json(msg=res.msg)
 
