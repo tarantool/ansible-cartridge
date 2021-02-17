@@ -14,6 +14,7 @@ cartridge_wait_buckets_discovery: true
 restarted: null
 expelled: false
 stateboard: false
+cartridge_multiversion: false
 
 instance_start_timeout: 60
 instance_discover_buckets_timeout: 60
@@ -28,6 +29,7 @@ cartridge_custom_steps_dir: null
 cartridge_scenario:
   - deliver_package
   - update_package
+  - update_instance_code
   - configure_instance
   - restart_instance
   - wait_instance_started
@@ -38,3 +40,9 @@ cartridge_scenario:
   - configure_app_config
   - bootstrap_vshard
   - configure_failover
+
+cartridge_create_systemd_unit_files: true
+cartridge_systemd_dir: /etc/systemd/system
+
+cartridge_configure_tmpfiles: true
+cartridge_tmpfiles_dir: /usr/lib/tmpfiles.d/

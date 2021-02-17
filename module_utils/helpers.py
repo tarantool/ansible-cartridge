@@ -229,16 +229,29 @@ def is_stateboard(host_vars):
     return host_vars.get('stateboard') is True
 
 
-def get_instance_id(app_name, instance_name, stateboard=False):
+def get_instance_id(app_name, instance_name=None, stateboard=False):
     if stateboard:
-        return '{}-stateboard'.format(app_name)
+        return '%s-stateboard' % app_name
 
-    return '{}.{}'.format(app_name, instance_name)
+    if instance_name is None:
+        raise Exception("instance_name should be not none for non-stateboard instance")
+
+    return '%s.%s' % (app_name, instance_name)
 
 
-def get_instance_console_sock(run_dir, app_name, instance_name, stateboard=False):
+def get_instance_console_sock(run_dir, app_name, instance_name=None, stateboard=False):
     instance_fullname = get_instance_id(app_name, instance_name, stateboard)
     return os.path.join(run_dir, '%s.control' % instance_fullname)
+
+
+def get_instance_pid_file(run_dir, app_name, instance_name=None, stateboard=False):
+    instance_id = get_instance_id(app_name, instance_name, stateboard)
+    return os.path.join(run_dir, '%s.pid' % instance_id)
+
+
+def get_instance_work_dir(data_dir, app_name, instance_name=None, stateboard=False):
+    instance_id = get_instance_id(app_name, instance_name, stateboard)
+    return os.path.join(data_dir, instance_id)
 
 
 def box_cfg_was_called(control_console):

@@ -1,0 +1,11 @@
+---
+
+- name: Update instance code
+  file:
+    src: '{{ instance_info.app_code_dir}}'
+    dest: '{{ instance_info.instance_code_dir }}'
+    owner: tarantool
+    group: tarantool
+    state: link
+  when: cartridge_multiversion
+  tags: cartridge-instances

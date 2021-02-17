@@ -4,6 +4,7 @@ import os
 import pkgutil
 import re
 import subprocess
+import tarfile
 
 if pkgutil.find_loader('ansible.module_utils.helpers'):
     import ansible.module_utils.helpers as helpers
@@ -11,12 +12,9 @@ else:
     import module_utils.helpers as helpers
 
 argument_spec = {
-    'app_name': {'required': False, 'type': 'str'},
+    'app_name': {'required': True, 'type': 'str'},
     'package_path': {'required': True, 'type': 'str'},
 }
-
-DEB = 'deb'
-RPM = 'rpm'
 
 
 def run_command_and_get_output(cmd):
@@ -33,12 +31,14 @@ def run_command_and_get_output(cmd):
 
 
 def get_package_type(package_path):
-    _, ext = os.path.splitext(package_path)
-    if ext == '.rpm':
-        return RPM
-    elif ext == '.deb':
-        return DEB
-    raise Exception("Unknown package extension: %s" % ext)
+    if package_path.endswith('.rpm'):
+        return 'rpm'
+    if package_path.endswith('.deb'):
+        return 'deb'
+    if package_path.endswith('.tar.gz'):
+        return 'tgz'
+
+    raise Exception('Package of unsupported type is specified: %s' % package_path)
 
 
 def get_rpm_info(package_path):
@@ -97,29 +97,60 @@ def get_deb_info(package_path):
 
     return {
         'name': package_name,
-        'tnt_version': tnt_version
+        'tnt_version': tnt_version,
+    }
+
+
+def get_tgz_info(package_path, app_name):
+    with tarfile.open(package_path) as tar:
+        try:
+            tar.getmember(app_name)
+        except KeyError:
+            raise Exception("Package should contain '%s' directory" % app_name)
+
+        version_file_path = os.path.join(app_name, 'VERSION')
+        try:
+            member = tar.getmember(version_file_path)
+        except KeyError:
+            raise Exception("Package should contain %s file" % version_file_path)
+
+        version_file = tar.extractfile(member)
+        version_file_lines = version_file.readlines()
+
+    tnt_version = None
+    for line in version_file_lines:
+        m = re.search(r'TARANTOOL=(\d+\.\d+)\.', line.decode())
+        if m is not None:
+            tnt_version = m.groups()[0]
+            break
+
+    return {
+        'name': app_name,
+        'tnt_version': tnt_version,
     }
 
 
 def get_package_info(params):
     package_path = params['package_path']
-    app_name = params.get('cartridge_app_name')
+    app_name = params['app_name']
 
     package_type = get_package_type(package_path)
 
-    if package_type == RPM:
+    if package_type == 'rpm':
         package_info = get_rpm_info(package_path)
-    elif package_type == DEB:
+    elif package_type == 'deb':
         package_info = get_deb_info(package_path)
+    elif package_type == 'tgz':
+        package_info = get_tgz_info(package_path, app_name)
     else:
-        raise Exception('Unknown package type: %s', package_type)
+        return helpers.ModuleRes(failed=True, msg='Unknown package type: %s' % package_type)
 
     if app_name and package_info['name'] != app_name:
         msg = 'cartridge_app_name value should be equal to package name. ' + \
               'Found cartridge_app_name: "%s", package name: "%s"' % (app_name, package_info['name'])
         return helpers.ModuleRes(failed=True, msg=msg)
 
-    package_info['package_type'] = package_type
+    package_info['type'] = package_type
 
     return helpers.ModuleRes(changed=False, facts={
         'package_info': package_info,
