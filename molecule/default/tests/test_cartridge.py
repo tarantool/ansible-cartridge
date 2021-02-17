@@ -1,6 +1,5 @@
 import os
-import yaml
-# import copy
+from yaml import CLoader as Loader
 
 import testinfra.utils.ansible_runner
 import requests
@@ -17,7 +16,13 @@ testinfra_hosts = ansible_runner.get_hosts('all')
 APP_NAME = 'myapp'
 HOSTS_PATH = os.path.join('molecule', 'default', 'hosts.yml')
 
+inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
+variable_manager = VariableManager(loader=DataLoader(), inventory=inventory)
+
+cluster_cookie = inventory.groups['cluster'].get_vars()['cartridge_cluster_cookie']
+
 __authorized_session = None
+__configured_instances = None
 
 
 def get_authorized_session(cluster_cookie):
@@ -34,45 +39,37 @@ def check_conf_file(conf_file, conf_section, conf):
     assert conf_file.user == 'tarantool'
     assert conf_file.group == 'tarantool'
 
-    conf_file_dict = yaml.load(conf_file.content_string, Loader=yaml.FullLoader)
+    loader = Loader(conf_file.content_string)
+    conf_file_dict = loader.get_data()
 
     assert conf_section in conf_file_dict
     assert conf_file_dict[conf_section] == conf
 
 
-def get_cluster_cookie():
-    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
-    return inventory.groups['cluster'].get_vars()['cartridge_cluster_cookie']
-
-
 def get_configured_instances():
-    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
-    configured_instances = {
-        inventory.hosts[i].get_vars()['inventory_hostname']: inventory.hosts[i].get_vars()
-        for i in inventory.hosts
-    }
-    return configured_instances
+    global __configured_instances
+    if __configured_instances is None:
+        __configured_instances = {
+            inventory.hosts[i].get_vars()['inventory_hostname']: inventory.hosts[i].get_vars()
+            for i in inventory.hosts
+        }
+    return __configured_instances
 
 
 def get_instance_vars(instance):
-    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
     return inventory.hosts[instance].get_vars()
 
 
-def get_variable_vaule(name, default=None):
-    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
+def get_cluster_var(name, default=None):
     all_group_vars = inventory.groups['cluster'].get_vars()
     return all_group_vars[name] if name in all_group_vars else default
 
 
 def get_configured_replicasets():
-    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
-    variable_manager = VariableManager(loader=DataLoader(), inventory=inventory)
-
     replicasets = {}
 
-    for instance in inventory.hosts:
-        host_vars = variable_manager.get_vars(host=inventory.hosts[instance])
+    for instance in inventory.get_hosts():
+        host_vars = variable_manager.get_vars(host=instance)
         if 'replicaset_alias' not in host_vars:
             continue
 
@@ -90,7 +87,7 @@ def get_configured_replicasets():
                 'vshard_group': host_vars.get('vshard_group')
             }
 
-        replicasets[replicaset_alias]['instances'].append(instance)
+        replicasets[replicaset_alias]['instances'].append(instance.get_name())
 
     return replicasets
 
@@ -133,55 +130,65 @@ def aliases_in_priority_order(replicaset_servers):
 
 def test_services_status_and_config(host):
     hostname = host.check_output('hostname -s')
-    inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
 
-    host_instances = [
-        i for i in inventory.hosts
-        if hostname in list(map(lambda x: x.name, inventory.hosts[i].get_groups()))
+    machine_instances = [
+        instance for instance in inventory.get_hosts()
+        if variable_manager.get_vars(host=instance).get('ansible_host') == hostname
     ]
 
-    default_conf = get_variable_vaule('cartridge_defaults', default={})
-    default_conf.update(cluster_cookie=get_cluster_cookie())
+    assert machine_instances
 
-    for instance in host_instances:
-        instance_vars = get_instance_vars(instance)
+    default_conf = get_cluster_var('cartridge_defaults', default={})
+    default_conf.update(cluster_cookie=cluster_cookie)
+
+    for instance in machine_instances:
+        instance_vars = variable_manager.get_vars(host=instance)
 
         instance_conf = instance_vars['config']
         instance_name = instance_vars['inventory_hostname']
 
-        service = host.service('{}@{}'.format(APP_NAME, instance_name))
-        conf_file_path = '/etc/tarantool/conf.d/{}.{}.yml'.format(APP_NAME, instance_name)
-        conf_section = '{}.{}'.format(APP_NAME, instance_name)
+        conf_dir = instance_vars.get('cartridge_conf_dir', '/etc/tarantool/conf.d')
+        run_dir = instance_vars.get('cartridge_run_dir', '/var/run/tarantool')
+        data_dir = instance_vars.get('cartridge_data_dir', '/var/lib/tarantool')
 
-        if instance_is_stateboard(instance_vars):
-            service = host.service('{}-stateboard'.format(APP_NAME))
-            conf_file_path = '/etc/tarantool/conf.d/{}-stateboard.yml'.format(APP_NAME)
-            conf_section = '{}-stateboard'.format(APP_NAME)
+        if not instance_is_stateboard(instance_vars):
+            service_name = '%s@%s' % (APP_NAME, instance_name)
+            instance_id = '%s.%s' % (APP_NAME, instance_name)
+        else:
+            service_name = '%s-stateboard' % APP_NAME
+            instance_id = '%s-stateboard' % APP_NAME
 
-        conf_file = host.file(conf_file_path)
+        conf_file = host.file(os.path.join(conf_dir, '%s.yml' % instance_id))
+        conf_section = instance_id
+
+        default_conf_file = host.file(os.path.join(conf_dir, '%s.yml' % APP_NAME))
+        default_conf_section = APP_NAME
+
+        pid_file = host.file(os.path.join(run_dir, '%s.pid' % instance_id))
+        console_sock_file = host.file(os.path.join(run_dir, '%s.control' % instance_id))
+        work_dir_file = host.file(os.path.join(data_dir, instance_id))
+
+        service = host.service(service_name)
 
         if instance_is_expelled(instance_vars):
             assert not service.is_running
             assert not service.is_enabled
 
             assert not conf_file.exists
-            assert not host.file('/var/run/tarantool/{}.{}.control'.format(APP_NAME, instance_name)).exists
-            assert not host.file('/var/lib/tarantool/{}.{}'.format(APP_NAME, instance_name)).exists
+
+            assert not pid_file.exists
+            assert not console_sock_file.exists
+            assert not work_dir_file.exists
         else:
             assert service.is_running
             assert service.is_enabled
 
             check_conf_file(conf_file, conf_section, instance_conf)
 
-    default_conf_file_path = '/etc/tarantool/conf.d/{}.yml'.format(APP_NAME)
-    default_conf_file = host.file(default_conf_file_path)
-    default_conf_file_section = APP_NAME
-
-    check_conf_file(default_conf_file, default_conf_file_section, default_conf)
+    check_conf_file(default_conf_file, default_conf_section, default_conf)
 
 
 def test_instances():
-    cluster_cookie = get_cluster_cookie()
     configured_instances = get_configured_instances()
 
     # Select one instance to be control
@@ -220,7 +227,6 @@ def test_instances():
 def test_replicasets():
     # Get all configured instances
     configured_instances = get_configured_instances()
-    cluster_cookie = get_cluster_cookie()
 
     if not configured_instances:
         return
@@ -284,7 +290,7 @@ def test_replicasets():
 
 def test_failover():
     # Get configured failover status
-    configured_failover_params = get_variable_vaule('cartridge_failover_params')
+    configured_failover_params = get_cluster_var('cartridge_failover_params')
     if not configured_failover_params:
         return
 
@@ -296,9 +302,6 @@ def test_failover():
 
     # Select one instance to be control
     admin_api_url = get_admin_api_url(configured_instances)
-
-    # Get cluster cookie
-    cluster_cookie = get_cluster_cookie()
 
     # Get cluster failover status
     query = '''
@@ -336,7 +339,7 @@ def test_failover():
 
 def test_auth_params():
     # Get configured auth params
-    configured_auth = get_variable_vaule('cartridge_auth')
+    configured_auth = get_cluster_var('cartridge_auth')
     if not configured_auth:
         return
 
@@ -347,9 +350,6 @@ def test_auth_params():
 
     # Select one instance to be control
     admin_api_url = get_admin_api_url(configured_instances)
-
-    # Get cluster cookie
-    cluster_cookie = get_cluster_cookie()
 
     # Get cluster auth params
     query = '''
@@ -376,7 +376,7 @@ def test_auth_params():
 
 def test_auth_users():
     # Get configured auth params
-    configured_auth = get_variable_vaule('cartridge_auth')
+    configured_auth = get_cluster_var('cartridge_auth')
     if not configured_auth or 'users' not in configured_auth:
         return
 
@@ -387,9 +387,6 @@ def test_auth_users():
 
     # Select one instance to be control
     admin_api_url = get_admin_api_url(configured_instances)
-
-    # Get cluster cookie
-    cluster_cookie = get_cluster_cookie()
 
     # Get cluster auth params
     query = '''
@@ -439,7 +436,7 @@ def test_auth_users():
 
 def test_app_config():
     # Get configured auth params
-    specified_app_config = get_variable_vaule('cartridge_app_config')
+    specified_app_config = get_cluster_var('cartridge_app_config')
     if not specified_app_config:
         return
 
@@ -448,9 +445,6 @@ def test_app_config():
 
     if not configured_instances:
         return
-
-    # Get cluster cookie
-    cluster_cookie = get_cluster_cookie()
 
     # Get cartridge app config
     config_url = 'http://{}:{}/admin/config'.format(
@@ -462,7 +456,9 @@ def test_app_config():
 
     response = session.get(config_url)
     assert response.status_code == 200
-    app_config = yaml.safe_load(response.content)
+
+    loader = Loader(response.content)
+    app_config = loader.get_data()
 
     # Check if app config is equal to configured one
     for section_name, section in specified_app_config.items():
@@ -481,9 +477,6 @@ def test_cluster_has_no_issues():
 
     # Select one instance to be control
     admin_api_url = get_admin_api_url(configured_instances)
-
-    # Get cluster cookie
-    cluster_cookie = get_cluster_cookie()
 
     # Get cluster auth params
     query = '''
