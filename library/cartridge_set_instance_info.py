@@ -3,11 +3,9 @@
 import os
 
 from ansible.module_utils.basic import AnsibleModule
-
 from ansible.module_utils.helpers import ModuleRes
-from ansible.module_utils.helpers import get_instance_id
 from ansible.module_utils.helpers import get_instance_console_sock
-
+from ansible.module_utils.helpers import get_instance_id
 
 argument_spec = {
     'app_name': {'required': False, 'type': 'str'},
@@ -72,7 +70,7 @@ def get_instance_info(params):
     if package_type in ['rpm', 'deb']:
         instance_info['instance_code_dir'] = os.path.join(instance_vars['cartridge_dist_dir'], app_name)
     elif package_type is not None:
-        return ModuleRes(success=False, msg='Unknown package type: %s' % package_type)
+        return ModuleRes(failed=True, msg='Unknown package type: %s' % package_type)
 
     # app conf file, instance conf file, instance conf section
     instance_info['app_conf_file'] = get_app_conf_file(
@@ -104,7 +102,9 @@ def get_instance_info(params):
         app_name, instance_name, instance_vars['stateboard']
     )
 
-    return ModuleRes(success=True, meta=instance_info)
+    return ModuleRes(changed=False, facts={
+        'instance_info': instance_info
+    })
 
 
 def main():
@@ -112,12 +112,8 @@ def main():
     try:
         res = get_instance_info(module.params)
     except Exception as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':

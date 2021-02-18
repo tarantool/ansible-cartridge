@@ -5,7 +5,6 @@ import re
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes
 
-
 argument_spec = {
     'hosts': {'required': True, 'type': 'list'},
     'hostvars': {'required': True, 'type': 'dict'}
@@ -178,7 +177,7 @@ def check_cluster_cookie_symbols(cluster_cookie):
     m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, cluster_cookie)
     if m is not None:
         errmsg = 'Cluster cookie cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
-            '("{}" found)'.format(m.group())
+                 '("{}" found)'.format(m.group())
         return errmsg
 
     return None
@@ -250,7 +249,7 @@ def check_replicaset(host_vars, found_replicasets):
     else:
         if replicaset != found_replicasets[replicaset_alias]:
             errmsg = 'Replicaset parameters must be the same for all instances' + \
-                ' within one replicaset ("{}")'.format(replicaset_alias)
+                     ' within one replicaset ("{}")'.format(replicaset_alias)
             return errmsg
 
     return None
@@ -345,7 +344,7 @@ def check_stateboard(stateboard_vars):
     m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, stateboard_password)
     if m is not None:
         errmsg = 'Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
-            '("{}" found)'.format(m.group())
+                 '("{}" found)'.format(m.group())
         return errmsg
 
     return None
@@ -360,7 +359,7 @@ def check_failover(found_common_params):
 
     if cartridge_failover_params is not None:
         if cartridge_failover_params.get('mode') is None:
-            return'"mode" is required in "cartridge_failover_params"'
+            return '"mode" is required in "cartridge_failover_params"'
 
         mode = cartridge_failover_params['mode']
         if mode not in FALOVER_MODES:
@@ -401,7 +400,7 @@ def check_failover(found_common_params):
                 m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, state_provider_password)
                 if m is not None:
                     errmsg = 'Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
-                        '("{}" found)'.format(m.group())
+                             '("{}" found)'.format(m.group())
                     return errmsg
 
             elif cartridge_failover_params['state_provider'] == 'etcd2':
@@ -427,65 +426,65 @@ def validate_config(params):
         # Validate types
         errmsg = validate_types(host_vars)
         if errmsg is not None:
-            return ModuleRes(success=False, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         if host_vars.get('stateboard') is True:
             if found_stateboard_vars is not None:
-                return ModuleRes(success=False, msg='Only one instance can be marked as a "stateboard"')
+                return ModuleRes(failed=True, msg='Only one instance can be marked as a "stateboard"')
             found_stateboard_vars = host_vars
             continue
 
         # All required params should be specified
         errmsg = check_required_params(host_vars, host)
         if errmsg is not None:
-            return ModuleRes(success=False, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         # Instance config
         errmsg = check_instance_config(host_vars['config'], host)
         if errmsg is not None:
-            return ModuleRes(success=False, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         # Params common for all instances
         errmsg = check_params_the_same_for_all_hosts(host_vars, found_common_params)
         if errmsg is not None:
-            return ModuleRes(success=False, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         # Cartridge defaults
         if 'cartridge_defaults' in host_vars:
             if 'cluster_cookie' in host_vars['cartridge_defaults']:
                 errmsg = 'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"'
-                return ModuleRes(success=False, msg=errmsg)
+                return ModuleRes(failed=True, msg=errmsg)
 
         # Instance state
         if host_vars.get('expelled') is True and host_vars.get('restarted') is True:
             errmsg = 'Flags "expelled" and "restarted" cannot be set at the same time'
-            return ModuleRes(success=False, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         # Replicasets
         errmsg = check_replicaset(host_vars, found_replicasets)
         if errmsg is not None:
-            return ModuleRes(success=False, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
     # Authorization params
     errmsg = check_auth(found_common_params)
     if errmsg is not None:
-        return ModuleRes(success=False, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     # Clusterwide config
     errmsg = check_app_config(found_common_params)
     if errmsg is not None:
-        return ModuleRes(success=False, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     # Failover
     errmsg = check_failover(found_common_params)
     if errmsg is not None:
-        return ModuleRes(success=False, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     # Stateboard
     if found_stateboard_vars is not None:
         errmsg = check_stateboard(found_stateboard_vars)
         if errmsg is not None:
-            return ModuleRes(success=False, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
     if found_common_params.get('cartridge_failover') is not None:
         warnings.append(
@@ -493,17 +492,12 @@ def validate_config(params):
             'Use `cartridge_failover_params` instead.'
         )
 
-    return ModuleRes(success=True, changed=False, warnings=warnings)
+    return ModuleRes(changed=False, warnings=warnings)
 
 
 def main():
     module = AnsibleModule(argument_spec=argument_spec)
-    res = validate_config(module.params)
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, meta=res.meta, warnings=res.warnings)
-    else:
-        module.fail_json(msg=res.msg)
+    validate_config(module.params).exit(module)
 
 
 if __name__ == '__main__':

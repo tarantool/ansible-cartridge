@@ -62,7 +62,7 @@ class TestNeedsRestart(unittest.TestCase):
             console_sock=self.console_sock,
             restarted=True
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
     def test_restart_disabled(self):
@@ -70,7 +70,7 @@ class TestNeedsRestart(unittest.TestCase):
             console_sock=self.console_sock,
             restarted=False
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
     def test_instance_not_started(self):
@@ -81,7 +81,7 @@ class TestNeedsRestart(unittest.TestCase):
             console_sock=self.console_sock
         )
 
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         # cannot connect to console sock
@@ -92,7 +92,7 @@ class TestNeedsRestart(unittest.TestCase):
             console_sock=bad_socket_path
         )
 
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
     def test_box_cfg_is_function(self):
@@ -114,7 +114,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
         )
 
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         # param was changed
@@ -125,7 +125,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
         )
 
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
     def test_code_was_updated(self):
@@ -135,7 +135,7 @@ class TestNeedsRestart(unittest.TestCase):
 
         res = call_needs_restart(console_sock=self.console_sock)
 
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
     @parameterized.expand(
@@ -169,7 +169,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
             stateboard=stateboard,
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         # param changed, memory size not
@@ -181,7 +181,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
             stateboard=stateboard
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         # param isn't changed
@@ -196,7 +196,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
             stateboard=stateboard
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         # param isn't changed
@@ -211,7 +211,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
             stateboard=stateboard
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         # param is changed
@@ -226,7 +226,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
             stateboard=stateboard
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
     @parameterized.expand(
@@ -260,7 +260,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
             stateboard=stateboard
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         # param changed, memory size not
@@ -272,7 +272,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
             stateboard=stateboard
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         if not stateboard:
             self.assertTrue(res.changed)
         else:
@@ -290,7 +290,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
             stateboard=stateboard
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         if not stateboard:
             self.assertTrue(res.changed)
         else:
@@ -308,7 +308,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
             stateboard=stateboard
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         # param is changed
@@ -323,7 +323,7 @@ class TestNeedsRestart(unittest.TestCase):
             },
             stateboard=stateboard
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         if not stateboard:
             self.assertTrue(res.changed)
         else:
@@ -356,7 +356,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memory_param_name: current_memory_size
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         # memory size changed only in cartridge_defaults
@@ -369,7 +369,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memory_param_name: new_memory_size_instance
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         # memory size changed both in cartridge_defaults and config
@@ -382,7 +382,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memory_param_name: new_memory_size_app
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         # memory size changed both in cartridge_defaults and config
@@ -397,7 +397,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memory_param_name: new_memory_size_app
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         # memory size changed both in cartridge_defaults and config
@@ -412,7 +412,7 @@ class TestNeedsRestart(unittest.TestCase):
                 memory_param_name: new_memory_size_app
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
     def tearDown(self):

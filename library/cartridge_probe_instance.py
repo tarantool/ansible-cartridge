@@ -5,7 +5,6 @@ from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
 from ansible.module_utils.helpers import is_expelled, is_stateboard
 
-
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
     'hostvars': {'required': True, 'type': 'dict'},
@@ -34,9 +33,9 @@ def probe_server(params):
         ok, err = control_console.eval_res_err(func_body, advertise_uri)
 
         if not ok and i in play_hosts:
-            return ModuleRes(success=False, msg=err)
+            return ModuleRes(failed=True, msg=err)
 
-    return ModuleRes(success=True)
+    return ModuleRes(changed=False)
 
 
 def main():
@@ -45,12 +44,8 @@ def main():
     try:
         res = probe_server(module.params)
     except CartridgeException as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':

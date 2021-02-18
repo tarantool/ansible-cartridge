@@ -144,7 +144,7 @@ class TestValidateConfig(unittest.TestCase):
         for t, params in params_by_types.items():
             for p in params:
                 res = call_validate_config({'instance-1': get_wrong_params(p)})
-                self.assertFalse(res.success)
+                self.assertTrue(res.failed)
                 self.assertIn("{} must be {}".format(p, t), res.msg)
 
     def test_instance_required_params(self):
@@ -159,7 +159,7 @@ class TestValidateConfig(unittest.TestCase):
             del params[p]
 
             res = call_validate_config({'instance-1': params})
-            self.assertFalse(res.success)
+            self.assertTrue(res.failed)
             self.assertIn('"{}" must be specified'.format(p), res.msg)
 
     def test_config_required_params(self):
@@ -170,7 +170,7 @@ class TestValidateConfig(unittest.TestCase):
                 'config': {}
             }
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Missed required parameter "advertise_uri" in "instance-1" config', res.msg)
 
         res = call_validate_config({
@@ -180,7 +180,7 @@ class TestValidateConfig(unittest.TestCase):
                 'config': {'advertise_uri': '3301'}
             }
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Instance advertise_uri must be specified as "<host>:<port>" ("instance-1")', res.msg)
 
         res = call_validate_config({
@@ -190,7 +190,7 @@ class TestValidateConfig(unittest.TestCase):
                 'config': {'advertise_uri': 'localhost:3301'}
             }
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
     def test_forbidden_params(self):
@@ -207,7 +207,7 @@ class TestValidateConfig(unittest.TestCase):
             bad_params['instance-1']['config'][p] = 'I AM FORBIDDEN'
 
             res = call_validate_config(bad_params)
-            self.assertFalse(res.success)
+            self.assertTrue(res.failed)
             self.assertIn(
                 'Specified forbidden parameter "{}" in "instance-1" config'.format(p),
                 res.msg
@@ -222,7 +222,7 @@ class TestValidateConfig(unittest.TestCase):
                 'config': {'advertise_uri': 'localhost:3301'}
             }
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"',
             res.msg
@@ -261,7 +261,7 @@ class TestValidateConfig(unittest.TestCase):
                 'instance-1': instance1_params,
                 'instance-2': instance2_params,
             })
-            self.assertFalse(res.success)
+            self.assertTrue(res.failed)
             self.assertIn('"{}" must be the same for all hosts'.format(p), res.msg)
 
             # passed only for one instance
@@ -276,7 +276,7 @@ class TestValidateConfig(unittest.TestCase):
                     'instance-1': instance1_params,
                     'instance-2': instance2_params,
                 })
-                self.assertFalse(res.success)
+                self.assertTrue(res.failed)
                 self.assertIn('"{}" must be the same for all hosts'.format(p), res.msg)
 
     def test_replicaset_required_params(self):
@@ -296,7 +296,7 @@ class TestValidateConfig(unittest.TestCase):
             del params[p]
 
             res = call_validate_config({'instance-1': params})
-            self.assertFalse(res.success)
+            self.assertTrue(res.failed)
             self.assertIn('Parameter "{}" is required for all replicasets'.format(p), res.msg)
 
     def test_replicaset_common_params(self):
@@ -343,7 +343,7 @@ class TestValidateConfig(unittest.TestCase):
                 'instance-12': instance12_params,
                 'instance-21': replicaset2_params,
             })
-            self.assertFalse(res.success)
+            self.assertTrue(res.failed)
             errmsg = 'Replicaset parameters must be the same for all instances within one replicaset ("replicaset-1")'
             self.assertIn(errmsg, res.msg)
 
@@ -360,7 +360,7 @@ class TestValidateConfig(unittest.TestCase):
                     'instance-12': instance12_params,
                     'instance-21': replicaset2_params,
                 })
-                self.assertFalse(res.success)
+                self.assertTrue(res.failed)
                 errmsg = 'Replicaset parameters must be the same for all instances within one replicaset ' + \
                     '("replicaset-1")'
                 self.assertIn(errmsg, res.msg)
@@ -374,7 +374,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_app_config': 42,
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn("cartridge_app_config must be <class 'dict'>", res.msg)
 
         res = call_validate_config({
@@ -385,7 +385,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_app_config': {},
             },
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         res = call_validate_config({
@@ -396,7 +396,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_app_config': {'section-1': 42},
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('"cartridge_app_config.section-1" must be dict', res.msg)
 
         res = call_validate_config({
@@ -407,7 +407,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_app_config': {'section-1': {}},
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             '"cartridge_app_config.section-1" must have "body" or "deleted" subsection',
             res.msg
@@ -423,7 +423,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             'cartridge_app_config.section-1" can contain only "body" or "deleted" subsections',
             res.msg
@@ -439,7 +439,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             '"cartridge_app_config.section-1" can contain only "body" or "deleted" subsections',
             res.msg
@@ -458,7 +458,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             '"cartridge_app_config.section-1" can contain only "body" or "deleted" subsections',
             res.msg
@@ -477,7 +477,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('"cartridge_app_config.section-1.deleted" must be bool', res.msg)
 
         res = call_validate_config({
@@ -490,7 +490,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('"cartridge_app_config.section-1.body" is required', res.msg)
 
         res = call_validate_config({
@@ -503,7 +503,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         res = call_validate_config({
@@ -519,7 +519,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         res = call_validate_config({
@@ -532,7 +532,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
     def test_instance_states(self):
@@ -546,7 +546,7 @@ class TestValidateConfig(unittest.TestCase):
                 'restarted': True,
             },
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         # expelled
@@ -559,7 +559,7 @@ class TestValidateConfig(unittest.TestCase):
                 'expelled': True,
             },
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         # both expelled and restarted set to true
@@ -573,7 +573,7 @@ class TestValidateConfig(unittest.TestCase):
                 'restarted': True,
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             'Flags "expelled" and "restarted" cannot be set at the same time',
             res.msg
@@ -592,7 +592,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover': True,
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             'Only one of "cartridge_failover" and "cartridge_failover_params" can be specified',
             res.msg
@@ -609,7 +609,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             "Failover mode should be one of ['stateful', 'eventual', 'disabled']",
             res.msg
@@ -639,7 +639,7 @@ class TestValidateConfig(unittest.TestCase):
             })
 
             res = call_validate_config(params)
-            self.assertFalse(res.success)
+            self.assertTrue(res.failed)
             self.assertIn(
                 '"{}" failover parameter is allowed only for "stateful" mode'.format(p),
                 res.msg
@@ -666,7 +666,7 @@ class TestValidateConfig(unittest.TestCase):
             del params['instance-1']['cartridge_failover_params'][p]
 
             res = call_validate_config(params)
-            self.assertFalse(res.success)
+            self.assertTrue(res.failed)
             self.assertIn(
                 '"{}" failover parameter is required for "stateful" mode'.format(p),
                 res.msg
@@ -684,7 +684,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             "Stateful failover state provider should be one of ['stateboard', 'etcd2']",
             res.msg
@@ -703,7 +703,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             'stateboard_params" is required for "stateboard" state provider',
             res.msg
@@ -735,7 +735,7 @@ class TestValidateConfig(unittest.TestCase):
             del params['instance-1']['cartridge_failover_params']['stateboard_params'][p]
 
             res = call_validate_config(params)
-            self.assertFalse(res.success)
+            self.assertTrue(res.failed)
             self.assertIn(
                 'stateboard_params.{}" is required for "stateboard" provider'.format(p),
                 res.msg
@@ -757,7 +757,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             'Stateboard URI must be specified as "<host>:<port>"',
             res.msg
@@ -779,7 +779,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             'Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-]',
             res.msg
@@ -798,7 +798,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertTrue(res.success)
+        self.assertFalse(res.failed)
 
         res = call_validate_config({
             'instance-1': {
@@ -819,7 +819,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             'etcd2 endpoints must be specified as "<host>:<port>"',
             res.msg
@@ -843,7 +843,7 @@ class TestValidateConfig(unittest.TestCase):
                 },
             },
         })
-        self.assertTrue(res.success)
+        self.assertFalse(res.failed)
 
 
 if __name__ == '__main__':

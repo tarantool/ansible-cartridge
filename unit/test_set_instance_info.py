@@ -5,14 +5,14 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 
 import unittest
 
-from library.cartridge_get_instance_info import get_instance_info
-from library.cartridge_get_instance_info import get_instance_pid_file
-from library.cartridge_get_instance_info import get_instance_conf_file
-from library.cartridge_get_instance_info import get_app_conf_file
-from library.cartridge_get_instance_info import get_instance_conf_section
-from library.cartridge_get_instance_info import get_instance_work_dir
-from library.cartridge_get_instance_info import get_instance_systemd_service
-from library.cartridge_get_instance_info import get_package_type
+from library.cartridge_set_instance_info import get_instance_info
+from library.cartridge_set_instance_info import get_instance_pid_file
+from library.cartridge_set_instance_info import get_instance_conf_file
+from library.cartridge_set_instance_info import get_app_conf_file
+from library.cartridge_set_instance_info import get_instance_conf_section
+from library.cartridge_set_instance_info import get_instance_work_dir
+from library.cartridge_set_instance_info import get_instance_systemd_service
+from library.cartridge_set_instance_info import get_package_type
 
 from ansible.module_utils.helpers import get_instance_console_sock
 
@@ -96,8 +96,8 @@ class TestGetInstanceInfo(unittest.TestCase):
         }
 
         res = call_get_instance_info(app_name, instance_name, instance_vars)
-        self.assertTrue(res.success)
-        self.assertEqual(res.meta, {
+        self.assertFalse(res.failed)
+        self.assertEqual(res.facts, {'instance_info': {
             'package_type': 'rpm',
             'instance_code_dir': 'some/dist/dir/myapp',
             'app_conf_file': 'some/conf/dir/myapp.yml',
@@ -107,7 +107,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'pid_file': 'some/run/dir/myapp.instance-1.pid',
             'work_dir': 'some/data/dir/myapp.instance-1',
             'systemd_service': 'myapp@instance-1',
-        })
+        }})
 
     def test_get_stateboard_info(self):
         app_name = 'myapp'
@@ -122,8 +122,8 @@ class TestGetInstanceInfo(unittest.TestCase):
         }
 
         res = call_get_instance_info(app_name, instance_name, instance_vars)
-        self.assertTrue(res.success)
-        self.assertEqual(res.meta, {
+        self.assertFalse(res.failed)
+        self.assertEqual(res.facts, {'instance_info': {
             'package_type': 'rpm',
             'instance_code_dir': 'some/dist/dir/myapp',
             'app_conf_file': 'some/conf/dir/myapp.yml',
@@ -133,4 +133,4 @@ class TestGetInstanceInfo(unittest.TestCase):
             'pid_file': 'some/run/dir/myapp-stateboard.pid',
             'work_dir': 'some/data/dir/myapp-stateboard',
             'systemd_service': 'myapp-stateboard',
-        })
+        }})

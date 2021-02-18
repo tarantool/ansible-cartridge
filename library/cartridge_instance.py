@@ -1,14 +1,13 @@
 #!/usr/bin/python
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes, CartridgeException, cartridge_errcodes
-from ansible.module_utils.helpers import get_control_console
-from ansible.module_utils.helpers import dynamic_box_cfg_params, memory_size_box_cfg_params
-from ansible.module_utils.helpers import box_cfg_was_called
-from ansible.module_utils.helpers import get_box_cfg
-
 import os
 
+from ansible.module_utils.basic import AnsibleModule
+from ansible.module_utils.helpers import ModuleRes, CartridgeException, cartridge_errcodes
+from ansible.module_utils.helpers import box_cfg_was_called
+from ansible.module_utils.helpers import dynamic_box_cfg_params, memory_size_box_cfg_params
+from ansible.module_utils.helpers import get_box_cfg
+from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
@@ -96,7 +95,7 @@ def manage_instance(params):
 
     # Check if instance isn't started yet
     if not os.path.exists(console_sock):
-        return ModuleRes(success=True, changed=False)
+        return ModuleRes(changed=False)
 
     try:
         control_console = get_control_console(console_sock)
@@ -107,12 +106,12 @@ def manage_instance(params):
             cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
         ]
         if e.code in allowed_errcodes:
-            return ModuleRes(success=True, changed=False)
+            return ModuleRes(changed=False)
 
         raise e
 
     if not box_cfg_was_called(control_console):
-        return ModuleRes(success=True, changed=False)
+        return ModuleRes(changed=False)
 
     current_box_cfg = get_box_cfg(control_console)
 
@@ -126,7 +125,7 @@ def manage_instance(params):
             )
 
             if err is not None:
-                return ModuleRes(success=False, msg="Failed to change memory size in runtime: %s" % err)
+                return ModuleRes(failed=True, msg="Failed to change memory size in runtime: %s" % err)
 
             memory_size_changed = memory_size_changed or memory_param_changed
 
@@ -135,7 +134,7 @@ def manage_instance(params):
 
     changed = memory_size_changed or dynamic_params_changed
 
-    return ModuleRes(success=True, changed=changed)
+    return ModuleRes(changed=changed)
 
 
 def main():
@@ -143,12 +142,8 @@ def main():
     try:
         res = manage_instance(module.params)
     except CartridgeException as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':

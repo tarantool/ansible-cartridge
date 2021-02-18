@@ -2,9 +2,8 @@
 
 from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
-from ansible.module_utils.helpers import get_control_console
 from ansible.module_utils.helpers import filter_none_values
-
+from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
     'auth': {'required': True, 'type': 'dict'},
@@ -156,13 +155,13 @@ def manage_auth(params):
     control_console = get_control_console(params['console_sock'])
 
     if not auth_params:
-        return ModuleRes(success=True, changed=False)
+        return ModuleRes(changed=False)
 
     # Check if auth backend implements all functions for users management
     if auth_params.get('users') is not None:
         if not check_cluster_auth_implements_all(control_console):
             errmsg = 'Cluster auth backend must implement all user management functions'
-            return ModuleRes(success=False, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
     # Manage auth params
     common_auth_params = auth_params.copy()
@@ -175,18 +174,18 @@ def manage_auth(params):
         common_auth_params,
     )
     if err is not None:
-        return ModuleRes(success=False, msg=err)
+        return ModuleRes(failed=True, msg=err)
 
     params_changed = new_cluster_auth_params != current_auth_params
 
     # Manage users
     if auth_params.get('users') is None:
-        return ModuleRes(success=True, changed=params_changed)
+        return ModuleRes(changed=params_changed)
 
     users = auth_params['users']
     cluster_users, err = get_cluster_users(control_console)
     if err is not None:
-        return ModuleRes(success=False, msg=err)
+        return ModuleRes(failed=True, msg=err)
 
     # find new users
     new_usernames = set(u['username'] for u in users).difference(
@@ -218,7 +217,7 @@ def manage_auth(params):
     for user in users_to_add:
         _, err = add_cluster_user(control_console, user)
         if err is not None:
-            return ModuleRes(success=False, msg=err)
+            return ModuleRes(failed=True, msg=err)
 
         users_changed = True
 
@@ -227,18 +226,18 @@ def manage_auth(params):
 
         edited_user, err = edit_cluster_user(control_console, user)
         if err is not None:
-            return ModuleRes(success=False, msg=err)
+            return ModuleRes(failed=True, msg=err)
 
         users_changed = users_changed or not users_are_equal(cluster_user, edited_user)
 
     for user in users_to_delete:
         _, err = delete_cluster_user(control_console, user)
         if err is not None:
-            return ModuleRes(success=False, msg=err)
+            return ModuleRes(failed=True, msg=err)
 
         users_changed = True
 
-    return ModuleRes(success=True, changed=params_changed or users_changed)
+    return ModuleRes(changed=params_changed or users_changed)
 
 
 def main():
@@ -246,12 +245,8 @@ def main():
     try:
         res = manage_auth(module.params)
     except CartridgeException as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':

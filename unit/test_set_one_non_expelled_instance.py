@@ -5,7 +5,7 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 
 import unittest
 
-from library.cartridge_get_one_not_expelled_instance import get_one_not_expelled_instance
+from library.cartridge_set_one_not_expelled_instance import get_one_not_expelled_instance
 
 
 def call_get_one_not_expelled_instance(hostvars, play_hosts=None):
@@ -39,18 +39,18 @@ class TestGetOneNotExpelledInstance(unittest.TestCase):
         res = call_get_one_not_expelled_instance(self.hostvars, [
             'expelled-1', 'my-stateboard', 'expelled-2',
         ])
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Not found any instance that is not expelled and is not a stateboard', res.msg)
 
     def test_instance_found(self):
         res = call_get_one_not_expelled_instance(self.hostvars, [
             'expelled-1', 'my-stateboard', 'expelled-2', 'instance-1', 'instance-2', 'instance-3',
         ])
-        self.assertTrue(res.success, res.msg)
+        self.assertFalse(res.failed, res.msg)
 
         possible_meta = [
             {'name': 'instance-1', 'console_sock': 'sock-1'},
             {'name': 'instance-2', 'console_sock': 'sock-2'},
         ]
 
-        self.assertIn(res.meta, possible_meta)
+        self.assertIn(res.facts['not_expelled_instance'], possible_meta)

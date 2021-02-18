@@ -4,12 +4,10 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
 
-
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
     'failover_params': {'required': False, 'type': 'raw'},
 }
-
 
 NEW_FAILOVER_API_CARTRIDGE_VERSION = '2.1.0'
 DEFAULT_STATE_PROVIDER = 'tarantool'
@@ -30,7 +28,7 @@ def manage_failover_old(control_console, failover_params):
     ''')
 
     if current_failover == failover_enabled:
-        return ModuleRes(success=True, changed=False)
+        return ModuleRes(changed=False)
 
     function_name = 'admin_enable_failover' if failover_enabled else 'admin_disable_failover'
 
@@ -42,9 +40,9 @@ def manage_failover_old(control_console, failover_params):
 
     if err is not None:
         errmsg = 'Failed {}: {}'.format(function_name, err)
-        return ModuleRes(success=False, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
-    return ModuleRes(success=True, changed=True)
+    return ModuleRes()
 
 
 def manage_failover_new(control_console, passed_failover_params):
@@ -80,14 +78,14 @@ def manage_failover_new(control_console, passed_failover_params):
 
     if err is not None:
         errmsg = 'Failed to set failover params: {}'.format(err)
-        return ModuleRes(success=False, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     new_failover_params, _ = control_console.eval_res_err('''
         return require('cartridge').failover_get_params()
     ''')
 
     changed = new_failover_params != current_failover_params
-    return ModuleRes(success=True, changed=changed)
+    return ModuleRes(changed=changed)
 
 
 def manage_failover(params):
@@ -108,7 +106,7 @@ def manage_failover(params):
             errmsg = 'Stateful failover is supported since cartridge {}'.format(
                 NEW_FAILOVER_API_CARTRIDGE_VERSION
             )
-            return ModuleRes(success=False, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
         return manage_failover_old(control_console, failover_params)
 
 
@@ -117,12 +115,8 @@ def main():
     try:
         res = manage_failover(module.params)
     except CartridgeException as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':

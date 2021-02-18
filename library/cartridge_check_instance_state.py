@@ -20,9 +20,9 @@ def check_stateboard_state(control_console):
         return true
     ''')
     if not box_status:
-        return ModuleRes(success=False, msg="Stateboard is not running: %s" % err)
+        return ModuleRes(failed=True, msg="Stateboard is not running: %s" % err)
 
-    return ModuleRes(success=True)
+    return ModuleRes(changed=False)
 
 
 def check_instance_state(control_console, expected_states, check_buckets_are_discovered):
@@ -30,10 +30,10 @@ def check_instance_state(control_console, expected_states, check_buckets_are_dis
         return require('cartridge.confapplier').get_state()
     ''')
     if not instance_state:
-        return ModuleRes(success=False, msg="Impossible to get state: %s" % err)
+        return ModuleRes(failed=True, msg="Impossible to get state: %s" % err)
     if instance_state not in expected_states:
         return ModuleRes(
-            success=False,
+            failed=True,
             msg="Instance is not in one of states: %s, it's in '%s' state" % (
                 expected_states,
                 instance_state,
@@ -79,9 +79,9 @@ def check_instance_state(control_console, expected_states, check_buckets_are_dis
             return true
         ''')
         if not buckets_ok:
-            return ModuleRes(success=False, msg=err)
+            return ModuleRes(failed=True, msg=err)
 
-    return ModuleRes(success=True)
+    return ModuleRes(changed=False)
 
 
 def check_state(params):
@@ -98,7 +98,7 @@ def check_state(params):
             )
 
     except CartridgeException as e:
-        return ModuleRes(success=False, msg=str(e))
+        return ModuleRes(exception=e)
 
 
 def main():
@@ -107,12 +107,8 @@ def main():
     try:
         res = check_state(module.params)
     except CartridgeException as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':

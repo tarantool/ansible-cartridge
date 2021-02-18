@@ -4,7 +4,6 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes, CartridgeException
 from ansible.module_utils.helpers import get_control_console
 
-
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
 }
@@ -17,7 +16,7 @@ def bootstrap_vshard(params):
     ''')
 
     if not can_bootstrap:
-        return ModuleRes(success=True, changed=False)
+        return ModuleRes(changed=False)
 
     ok, err = control_console.eval_res_err('''
         return require('cartridge.admin').bootstrap_vshard()
@@ -25,9 +24,9 @@ def bootstrap_vshard(params):
 
     if not ok:
         errmsg = 'Vshard bootstrap failed: {}'.format(err)
-        return ModuleRes(success=False, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
-    return ModuleRes(success=True, changed=True)
+    return ModuleRes()
 
 
 def main():
@@ -35,12 +34,8 @@ def main():
     try:
         res = bootstrap_vshard(module.params)
     except CartridgeException as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':

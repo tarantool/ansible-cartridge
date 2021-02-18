@@ -9,7 +9,7 @@ sys.path.append(os.path.dirname(__file__))
 import unittest
 from instance import Instance
 
-from library.cartridge_get_control_instance import get_control_instance
+from library.cartridge_set_control_instance import get_control_instance
 
 
 def call_get_control_instance(console_sock, hostvars=dict(), play_hosts=None):
@@ -65,7 +65,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI1, 'uuid': UUID1},
         ])
         res = call_get_control_instance(self.console_sock)
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Unable to get instance alias', res.msg)
 
     def test_one_instance(self):
@@ -82,18 +82,18 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
         ])
         res = call_get_control_instance(self.console_sock, hostvars)
-        self.assertTrue(res.success, msg=res.msg)
-        self.assertEqual(res.meta, {
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.facts, {'control_instance': {
             'name': ALIAS1,
             'console_sock': SOCK1,
-        })
+        }})
 
         # without UUID
         set_membership_members(self.instance, [
             {'uri': URI1, 'alias': ALIAS1},
         ])
         res = call_get_control_instance(self.console_sock, hostvars)
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
 
     def test_two_instances(self):
@@ -116,9 +116,9 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI2, 'uuid': UUID2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(self.console_sock, hostvars)
-        self.assertTrue(res.success, msg=res.msg)
-        self.assertIn(res.meta['name'], [ALIAS1, ALIAS2])
-        self.assertIn(res.meta['console_sock'], [SOCK1, SOCK2])
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertIn(res.facts['control_instance']['name'], [ALIAS1, ALIAS2])
+        self.assertIn(res.facts['control_instance']['console_sock'], [SOCK1, SOCK2])
 
         # one with UUID (it is selected)
         set_membership_members(self.instance, [
@@ -126,11 +126,11 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(self.console_sock, hostvars)
-        self.assertTrue(res.success, msg=res.msg)
-        self.assertEqual(res.meta, {
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.facts, {'control_instance': {
             'name': ALIAS1,
             'console_sock': SOCK1,
-        })
+        }})
 
         # one with UUID (but without alias)
         set_membership_members(self.instance, [
@@ -138,7 +138,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(self.console_sock, hostvars)
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn("Unable to get instance alias", res.msg)
 
         # both without UUID (no one selected)
@@ -147,7 +147,7 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(self.console_sock, hostvars)
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
 
     def test_no_joined_instances(self):
@@ -181,11 +181,11 @@ class TestControlInstance(unittest.TestCase):
             {'uri': URI2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(self.console_sock, hostvars)
-        self.assertTrue(res.success, msg=res.msg)
-        self.assertEqual(res.meta, {
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.facts, {'control_instance': {
             'name': ALIAS2,
             'console_sock': SOCK2,
-        })
+        }})
 
         # only instances w/o replicaset_alias, expelled and stateboard
         # are in play_hosts
@@ -196,7 +196,7 @@ class TestControlInstance(unittest.TestCase):
         res = call_get_control_instance(self.console_sock, hostvars, play_hosts=[
             ALIAS1, 'expelled-instance', 'my-stateboard',
         ])
-        self.assertFalse(res.success, res.meta)
+        self.assertTrue(res.failed, res.facts)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
 
     def tearDown(self):

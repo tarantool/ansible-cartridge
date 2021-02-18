@@ -41,7 +41,7 @@ class TestFailover(unittest.TestCase):
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='eventual')
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('manage_failover')
@@ -53,7 +53,7 @@ class TestFailover(unittest.TestCase):
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='eventual')
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('manage_failover')
@@ -64,7 +64,7 @@ class TestFailover(unittest.TestCase):
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='stateful')
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn(
             'Stateful failover is supported since cartridge 2',
             res.msg
@@ -78,7 +78,7 @@ class TestFailover(unittest.TestCase):
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='disabled')
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('manage_failover')
@@ -90,7 +90,7 @@ class TestFailover(unittest.TestCase):
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='disabled')
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('manage_failover')
@@ -105,7 +105,7 @@ class TestFailover(unittest.TestCase):
         self.instance.set_fail_on('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='eventual')
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Failed admin_enable_failover', res.msg)
         self.assertIn('cartridge err', res.msg)
 
@@ -115,7 +115,7 @@ class TestFailover(unittest.TestCase):
         self.instance.set_fail_on('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='disabled')
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Failed admin_disable_failover', res.msg)
         self.assertIn('cartridge err', res.msg)
 
@@ -127,7 +127,7 @@ class TestFailover(unittest.TestCase):
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='eventual')
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -139,7 +139,7 @@ class TestFailover(unittest.TestCase):
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='eventual')
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -154,7 +154,7 @@ class TestFailover(unittest.TestCase):
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='disabled')
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -166,7 +166,7 @@ class TestFailover(unittest.TestCase):
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='disabled')
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -188,7 +188,7 @@ class TestFailover(unittest.TestCase):
         res = call_manage_failover(self.console_sock, mode='stateful',
                                    state_provider='stateboard',
                                    stateboard_params=STATEBOARD_PARAMS)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -210,7 +210,7 @@ class TestFailover(unittest.TestCase):
         res = call_manage_failover(self.console_sock, mode='stateful',
                                    state_provider='stateboard',
                                    stateboard_params=STATEBOARD_PARAMS)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -236,7 +236,7 @@ class TestFailover(unittest.TestCase):
             res = call_manage_failover(self.console_sock, mode='stateful',
                                        state_provider='stateboard',
                                        stateboard_params=new_params)
-            self.assertTrue(res.success, msg=res.msg)
+            self.assertFalse(res.failed, msg=res.msg)
             self.assertTrue(res.changed)
 
             calls = self.instance.get_calls('failover_set_params')
@@ -265,7 +265,7 @@ class TestFailover(unittest.TestCase):
         res = call_manage_failover(self.console_sock, mode='stateful',
                                    state_provider='etcd2',
                                    etcd2_params=ETCD2_PARAMS)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -283,7 +283,7 @@ class TestFailover(unittest.TestCase):
         res = call_manage_failover(self.console_sock, mode='stateful',
                                    state_provider='etcd2',
                                    etcd2_params=None)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -304,7 +304,7 @@ class TestFailover(unittest.TestCase):
         res = call_manage_failover(self.console_sock, mode='stateful',
                                    state_provider='etcd2',
                                    etcd2_params=ETCD2_PARAMS)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -335,7 +335,7 @@ class TestFailover(unittest.TestCase):
             res = call_manage_failover(self.console_sock, mode='stateful',
                                        state_provider='etcd2',
                                        etcd2_params=new_params)
-            self.assertTrue(res.success, msg=res.msg)
+            self.assertFalse(res.failed, msg=res.msg)
             self.assertTrue(res.changed)
 
             calls = self.instance.get_calls('failover_set_params')
@@ -370,7 +370,7 @@ class TestFailover(unittest.TestCase):
                                    state_provider='stateboard',
                                    etcd2_params=ETCD2_PARAMS,
                                    stateboard_params=STATEBOARD_PARAMS)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -390,7 +390,7 @@ class TestFailover(unittest.TestCase):
                                    state_provider='etcd2',
                                    etcd2_params=ETCD2_PARAMS,
                                    stateboard_params=STATEBOARD_PARAMS)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -415,7 +415,7 @@ class TestFailover(unittest.TestCase):
                                    state_provider='etcd2',
                                    etcd2_params=ETCD2_PARAMS,
                                    stateboard_params=STATEBOARD_PARAMS)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')

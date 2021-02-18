@@ -35,7 +35,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover_deprecated(self.console_sock, True)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('manage_failover')
@@ -47,7 +47,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover_deprecated(self.console_sock, True)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('manage_failover')
@@ -61,7 +61,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover_deprecated(self.console_sock, False)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('manage_failover')
@@ -73,7 +73,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover_deprecated(self.console_sock, False)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('manage_failover')
@@ -88,7 +88,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.set_fail_on('manage_failover')
 
         res = call_manage_failover_deprecated(self.console_sock, True)
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Failed admin_enable_failover', res.msg)
         self.assertIn('cartridge err', res.msg)
 
@@ -98,7 +98,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.set_fail_on('manage_failover')
 
         res = call_manage_failover_deprecated(self.console_sock, False)
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Failed admin_disable_failover', res.msg)
         self.assertIn('cartridge err', res.msg)
 
@@ -110,7 +110,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover_deprecated(self.console_sock, True)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -122,7 +122,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover_deprecated(self.console_sock, True)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -137,7 +137,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover_deprecated(self.console_sock, False)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -149,7 +149,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover_deprecated(self.console_sock, False)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('failover_set_params')
@@ -165,7 +165,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.set_fail_on('failover_set_params')
 
         res = call_manage_failover_deprecated(self.console_sock, True)
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Failed to set failover params', res.msg)
         self.assertIn('cartridge err', res.msg)
 
@@ -175,7 +175,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.instance.set_fail_on('failover_set_params')
 
         res = call_manage_failover_deprecated(self.console_sock, False)
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Failed to set failover params', res.msg)
         self.assertIn('cartridge err', res.msg)
 

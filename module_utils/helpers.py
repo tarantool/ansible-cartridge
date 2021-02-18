@@ -1,18 +1,41 @@
 #!/usr/bin/python
 
-import socket
 import json
-import re
 import os
+import re
+import socket
 
 
 class ModuleRes:
-    def __init__(self, success, msg=None, changed=False, meta=None, warnings=None):
-        self.success = success
+    def __init__(self, failed=False, changed=True, msg=None, exception=None, warnings=None, facts=None, **kwargs):
+        self.failed = failed
         self.msg = msg
         self.changed = changed
-        self.meta = meta if meta is not None else dict()
         self.warnings = warnings
+        self.facts = facts
+        self.kwargs = kwargs
+
+        if exception:
+            self.failed = True
+            self.msg = str(exception)
+
+    def get_exit_json(self):
+        res = {'changed': self.changed}
+        if self.msg is not None:
+            res['msg'] = self.msg
+        if self.warnings is not None:
+            res['warnings'] = self.warnings
+        if self.facts is not None:
+            res['ansible_facts'] = self.facts
+        for key, value in self.kwargs.items():
+            res[key] = value
+        return res
+
+    def exit(self, module):
+        if not self.failed:
+            module.exit_json(**self.get_exit_json())
+        else:
+            module.fail_json(**self.get_exit_json())
 
 
 class CartridgeErrorCodes:
@@ -27,7 +50,6 @@ class CartridgeErrorCodes:
 
 
 cartridge_errcodes = CartridgeErrorCodes()
-
 
 # parameters of instance configuration that can be changed dynamically
 dynamic_box_cfg_params = {
@@ -81,7 +103,7 @@ class Console:
 
         if not os.path.exists(socket_path):
             errmsg = 'Instance socket not found: "{}". '.format(socket_path) + \
-                'Make sure the instance was started correctly'
+                     'Make sure the instance was started correctly'
             raise CartridgeException(cartridge_errcodes.SOCKET_NOT_FOUND, errmsg)
 
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -112,7 +134,7 @@ class Console:
                 # It is correct because of cmd structure: it always returns a value
                 if chunk == '':
                     errmsg = 'Error: broken pipe. ' + \
-                        'Probably, the instance was not bootstrapped yet to perform this operation'
+                             'Probably, the instance was not bootstrapped yet to perform this operation'
                     raise CartridgeException(cartridge_errcodes.BROKEN_PIPE, errmsg)
                 data = data + chunk
                 if data.endswith('\n...\n'):

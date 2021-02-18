@@ -56,7 +56,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertFalse(res.success, msg=res.msg)
+        self.assertTrue(res.failed, msg=res.msg)
         self.assertEqual(res.msg, "Failed to edit topology: cartridge err")
 
         calls = self.instance.get_calls('edit_topology')
@@ -85,7 +85,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertFalse(res.success, msg=res.msg)
+        self.assertTrue(res.failed, msg=res.msg)
         self.assertEqual(res.msg, "Failed to edit failover priority: cartridge err")
 
         calls = self.instance.get_calls('edit_topology')
@@ -134,7 +134,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertFalse(res.success, msg=res.msg)
+        self.assertTrue(res.failed, msg=res.msg)
         self.assertIn("Some of replicaset instances aren't found in cluster: r2-replica", res.msg)
         self.assertEqual(len(self.instance.get_calls('edit_topology')), 0)
 
@@ -147,7 +147,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('edit_topology')
@@ -233,7 +233,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
         calls = self.instance.get_calls('edit_topology')
 
@@ -254,7 +254,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
         calls = self.instance.get_calls('edit_topology')
 
@@ -312,7 +312,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
         calls = self.instance.get_calls('edit_topology')
 
@@ -372,7 +372,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
         calls = self.instance.get_calls('edit_topology')
 
@@ -414,7 +414,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
         calls = self.instance.get_calls('edit_topology')
 
@@ -460,7 +460,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
         calls = self.instance.get_calls('edit_topology')
 
@@ -540,7 +540,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('edit_topology')
@@ -615,7 +615,7 @@ class TestEditTopology(unittest.TestCase):
             self.console_sock,
             hostvars
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('edit_topology')
