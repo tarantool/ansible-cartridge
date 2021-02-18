@@ -155,8 +155,7 @@ def test_services_status_and_config(host):
             service_name = '%s@%s' % (APP_NAME, instance_name)
             instance_id = '%s.%s' % (APP_NAME, instance_name)
         else:
-            service_name = '%s-stateboard' % APP_NAME
-            instance_id = '%s-stateboard' % APP_NAME
+            instance_id = service_name = '%s-stateboard' % APP_NAME
 
         conf_file = host.file(os.path.join(conf_dir, '%s.yml' % instance_id))
         conf_section = instance_id
