@@ -30,7 +30,7 @@ class TestBootstrapVshard(unittest.TestCase):
         self.instance.set_variable('can_bootstrap_vshard', False)
 
         res = call_bootstrap_vshard(self.console_sock)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         self.assertEqual(len(self.instance.get_calls('bootstrap_vshard')), 0)
@@ -39,7 +39,7 @@ class TestBootstrapVshard(unittest.TestCase):
         self.instance.set_variable('can_bootstrap_vshard', True)
 
         res = call_bootstrap_vshard(self.console_sock)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         self.assertEqual(len(self.instance.get_calls('bootstrap_vshard')), 1)
@@ -49,7 +49,7 @@ class TestBootstrapVshard(unittest.TestCase):
         self.instance.set_fail_on('bootstrap_vshard')
 
         res = call_bootstrap_vshard(self.console_sock)
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Vshard bootstrap failed', res.msg)
         self.assertIn('cartridge err', res.msg)
 

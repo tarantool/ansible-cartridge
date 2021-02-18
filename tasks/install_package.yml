@@ -7,10 +7,9 @@
   register: copied_package
 
 - name: Get package meta info
-  cartridge_get_package_info:
+  cartridge_set_package_info:
     package_path: '{{ copied_package.dest }}'
     app_name: '{{ cartridge_app_name }}'
-  register: package_info
   any_errors_fatal: true
 
 - name: Set cartridge_app_name from package info

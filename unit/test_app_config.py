@@ -29,7 +29,7 @@ class TestAppConfig(unittest.TestCase):
 
     def test_empty_config(self):
         res = call_config_app(self.console_sock, {})
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
     def test_edit_system_sections(self):
@@ -46,7 +46,7 @@ class TestAppConfig(unittest.TestCase):
             res = call_config_app(self.console_sock, {
                 section: {}
             })
-            self.assertFalse(res.success)
+            self.assertTrue(res.failed)
             self.assertIn('Unable to patch config system section', res.msg)
 
             calls = self.instance.get_calls('config_patch_clusterwide')
@@ -65,7 +65,7 @@ class TestAppConfig(unittest.TestCase):
                 'body': SECTION_BODY,
             }
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('config_patch_clusterwide')
@@ -85,7 +85,7 @@ class TestAppConfig(unittest.TestCase):
                 'body': SECTION_BODY,
             }
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('config_patch_clusterwide')
@@ -110,7 +110,7 @@ class TestAppConfig(unittest.TestCase):
                 'deleted': True,
             }
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('config_patch_clusterwide')
@@ -131,7 +131,7 @@ class TestAppConfig(unittest.TestCase):
                 'deleted': True,
             }
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('config_patch_clusterwide')
@@ -151,7 +151,7 @@ class TestAppConfig(unittest.TestCase):
                 'body': SECTION1_BODY,
             }
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('config_patch_clusterwide')
@@ -181,7 +181,7 @@ class TestAppConfig(unittest.TestCase):
                 'body': SECTION2_BODY,
             }
         })
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('config_patch_clusterwide')
@@ -207,7 +207,7 @@ class TestAppConfig(unittest.TestCase):
                 'body': SECTION_NEW_BODY,
             },
         })
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('Config patch failed', res.msg)
         self.assertIn('cartridge err', res.msg)
 

@@ -28,7 +28,7 @@ def get_control_instance(params):
         if 'payload' in member and member['payload'].get('uuid') is not None:
             if member['payload'].get('alias') is None:
                 errmsg = 'Unable to get instance alias for "{}"'.format(member['payload']['uuid'])
-                return ModuleRes(success=False, msg=errmsg)
+                return ModuleRes(failed=True, msg=errmsg)
 
             control_instance_name = member['payload']['alias']
             break
@@ -45,19 +45,20 @@ def get_control_instance(params):
 
     if control_instance_name is None:
         errmsg = 'Not found any joined instance or instance to create a replicaset'
-        return ModuleRes(success=False, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     instance_vars = hostvars[control_instance_name]
     if 'instance_info' not in instance_vars:
         raise Exception('Instance %s has no instance_info set' % control_instance_name)
 
     instance_info = instance_vars['instance_info']
-    control_instance = {
-        'name': control_instance_name,
-        'console_sock': instance_info['console_sock'],
-    }
 
-    return ModuleRes(success=True, meta=control_instance)
+    return ModuleRes(changed=False, facts={
+        'control_instance': {
+            'name': control_instance_name,
+            'console_sock': instance_info['console_sock'],
+        }
+    })
 
 
 def main():
@@ -65,12 +66,8 @@ def main():
     try:
         res = get_control_instance(module.params)
     except CartridgeException as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':

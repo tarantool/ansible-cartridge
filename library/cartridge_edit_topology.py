@@ -12,7 +12,6 @@ argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
 }
 
-
 format_replicaset_func = '''
 local function format_replicaset(r)
     local instances = {}
@@ -345,7 +344,7 @@ def edit_topology(params):
     instances_to_expel = get_instances_to_expel(hostvars, play_hosts)
 
     if not replicasets and not instances_to_expel:
-        return ModuleRes(success=True, changed=False)
+        return ModuleRes(changed=False)
 
     control_console = get_control_console(console_sock)
     cluster_instances = get_cluster_instances(control_console)
@@ -356,14 +355,14 @@ def edit_topology(params):
         replicasets, cluster_replicasets, instances_to_expel, cluster_instances
     )
     if err is not None:
-        return ModuleRes(success=False, msg="Failed to collect edit topology params: %s" % err)
+        return ModuleRes(failed=True, msg="Failed to collect edit topology params: %s" % err)
 
     topology_changed = False
 
     if edit_topology_params:
         res, err = control_console.eval_res_err(edit_topology_func_body, edit_topology_params)
         if err is not None:
-            return ModuleRes(success=False, msg="Failed to edit topology: %s" % err)
+            return ModuleRes(failed=True, msg="Failed to edit topology: %s" % err)
 
         topology_changed = True
         edited_replicasets = res['replicasets']
@@ -382,12 +381,11 @@ def edit_topology(params):
     if edit_topology_params:
         res, err = control_console.eval_res_err(edit_topology_func_body, edit_topology_params)
         if err is not None:
-            return ModuleRes(success=False, msg="Failed to edit failover priority: %s" % err)
+            return ModuleRes(failed=True, msg="Failed to edit failover priority: %s" % err)
 
         topology_changed = True
-        cluster_replicasets = res['replicasets']
 
-    return ModuleRes(success=True, changed=topology_changed)
+    return ModuleRes(changed=topology_changed)
 
 
 def main():
@@ -395,12 +393,8 @@ def main():
     try:
         res = edit_topology(module.params)
     except CartridgeException as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':

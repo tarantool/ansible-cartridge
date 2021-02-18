@@ -46,7 +46,7 @@ class TestAuth(unittest.TestCase):
 
     def test_empty(self):
         res = call_manage_auth(self.console_sock)
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
     def test_edit_params(self):
@@ -71,7 +71,7 @@ class TestAuth(unittest.TestCase):
             self.instance.clear_calls('auth_set_params')
 
             res = call_manage_auth(self.console_sock, **auth_patch)
-            self.assertTrue(res.success, msg=res.msg)
+            self.assertFalse(res.failed, msg=res.msg)
             self.assertFalse(res.changed)
 
             calls = self.instance.get_calls('auth_set_params')
@@ -84,7 +84,7 @@ class TestAuth(unittest.TestCase):
             self.instance.clear_calls('auth_set_params')
 
             res = call_manage_auth(self.console_sock, **auth_patch)
-            self.assertTrue(res.success, msg=res.msg)
+            self.assertFalse(res.failed, msg=res.msg)
             self.assertTrue(res.changed)
 
             calls = self.instance.get_calls('auth_set_params')
@@ -96,7 +96,7 @@ class TestAuth(unittest.TestCase):
         self.instance.set_variable('auth_params', {})
 
         res = call_manage_auth(self.console_sock, enabled=True)
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('cartridge err', res.msg)
 
     def test_user_functions_implemented(self):
@@ -108,7 +108,7 @@ class TestAuth(unittest.TestCase):
         # no one operation is implemented
         self.instance.set_variable('webui_auth_params', {})
         res = call_manage_auth(self.console_sock, users=[USER])
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('backend must implement all user management functions', res.msg)
 
         # check that all operations are required
@@ -123,7 +123,7 @@ class TestAuth(unittest.TestCase):
             })
 
             res = call_manage_auth(self.console_sock, users=[USER])
-            self.assertFalse(res.success)
+            self.assertTrue(res.failed)
             self.assertIn('backend must implement all user management functions', res.msg)
 
     def test_add_user(self):
@@ -148,7 +148,7 @@ class TestAuth(unittest.TestCase):
         self.instance.clear_calls('auth_remove_user')
 
         res = call_manage_auth(self.console_sock, users=[USER1, USER2])
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('auth_add_user')
@@ -169,7 +169,7 @@ class TestAuth(unittest.TestCase):
         self.instance.clear_calls('auth_remove_user')
 
         res = call_manage_auth(self.console_sock, users=[USER1, USER2])
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('auth_add_user')
@@ -188,7 +188,7 @@ class TestAuth(unittest.TestCase):
         self.instance.set_variable('users', [])
 
         res = call_manage_auth(self.console_sock, users=[USER1])
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('cartridge err', res.msg)
 
     def test_edit_user(self):
@@ -220,7 +220,7 @@ class TestAuth(unittest.TestCase):
             }
 
             res = call_manage_auth(self.console_sock, users=[user_patch])
-            self.assertTrue(res.success, msg=res.msg)
+            self.assertFalse(res.failed, msg=res.msg)
             if param != 'password':
                 self.assertTrue(res.changed)
             else:
@@ -246,7 +246,7 @@ class TestAuth(unittest.TestCase):
         }
 
         res = call_manage_auth(self.console_sock, users=[user_patch])
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('cartridge err', res.msg)
 
     def test_edit_user_no_version(self):
@@ -279,7 +279,7 @@ class TestAuth(unittest.TestCase):
             }
 
             res = call_manage_auth(self.console_sock, users=[user_patch])
-            self.assertTrue(res.success, msg=res.msg)
+            self.assertFalse(res.failed, msg=res.msg)
             if param != 'password':
                 self.assertTrue(res.changed)
             else:
@@ -305,7 +305,7 @@ class TestAuth(unittest.TestCase):
         }
 
         res = call_manage_auth(self.console_sock, users=[user_patch])
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('cartridge err', res.msg)
 
     def test_delete_user(self):
@@ -333,7 +333,7 @@ class TestAuth(unittest.TestCase):
         deleted_user2['deleted'] = True
 
         res = call_manage_auth(self.console_sock, users=[USER1, deleted_user2])
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('auth_add_user')
@@ -357,7 +357,7 @@ class TestAuth(unittest.TestCase):
         deleted_user2['deleted'] = True
 
         res = call_manage_auth(self.console_sock, users=[USER1, deleted_user2])
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('auth_add_user')
@@ -378,7 +378,7 @@ class TestAuth(unittest.TestCase):
         deleted_user1['deleted'] = True
 
         res = call_manage_auth(self.console_sock, users=[deleted_user1])
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
         self.assertIn('cartridge err', res.msg)
 
     def test_empty_users(self):
@@ -398,7 +398,7 @@ class TestAuth(unittest.TestCase):
         self.instance.clear_calls('auth_remove_user')
 
         res = call_manage_auth(self.console_sock, users=[])
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('auth_add_user')

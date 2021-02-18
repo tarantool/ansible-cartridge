@@ -42,7 +42,7 @@ class TestManageInstance(unittest.TestCase):
             console_sock=self.console_sock
         )
 
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(len(self.instance.get_calls('box_cfg')), 0)
 
@@ -55,7 +55,7 @@ class TestManageInstance(unittest.TestCase):
             console_sock=bad_socket_path
         )
 
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(len(self.instance.get_calls('box_cfg')), 0)
 
@@ -67,7 +67,7 @@ class TestManageInstance(unittest.TestCase):
             console_sock=self.console_sock
         )
 
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
         self.assertEqual(len(self.instance.get_calls('box_cfg')), 0)
 
@@ -87,7 +87,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: new_instance_value,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -103,7 +103,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: new_app_value,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -122,7 +122,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: new_app_value,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -145,7 +145,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: SMALL_MEMORY,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         self.assertEqual(len(self.instance.get_calls('box_cfg')), 0)
@@ -169,7 +169,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: INSTANCE_BIG_MEMORY,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -186,7 +186,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: APP_BIG_MEMORY,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -206,7 +206,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: APP_BIG_MEMORY,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -234,7 +234,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: INSTANCE_BIG_MEMORY,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -251,7 +251,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: APP_BIG_MEMORY,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -271,7 +271,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: APP_BIG_MEMORY,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -290,7 +290,7 @@ class TestManageInstance(unittest.TestCase):
                 'memtx_memory': BIG_MEMTX_MEMORY,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -314,7 +314,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: new_instance_value,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -331,7 +331,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: new_app_value,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -351,7 +351,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: new_app_value,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -368,7 +368,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: old_value,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
@@ -385,7 +385,7 @@ class TestManageInstance(unittest.TestCase):
                 param_name: old_value,
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')

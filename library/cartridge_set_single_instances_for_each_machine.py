@@ -5,7 +5,6 @@ from ansible.module_utils.basic import AnsibleModule
 from ansible.module_utils.helpers import ModuleRes
 from ansible.module_utils.helpers import is_expelled
 
-
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
@@ -37,8 +36,8 @@ def get_one_not_expelled_instance_for_machine(params):
             machine_hostnames.add(machine_hostname)
             instance_names.append(instance_name)
 
-    return ModuleRes(success=True, meta={
-        'names': instance_names,
+    return ModuleRes(changed=False, facts={
+        'single_instances_for_each_machine': instance_names,
     })
 
 
@@ -47,12 +46,8 @@ def main():
     try:
         res = get_one_not_expelled_instance_for_machine(module.params)
     except Exception as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':

@@ -5,7 +5,7 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 
 import unittest
 
-from library.cartridge_get_instance_from_each_machine import get_one_not_expelled_instance_for_machine
+from library.cartridge_set_single_instances_for_each_machine import get_one_not_expelled_instance_for_machine
 
 
 def call_get_one_not_expelled_instance_for_machine(hostvars, play_hosts=None):
@@ -49,22 +49,23 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
         res = call_get_one_not_expelled_instance_for_machine(self.hostvars, [
             'expelled-1', 'expelled-2',
         ])
-        self.assertTrue(res.success, res.msg)
-        self.assertEqual(len(res.meta['names']), 0)
+        self.assertFalse(res.failed, res.msg)
+        self.assertEqual(len(res.facts['single_instances_for_each_machine']), 0)
 
     def test_stateboard_found(self):
         res = call_get_one_not_expelled_instance_for_machine(self.hostvars, [
             'expelled-1', 'expelled-2', 'stateboard-1', 'stateboard-2',
         ])
-        self.assertTrue(res.success, res.msg)
-        self.assertEqual(res.meta['names'], ['stateboard-1', 'stateboard-2'])
+        self.assertFalse(res.failed, res.msg)
+        self.assertEqual(res.facts['single_instances_for_each_machine'], ['stateboard-1', 'stateboard-2'])
 
     def test_instances_found(self):
         res = call_get_one_not_expelled_instance_for_machine(self.hostvars, [
             'expelled-1', 'expelled-2', 'instance-1', 'instance-2', 'stateboard-1', 'stateboard-2',
         ])
-        self.assertTrue(res.success, res.msg)
+        self.assertFalse(res.failed, res.msg)
 
-        self.assertEqual(len(res.meta['names']), 2)
-        self.assertTrue('instance-1' in res.meta['names'] or 'stateboard-1' in res.meta['names'])
-        self.assertTrue('instance-2' in res.meta['names'] or 'stateboard-2' in res.meta['names'])
+        single_instances = res.facts['single_instances_for_each_machine']
+        self.assertEqual(len(single_instances), 2)
+        self.assertTrue('instance-1' in single_instances or 'stateboard-1' in single_instances)
+        self.assertTrue('instance-2' in single_instances or 'stateboard-2' in single_instances)

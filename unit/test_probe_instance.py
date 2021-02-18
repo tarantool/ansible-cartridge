@@ -54,7 +54,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
 
         calls = self.instance.get_calls('admin_probe_server')
         self.assertEqual(len(calls), 1)
@@ -73,7 +73,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
 
         calls = self.instance.get_calls('admin_probe_server')
         self.assertEqual(len(calls), 2)
@@ -93,7 +93,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
 
         calls = self.instance.get_calls('admin_probe_server')
         self.assertEqual(len(calls), 1)
@@ -112,7 +112,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
 
         calls = self.instance.get_calls('admin_probe_server')
         self.assertIn(len(calls), [1, 2])
@@ -137,7 +137,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
 
         calls = self.instance.get_calls('admin_probe_server')
         self.assertEqual(len(calls), 0)
@@ -156,7 +156,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
 
         calls = self.instance.get_calls('admin_probe_server')
         self.assertEqual(len(calls), 1)
@@ -176,7 +176,7 @@ class TestProbeInstance(unittest.TestCase):
                 }
             }
         )
-        self.assertFalse(res.success)
+        self.assertTrue(res.failed)
 
         calls = self.instance.get_calls('admin_probe_server')
         self.assertEqual(len(calls), 1)
@@ -201,7 +201,7 @@ class TestProbeInstance(unittest.TestCase):
             },
             play_hosts=['instance-1']
         )
-        self.assertTrue(res.success, msg=res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
 
         calls = self.instance.get_calls('admin_probe_server')
         self.assertEqual(len(calls), 2)

@@ -1,19 +1,16 @@
 #!/usr/bin/python
 
 import os
-import subprocess
 import re
+import subprocess
 
 from ansible.module_utils.basic import AnsibleModule
-
 from ansible.module_utils.helpers import ModuleRes
-
 
 argument_spec = {
     'app_name': {'required': False, 'type': 'str'},
     'package_path': {'required': True, 'type': 'str'},
 }
-
 
 DEB = 'deb'
 RPM = 'rpm'
@@ -117,11 +114,13 @@ def get_package_info(params):
     if app_name and package_info['name'] != app_name:
         msg = 'cartridge_app_name value should be equal to package name. ' + \
               'Found cartridge_app_name: "%s", package name: "%s"' % (app_name, package_info['name'])
-        return ModuleRes(success=False, msg=msg)
+        return ModuleRes(failed=True, msg=msg)
 
     package_info['package_type'] = package_type
 
-    return ModuleRes(success=True, meta=package_info)
+    return ModuleRes(changed=False, facts={
+        'package_info': package_info,
+    })
 
 
 def main():
@@ -129,12 +128,8 @@ def main():
     try:
         res = get_package_info(module.params)
     except Exception as e:
-        module.fail_json(msg=str(e))
-
-    if res.success is True:
-        module.exit_json(changed=res.changed, **res.meta)
-    else:
-        module.fail_json(msg=res.msg)
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 if __name__ == '__main__':
