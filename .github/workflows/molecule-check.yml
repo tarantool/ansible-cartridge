@@ -33,16 +33,22 @@ jobs:
           path: 'packages'
           key: ce-${{ matrix.tarantool-version }}-${{ env.CARTRIDGE_CLI_VERSION }}
 
+      - name: Install Tarantool
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        uses: tarantool/setup-tarantool@v1
+        with:
+          tarantool-version: '${{ matrix.tarantool-version }}'
+
       - name: Create test packages
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
-          sudo apt -y update
-          sudo apt -y install git gcc make cmake unzip
+          sudo apt-get update
+
+          sudo apt-get -y install git gcc make cmake unzip
           git config --global user.email "test@tarantool.io" \
             && git config --global user.name "Tar Antool"
 
-          curl -L https://tarantool.io/release/${{ matrix.tarantool-version }}/installer.sh | bash
-          sudo apt install -y cartridge-cli ${{ env.CARTRIDGE_CLI_VERSION }}
+          sudo apt-get install -y cartridge-cli ${{ env.CARTRIDGE_CLI_VERSION }}
 
           tarantool --version
           cartridge version
