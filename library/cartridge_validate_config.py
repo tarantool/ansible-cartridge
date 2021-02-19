@@ -1,9 +1,12 @@
 #!/usr/bin/python
 
+import pkgutil
 import re
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes
+if pkgutil.find_loader('ansible.module_utils.helpers'):
+    import ansible.module_utils.helpers as helpers
+else:
+    import module_utils.helpers as helpers
 
 argument_spec = {
     'hosts': {'required': True, 'type': 'list'},
@@ -426,65 +429,65 @@ def validate_config(params):
         # Validate types
         errmsg = validate_types(host_vars)
         if errmsg is not None:
-            return ModuleRes(failed=True, msg=errmsg)
+            return helpers.ModuleRes(failed=True, msg=errmsg)
 
         if host_vars.get('stateboard') is True:
             if found_stateboard_vars is not None:
-                return ModuleRes(failed=True, msg='Only one instance can be marked as a "stateboard"')
+                return helpers.ModuleRes(failed=True, msg='Only one instance can be marked as a "stateboard"')
             found_stateboard_vars = host_vars
             continue
 
         # All required params should be specified
         errmsg = check_required_params(host_vars, host)
         if errmsg is not None:
-            return ModuleRes(failed=True, msg=errmsg)
+            return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Instance config
         errmsg = check_instance_config(host_vars['config'], host)
         if errmsg is not None:
-            return ModuleRes(failed=True, msg=errmsg)
+            return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Params common for all instances
         errmsg = check_params_the_same_for_all_hosts(host_vars, found_common_params)
         if errmsg is not None:
-            return ModuleRes(failed=True, msg=errmsg)
+            return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Cartridge defaults
         if 'cartridge_defaults' in host_vars:
             if 'cluster_cookie' in host_vars['cartridge_defaults']:
                 errmsg = 'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"'
-                return ModuleRes(failed=True, msg=errmsg)
+                return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Instance state
         if host_vars.get('expelled') is True and host_vars.get('restarted') is True:
             errmsg = 'Flags "expelled" and "restarted" cannot be set at the same time'
-            return ModuleRes(failed=True, msg=errmsg)
+            return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Replicasets
         errmsg = check_replicaset(host_vars, found_replicasets)
         if errmsg is not None:
-            return ModuleRes(failed=True, msg=errmsg)
+            return helpers.ModuleRes(failed=True, msg=errmsg)
 
     # Authorization params
     errmsg = check_auth(found_common_params)
     if errmsg is not None:
-        return ModuleRes(failed=True, msg=errmsg)
+        return helpers.ModuleRes(failed=True, msg=errmsg)
 
     # Clusterwide config
     errmsg = check_app_config(found_common_params)
     if errmsg is not None:
-        return ModuleRes(failed=True, msg=errmsg)
+        return helpers.ModuleRes(failed=True, msg=errmsg)
 
     # Failover
     errmsg = check_failover(found_common_params)
     if errmsg is not None:
-        return ModuleRes(failed=True, msg=errmsg)
+        return helpers.ModuleRes(failed=True, msg=errmsg)
 
     # Stateboard
     if found_stateboard_vars is not None:
         errmsg = check_stateboard(found_stateboard_vars)
         if errmsg is not None:
-            return ModuleRes(failed=True, msg=errmsg)
+            return helpers.ModuleRes(failed=True, msg=errmsg)
 
     if found_common_params.get('cartridge_failover') is not None:
         warnings.append(
@@ -492,13 +495,8 @@ def validate_config(params):
             'Use `cartridge_failover_params` instead.'
         )
 
-    return ModuleRes(changed=False, warnings=warnings)
-
-
-def main():
-    module = AnsibleModule(argument_spec=argument_spec)
-    validate_config(module.params).exit(module)
+    return helpers.ModuleRes(changed=False, warnings=warnings)
 
 
 if __name__ == '__main__':
-    main()
+    helpers.execute_module(argument_spec, validate_config)

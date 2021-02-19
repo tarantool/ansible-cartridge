@@ -5,6 +5,8 @@ import os
 import re
 import socket
 
+from ansible.module_utils.basic import AnsibleModule
+
 
 class ModuleRes:
     def __init__(self, failed=False, changed=True, msg=None, exception=None, warnings=None, facts=None, **kwargs):
@@ -36,6 +38,15 @@ class ModuleRes:
             module.exit_json(**self.get_exit_json())
         else:
             module.fail_json(**self.get_exit_json())
+
+
+def execute_module(argument_spec, function):
+    module = AnsibleModule(argument_spec=argument_spec)
+    try:
+        res = function(module.params)
+    except Exception as e:
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 class CartridgeErrorCodes:

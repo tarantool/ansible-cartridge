@@ -12,12 +12,12 @@ class OsPathExistsMock:
         self.existent_paths.discard(path)
 
 
-class OsPathGetMtimeMock:
+class OsPathGetMTimeMock:
     def __init__(self):
         self.known_mtimes = dict()
 
     def __call__(self, path):
         return self.known_mtimes[path]
 
-    def set_mtime(self, path, mtime):
-        self.known_mtimes.update({path: mtime})
+    def set_m_time(self, path, m_time):
+        self.known_mtimes.update({path: m_time})

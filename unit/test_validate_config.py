@@ -1,9 +1,4 @@
-# Hack ansible.module_utils.helpers import
-import sys
 import copy
-import module_utils.helpers as helpers
-sys.modules['ansible.module_utils.helpers'] = helpers
-
 import unittest
 
 from library.cartridge_validate_config import validate_config
@@ -116,7 +111,6 @@ class TestValidateConfig(unittest.TestCase):
                 }
 
             if path.startswith('cartridge_failover_params.etcd2_params.endpoints[0]'):
-                p = path.split('.')[-1]
                 return {
                     'cartridge_failover_params': {
                         'etcd2_params': {
@@ -142,10 +136,10 @@ class TestValidateConfig(unittest.TestCase):
             return {path: wrong_type_value}
 
         for t, params in params_by_types.items():
-            for p in params:
-                res = call_validate_config({'instance-1': get_wrong_params(p)})
+            for param in params:
+                res = call_validate_config({'instance-1': get_wrong_params(param)})
                 self.assertTrue(res.failed)
-                self.assertIn("{} must be {}".format(p, t), res.msg)
+                self.assertIn("{} must be {}".format(param, t), res.msg)
 
     def test_instance_required_params(self):
         required_params = {
@@ -362,7 +356,7 @@ class TestValidateConfig(unittest.TestCase):
                 })
                 self.assertTrue(res.failed)
                 errmsg = 'Replicaset parameters must be the same for all instances within one replicaset ' + \
-                    '("replicaset-1")'
+                         '("replicaset-1")'
                 self.assertIn(errmsg, res.msg)
 
     def test_app_config(self):

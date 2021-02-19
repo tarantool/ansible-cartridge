@@ -1,14 +1,6 @@
-# Hack ansible.module_utils.helpers import
-import sys
-import module_utils.helpers as helpers
-sys.modules['ansible.module_utils.helpers'] = helpers
-
-import os
-sys.path.append(os.path.dirname(__file__))
-
 import unittest
-from instance import Instance
 
+from instance import Instance
 from library.cartridge_auth import manage_auth
 
 
@@ -412,3 +404,4 @@ class TestAuth(unittest.TestCase):
 
     def tearDown(self):
         self.instance.stop()
+        del self.instance

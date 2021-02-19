@@ -1,27 +1,17 @@
-# Hack ansible.module_utils.helpers import
-import sys
-import module_utils.helpers as helpers
-sys.modules['ansible.module_utils.helpers'] = helpers
-
-import os
-sys.path.append(os.path.dirname(__file__))
-
 import unittest
+
 from parameterized import parameterized
-from instance import Instance
 
 from helpers import set_box_cfg
-
+from instance import Instance
 from library.cartridge_instance import manage_instance
 
 
-def call_manage_instance(console_sock,
-                         config={},
-                         cartridge_defaults={}):
+def call_manage_instance(console_sock, config=None, cartridge_defaults=None):
     return manage_instance({
         'console_sock': console_sock,
-        'config': config,
-        'cartridge_defaults': cartridge_defaults,
+        'config': config or {},
+        'cartridge_defaults': cartridge_defaults or {},
     })
 
 
@@ -46,7 +36,7 @@ class TestManageInstance(unittest.TestCase):
         self.assertFalse(res.changed)
         self.assertEqual(len(self.instance.get_calls('box_cfg')), 0)
 
-        # cennot connect to console sock
+        # cannot connect to console sock
         self.instance.clear_calls('box_cfg')
         bad_socket_path = 'bad-socket-path'
         self.instance.write_file(bad_socket_path)
@@ -394,3 +384,4 @@ class TestManageInstance(unittest.TestCase):
 
     def tearDown(self):
         self.instance.stop()
+        del self.instance

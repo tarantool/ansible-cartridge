@@ -1,8 +1,3 @@
-# Hack ansible.module_utils.helpers import
-import sys
-import module_utils.helpers as helpers
-sys.modules['ansible.module_utils.helpers'] = helpers
-
 import unittest
 
 from library.cartridge_set_single_instances_for_each_machine import get_one_not_expelled_instance_for_machine
@@ -18,7 +13,7 @@ def call_get_one_not_expelled_instance_for_machine(hostvars, play_hosts=None):
     })
 
 
-class TestGetOneInstanceForMachine(unittest.TestCase):
+class TestSetOneInstanceForMachine(unittest.TestCase):
     def setUp(self):
         self.hostvars = {
             'stateboard-1': {

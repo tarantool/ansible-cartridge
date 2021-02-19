@@ -1,11 +1,12 @@
 #!/usr/bin/python
 
 import os
+import pkgutil
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes
-from ansible.module_utils.helpers import get_instance_console_sock
-from ansible.module_utils.helpers import get_instance_id
+if pkgutil.find_loader('ansible.module_utils.helpers'):
+    import ansible.module_utils.helpers as helpers
+else:
+    import module_utils.helpers as helpers
 
 argument_spec = {
     'app_name': {'required': False, 'type': 'str'},
@@ -15,12 +16,12 @@ argument_spec = {
 
 
 def get_instance_pid_file(run_dir, app_name, instance_name, stateboard=False):
-    instance_id = get_instance_id(app_name, instance_name, stateboard)
+    instance_id = helpers.get_instance_id(app_name, instance_name, stateboard)
     return os.path.join(run_dir, '%s.pid' % instance_id)
 
 
 def get_instance_conf_file(conf_dir, app_name, instance_name, stateboard=False):
-    instance_id = get_instance_id(app_name, instance_name, stateboard)
+    instance_id = helpers.get_instance_id(app_name, instance_name, stateboard)
     return os.path.join(conf_dir, '%s.yml' % instance_id)
 
 
@@ -29,11 +30,11 @@ def get_app_conf_file(conf_dir, app_name):
 
 
 def get_instance_conf_section(app_name, instance_name, stateboard=False):
-    return get_instance_id(app_name, instance_name, stateboard)
+    return helpers.get_instance_id(app_name, instance_name, stateboard)
 
 
 def get_instance_work_dir(data_dir, app_name, instance_name, stateboard=False):
-    instance_id = get_instance_id(app_name, instance_name, stateboard)
+    instance_id = helpers.get_instance_id(app_name, instance_name, stateboard)
     return os.path.join(data_dir, instance_id)
 
 
@@ -70,7 +71,7 @@ def get_instance_info(params):
     if package_type in ['rpm', 'deb']:
         instance_info['instance_code_dir'] = os.path.join(instance_vars['cartridge_dist_dir'], app_name)
     elif package_type is not None:
-        return ModuleRes(failed=True, msg='Unknown package type: %s' % package_type)
+        return helpers.ModuleRes(failed=True, msg='Unknown package type: %s' % package_type)
 
     # app conf file, instance conf file, instance conf section
     instance_info['app_conf_file'] = get_app_conf_file(
@@ -84,7 +85,7 @@ def get_instance_info(params):
     )
 
     # console socket, PID file paths
-    instance_info['console_sock'] = get_instance_console_sock(
+    instance_info['console_sock'] = helpers.get_instance_console_sock(
         instance_vars['cartridge_run_dir'], app_name, instance_name, instance_vars['stateboard']
     )
 
@@ -102,19 +103,10 @@ def get_instance_info(params):
         app_name, instance_name, instance_vars['stateboard']
     )
 
-    return ModuleRes(changed=False, facts={
+    return helpers.ModuleRes(changed=False, facts={
         'instance_info': instance_info
     })
 
 
-def main():
-    module = AnsibleModule(argument_spec=argument_spec)
-    try:
-        res = get_instance_info(module.params)
-    except Exception as e:
-        res = ModuleRes(exception=e)
-    res.exit(module)
-
-
 if __name__ == '__main__':
-    main()
+    helpers.execute_module(argument_spec, get_instance_info)
