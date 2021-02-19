@@ -1,13 +1,12 @@
 #!/usr/bin/python
 
 import os
+import pkgutil
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes, CartridgeException, cartridge_errcodes
-from ansible.module_utils.helpers import box_cfg_was_called
-from ansible.module_utils.helpers import dynamic_box_cfg_params
-from ansible.module_utils.helpers import get_box_cfg
-from ansible.module_utils.helpers import get_control_console
+if pkgutil.find_loader('ansible.module_utils.helpers'):
+    import ansible.module_utils.helpers as helpers
+else:
+    import module_utils.helpers as helpers
 
 argument_spec = {
     'app_name': {'required': True, 'type': 'str'},
@@ -77,10 +76,10 @@ def check_conf_updated(new_conf, old_conf, ignore_keys):
 def needs_restart(params):
     restarted = params['restarted']
     if restarted is True:
-        return ModuleRes()
+        return helpers.ModuleRes()
 
     if restarted is False:
-        return ModuleRes(changed=False)
+        return helpers.ModuleRes(changed=False)
 
     stateboard = params['stateboard']
 
@@ -94,18 +93,18 @@ def needs_restart(params):
 
     # check if instance was not started yet
     if not os.path.exists(console_sock):
-        return ModuleRes()
+        return helpers.ModuleRes()
 
     try:
-        control_console = get_control_console(console_sock)
-    except CartridgeException as e:
+        control_console = helpers.get_control_console(console_sock)
+    except helpers.CartridgeException as e:
         allowed_errcodes = [
-            cartridge_errcodes.SOCKET_NOT_FOUND,
-            cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
-            cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
+            helpers.cartridge_errcodes.SOCKET_NOT_FOUND,
+            helpers.cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
+            helpers.cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
         ]
         if e.code in allowed_errcodes:
-            return ModuleRes()
+            return helpers.ModuleRes()
 
         raise e
 
@@ -115,7 +114,7 @@ def needs_restart(params):
     instance_code_dir = instance_info['instance_code_dir']
     package_update_time = os.path.getmtime(instance_code_dir)
     if last_restart_time < package_update_time:
-        return ModuleRes()
+        return helpers.ModuleRes()
 
     # check if instance config was changed (except dynamic params)
     current_instance_conf, err = read_yaml_file_section(
@@ -124,10 +123,10 @@ def needs_restart(params):
         instance_info['conf_section']
     )
     if err is not None:
-        return ModuleRes(failed=True, msg="Failed to read current instance config: %s" % err)
+        return helpers.ModuleRes(failed=True, msg="Failed to read current instance config: %s" % err)
 
-    if check_conf_updated(new_instance_conf, current_instance_conf, dynamic_box_cfg_params):
-        return ModuleRes()
+    if check_conf_updated(new_instance_conf, current_instance_conf, helpers.dynamic_box_cfg_params):
+        return helpers.ModuleRes()
 
     if not stateboard:
         # check if default config was changed (except dynamic params)
@@ -137,21 +136,21 @@ def needs_restart(params):
             app_name
         )
         if err is not None:
-            return ModuleRes(failed=True, msg="Failed to read current default config: %s" % err)
+            return helpers.ModuleRes(failed=True, msg="Failed to read current default config: %s" % err)
 
         new_default_conf.update({'cluster_cookie': cluster_cookie})
-        if check_conf_updated(new_default_conf, current_default_conf, dynamic_box_cfg_params):
-            return ModuleRes()
+        if check_conf_updated(new_default_conf, current_default_conf, helpers.dynamic_box_cfg_params):
+            return helpers.ModuleRes()
 
     # if box.cfg wasn't called,
-    if not box_cfg_was_called(control_console):
-        return ModuleRes()
+    if not helpers.box_cfg_was_called(control_console):
+        return helpers.ModuleRes()
 
-    current_cfg = get_box_cfg(control_console)
+    current_cfg = helpers.get_box_cfg(control_console)
     if current_cfg is None:
-        return ModuleRes()
+        return helpers.ModuleRes()
 
-    for param_name in dynamic_box_cfg_params:
+    for param_name in helpers.dynamic_box_cfg_params:
         new_value = None
         if param_name in new_instance_conf:
             new_value = new_instance_conf[param_name]
@@ -163,19 +162,10 @@ def needs_restart(params):
         # it mean that instance should be restarted to apply change
         if new_value is not None:
             if current_cfg.get(param_name) != new_value:
-                return ModuleRes()
+                return helpers.ModuleRes()
 
-    return ModuleRes(changed=False)
-
-
-def main():
-    module = AnsibleModule(argument_spec=argument_spec)
-    try:
-        res = needs_restart(module.params)
-    except CartridgeException as e:
-        res = ModuleRes(exception=e)
-    res.exit(module)
+    return helpers.ModuleRes(changed=False)
 
 
 if __name__ == '__main__':
-    main()
+    helpers.execute_module(argument_spec, needs_restart)

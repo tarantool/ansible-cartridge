@@ -1,11 +1,14 @@
 #!/usr/bin/python
 
 import os
+import pkgutil
 import re
 import subprocess
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes
+if pkgutil.find_loader('ansible.module_utils.helpers'):
+    import ansible.module_utils.helpers as helpers
+else:
+    import module_utils.helpers as helpers
 
 argument_spec = {
     'app_name': {'required': False, 'type': 'str'},
@@ -114,23 +117,14 @@ def get_package_info(params):
     if app_name and package_info['name'] != app_name:
         msg = 'cartridge_app_name value should be equal to package name. ' + \
               'Found cartridge_app_name: "%s", package name: "%s"' % (app_name, package_info['name'])
-        return ModuleRes(failed=True, msg=msg)
+        return helpers.ModuleRes(failed=True, msg=msg)
 
     package_info['package_type'] = package_type
 
-    return ModuleRes(changed=False, facts={
+    return helpers.ModuleRes(changed=False, facts={
         'package_info': package_info,
     })
 
 
-def main():
-    module = AnsibleModule(argument_spec=argument_spec)
-    try:
-        res = get_package_info(module.params)
-    except Exception as e:
-        res = ModuleRes(exception=e)
-    res.exit(module)
-
-
 if __name__ == '__main__':
-    main()
+    helpers.execute_module(argument_spec, get_package_info)

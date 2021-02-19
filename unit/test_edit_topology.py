@@ -1,15 +1,7 @@
-# Hack ansible.module_utils.helpers import
-import sys
-import module_utils.helpers as helpers
-sys.modules['ansible.module_utils.helpers'] = helpers
-
-import os
-sys.path.append(os.path.dirname(__file__))
-
 import unittest
-from instance import Instance
-from helpers import add_replicaset
 
+from helpers import add_replicaset
+from instance import Instance
 from library.cartridge_edit_topology import edit_topology
 
 
@@ -485,11 +477,11 @@ class TestEditTopology(unittest.TestCase):
 
         self.assertEqual(replicasets_opts, exp_replicasets_opts)
 
-        filover_priority_call = calls[1]
+        failover_priority_call = calls[1]
         self.assertNotIn('servers', call)
         self.assertIn('replicasets', call)
 
-        replicasets_opts = filover_priority_call['replicasets']
+        replicasets_opts = failover_priority_call['replicasets']
         self.assertEqual(len(replicasets_opts), 1)
 
         exp_replicasets_opts = [
@@ -653,3 +645,4 @@ class TestEditTopology(unittest.TestCase):
 
     def tearDown(self):
         self.instance.stop()
+        del self.instance

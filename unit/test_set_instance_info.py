@@ -1,20 +1,14 @@
-# Hack ansible.module_utils.helpers import
-import sys
-import module_utils.helpers as helpers
-sys.modules['ansible.module_utils.helpers'] = helpers
-
 import unittest
 
+from library.cartridge_set_instance_info import get_app_conf_file
+from library.cartridge_set_instance_info import get_instance_conf_file
+from library.cartridge_set_instance_info import get_instance_conf_section
 from library.cartridge_set_instance_info import get_instance_info
 from library.cartridge_set_instance_info import get_instance_pid_file
-from library.cartridge_set_instance_info import get_instance_conf_file
-from library.cartridge_set_instance_info import get_app_conf_file
-from library.cartridge_set_instance_info import get_instance_conf_section
-from library.cartridge_set_instance_info import get_instance_work_dir
 from library.cartridge_set_instance_info import get_instance_systemd_service
+from library.cartridge_set_instance_info import get_instance_work_dir
 from library.cartridge_set_instance_info import get_package_type
-
-from ansible.module_utils.helpers import get_instance_console_sock
+from module_utils.helpers import get_instance_console_sock
 
 
 def call_get_instance_info(app_name, instance_name, instance_vars):
@@ -25,7 +19,7 @@ def call_get_instance_info(app_name, instance_name, instance_vars):
     })
 
 
-class TestGetInstanceInfo(unittest.TestCase):
+class TestSetInstanceInfo(unittest.TestCase):
     def test_pid_file(self):
         pid_file = get_instance_pid_file('some/run/dir', 'myapp', 'instance-1')
         self.assertEqual(pid_file, 'some/run/dir/myapp.instance-1.pid')

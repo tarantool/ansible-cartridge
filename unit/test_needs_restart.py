@@ -1,47 +1,36 @@
-# Hack ansible.module_utils.helpers import
-import sys
-import module_utils.helpers as helpers
-sys.modules['ansible.module_utils.helpers'] = helpers
-
-import os
-sys.path.append(os.path.dirname(__file__))
-
+import itertools
 import unittest
+
 from parameterized import parameterized
-from instance import Instance
 
 from helpers import set_box_cfg
-
-import itertools
-
+from instance import Instance
 from library.cartridge_needs_restart import needs_restart
 
 
 def call_needs_restart(console_sock,
                        restarted=None,
-                       app_name=Instance.APPNAME,
+                       app_name=Instance.APP_NAME,
                        instance_conf_file=Instance.INSTANCE_CONF_PATH,
                        app_conf_file=Instance.APP_CONF_PATH,
                        instance_code_dir=Instance.APP_CODE_PATH,
                        conf_section=Instance.CONF_SECTION,
-                       config={},
+                       config=None,
                        cluster_cookie=Instance.COOKIE,
-                       cartridge_defaults={},
+                       cartridge_defaults=None,
                        stateboard=False):
-
     instance_info = {
         'console_sock': console_sock,
         'app_conf_file': app_conf_file,
         'conf_file': instance_conf_file,
         'conf_section': conf_section,
-        'app_conf_file': app_conf_file,
         'instance_code_dir': instance_code_dir,
     }
 
     return needs_restart({
         'app_name': app_name,
-        'config': config,
-        'cartridge_defaults': cartridge_defaults,
+        'config': config or {},
+        'cartridge_defaults': cartridge_defaults or {},
         'cluster_cookie': cluster_cookie,
         'restarted': restarted,
         'stateboard': stateboard,
@@ -130,8 +119,8 @@ class TestNeedsRestart(unittest.TestCase):
 
     def test_code_was_updated(self):
         # code was updated today, socket yesterday - needs restart
-        self.instance.set_path_mtime(self.instance.APP_CODE_PATH, self.instance.DATE_TODAY)
-        self.instance.set_path_mtime(self.console_sock, self.instance.DATE_YESTERDAY)
+        self.instance.set_path_m_time(self.instance.APP_CODE_PATH, self.instance.DATE_TODAY)
+        self.instance.set_path_m_time(self.console_sock, self.instance.DATE_YESTERDAY)
 
         res = call_needs_restart(console_sock=self.console_sock)
 
@@ -417,3 +406,4 @@ class TestNeedsRestart(unittest.TestCase):
 
     def tearDown(self):
         self.instance.stop()
+        del self.instance

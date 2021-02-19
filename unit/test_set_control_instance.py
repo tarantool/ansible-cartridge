@@ -1,18 +1,12 @@
-# Hack ansible.module_utils.helpers import
-import sys
-import module_utils.helpers as helpers
-sys.modules['ansible.module_utils.helpers'] = helpers
-
-import os
-sys.path.append(os.path.dirname(__file__))
-
 import unittest
-from instance import Instance
 
+from instance import Instance
 from library.cartridge_set_control_instance import get_control_instance
 
 
-def call_get_control_instance(console_sock, hostvars=dict(), play_hosts=None):
+def call_get_control_instance(console_sock, hostvars=None, play_hosts=None):
+    if hostvars is None:
+        hostvars = {}
     if play_hosts is None:
         play_hosts = hostvars.keys()
 
@@ -51,7 +45,7 @@ def set_membership_members(instance, members):
     })
 
 
-class TestControlInstance(unittest.TestCase):
+class TestSetControlInstance(unittest.TestCase):
     def setUp(self):
         self.cookie = 'secret'
         self.console_sock = './tmp/x.sock'
@@ -201,3 +195,4 @@ class TestControlInstance(unittest.TestCase):
 
     def tearDown(self):
         self.instance.stop()
+        del self.instance

@@ -1,8 +1,11 @@
 #!/usr/bin/python
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes, CartridgeException
-from ansible.module_utils.helpers import get_control_console
+import pkgutil
+
+if pkgutil.find_loader('ansible.module_utils.helpers'):
+    import ansible.module_utils.helpers as helpers
+else:
+    import module_utils.helpers as helpers
 
 argument_spec = {
     'app_config': {'required': True, 'type': 'dict'},
@@ -15,7 +18,7 @@ def section_is_deleted(section):
 
 
 def config_app(params):
-    control_console = get_control_console(params['console_sock'])
+    control_console = helpers.get_control_console(params['console_sock'])
     config = params['app_config']
 
     system_sections = {
@@ -33,7 +36,7 @@ def config_app(params):
     ''')
 
     if config is None:
-        return ModuleRes(failed=True, msg="Cluster isn't bootstrapped yet")
+        return helpers.ModuleRes(failed=True, msg="Cluster isn't bootstrapped yet")
 
     # Patch it
     patch = {}
@@ -42,7 +45,7 @@ def config_app(params):
     for section_name, section in config.items():
         if section_name in system_sections:
             errmsg = 'Unable to patch config system section: "{}"'.format(section_name)
-            return ModuleRes(failed=True, msg=errmsg)
+            return helpers.ModuleRes(failed=True, msg=errmsg)
 
         if section_is_deleted(section):
             if section_name in current_config:
@@ -54,7 +57,7 @@ def config_app(params):
                 changed = True
 
     if not changed:
-        return ModuleRes(changed=False)
+        return helpers.ModuleRes(changed=False)
 
     func_body = '''
         local patch = ...
@@ -64,19 +67,10 @@ def config_app(params):
 
     if not ok:
         errmsg = 'Config patch failed: {}'.format(err)
-        return ModuleRes(failed=True, msg=errmsg)
+        return helpers.ModuleRes(failed=True, msg=errmsg)
 
-    return ModuleRes()
-
-
-def main():
-    module = AnsibleModule(argument_spec=argument_spec)
-    try:
-        res = config_app(module.params)
-    except CartridgeException as e:
-        res = ModuleRes(exception=e)
-    res.exit(module)
+    return helpers.ModuleRes()
 
 
 if __name__ == '__main__':
-    main()
+    helpers.execute_module(argument_spec, config_app)

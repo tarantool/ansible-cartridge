@@ -1,13 +1,12 @@
-import os
-import socket
-import re
 import json
-import tenacity
-
+import os
+import re
+import socket
 from subprocess import Popen
 
-from os_mock import OsPathExistsMock, OsPathGetMtimeMock
+import tenacity
 
+from os_mock import OsPathExistsMock, OsPathGetMTimeMock
 
 script_abspath = os.path.realpath(
     os.path.join(
@@ -17,14 +16,14 @@ script_abspath = os.path.realpath(
 
 
 class Instance:
-    APPNAME = 'myapp'
+    APP_NAME = 'myapp'
     INSTANCE_NAME = 'instance-1'
     COOKIE = 'cookie'
 
-    INSTANCE_CONF_PATH = '/etc/tarantool/conf.d/{}.{}.yml'.format(APPNAME, INSTANCE_NAME)
-    CONF_SECTION = '{}.{}'.format(APPNAME, INSTANCE_NAME)
-    APP_CONF_PATH = '/etc/tarantool/conf.d/{}.yml'.format(APPNAME)
-    APP_CODE_PATH = '/usr/share/tarantool/{}'.format(APPNAME)
+    INSTANCE_CONF_PATH = '/etc/tarantool/conf.d/{}.{}.yml'.format(APP_NAME, INSTANCE_NAME)
+    CONF_SECTION = '{}.{}'.format(APP_NAME, INSTANCE_NAME)
+    APP_CONF_PATH = '/etc/tarantool/conf.d/{}.yml'.format(APP_NAME)
+    APP_CODE_PATH = '/usr/share/tarantool/{}'.format(APP_NAME)
 
     DATE_YESTERDAY = -1
     DATE_TODAY = 0
@@ -42,7 +41,7 @@ class Instance:
         self.__original_getmtime = os.path.getmtime
 
         os.path.exists = OsPathExistsMock()
-        os.path.getmtime = OsPathGetMtimeMock()
+        os.path.getmtime = OsPathGetMTimeMock()
 
     def __del__(self):
         os.path.exists = self.__original_exists
@@ -74,7 +73,7 @@ class Instance:
         }
         for path, content in files.items():
             self.write_file(path, content)
-            self.set_path_mtime(path, self.DATE_TODAY)
+            self.set_path_m_time(path, self.DATE_TODAY)
 
         self.set_default_instance_config()
         self.set_default_app_config()
@@ -89,9 +88,10 @@ class Instance:
                 chunk = self.sock.recv(1024).decode()
                 # It is correct because of cmd structure: it always returns a value
                 if chunk == '':
-                    errmsg = 'Error: broken pipe. ' + \
+                    raise Exception(
+                        'Error: broken pipe. '
                         'Probably, the instance was not bootstrapped yet to perform this operation'
-                    raise Exception(errmsg)
+                    )
                 data = data + chunk
                 if data.endswith('\n...\n'):
                     break
@@ -182,8 +182,8 @@ class Instance:
             '{}: {}'.format(k, v)
             for k, v in config.items()
         ])
-        conf = '{appname}: {{ {params} }}'.format(
-            appname=self.APPNAME,
+        conf = '{app_name}: {{ {params} }}'.format(
+            app_name=self.APP_NAME,
             params=params
         )
         self.write_file(self.APP_CONF_PATH, conf)
@@ -196,8 +196,9 @@ class Instance:
             'cluster_cookie': self.COOKIE
         })
 
-    def set_path_mtime(self, path, mtime):
-        os.path.getmtime.set_mtime(path, mtime)
+    @staticmethod
+    def set_path_m_time(path, m_time):
+        os.path.getmtime.set_m_time(path, m_time)
 
     def set_box_cfg_function(self, value=True):
         self.eval('''

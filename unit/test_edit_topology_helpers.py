@@ -1,16 +1,8 @@
-# Hack ansible.module_utils.helpers import
-import sys
-import module_utils.helpers as helpers
-sys.modules['ansible.module_utils.helpers'] = helpers
-
-import os
-sys.path.append(os.path.dirname(__file__))
-
 import unittest
 
 from library.cartridge_edit_topology import get_configured_replicasets
-from library.cartridge_edit_topology import get_instances_to_expel
 from library.cartridge_edit_topology import get_edit_replicaset_params
+from library.cartridge_edit_topology import get_instances_to_expel
 
 
 def call_get_configured_replicasets(hostvars, play_hosts=None):
@@ -60,7 +52,7 @@ class TestGetConfiguredReplicasets(unittest.TestCase):
         self.assertEqual(len(replicaset), 7)
 
         self.assertEqual(replicaset['alias'], 'replicaset-1')
-        self.assertEqual(set(replicaset['instances']), set(['instance-2', 'instance-4']))
+        self.assertEqual(set(replicaset['instances']), {'instance-2', 'instance-4'})
 
         self.assertEqual(replicaset['roles'], None)
         self.assertEqual(replicaset['failover_priority'], None)
@@ -102,7 +94,7 @@ class TestGetConfiguredReplicasets(unittest.TestCase):
 
             if alias == 'r1':
                 rpl_conf = rpl1_vars
-            elif alias == 'r2':
+            else:
                 rpl_conf = rpl2_vars
 
             self.assertEqual(replicaset['roles'], rpl_conf.get('roles'))

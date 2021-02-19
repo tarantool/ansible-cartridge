@@ -1,10 +1,11 @@
 #!/usr/bin/python
 
-from ansible.module_utils.basic import AnsibleModule
+import pkgutil
 
-from ansible.module_utils.helpers import ModuleRes, CartridgeException
-from ansible.module_utils.helpers import get_control_console
-from ansible.module_utils.helpers import is_expelled, is_stateboard
+if pkgutil.find_loader('ansible.module_utils.helpers'):
+    import ansible.module_utils.helpers as helpers
+else:
+    import module_utils.helpers as helpers
 
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
@@ -118,7 +119,7 @@ def get_configured_replicasets(hostvars, play_hosts):
         if instance_name not in play_hosts:
             continue
 
-        if is_expelled(instance_vars) or is_stateboard(instance_vars):
+        if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
             continue
 
         if 'replicaset_alias' in instance_vars:
@@ -143,7 +144,7 @@ def get_configured_replicasets(hostvars, play_hosts):
 def get_instances_to_expel(hostvars, play_hosts):
     instances_to_expel = [
         instance_name for instance_name in play_hosts
-        if not is_stateboard(hostvars[instance_name]) and is_expelled(hostvars[instance_name])
+        if not helpers.is_stateboard(hostvars[instance_name]) and helpers.is_expelled(hostvars[instance_name])
     ]
 
     return instances_to_expel
@@ -344,9 +345,9 @@ def edit_topology(params):
     instances_to_expel = get_instances_to_expel(hostvars, play_hosts)
 
     if not replicasets and not instances_to_expel:
-        return ModuleRes(changed=False)
+        return helpers.ModuleRes(changed=False)
 
-    control_console = get_control_console(console_sock)
+    control_console = helpers.get_control_console(console_sock)
     cluster_instances = get_cluster_instances(control_console)
 
     # call edit_topology once
@@ -355,14 +356,14 @@ def edit_topology(params):
         replicasets, cluster_replicasets, instances_to_expel, cluster_instances
     )
     if err is not None:
-        return ModuleRes(failed=True, msg="Failed to collect edit topology params: %s" % err)
+        return helpers.ModuleRes(failed=True, msg="Failed to collect edit topology params: %s" % err)
 
     topology_changed = False
 
     if edit_topology_params:
         res, err = control_console.eval_res_err(edit_topology_func_body, edit_topology_params)
         if err is not None:
-            return ModuleRes(failed=True, msg="Failed to edit topology: %s" % err)
+            return helpers.ModuleRes(failed=True, msg="Failed to edit topology: %s" % err)
 
         topology_changed = True
         edited_replicasets = res['replicasets']
@@ -381,21 +382,12 @@ def edit_topology(params):
     if edit_topology_params:
         res, err = control_console.eval_res_err(edit_topology_func_body, edit_topology_params)
         if err is not None:
-            return ModuleRes(failed=True, msg="Failed to edit failover priority: %s" % err)
+            return helpers.ModuleRes(failed=True, msg="Failed to edit failover priority: %s" % err)
 
         topology_changed = True
 
-    return ModuleRes(changed=topology_changed)
-
-
-def main():
-    module = AnsibleModule(argument_spec=argument_spec)
-    try:
-        res = edit_topology(module.params)
-    except CartridgeException as e:
-        res = ModuleRes(exception=e)
-    res.exit(module)
+    return helpers.ModuleRes(changed=topology_changed)
 
 
 if __name__ == '__main__':
-    main()
+    helpers.execute_module(argument_spec, edit_topology)

@@ -1,8 +1,3 @@
-# Hack ansible.module_utils.helpers import
-import sys
-import module_utils.helpers as helpers
-sys.modules['ansible.module_utils.helpers'] = helpers
-
 import unittest
 
 from library.cartridge_set_one_not_expelled_instance import get_one_not_expelled_instance
@@ -18,7 +13,7 @@ def call_get_one_not_expelled_instance(hostvars, play_hosts=None):
     })
 
 
-class TestGetOneNotExpelledInstance(unittest.TestCase):
+class TestSetOneNotExpelledInstance(unittest.TestCase):
     def setUp(self):
         self.hostvars = {
             'expelled-1': {'expelled': True},

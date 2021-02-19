@@ -1,9 +1,11 @@
 #!/usr/bin/python
 
-from ansible.module_utils.basic import AnsibleModule
-from ansible.module_utils.helpers import ModuleRes, CartridgeException
-from ansible.module_utils.helpers import get_control_console
-from ansible.module_utils.helpers import is_expelled, is_stateboard
+import pkgutil
+
+if pkgutil.find_loader('ansible.module_utils.helpers'):
+    import ansible.module_utils.helpers as helpers
+else:
+    import module_utils.helpers as helpers
 
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
@@ -17,7 +19,7 @@ def get_control_instance(params):
     play_hosts = params['play_hosts']
     console_sock = params['console_sock']
 
-    control_console = get_control_console(console_sock)
+    control_console = helpers.get_control_console(console_sock)
     control_instance_name = None
 
     members, _ = control_console.eval_res_err('''
@@ -28,7 +30,7 @@ def get_control_instance(params):
         if 'payload' in member and member['payload'].get('uuid') is not None:
             if member['payload'].get('alias') is None:
                 errmsg = 'Unable to get instance alias for "{}"'.format(member['payload']['uuid'])
-                return ModuleRes(failed=True, msg=errmsg)
+                return helpers.ModuleRes(failed=True, msg=errmsg)
 
             control_instance_name = member['payload']['alias']
             break
@@ -36,7 +38,7 @@ def get_control_instance(params):
     if control_instance_name is None:
         for instance_name in play_hosts:
             instance_vars = hostvars[instance_name]
-            if is_expelled(instance_vars) or is_stateboard(instance_vars):
+            if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
                 continue
 
             if 'replicaset_alias' in instance_vars:
@@ -45,7 +47,7 @@ def get_control_instance(params):
 
     if control_instance_name is None:
         errmsg = 'Not found any joined instance or instance to create a replicaset'
-        return ModuleRes(failed=True, msg=errmsg)
+        return helpers.ModuleRes(failed=True, msg=errmsg)
 
     instance_vars = hostvars[control_instance_name]
     if 'instance_info' not in instance_vars:
@@ -53,7 +55,7 @@ def get_control_instance(params):
 
     instance_info = instance_vars['instance_info']
 
-    return ModuleRes(changed=False, facts={
+    return helpers.ModuleRes(changed=False, facts={
         'control_instance': {
             'name': control_instance_name,
             'console_sock': instance_info['console_sock'],
@@ -61,14 +63,5 @@ def get_control_instance(params):
     })
 
 
-def main():
-    module = AnsibleModule(argument_spec=argument_spec)
-    try:
-        res = get_control_instance(module.params)
-    except CartridgeException as e:
-        res = ModuleRes(exception=e)
-    res.exit(module)
-
-
 if __name__ == '__main__':
-    main()
+    helpers.execute_module(argument_spec, get_control_instance)
