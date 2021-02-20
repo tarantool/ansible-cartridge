@@ -13,7 +13,6 @@ argument_spec = {
     'config': {'required': True, 'type': 'dict'},
     'cartridge_defaults': {'required': True, 'type': 'dict'},
     'cluster_cookie': {'required': True, 'type': 'str'},
-    'restarted': {'required': False, 'type': 'bool'},
     'stateboard': {'required': True, 'type': 'bool'},
     'instance_info': {'required': True, 'type': 'dict'},
 }
@@ -74,13 +73,6 @@ def check_conf_updated(new_conf, old_conf, ignore_keys):
 
 
 def needs_restart(params):
-    restarted = params['restarted']
-    if restarted is True:
-        return helpers.ModuleRes(facts={'needs_restart': True})
-
-    if restarted is False:
-        return helpers.ModuleRes(changed=False)
-
     stateboard = params['stateboard']
 
     app_name = params['app_name']

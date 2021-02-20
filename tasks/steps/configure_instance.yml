@@ -8,18 +8,17 @@
         console_sock: '{{ instance_info.console_sock }}'
         config: '{{ config }}'
         cartridge_defaults: '{{ cartridge_defaults }}'
-      when: >-
-        not restarted and not expelled
+      when: not restarted and not expelled
 
     - name: 'Check if instance restart is forced or required to apply changes'
       cartridge_set_needs_restart:
-        restarted: '{{ restarted }}'
         app_name: '{{ cartridge_app_name }}'
         config: '{{ config }}'
         cartridge_defaults: '{{ cartridge_defaults }}'
         cluster_cookie: '{{ cartridge_cluster_cookie }}'
         stateboard: '{{ stateboard }}'
         instance_info: '{{ instance_info}}'
+      when: restarted is none
 
     - name: 'Place default config'
       copy:

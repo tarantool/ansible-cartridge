@@ -59,7 +59,7 @@ class TestTags(unittest.TestCase):
             'Select one instance for each physical machine',
             'Select one not expelled instance',
             'Collect scenario steps',
-            'BLOCK : Include steps by scenario',
+            'Include steps by scenario',
         ])
 
     def test_tag_cartridge_instances(self):
@@ -73,7 +73,7 @@ class TestTags(unittest.TestCase):
             'Select one instance for each physical machine',
             'Select one not expelled instance',
             'Collect scenario steps',
-            'BLOCK : Include steps by scenario',
+            'Include steps by scenario',
         ])
 
     def test_tag_cartridge_replicasets(self):
@@ -87,7 +87,7 @@ class TestTags(unittest.TestCase):
             'Select one instance for each physical machine',
             'Select one not expelled instance',
             'Collect scenario steps',
-            'BLOCK : Include steps by scenario',
+            'Include steps by scenario',
         ])
 
     def test_tag_cartridge_config(self):
@@ -101,7 +101,7 @@ class TestTags(unittest.TestCase):
             'Select one instance for each physical machine',
             'Select one not expelled instance',
             'Collect scenario steps',
-            'BLOCK : Include steps by scenario',
+            'Include steps by scenario',
         ])
 
     def test_not_cartridge_tag(self):

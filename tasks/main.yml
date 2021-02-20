@@ -20,7 +20,7 @@
     - cartridge-replicasets
     - cartridge-config
 
-- name: 'BLOCK : Include steps by scenario'
+- name: 'Include steps by scenario'
   include_tasks: "{{ item.path }}"
   loop_control:
     label: "{{ item.name }}"

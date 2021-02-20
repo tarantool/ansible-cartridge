@@ -9,7 +9,6 @@ from library.cartridge_set_needs_restart import needs_restart
 
 
 def call_needs_restart(console_sock,
-                       restarted=None,
                        app_name=Instance.APP_NAME,
                        instance_conf_file=Instance.INSTANCE_CONF_PATH,
                        app_conf_file=Instance.APP_CONF_PATH,
@@ -32,7 +31,6 @@ def call_needs_restart(console_sock,
         'config': config or {},
         'cartridge_defaults': cartridge_defaults or {},
         'cluster_cookie': cluster_cookie,
-        'restarted': restarted,
         'stateboard': stateboard,
         'instance_info': instance_info,
     })
@@ -45,26 +43,6 @@ class TestSetNeedsRestart(unittest.TestCase):
 
         self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
-
-    def test_restart_forced(self):
-        res = call_needs_restart(
-            console_sock=self.console_sock,
-            restarted=True
-        )
-        self.assertFalse(res.failed, msg=res.msg)
-        self.assertTrue(res.changed)
-        self.assertIsNotNone(res.facts)
-        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
-
-    def test_restart_disabled(self):
-        res = call_needs_restart(
-            console_sock=self.console_sock,
-            restarted=False
-        )
-        self.assertFalse(res.failed, msg=res.msg)
-        self.assertFalse(res.changed)
-        facts = res.facts or {}
-        self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
     def test_instance_not_started(self):
         # console sock doesn't exists
