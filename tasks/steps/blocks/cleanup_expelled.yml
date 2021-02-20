@@ -1,19 +1,18 @@
 ---
-- name: Stop and disable instance systemd service
+
+- name: 'Stop and disable instance systemd service'
   systemd:
     name: '{{ instance_info.systemd_service }}'
     state: stopped
     enabled: false
-  tags: cartridge-replicasets
 
-- name: Cleanup instance files
+- name: 'Cleanup instance files'
   file:
     path: '{{ filepath }}'
     state: absent
+  loop_control:
+    loop_var: filepath
   with_items:
     - '{{ instance_info.conf_file }}'
     - '{{ instance_info.console_sock }}'
     - '{{ instance_info.work_dir }}'
-  loop_control:
-    loop_var: filepath
-  tags: cartridge-replicasets

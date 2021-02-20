@@ -1,0 +1,14 @@
+---
+
+- when: cartridge_app_config is not none
+  tags: cartridge-config
+  block:
+    - import_tasks: 'blocks/set_control_instance.yml'
+      when: control_instance is not defined
+
+    - name: 'Configure application config'
+      cartridge_configure_app_config:
+        app_config: '{{ cartridge_app_config }}'
+        console_sock: '{{ control_instance.console_sock }}'
+      run_once: true
+      delegate_to: '{{ control_instance.name }}'

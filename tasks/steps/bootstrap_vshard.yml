@@ -1,0 +1,30 @@
+---
+
+- when:
+    - cartridge_bootstrap_vshard
+    - not expelled
+  tags: cartridge-config
+  block:
+    - import_tasks: 'blocks/set_control_instance.yml'
+      when: control_instance is not defined
+
+    - name: 'Bootstrap VShard'
+      cartridge_bootstrap_vshard:
+        console_sock: '{{ control_instance.console_sock }}'
+      register: bootstrap_vshard
+      until: not bootstrap_vshard.failed
+      retries: 3
+      delay: 5
+      run_once: true
+      delegate_to: '{{ control_instance.name }}'
+
+    - name: 'Wait until the instance discovers buckets'
+      cartridge_check_instance_state:
+        console_sock: '{{ instance_info.console_sock }}'
+        stateboard: '{{ stateboard }}'
+        check_buckets_are_discovered: true
+      register: check_instance
+      until: not check_instance.failed
+      retries: '{{ instance_discover_buckets_timeout // 5 }}'
+      delay: 5
+      when: cartridge_wait_buckets_discovery

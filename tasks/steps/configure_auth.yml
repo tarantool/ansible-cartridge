@@ -1,0 +1,14 @@
+---
+
+- when: cartridge_auth is not none
+  tags: cartridge-config
+  block:
+    - import_tasks: 'blocks/set_control_instance.yml'
+      when: control_instance is not defined
+
+    - name: 'Configure cartridge auth'
+      cartridge_configure_auth:
+        auth: '{{ cartridge_auth }}'
+        console_sock: '{{ control_instance.console_sock }}'
+      run_once: true
+      delegate_to: '{{ control_instance.name }}'

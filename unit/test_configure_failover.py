@@ -1,7 +1,7 @@
 import unittest
 
 from instance import Instance
-from library.cartridge_manage_failover import manage_failover
+from library.cartridge_configure_failover import manage_failover
 
 
 def call_manage_failover(console_sock, mode,

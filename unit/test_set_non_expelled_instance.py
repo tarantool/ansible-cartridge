@@ -1,6 +1,6 @@
 import unittest
 
-from library.cartridge_set_one_not_expelled_instance import get_one_not_expelled_instance
+from library.cartridge_set_not_expelled_instance import get_one_not_expelled_instance
 
 
 def call_get_one_not_expelled_instance(hostvars, play_hosts=None):

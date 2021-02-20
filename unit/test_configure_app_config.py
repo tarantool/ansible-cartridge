@@ -1,7 +1,7 @@
 import unittest
 
 from instance import Instance
-from library.cartridge_app_config import config_app
+from library.cartridge_configure_app_config import config_app
 
 
 def call_config_app(console_sock, config):
