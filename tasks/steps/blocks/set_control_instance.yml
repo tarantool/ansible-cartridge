@@ -1,0 +1,9 @@
+---
+
+- name: 'Select control instance to manage topology and configuration'
+  cartridge_set_control_instance:
+    hostvars: '{{ hostvars }}'
+    play_hosts: '{{ play_hosts }}'
+    console_sock: '{{ not_expelled_instance.console_sock }}'
+  run_once: true
+  delegate_to: '{{ not_expelled_instance.name }}'

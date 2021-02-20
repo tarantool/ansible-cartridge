@@ -5,11 +5,10 @@ from parameterized import parameterized
 
 from helpers import set_box_cfg
 from instance import Instance
-from library.cartridge_needs_restart import needs_restart
+from library.cartridge_set_needs_restart import needs_restart
 
 
 def call_needs_restart(console_sock,
-                       restarted=None,
                        app_name=Instance.APP_NAME,
                        instance_conf_file=Instance.INSTANCE_CONF_PATH,
                        app_conf_file=Instance.APP_CONF_PATH,
@@ -32,35 +31,18 @@ def call_needs_restart(console_sock,
         'config': config or {},
         'cartridge_defaults': cartridge_defaults or {},
         'cluster_cookie': cluster_cookie,
-        'restarted': restarted,
         'stateboard': stateboard,
         'instance_info': instance_info,
     })
 
 
-class TestNeedsRestart(unittest.TestCase):
+class TestSetNeedsRestart(unittest.TestCase):
     def setUp(self):
         self.cookie = 'secret'
         self.console_sock = './tmp/x.sock'
 
         self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
-
-    def test_restart_forced(self):
-        res = call_needs_restart(
-            console_sock=self.console_sock,
-            restarted=True
-        )
-        self.assertFalse(res.failed, msg=res.msg)
-        self.assertTrue(res.changed)
-
-    def test_restart_disabled(self):
-        res = call_needs_restart(
-            console_sock=self.console_sock,
-            restarted=False
-        )
-        self.assertFalse(res.failed, msg=res.msg)
-        self.assertFalse(res.changed)
 
     def test_instance_not_started(self):
         # console sock doesn't exists
@@ -72,6 +54,8 @@ class TestNeedsRestart(unittest.TestCase):
 
         self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
         # cannot connect to console sock
         bad_socket_path = 'bad-socket-path'
@@ -83,6 +67,8 @@ class TestNeedsRestart(unittest.TestCase):
 
         self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
     def test_box_cfg_is_function(self):
         param_name = 'some-param'
@@ -105,6 +91,8 @@ class TestNeedsRestart(unittest.TestCase):
 
         self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
         # param was changed
         res = call_needs_restart(
@@ -116,6 +104,8 @@ class TestNeedsRestart(unittest.TestCase):
 
         self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
     def test_code_was_updated(self):
         # code was updated today, socket yesterday - needs restart
@@ -126,6 +116,8 @@ class TestNeedsRestart(unittest.TestCase):
 
         self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
     @parameterized.expand(
         itertools.product(
@@ -160,6 +152,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
+        facts = res.facts or {}
+        self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
         # param changed, memory size not
         res = call_needs_restart(
@@ -172,6 +166,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
         # param isn't changed
         # memory size is changed in config
@@ -187,6 +183,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
         # param isn't changed
         # memory size is changed in config
@@ -202,6 +200,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
+        facts = res.facts or {}
+        self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
         # param is changed
         # memory size is changed in config
@@ -217,6 +217,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
     @parameterized.expand(
         itertools.product(
@@ -251,6 +253,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
+        facts = res.facts or {}
+        self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
         # param changed, memory size not
         res = call_needs_restart(
@@ -264,8 +268,12 @@ class TestNeedsRestart(unittest.TestCase):
         self.assertFalse(res.failed, msg=res.msg)
         if not stateboard:
             self.assertTrue(res.changed)
+            self.assertIsNotNone(res.facts)
+            self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
         else:
             self.assertFalse(res.changed)
+            facts = res.facts or {}
+            self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
         # param isn't changed
         # memory size is changed in config
@@ -282,8 +290,12 @@ class TestNeedsRestart(unittest.TestCase):
         self.assertFalse(res.failed, msg=res.msg)
         if not stateboard:
             self.assertTrue(res.changed)
+            self.assertIsNotNone(res.facts)
+            self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
         else:
             self.assertFalse(res.changed)
+            facts = res.facts or {}
+            self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
         # param isn't changed
         # memory size is changed in config
@@ -299,6 +311,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
+        facts = res.facts or {}
+        self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
         # param is changed
         # memory size is changed in config
@@ -315,8 +329,12 @@ class TestNeedsRestart(unittest.TestCase):
         self.assertFalse(res.failed, msg=res.msg)
         if not stateboard:
             self.assertTrue(res.changed)
+            self.assertIsNotNone(res.facts)
+            self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
         else:
             self.assertFalse(res.changed)
+            facts = res.facts or {}
+            self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
     @parameterized.expand([
         ["memtx_memory"],
@@ -347,6 +365,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
+        facts = res.facts or {}
+        self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
         # memory size changed only in cartridge_defaults
         res = call_needs_restart(
@@ -360,6 +380,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
+        facts = res.facts or {}
+        self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
         # memory size changed both in cartridge_defaults and config
         res = call_needs_restart(
@@ -373,6 +395,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
         # memory size changed both in cartridge_defaults and config
         # memory size on instance is equal to value from cartridge_defaults
@@ -388,6 +412,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertTrue(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
         # memory size changed both in cartridge_defaults and config
         # memory size on instance is equal to value from config
@@ -403,6 +429,8 @@ class TestNeedsRestart(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
+        facts = res.facts or {}
+        self.assertTrue('needs_restart' not in facts or facts['needs_restart'] is False)
 
     def tearDown(self):
         self.instance.stop()

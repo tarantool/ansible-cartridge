@@ -1,0 +1,6 @@
+---
+
+- name: 'BLOCK : Cleanup expelled instance files and services'
+  include_tasks: 'blocks/cleanup_expelled.yml'
+  when: expelled
+  tags: cartridge-replicasets
