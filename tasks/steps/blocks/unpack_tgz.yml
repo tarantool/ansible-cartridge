@@ -25,6 +25,8 @@
     - '{{ cartridge_run_dir }}'
     - '{{ cartridge_data_dir }}'
     - '{{ cartridge_conf_dir }}'
+    - '{{ cartridge_install_dir }}'
+    - '{{ cartridge_instances_dir }}'
     - '{{ instance_info.app_code_dir }}'
   any_errors_fatal: true
 

@@ -5,7 +5,7 @@
     app_name: '{{ cartridge_app_name }}'
     tnt_version: '{{ package_info.tnt_version }}'
     instance_vars:
-      cartridge_dist_dir: '{{ cartridge_dist_dir }}'
+      cartridge_install_dir: '{{ cartridge_install_dir }}'
       cartridge_run_dir: '{{ cartridge_run_dir }}'
       cartridge_data_dir: '{{ cartridge_data_dir }}'
       systemd_instance_code_dir: '{{ instance_info.systemd_instance_code_dir }}'
