@@ -1,0 +1,8 @@
+---
+
+- name: 'BLOCK : Install package'
+  include_tasks: 'blocks/update_package.yml'
+  when:
+    - cartridge_package_path is not none
+    - inventory_hostname in single_instances_for_each_machine
+  tags: cartridge-instances

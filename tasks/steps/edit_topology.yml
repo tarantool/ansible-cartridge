@@ -1,0 +1,14 @@
+---
+
+- tags: cartridge-replicasets
+  block:
+    - import_tasks: 'blocks/set_control_instance.yml'
+      when: control_instance is not defined
+
+    - name: 'Edit topology'
+      cartridge_edit_topology:
+        hostvars: '{{ hostvars }}'
+        play_hosts: '{{ play_hosts }}'
+        console_sock: '{{ control_instance.console_sock }}'
+      run_once: true
+      delegate_to: '{{ control_instance.name }}'

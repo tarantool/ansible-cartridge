@@ -166,12 +166,19 @@ Configuration format is described in detail in the
   parameters values for instances;
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean
   flag that indicates if vshard should be bootstrapped;
+* `cartridge_wait_buckets_discovery` (`boolean`, optional, default: `true`): boolean
+  flag indicating whether the role should wait for buckets discovery after vshard bootstrap;
 * `cartridge_failover_params` (`dict`, optional): [failover](#failover) parameters;
 * `cartridge_app_config` (`dict`, optional): application config sections to patch;
 * `cartridge_auth`: (`dict`, optional): [authorization configuration](#cartridge-authorization);
 * `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`):
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency);
+* `cartridge_scenario` (`list-of-strings`, optional): list of steps to be launched
+* `cartridge_custom_steps_dir` (`string`, optional, default: `null`): path to directory
+  containing YAML files of custom steps
+* `cartridge_custom_steps` (`list-of-dicts`, optional, default: `[]`): list of custom steps.
+  Use dictionary with  to define step: ``
 * `config` (`dict`, required): [instance configuration](#instances);
 * `restarted` (`boolean`, optional): flag indicates if instance should be
   restarted or not (if this flag isn't specified, instance will be restarted if
@@ -180,8 +187,10 @@ Configuration format is described in detail in the
 * `stateboard` (`boolean`, optional, default: `false`): boolean flag that indicates
    that the instance is a [stateboard](#stateboard-instance);
 * `instance_start_timeout` (`number`, optional, default: 60): time in seconds to wait for instance to be started;
+* `instance_discover_buckets_timeout` (`number`, optional, default: 60): time in seconds
+  to wait for instance to discover buckets;
 * `replicaset_alias` (`string`, optional): replicaset alias, will be displayed in Web UI;
-* `failover_priority` (`list-of-string`): failover priority;
+* `failover_priority` (`list-of-strings`): failover priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
 * `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
 * `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled);

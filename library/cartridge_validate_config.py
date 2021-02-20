@@ -1,5 +1,6 @@
 #!/usr/bin/python
 
+import os
 import pkgutil
 import re
 
@@ -22,6 +23,9 @@ PARAMS_THE_SAME_FOR_ALL_HOSTS = [
     'cartridge_failover',
     'cartridge_failover_params',
     'cartridge_app_config',
+    'cartridge_scenario',
+    'cartridge_custom_steps_dir',
+    'cartridge_custom_steps',
 ]
 
 CONFIG_REQUIRED_PARAMS = ['advertise_uri']
@@ -120,12 +124,17 @@ def validate_types(vars):
         'cartridge_cluster_cookie': str,
         'cartridge_defaults': dict,
         'cartridge_bootstrap_vshard': bool,
+        'cartridge_wait_buckets_discovery': bool,
         'cartridge_failover': bool,
         'cartridge_app_config': dict,
+        'cartridge_scenario': list,
+        'cartridge_custom_steps_dir': str,
+        'cartridge_custom_steps': list,
         'restarted': bool,
         'expelled': bool,
         'stateboard': bool,
         'instance_start_timeout': int,
+        'instance_discover_buckets_timeout': int,
         'replicaset_alias': str,
         'failover_priority': [str],
         'roles': [str],
@@ -416,6 +425,35 @@ def check_failover(found_common_params):
     return None
 
 
+def check_scenario(found_common_params):
+    scenario = found_common_params.get('cartridge_scenario')
+    if scenario is not None:
+        for task in scenario:
+            if type(task) != str:
+                return f"Incorrect type of task name '{task}'. String expected, got: {type(task)}"
+
+    dir_path = found_common_params.get('cartridge_custom_steps_dir')
+    if dir_path is not None:
+        if not os.path.exists(dir_path):
+            return f"Directory '{dir_path}' from 'cartridge_custom_steps_dir' doesn't exists"
+
+    custom_steps = found_common_params.get('cartridge_custom_steps')
+    if custom_steps is not None:
+        for task in custom_steps:
+            if type(task) != dict:
+                return f"Incorrect type of custom task '{task}'. Dictionary expected, got: {type(task)}"
+
+            if task.get('name') is not None and type(task.get('name')) != str:
+                return f"Incorrect type of name from task '{task}'. String expected, got: {type(task['name'])}"
+
+            if not task.get('file'):
+                return f"No path to task file in custom task '{task}'"
+            if type(task['file']) != str:
+                return f"Incorrect type of file path from task '{task}'. String expected, got: {type(task['file'])}"
+            if not os.path.exists(task['file']):
+                return f"File '{task['file']}' from custom task '{task}' doesn't exists"
+
+
 def validate_config(params):
     found_replicasets = {}
     found_common_params = {}
@@ -488,6 +526,11 @@ def validate_config(params):
         errmsg = check_stateboard(found_stateboard_vars)
         if errmsg is not None:
             return helpers.ModuleRes(failed=True, msg=errmsg)
+
+    # Scenario
+    errmsg = check_scenario(found_common_params)
+    if errmsg is not None:
+        return helpers.ModuleRes(failed=True, msg=errmsg)
 
     if found_common_params.get('cartridge_failover') is not None:
         warnings.append(

@@ -1,4 +1,5 @@
 ---
+
 cartridge_package_path: null
 cartridge_defaults: {}
 cartridge_enable_tarantool_repo: true
@@ -8,14 +9,32 @@ cartridge_app_config: null
 cartridge_auth: null
 cartridge_failover: null
 cartridge_failover_params: null
+cartridge_wait_buckets_discovery: true
 
 restarted: null
 expelled: false
 stateboard: false
 
 instance_start_timeout: 60
+instance_discover_buckets_timeout: 60
 
 cartridge_dist_dir: /usr/share/tarantool
 cartridge_conf_dir: /etc/tarantool/conf.d
 cartridge_run_dir: /var/run/tarantool
 cartridge_data_dir: /var/lib/tarantool
+
+cartridge_custom_steps: []
+cartridge_custom_steps_dir: null
+cartridge_scenario:
+  - deliver_package
+  - update_package
+  - configure_instance
+  - restart_instance
+  - wait_instance_started
+  - connect_to_membership
+  - edit_topology
+  - cleanup_expelled
+  - setup_auth
+  - setup_app_config
+  - bootstrap_vshard
+  - setup_failover
