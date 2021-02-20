@@ -167,7 +167,7 @@ Configuration format is described in detail in the
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean
   flag that indicates if vshard should be bootstrapped;
 * `cartridge_wait_buckets_discovery` (`boolean`, optional, default: `true`): boolean
-  flag that indicates if buckets should be discovered after vshard bootstrap;
+  flag indicating whether the role should wait for buckets discovery after vshard bootstrap;
 * `cartridge_failover_params` (`dict`, optional): [failover](#failover) parameters;
 * `cartridge_app_config` (`dict`, optional): application config sections to patch;
 * `cartridge_auth`: (`dict`, optional): [authorization configuration](#cartridge-authorization);

@@ -56,10 +56,10 @@ class TestTags(unittest.TestCase):
             'Validate OS Family',
             "Set 'remote_user' for delegated tasks",
             'Collect instance info',
-            'Collect steps',
             'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'BLOCK : Import tasks by scenario',
+            'Collect scenario steps',
+            'BLOCK : Include steps by scenario',
         ])
 
     def test_tag_cartridge_instances(self):
@@ -70,10 +70,10 @@ class TestTags(unittest.TestCase):
             'Validate OS Family',
             "Set 'remote_user' for delegated tasks",
             'Collect instance info',
-            'Collect steps',
             'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'BLOCK : Import tasks by scenario',
+            'Collect scenario steps',
+            'BLOCK : Include steps by scenario',
         ])
 
     def test_tag_cartridge_replicasets(self):
@@ -84,10 +84,10 @@ class TestTags(unittest.TestCase):
             'Validate OS Family',
             "Set 'remote_user' for delegated tasks",
             'Collect instance info',
-            'Collect steps',
             'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'BLOCK : Import tasks by scenario',
+            'Collect scenario steps',
+            'BLOCK : Include steps by scenario',
         ])
 
     def test_tag_cartridge_config(self):
@@ -98,10 +98,10 @@ class TestTags(unittest.TestCase):
             'Validate OS Family',
             "Set 'remote_user' for delegated tasks",
             'Collect instance info',
-            'Collect steps',
             'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'BLOCK : Import tasks by scenario',
+            'Collect scenario steps',
+            'BLOCK : Include steps by scenario',
         ])
 
     def test_not_cartridge_tag(self):

@@ -1,11 +1,9 @@
 ---
 
-- name: 'BLOCK : Application config'
-  when: cartridge_app_config is not none
+- when: cartridge_app_config is not none
   tags: cartridge-config
   block:
-    - name: 'Check "control_instance" variable'
-      import_tasks: 'blocks/select_control_instance.yml'
+    - import_tasks: 'blocks/select_control_instance.yml'
       when: control_instance is not defined
 
     - name: 'Application config'

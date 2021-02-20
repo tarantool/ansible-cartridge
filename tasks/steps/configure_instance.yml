@@ -1,7 +1,6 @@
 ---
 
-- name: 'BLOCK : Configure instance and determine if a restart is needed'
-  when: not expelled
+- when: not expelled
   tags: cartridge-instances
   block:
     - name: 'Manage instance parameters in runtime'

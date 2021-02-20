@@ -8,21 +8,19 @@
     - cartridge-replicasets
     - cartridge-config
 
-- name: 'Validate config and hosts'
-  import_tasks: 'validate.yml'
+- import_tasks: 'validate.yml'
   tags:
     - cartridge-instances
     - cartridge-replicasets
     - cartridge-config
 
-- name: 'Prepare facts'
-  import_tasks: 'prepare.yml'
+- import_tasks: 'prepare.yml'
   tags:
     - cartridge-instances
     - cartridge-replicasets
     - cartridge-config
 
-- name: 'BLOCK : Import tasks by scenario'
+- name: 'BLOCK : Include steps by scenario'
   include_tasks: "{{ item.path }}"
   loop_control:
     label: "{{ item.name }}"

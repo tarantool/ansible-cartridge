@@ -1,10 +1,8 @@
 ---
 
-- name: 'Edit topology'
-  tags: cartridge-replicasets
+- tags: cartridge-replicasets
   block:
-    - name: 'Check "control_instance" variable'
-      import_tasks: 'blocks/select_control_instance.yml'
+    - import_tasks: 'blocks/select_control_instance.yml'
       when: control_instance is not defined
 
     - name: 'Edit topology'

@@ -32,7 +32,6 @@ cartridge_scenario:
   - restart_instance
   - wait_instance_started
   - connect_to_membership
-  - select_control_instance
   - edit_topology
   - cleanup_expelled
   - setup_auth

@@ -10,8 +10,7 @@
   set_fact:
     cartridge_app_name: '{{ package_info.name }}'
 
-- name: 'BLOCK : Enable Tarantool repository'
-  vars:
+- vars:
     version: '{{ package_info.tnt_version }}'
   when: cartridge_enable_tarantool_repo and package_info.tnt_version
   block:
