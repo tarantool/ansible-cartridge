@@ -1,0 +1,7 @@
+---
+
+- import_tasks: 'blocks/select_control_instance.yml'
+  tags:
+    - cartridge-instances
+    - cartridge-replicasets
+    - cartridge-config
