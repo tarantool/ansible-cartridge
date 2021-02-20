@@ -151,11 +151,36 @@ def test_services_status_and_config(host):
         run_dir = instance_vars.get('cartridge_run_dir', '/var/run/tarantool')
         data_dir = instance_vars.get('cartridge_data_dir', '/var/lib/tarantool')
 
+        install_dir = instance_vars.get('cartridge_install_dir', '/usr/share/tarantool')
+        instances_dir = instance_vars.get('cartridge_instances_dir', '/usr/share/tarantool')
+
+        multiversion = instance_vars.get('cartridge_multiversion', False)
+
+        if not multiversion:
+            app_code_dir_path = os.path.join(install_dir, APP_NAME)
+        else:
+            package_path = instance_vars.get('cartridge_package_path')
+            package_basename = os.path.basename(package_path)
+            package_name_version, ext = os.path.splitext(package_basename)
+            if ext == '.gz' and package_name_version.endswith('.tar'):
+                package_name_version, _ = os.path.splitext(package_name_version)
+
+            app_code_dir_path = os.path.join(install_dir, package_name_version)
+
+        app_code_dir = host.file(app_code_dir_path)
+        assert app_code_dir.exists
+
         if not instance_is_stateboard(instance_vars):
             service_name = '%s@%s' % (APP_NAME, instance_name)
             instance_id = '%s.%s' % (APP_NAME, instance_name)
         else:
             instance_id = service_name = '%s-stateboard' % APP_NAME
+
+        if multiversion:
+            instance_code_dir =  host.file(os.path.join(instances_dir, instance_id))
+            assert instance_code_dir.exists
+            assert instance_code_dir.is_symlink
+            assert instance_code_dir.linked_to == app_code_dir_path
 
         conf_file = host.file(os.path.join(conf_dir, '%s.yml' % instance_id))
         conf_section = instance_id
