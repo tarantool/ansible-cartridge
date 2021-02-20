@@ -43,9 +43,11 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover_params.etcd2_params.prefix',
                 'cartridge_failover_params.etcd2_params.username',
                 'cartridge_failover_params.etcd2_params.password',
+                'cartridge_custom_steps_dir',
             },
             bool: {
                 'cartridge_bootstrap_vshard',
+                'cartridge_wait_buckets_discovery',
                 'cartridge_failover',
                 'restarted',
                 'expelled',
@@ -63,6 +65,7 @@ class TestValidateConfig(unittest.TestCase):
             },
             int: {
                 'instance_start_timeout',
+                'instance_discover_buckets_timeout',
                 'weight',
                 'config.memtx_memory',
                 'cartridge_auth.cookie_max_age',
@@ -74,6 +77,8 @@ class TestValidateConfig(unittest.TestCase):
                 'failover_priority',
                 'cartridge_auth.users',
                 'cartridge_failover_params.etcd2_params.endpoints',
+                'cartridge_scenario',
+                'cartridge_custom_steps',
             }
         }
 
@@ -233,6 +238,18 @@ class TestValidateConfig(unittest.TestCase):
                 {'section-1': {'body': 'body'}},
                 {'section-1': {'body': 'other-body'}}
             ],
+            'cartridge_scenario': [
+                ['task_1'],
+                ['task_2'],
+            ],
+            'cartridge_custom_steps_dir': [
+                'dir_1',
+                'dir_2',
+            ],
+            'cartridge_custom_steps': [
+                [{'name': 'task_1', 'file': 'task_1.yml'}],
+                [{'name': 'task_2', 'file': 'task_2.yml'}],
+            ]
         }
 
         required_params = {
@@ -838,6 +855,139 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertFalse(res.failed)
+
+    def test_custom_steps(self):
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_scenario': ['task_1', 'task_2'],
+                'cartridge_custom_steps_dir': './tasks',
+                'cartridge_custom_steps': [
+                    {'name': 'my_main', 'file': './tasks/main.yml'},
+                ],
+            },
+        })
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertFalse(res.changed)
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_scenario': ['task_1', ['list']],
+            },
+        })
+        self.assertTrue(res.failed)
+        self.assertIn(
+            "Incorrect type of task name '['list']'. String expected, got: <class 'list'>",
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_custom_steps_dir': './not_exists',
+            },
+        })
+        self.assertTrue(res.failed)
+        self.assertIn(
+            "Directory './not_exists' from 'cartridge_custom_steps_dir' doesn't exists",
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_custom_steps': [
+                    'test',
+                ],
+            },
+        })
+        self.assertTrue(res.failed)
+        self.assertIn(
+            "Incorrect type of custom task 'test'. Dictionary expected, got: <class 'str'>",
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_custom_steps': [
+                    {'name': ['qwerty']},
+                ],
+            },
+        })
+        self.assertTrue(res.failed)
+        self.assertIn(
+            "Incorrect type of name from task '{'name': ['qwerty']}'. String expected, got: <class 'list'>",
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_custom_steps': [
+                    {'name': 'task'},
+                ],
+            },
+        })
+        self.assertTrue(res.failed)
+        self.assertIn(
+            "No path to task file in custom task '{'name': 'task'}'",
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_custom_steps': [
+                    {'name': 'task', 'file': ['qwerty']},
+                ],
+            },
+        })
+        self.assertTrue(res.failed)
+        self.assertIn(
+            "Incorrect type of file path from task '{'name': 'task', 'file': ['qwerty']}'. "
+            "String expected, got: <class 'list'>",
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_custom_steps': [
+                    {'name': 'task', 'file': 'qwerty'},
+                ],
+            },
+        })
+        self.assertTrue(res.failed)
+        self.assertIn(
+            "File 'qwerty' from custom task '{'name': 'task', 'file': 'qwerty'}' doesn't exists",
+            res.msg
+        )
 
 
 if __name__ == '__main__':
