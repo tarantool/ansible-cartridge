@@ -8,7 +8,7 @@
         console_sock: '{{ instance_info.console_sock }}'
         config: '{{ config }}'
         cartridge_defaults: '{{ cartridge_defaults }}'
-      when: not restarted and not expelled
+      when: not restarted
 
     - name: 'Check if instance restart is forced or required to apply changes'
       cartridge_set_needs_restart:

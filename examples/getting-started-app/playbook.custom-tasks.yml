@@ -36,8 +36,7 @@
         name: tarantool-cartridge
       vars:
         cartridge_scenario:
-          - select_control_instance
           - setup_auth
           - setup_app_config
-          - bootstrap
+          - bootstrap_vshard
           - manage_failover

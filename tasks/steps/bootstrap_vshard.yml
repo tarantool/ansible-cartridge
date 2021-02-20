@@ -1,6 +1,8 @@
 ---
 
-- when: cartridge_bootstrap_vshard and not expelled
+- when:
+    - cartridge_bootstrap_vshard
+    - not expelled
   tags: cartridge-config
   block:
     - import_tasks: 'blocks/set_control_instance.yml'

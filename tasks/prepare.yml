@@ -3,7 +3,9 @@
 - name: "Set 'remote_user' for delegated tasks"
   set_fact:
     remote_user: '{{ ansible_user }}'
-  when: remote_user is not defined and ansible_user is defined
+  when:
+    - remote_user is not defined
+    - ansible_user is defined
 
 - name: 'Collect instance info'
   cartridge_set_instance_info:

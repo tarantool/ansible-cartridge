@@ -12,7 +12,9 @@
 
 - vars:
     version: '{{ package_info.tnt_version }}'
-  when: cartridge_enable_tarantool_repo and package_info.tnt_version
+  when:
+    - cartridge_enable_tarantool_repo
+    - package_info.tnt_version
   block:
     - name: 'Get repository setup script'
       get_url:
@@ -38,7 +40,9 @@
     state: present
     update_cache: true
   register: install_rpm
-  failed_when: install_rpm.rc != 0 and "does not update installed package" not in install_rpm.results[0]
+  failed_when:
+    - install_rpm.rc != 0
+    - '"does not update installed package" not in install_rpm.results[0]'
   when: package_info.package_type == 'rpm'
 
 - name: 'Install DEB'

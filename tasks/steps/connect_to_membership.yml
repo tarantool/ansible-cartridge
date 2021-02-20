@@ -9,7 +9,9 @@
   until: not probe.failed
   retries: 3
   delay: 5
-  when: not expelled and not stateboard
+  when:
+    - not expelled
+    - not stateboard
   tags:
     - cartridge-instances
     - cartridge-replicasets
