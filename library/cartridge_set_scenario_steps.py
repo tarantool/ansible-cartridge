@@ -24,11 +24,11 @@ def get_steps_paths_from_dir(dir_path):
     if dir_path is None:
         return steps_paths
 
-    files = os.listdir(dir_path)
-    files = filter(lambda x: x.endswith('.yml'), files)
-    for file in files:
-        name = get_step_name_from_path(file)
-        steps_paths[name] = os.path.abspath(os.path.join(dir_path, file))
+    file_names = os.listdir(dir_path)
+    file_names = filter(lambda x: x.endswith('.yml') or x.endswith('.yaml'), file_names)
+    for file_name in file_names:
+        name = get_step_name_from_path(file_name)
+        steps_paths[name] = os.path.abspath(os.path.join(dir_path, file_name))
 
     return steps_paths
 
@@ -44,12 +44,12 @@ def get_scenario_steps(params):
     role_steps_dir = os.path.join(params['role_path'], 'tasks', 'steps')
 
     role_steps = get_steps_paths_from_dir(role_steps_dir)
-    custom_dir_steps = get_steps_paths_from_dir(params['custom_steps_dir'])
+    custom_steps_from_dir = get_steps_paths_from_dir(params['custom_steps_dir'])
     custom_steps = get_steps_paths_from_list(params['custom_steps'] or [])
 
     steps_paths = {
         **role_steps,
-        **custom_dir_steps,
+        **custom_steps_from_dir,
         **custom_steps,
     }
 

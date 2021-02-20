@@ -37,9 +37,9 @@ to use the newest tag with new release
 - Now `check_instance_started` function: check all instances, including the stateboard;
   wait `Unconfigured` or `RolesConfigured` status instead `alive` state; check that
   all buckets are discovered by routers if cluster was bootstrapped.
-- Role divided into many sections (#141). It's possible to combine them using a scenario
-  in the config by `cartridge_scenario`. It is also possible to use custom task sections
-  in a scenario. Custom steps can be defined by `cartridge_custom_steps_dir` and `cartridge_custom_steps`.
+- Role divided into many steps (#141). It's possible to combine them using a scenario
+  in the config by `cartridge_scenario`. It is also possible to use custom steps in a scenario.
+  Custom steps can be defined by `cartridge_custom_steps_dir` and `cartridge_custom_steps`.
 
 ## [1.7.0] - 2020-11-24
 

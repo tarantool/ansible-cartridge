@@ -19,11 +19,11 @@ class TestSetSteps(unittest.TestCase):
         self.dirs = {
             self.full_role_path: {
                 'task_1.yml',
-                'task_2.yml',
+                'task_2.yaml',
                 'task_3.yml',
             },
             self.custom_steps_dir: {
-                'task_2.yml',
+                'task_2.yaml',
                 'task_4.yml',
                 'task_5.yml',
             },
@@ -51,7 +51,7 @@ class TestSetSteps(unittest.TestCase):
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
-            {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yml')},
+            {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
             {'name': 'task_3', 'path': os.path.join(self.full_role_path, 'task_3.yml')},
         ])
 
@@ -63,7 +63,7 @@ class TestSetSteps(unittest.TestCase):
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
-            {'name': 'task_2', 'path': os.path.join(self.custom_steps_dir, 'task_2.yml')},
+            {'name': 'task_2', 'path': os.path.join(self.custom_steps_dir, 'task_2.yaml')},
             {'name': 'task_3', 'path': os.path.join(self.full_role_path, 'task_3.yml')},
             {'name': 'task_4', 'path': os.path.join(self.custom_steps_dir, 'task_4.yml')},
             {'name': 'task_5', 'path': os.path.join(self.custom_steps_dir, 'task_5.yml')},
@@ -81,7 +81,7 @@ class TestSetSteps(unittest.TestCase):
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
-            {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yml')},
+            {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
             {'name': 'task_3', 'path': '/custom_steps/task_3.yml'},
             {'name': 'task_5', 'path': '/custom_steps/task_5.yml'},
             {'name': 'task_6', 'path': '/custom_steps/task_6.yml'},
@@ -100,7 +100,7 @@ class TestSetSteps(unittest.TestCase):
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
-            {'name': 'task_2', 'path': os.path.join(self.custom_steps_dir, 'task_2.yml')},
+            {'name': 'task_2', 'path': os.path.join(self.custom_steps_dir, 'task_2.yaml')},
             {'name': 'task_3', 'path': '/custom_steps/task_3.yml'},
             {'name': 'task_4', 'path': os.path.join(self.custom_steps_dir, 'task_4.yml')},
             {'name': 'task_5', 'path': '/custom_steps/task_5.yml'},
@@ -113,7 +113,7 @@ class TestSetSteps(unittest.TestCase):
             role_path=self.role_path,
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
-            {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yml')},
+            {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
         ])
 
         tasks = self.call_get_tasks_paths(
@@ -122,7 +122,7 @@ class TestSetSteps(unittest.TestCase):
             custom_steps_dir=self.custom_steps_dir,
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
-            {'name': 'task_2', 'path': os.path.join(self.custom_steps_dir, 'task_2.yml')},
+            {'name': 'task_2', 'path': os.path.join(self.custom_steps_dir, 'task_2.yaml')},
         ])
 
         tasks = self.call_get_tasks_paths(
@@ -130,11 +130,11 @@ class TestSetSteps(unittest.TestCase):
             role_path=self.role_path,
             custom_steps_dir=self.custom_steps_dir,
             custom_steps=[
-                {'name': 'task_2', 'file': '/custom_steps/task_2.yml'},
+                {'name': 'task_2', 'file': '/custom_steps/task_2.yaml'},
             ],
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
-            {'name': 'task_2', 'path': '/custom_steps/task_2.yml'},
+            {'name': 'task_2', 'path': '/custom_steps/task_2.yaml'},
         ])
 
     def test_task_not_found(self):
