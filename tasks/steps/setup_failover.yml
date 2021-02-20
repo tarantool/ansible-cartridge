@@ -3,7 +3,7 @@
 - when: cartridge_failover is not none or cartridge_failover_params is not none
   tags: cartridge-config
   block:
-    - import_tasks: 'blocks/select_control_instance.yml'
+    - import_tasks: 'blocks/set_control_instance.yml'
       when: control_instance is not defined
 
     - name: 'Setup failover'

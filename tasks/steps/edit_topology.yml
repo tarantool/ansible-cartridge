@@ -2,7 +2,7 @@
 
 - tags: cartridge-replicasets
   block:
-    - import_tasks: 'blocks/select_control_instance.yml'
+    - import_tasks: 'blocks/set_control_instance.yml'
       when: control_instance is not defined
 
     - name: 'Edit topology'
