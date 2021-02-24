@@ -35,7 +35,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: 'packages'
-          key: ce-with-tgz-${{ matrix.tarantool-version }}-${{ env.CARTRIDGE_CLI_VERSION }}
+          key: ce-${{ matrix.tarantool-version }}-${{ env.CARTRIDGE_CLI_VERSION }}-${{ hashFiles('./create-packages.sh') }}
 
       - name: Install Tarantool
         if: steps.cache-packages.outputs.cache-hit != 'true'
@@ -87,7 +87,7 @@ jobs:
         uses: actions/cache@v2
         with:
           path: 'packages'
-          key: sdk-with-tgz-${{ matrix.sdk-version }}
+          key: sdk-${{ matrix.sdk-version }}-${{ hashFiles('./create-packages.sh') }}
 
       - name: Create test packages
         if: steps.cache-packages.outputs.cache-hit != 'true'
