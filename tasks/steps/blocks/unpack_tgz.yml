@@ -2,22 +2,22 @@
 
 - name: 'Create group'
   group:
-    name: tarantool
+    name: '{{ cartridge_app_group }}'
     state: present
   any_errors_fatal: true
 
-- name: 'Create user and add to group'
+- name: 'Create user {{ cartridge_app_user }} and add to group {{ cartridge_app_group }}'
   user:
-    name: tarantool
-    groups: tarantool
+    name: '{{ cartridge_app_user }}'
+    groups: '{{ cartridge_app_group }}'
     append: true
   any_errors_fatal: true
 
 - name: 'Create userspace folders'
   file:
     path: '{{ dir_path }}'
-    owner: tarantool
-    group: tarantool
+    owner: '{{ cartridge_app_user }}'
+    group: '{{ cartridge_app_group }}'
     state: directory
     mode: 0755
   loop_control:
@@ -33,7 +33,8 @@
 
 - name: 'Configure tmpfiles'
   copy:
-    content: d {{ cartridge_run_dir }} 0755 tarantool tarantool
+    content: >-
+      d {{ cartridge_run_dir }} 0755 {{ cartridge_app_user }} {{ cartridge_app_group }}
     dest: '{{ instance_info.tmpfiles_conf }}'
     mode: 0644
   when: cartridge_configure_tmpfiles
@@ -50,8 +51,8 @@
     dest: '{{ instance_info.dist_dir }}'
     src: '{{ delivered_package_path }}'
     remote_src: true
-    owner: tarantool
-    group: tarantool
+    owner: '{{ cartridge_app_user }}'
+    group: '{{ cartridge_app_group }}'
     keep_newer: true
     extra_opts: '--strip-components=1'
   any_errors_fatal: true

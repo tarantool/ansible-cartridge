@@ -4,8 +4,8 @@
   file:
     src: '{{ instance_info.dist_dir}}'
     dest: '{{ instance_info.instance_dist_dir }}'
-    owner: tarantool
-    group: tarantool
+    owner: '{{ cartridge_app_user }}'
+    group: '{{ cartridge_app_group }}'
     state: link
   when: cartridge_multiversion
   tags: cartridge-instances

@@ -28,8 +28,8 @@
             | to_nice_yaml
           }}
         dest: '{{ instance_info.app_conf_file }}'
-        owner: tarantool
-        group: tarantool
+        owner: '{{ cartridge_app_user }}'
+        group: '{{ cartridge_app_group }}'
         mode: '644'
       when: not stateboard
 
@@ -41,6 +41,6 @@
               | to_nice_yaml
           }}
         dest: '{{ instance_info.conf_file }}'
-        owner: tarantool
-        group: tarantool
+        owner: '{{ cartridge_app_user }}'
+        group: '{{ cartridge_app_group }}'
         mode: '644'

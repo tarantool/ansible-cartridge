@@ -25,6 +25,9 @@ cartridge_conf_dir: /etc/tarantool/conf.d
 cartridge_run_dir: /var/run/tarantool
 cartridge_data_dir: /var/lib/tarantool
 
+cartridge_app_user: tarantool
+cartridge_app_group: tarantool
+
 cartridge_custom_steps: []
 cartridge_custom_steps_dir: null
 cartridge_scenario:
