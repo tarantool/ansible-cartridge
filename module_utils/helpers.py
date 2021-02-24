@@ -254,6 +254,11 @@ def get_instance_work_dir(data_dir, app_name, instance_name=None, stateboard=Fal
     return os.path.join(data_dir, instance_id)
 
 
+def get_multiversion_instance_code_dir(instances_dir, app_name, instance_name=None, stateboard=False):
+    instance_id = get_instance_id(app_name, instance_name, stateboard)
+    return os.path.join(instances_dir, instance_id)
+
+
 def box_cfg_was_called(control_console):
     data = control_console.eval('''
         return type(box.cfg) ~= 'function'

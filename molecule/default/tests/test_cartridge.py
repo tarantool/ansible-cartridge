@@ -157,7 +157,7 @@ def test_services_status_and_config(host):
         multiversion = instance_vars.get('cartridge_multiversion', False)
 
         if not multiversion:
-            app_code_dir_path = os.path.join(install_dir, APP_NAME)
+            dist_dir_path = os.path.join(install_dir, APP_NAME)
         else:
             package_path = instance_vars.get('cartridge_package_path')
             package_basename = os.path.basename(package_path)
@@ -165,10 +165,10 @@ def test_services_status_and_config(host):
             if ext == '.gz' and package_name_version.endswith('.tar'):
                 package_name_version, _ = os.path.splitext(package_name_version)
 
-            app_code_dir_path = os.path.join(install_dir, package_name_version)
+            dist_dir_path = os.path.join(install_dir, package_name_version)
 
-        app_dir = host.file(app_code_dir_path)
-        assert app_dir.exists
+        dist_dir = host.file(dist_dir_path)
+        assert dist_dir.exists
 
         if not instance_is_stateboard(instance_vars):
             service_name = '%s@%s' % (APP_NAME, instance_name)
@@ -177,10 +177,10 @@ def test_services_status_and_config(host):
             instance_id = service_name = '%s-stateboard' % APP_NAME
 
         if multiversion:
-            instance_dir = host.file(os.path.join(instances_dir, instance_id))
-            assert instance_dir.exists
-            assert instance_dir.is_symlink
-            assert instance_dir.linked_to == app_code_dir_path
+            instance_dist_dir = host.file(os.path.join(instances_dir, instance_id))
+            assert instance_dist_dir.exists
+            assert instance_dist_dir.is_symlink
+            assert instance_dist_dir.linked_to == dist_dir_path
 
         conf_file = host.file(os.path.join(conf_dir, '%s.yml' % instance_id))
         conf_section = instance_id

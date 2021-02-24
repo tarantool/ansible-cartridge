@@ -28,7 +28,7 @@
     - '{{ cartridge_conf_dir }}'
     - '{{ cartridge_install_dir }}'
     - '{{ cartridge_instances_dir }}'
-    - '{{ instance_info.app_dir }}'
+    - '{{ instance_info.dist_dir }}'
   any_errors_fatal: true
 
 - name: 'Configure tmpfiles'
@@ -47,7 +47,7 @@
 
 - name: 'Unpack TGZ'
   unarchive:
-    dest: '{{ instance_info.app_dir }}'
+    dest: '{{ instance_info.dist_dir }}'
     src: '{{ delivered_package_path }}'
     remote_src: true
     owner: tarantool

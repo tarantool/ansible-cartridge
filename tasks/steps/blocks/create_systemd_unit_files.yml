@@ -5,11 +5,11 @@
     app_name: '{{ cartridge_app_name }}'
     tnt_version: '{{ package_info.tnt_version }}'
     instance_vars:
-      cartridge_install_dir: '{{ cartridge_install_dir }}'
+      dist_dir: '{{ instance_info.dist_dir }}'
+      cartridge_multiversion: '{{ cartridge_multiversion }}'
+      cartridge_instances_dir: '{{ cartridge_instances_dir }}'
       cartridge_run_dir: '{{ cartridge_run_dir }}'
       cartridge_data_dir: '{{ cartridge_data_dir }}'
-      systemd_instance_code_dir: '{{ instance_info.systemd_instance_code_dir }}'
-      systemd_stateboard_code_dir: '{{ instance_info.systemd_stateboard_code_dir }}'
 
 - name: 'Place systemd units files'
   template:

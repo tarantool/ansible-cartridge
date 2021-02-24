@@ -5,7 +5,7 @@ from library.cartridge_set_instance_info import get_instance_conf_file
 from library.cartridge_set_instance_info import get_instance_conf_section
 from library.cartridge_set_instance_info import get_instance_info
 from library.cartridge_set_instance_info import get_instance_systemd_service
-from library.cartridge_set_instance_info import get_multiversion_app_code_dir
+from library.cartridge_set_instance_info import get_multiversion_dist_dir
 
 from module_utils.helpers import get_instance_console_sock
 from module_utils.helpers import get_instance_pid_file
@@ -71,19 +71,19 @@ class TestSetInstanceInfo(unittest.TestCase):
         self.assertEqual(instance_systemd_service, 'myapp-stateboard')
 
     def test_get_multiversion_app_code_dir(self):
-        app_dir = get_multiversion_app_code_dir('some/install/dir', 'myapp-0.1.0-1.rpm')
+        app_dir = get_multiversion_dist_dir('some/install/dir', 'myapp-0.1.0-1.rpm')
         self.assertEqual(app_dir, 'some/install/dir/myapp-0.1.0-1')
-        app_dir = get_multiversion_app_code_dir('some/install/dir', 'myapp-0.1.0-1-suffix.rpm')
+        app_dir = get_multiversion_dist_dir('some/install/dir', 'myapp-0.1.0-1-suffix.rpm')
         self.assertEqual(app_dir, 'some/install/dir/myapp-0.1.0-1-suffix')
 
-        app_dir = get_multiversion_app_code_dir('some/install/dir', 'myapp-0.1.0-1.deb')
+        app_dir = get_multiversion_dist_dir('some/install/dir', 'myapp-0.1.0-1.deb')
         self.assertEqual(app_dir, 'some/install/dir/myapp-0.1.0-1')
-        app_dir = get_multiversion_app_code_dir('some/install/dir', 'myapp-0.1.0-1-suffix.deb')
+        app_dir = get_multiversion_dist_dir('some/install/dir', 'myapp-0.1.0-1-suffix.deb')
         self.assertEqual(app_dir, 'some/install/dir/myapp-0.1.0-1-suffix')
 
-        app_dir = get_multiversion_app_code_dir('some/install/dir', 'myapp-0.1.0-1.tar.gz')
+        app_dir = get_multiversion_dist_dir('some/install/dir', 'myapp-0.1.0-1.tar.gz')
         self.assertEqual(app_dir, 'some/install/dir/myapp-0.1.0-1')
-        app_dir = get_multiversion_app_code_dir('some/install/dir', 'myapp-0.1.0-1-suffix.tar.gz')
+        app_dir = get_multiversion_dist_dir('some/install/dir', 'myapp-0.1.0-1-suffix.tar.gz')
         self.assertEqual(app_dir, 'some/install/dir/myapp-0.1.0-1-suffix')
 
     def test_get_instance_info(self):
@@ -112,10 +112,8 @@ class TestSetInstanceInfo(unittest.TestCase):
             'work_dir': 'some/data/dir/myapp.instance-1',
             'systemd_service': 'myapp@instance-1',
             'tmpfiles_conf': '/some/tmpfiles/dir/myapp.conf',
-            'app_dir': 'some/install/dir/myapp',
-            'instance_dir': 'some/install/dir/myapp',
-            'systemd_instance_code_dir': 'some/install/dir/myapp',
-            'systemd_stateboard_code_dir': 'some/install/dir/myapp',
+            'dist_dir': 'some/install/dir/myapp',
+            'instance_dist_dir': 'some/install/dir/myapp',
         }})
 
     def test_get_instance_info_multiversion(self):
@@ -144,10 +142,8 @@ class TestSetInstanceInfo(unittest.TestCase):
             'work_dir': 'some/data/dir/myapp.instance-1',
             'systemd_service': 'myapp@instance-1',
             'tmpfiles_conf': '/some/tmpfiles/dir/myapp.conf',
-            'app_dir': 'some/install/dir/myapp-0.1.0-1',
-            'instance_dir': 'some/instances/dir/myapp.instance-1',
-            'systemd_instance_code_dir': 'some/instances/dir/myapp.%i',
-            'systemd_stateboard_code_dir': 'some/instances/dir/myapp-stateboard',
+            'dist_dir': 'some/install/dir/myapp-0.1.0-1',
+            'instance_dist_dir': 'some/instances/dir/myapp.instance-1',
         }})
 
     def test_get_stateboard_info(self):
@@ -176,10 +172,8 @@ class TestSetInstanceInfo(unittest.TestCase):
             'work_dir': 'some/data/dir/myapp-stateboard',
             'systemd_service': 'myapp-stateboard',
             'tmpfiles_conf': '/some/tmpfiles/dir/myapp.conf',
-            'app_dir': 'some/install/dir/myapp',
-            'instance_dir': 'some/install/dir/myapp',
-            'systemd_instance_code_dir': 'some/install/dir/myapp',
-            'systemd_stateboard_code_dir': 'some/install/dir/myapp',
+            'dist_dir': 'some/install/dir/myapp',
+            'instance_dist_dir': 'some/install/dir/myapp',
         }})
 
     def test_get_stateboard_info_multiversion(self):
@@ -208,8 +202,6 @@ class TestSetInstanceInfo(unittest.TestCase):
             'work_dir': 'some/data/dir/myapp-stateboard',
             'systemd_service': 'myapp-stateboard',
             'tmpfiles_conf': '/some/tmpfiles/dir/myapp.conf',
-            'app_dir': 'some/install/dir/myapp-0.1.0-1',
-            'instance_dir': 'some/instances/dir/myapp-stateboard',
-            'systemd_instance_code_dir': 'some/instances/dir/myapp.%i',
-            'systemd_stateboard_code_dir': 'some/instances/dir/myapp-stateboard',
+            'dist_dir': 'some/install/dir/myapp-0.1.0-1',
+            'instance_dist_dir': 'some/instances/dir/myapp-stateboard',
         }})

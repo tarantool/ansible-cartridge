@@ -103,8 +103,8 @@ def needs_restart(params):
     last_restart_time = os.path.getmtime(console_sock)
 
     # check if application code was updated
-    instance_dir = instance_info['instance_dir']
-    package_update_time = os.path.getmtime(instance_dir)
+    instance_dist_dir = instance_info['instance_dist_dir']
+    package_update_time = os.path.getmtime(instance_dist_dir)
     if last_restart_time < package_update_time:
         return helpers.ModuleRes(facts={'needs_restart': True})
 

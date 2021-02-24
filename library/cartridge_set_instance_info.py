@@ -34,7 +34,7 @@ def get_instance_systemd_service(app_name, instance_name, stateboard=False):
     return '%s@%s' % (app_name, instance_name)
 
 
-def get_multiversion_app_code_dir(install_dir, package_path):
+def get_multiversion_dist_dir(install_dir, package_path):
     package_basename = os.path.basename(package_path)
 
     # get name and version
@@ -44,43 +44,6 @@ def get_multiversion_app_code_dir(install_dir, package_path):
 
     app_dir = os.path.join(install_dir, package_name_version)
     return app_dir
-
-
-def get_multiversion_instance_code_dir(instances_dir, app_name, instance_name=None, stateboard=False):
-    instance_id = helpers.get_instance_id(app_name, instance_name, stateboard)
-    return os.path.join(instances_dir, instance_id)
-
-
-def get_bin_dirs_info(app_name, instance_name, instance_vars):
-    bin_dirs_info = {}
-
-    if not instance_vars['cartridge_multiversion']:
-        app_dir = os.path.join(instance_vars['cartridge_install_dir'], app_name)
-
-        bin_dirs_info['app_dir'] = app_dir
-        bin_dirs_info['instance_dir'] = app_dir
-        bin_dirs_info['systemd_instance_code_dir'] = app_dir
-        bin_dirs_info['systemd_stateboard_code_dir'] = app_dir
-    else:
-        bin_dirs_info['app_dir'] = get_multiversion_app_code_dir(
-            instance_vars['cartridge_install_dir'],
-            instance_vars['cartridge_package_path']
-        )
-
-        instances_dir = instance_vars['cartridge_instances_dir']
-
-        bin_dirs_info['instance_dir'] = get_multiversion_instance_code_dir(
-            instances_dir, app_name, instance_name, instance_vars['stateboard'],
-        )
-
-        bin_dirs_info['systemd_instance_code_dir'] = get_multiversion_instance_code_dir(
-            instances_dir, app_name, instance_name="%i",
-        )
-        bin_dirs_info['systemd_stateboard_code_dir'] = get_multiversion_instance_code_dir(
-            instances_dir, app_name, stateboard=True,
-        )
-
-    return bin_dirs_info
 
 
 def get_instance_info(params):
@@ -126,8 +89,21 @@ def get_instance_info(params):
     )
 
     # code dirs
-    bin_dirs_info = get_bin_dirs_info(app_name, instance_name, instance_vars)
-    instance_info.update(bin_dirs_info)
+    if not instance_vars['cartridge_multiversion']:
+        app_dir = os.path.join(instance_vars['cartridge_install_dir'], app_name)
+
+        instance_info['dist_dir'] = app_dir
+        instance_info['instance_dist_dir'] = app_dir
+    else:
+        instance_info['dist_dir'] = get_multiversion_dist_dir(
+            instance_vars['cartridge_install_dir'],
+            instance_vars['cartridge_package_path']
+        )
+
+        instance_info['instance_dist_dir'] = helpers.get_multiversion_instance_code_dir(
+            instance_vars['cartridge_instances_dir'],
+            app_name, instance_name, instance_vars['stateboard'],
+        )
 
     return helpers.ModuleRes(changed=False, facts={
         'instance_info': instance_info

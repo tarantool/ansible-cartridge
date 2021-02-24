@@ -52,19 +52,29 @@ def get_systemd_units_info(params):
         instance_vars['cartridge_run_dir'], app_name, stateboard=True
     )
 
-    instance_dir = instance_vars['systemd_instance_code_dir']
-    stateboard_code_dir = instance_vars['systemd_stateboard_code_dir']
+    if not instance_vars['cartridge_multiversion']:
+        instance_dist_dir = instance_vars['dist_dir']
+        stateboard_dir = instance_vars['dist_dir']
+    else:
+        instances_dir = instance_vars['cartridge_instances_dir']
 
-    systemd_units_info['instance_entrypoint'] = os.path.join(instance_dir, 'init.lua')
-    systemd_units_info['stateboard_entrypoint'] = os.path.join(stateboard_code_dir, 'stateboard.init.lua')
+        instance_dist_dir = helpers.get_multiversion_instance_code_dir(
+            instances_dir, app_name, instance_name="%i",
+        )
+        stateboard_dir = helpers.get_multiversion_instance_code_dir(
+            instances_dir, app_name, stateboard=True,
+        )
+
+    systemd_units_info['instance_entrypoint'] = os.path.join(instance_dist_dir, 'init.lua')
+    systemd_units_info['stateboard_entrypoint'] = os.path.join(stateboard_dir, 'stateboard.init.lua')
 
     if tnt_version:
         opensource_tarantool_binary = '/usr/bin/tarantool'
         systemd_units_info['instance_tarantool_binary'] = opensource_tarantool_binary
         systemd_units_info['stateboard_tarantool_binary'] = opensource_tarantool_binary
     else:
-        systemd_units_info['instance_tarantool_binary'] = os.path.join(instance_dir, 'tarantool')
-        systemd_units_info['stateboard_tarantool_binary'] = os.path.join(stateboard_code_dir, 'tarantool')
+        systemd_units_info['instance_tarantool_binary'] = os.path.join(instance_dist_dir, 'tarantool')
+        systemd_units_info['stateboard_tarantool_binary'] = os.path.join(stateboard_dir, 'tarantool')
 
     return helpers.ModuleRes(changed=False, facts={
         'systemd_units_info': systemd_units_info

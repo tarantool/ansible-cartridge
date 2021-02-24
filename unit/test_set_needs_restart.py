@@ -12,7 +12,7 @@ def call_needs_restart(console_sock,
                        app_name=Instance.APP_NAME,
                        instance_conf_file=Instance.INSTANCE_CONF_PATH,
                        app_conf_file=Instance.APP_CONF_PATH,
-                       instance_dir=Instance.APP_CODE_PATH,
+                       instance_dist_dir=Instance.APP_CODE_PATH,
                        conf_section=Instance.CONF_SECTION,
                        config=None,
                        cluster_cookie=Instance.COOKIE,
@@ -23,7 +23,7 @@ def call_needs_restart(console_sock,
         'app_conf_file': app_conf_file,
         'conf_file': instance_conf_file,
         'conf_section': conf_section,
-        'instance_dir': instance_dir,
+        'instance_dist_dir': instance_dist_dir,
     }
 
     return needs_restart({
