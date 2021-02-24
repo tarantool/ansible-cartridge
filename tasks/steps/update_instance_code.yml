@@ -1,6 +1,6 @@
 ---
 
-- name: Update instance code
+- name: 'Update instance code'
   file:
     src: '{{ instance_info.app_code_dir}}'
     dest: '{{ instance_info.instance_code_dir }}'

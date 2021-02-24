@@ -1,18 +1,19 @@
 ---
-- name: Create group
+
+- name: 'Create group'
   group:
     name: tarantool
     state: present
   any_errors_fatal: true
 
-- name: Create user and add to group
+- name: 'Create user and add to group'
   user:
     name: tarantool
     groups: tarantool
     append: true
   any_errors_fatal: true
 
-- name: Create userspace folders
+- name: 'Create userspace folders'
   file:
     path: '{{ dir_path }}'
     owner: tarantool
@@ -30,7 +31,7 @@
     - '{{ instance_info.app_code_dir }}'
   any_errors_fatal: true
 
-- name: Configure tmpfiles
+- name: 'Configure tmpfiles'
   copy:
     content: d {{ cartridge_run_dir }} 0755 tarantool tarantool
     dest: '{{ instance_info.tmpfiles_conf }}'
@@ -38,13 +39,13 @@
   when: cartridge_configure_tmpfiles
   any_errors_fatal: true
 
-- name: Install Tarantool
+- name: 'Install Tarantool'
   package:
     name: tarantool
     state: present
   when: 'package_info.tnt_version is not none'
 
-- name: Unpack TGZ
+- name: 'Unpack TGZ'
   unarchive:
     dest: '{{ instance_info.app_code_dir }}'
     src: '{{ delivered_package_path }}'
@@ -55,6 +56,6 @@
     extra_opts: '--strip-components=1'
   any_errors_fatal: true
 
-- name: Create systemd unit files
+- name: 'Create systemd unit files'
   include_tasks: create_systemd_unit_files.yml
-  when: cartridge_create_systemd_unit_files
+  when: cartridge_configure_systemd_unit_files

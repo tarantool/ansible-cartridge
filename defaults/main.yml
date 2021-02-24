@@ -42,7 +42,7 @@ cartridge_scenario:
   - bootstrap_vshard
   - configure_failover
 
-cartridge_create_systemd_unit_files: true
+cartridge_configure_systemd_unit_files: true
 cartridge_systemd_dir: /etc/systemd/system
 
 cartridge_configure_tmpfiles: true

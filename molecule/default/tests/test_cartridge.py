@@ -177,7 +177,7 @@ def test_services_status_and_config(host):
             instance_id = service_name = '%s-stateboard' % APP_NAME
 
         if multiversion:
-            instance_code_dir =  host.file(os.path.join(instances_dir, instance_id))
+            instance_code_dir = host.file(os.path.join(instances_dir, instance_id))
             assert instance_code_dir.exists
             assert instance_code_dir.is_symlink
             assert instance_code_dir.linked_to == app_code_dir_path

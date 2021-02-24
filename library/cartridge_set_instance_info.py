@@ -74,7 +74,7 @@ def get_code_dirs_info(app_name, instance_name, instance_vars):
         )
 
         code_dirs_info['systemd_instance_code_dir'] = get_multiversion_instance_code_dir(
-            instances_dir, app_name, "%i",
+            instances_dir, app_name, instance_name="%i",
         )
         code_dirs_info['systemd_stateboard_code_dir'] = get_multiversion_instance_code_dir(
             instances_dir, app_name, stateboard=True,

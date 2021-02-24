@@ -42,18 +42,6 @@ def get_package_type(package_path):
 
 
 def get_rpm_info(package_path):
-    # package name
-    cmd = ['rpm', '-qip', package_path]
-    rc, output = run_command_and_get_output(cmd)
-    if rc != 0:
-        raise Exception("failed to get RPM package info: %s" % output)
-
-    m = re.search(r'Name\s*:\s*([^\n]+)\n', output)
-    if m is None:
-        raise Exception("Failed to find package name in package info: %s" % output)
-
-    package_name = m.groups()[0]
-
     # Tarantool dependency
     tnt_version = None
 
@@ -67,7 +55,6 @@ def get_rpm_info(package_path):
         tnt_version = m.groups()[0]
 
     return {
-        'name': package_name,
         'tnt_version': tnt_version,
     }
 
@@ -77,13 +64,6 @@ def get_deb_info(package_path):
     rc, output = run_command_and_get_output(cmd)
     if rc != 0:
         raise Exception("failed to get DEB package info: %s" % output)
-
-    # package name
-    m = re.search(r'Package\s*:\s*([^\n]+)\n', output)
-    if m is None:
-        raise Exception("Failed to find package name in package info: %s" % output)
-
-    package_name = m.groups()[0]
 
     # Tarantool dependency
     tnt_version = None
@@ -96,7 +76,6 @@ def get_deb_info(package_path):
             tnt_version = m.groups()[0]
 
     return {
-        'name': package_name,
         'tnt_version': tnt_version,
     }
 
@@ -125,7 +104,6 @@ def get_tgz_info(package_path, app_name):
             break
 
     return {
-        'name': app_name,
         'tnt_version': tnt_version,
     }
 
@@ -144,11 +122,6 @@ def get_package_info(params):
         package_info = get_tgz_info(package_path, app_name)
     else:
         return helpers.ModuleRes(failed=True, msg='Unknown package type: %s' % package_type)
-
-    if app_name and package_info['name'] != app_name:
-        msg = 'cartridge_app_name value should be equal to package name. ' + \
-              'Found cartridge_app_name: "%s", package name: "%s"' % (app_name, package_info['name'])
-        return helpers.ModuleRes(failed=True, msg=msg)
 
     package_info['type'] = package_type
 
