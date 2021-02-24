@@ -167,8 +167,8 @@ def test_services_status_and_config(host):
 
             app_code_dir_path = os.path.join(install_dir, package_name_version)
 
-        app_code_dir = host.file(app_code_dir_path)
-        assert app_code_dir.exists
+        app_dir = host.file(app_code_dir_path)
+        assert app_dir.exists
 
         if not instance_is_stateboard(instance_vars):
             service_name = '%s@%s' % (APP_NAME, instance_name)
@@ -177,10 +177,10 @@ def test_services_status_and_config(host):
             instance_id = service_name = '%s-stateboard' % APP_NAME
 
         if multiversion:
-            instance_code_dir = host.file(os.path.join(instances_dir, instance_id))
-            assert instance_code_dir.exists
-            assert instance_code_dir.is_symlink
-            assert instance_code_dir.linked_to == app_code_dir_path
+            instance_dir = host.file(os.path.join(instances_dir, instance_id))
+            assert instance_dir.exists
+            assert instance_dir.is_symlink
+            assert instance_dir.linked_to == app_code_dir_path
 
         conf_file = host.file(os.path.join(conf_dir, '%s.yml' % instance_id))
         conf_section = instance_id

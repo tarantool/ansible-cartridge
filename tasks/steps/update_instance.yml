@@ -2,8 +2,8 @@
 
 - name: 'Update instance code'
   file:
-    src: '{{ instance_info.app_code_dir}}'
-    dest: '{{ instance_info.instance_code_dir }}'
+    src: '{{ instance_info.app_dir}}'
+    dest: '{{ instance_info.instance_dir }}'
     owner: tarantool
     group: tarantool
     state: link

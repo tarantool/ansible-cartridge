@@ -52,10 +52,10 @@ def get_systemd_units_info(params):
         instance_vars['cartridge_run_dir'], app_name, stateboard=True
     )
 
-    instance_code_dir = instance_vars['systemd_instance_code_dir']
+    instance_dir = instance_vars['systemd_instance_code_dir']
     stateboard_code_dir = instance_vars['systemd_stateboard_code_dir']
 
-    systemd_units_info['instance_entrypoint'] = os.path.join(instance_code_dir, 'init.lua')
+    systemd_units_info['instance_entrypoint'] = os.path.join(instance_dir, 'init.lua')
     systemd_units_info['stateboard_entrypoint'] = os.path.join(stateboard_code_dir, 'stateboard.init.lua')
 
     if tnt_version:
@@ -63,7 +63,7 @@ def get_systemd_units_info(params):
         systemd_units_info['instance_tarantool_binary'] = opensource_tarantool_binary
         systemd_units_info['stateboard_tarantool_binary'] = opensource_tarantool_binary
     else:
-        systemd_units_info['instance_tarantool_binary'] = os.path.join(instance_code_dir, 'tarantool')
+        systemd_units_info['instance_tarantool_binary'] = os.path.join(instance_dir, 'tarantool')
         systemd_units_info['stateboard_tarantool_binary'] = os.path.join(stateboard_code_dir, 'tarantool')
 
     return helpers.ModuleRes(changed=False, facts={

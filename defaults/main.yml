@@ -30,7 +30,7 @@ cartridge_custom_steps_dir: null
 cartridge_scenario:
   - deliver_package
   - update_package
-  - update_instance_code
+  - update_instance
   - configure_instance
   - restart_instance
   - wait_instance_started

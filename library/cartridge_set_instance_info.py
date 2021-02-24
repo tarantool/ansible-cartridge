@@ -42,8 +42,8 @@ def get_multiversion_app_code_dir(install_dir, package_path):
     if ext == '.gz' and package_name_version.endswith('.tar'):
         package_name_version, _ = os.path.splitext(package_name_version)
 
-    app_code_dir = os.path.join(install_dir, package_name_version)
-    return app_code_dir
+    app_dir = os.path.join(install_dir, package_name_version)
+    return app_dir
 
 
 def get_multiversion_instance_code_dir(instances_dir, app_name, instance_name=None, stateboard=False):
@@ -51,36 +51,36 @@ def get_multiversion_instance_code_dir(instances_dir, app_name, instance_name=No
     return os.path.join(instances_dir, instance_id)
 
 
-def get_code_dirs_info(app_name, instance_name, instance_vars):
-    code_dirs_info = {}
+def get_bin_dirs_info(app_name, instance_name, instance_vars):
+    bin_dirs_info = {}
 
     if not instance_vars['cartridge_multiversion']:
-        app_code_dir = os.path.join(instance_vars['cartridge_install_dir'], app_name)
+        app_dir = os.path.join(instance_vars['cartridge_install_dir'], app_name)
 
-        code_dirs_info['app_code_dir'] = app_code_dir
-        code_dirs_info['instance_code_dir'] = app_code_dir
-        code_dirs_info['systemd_instance_code_dir'] = app_code_dir
-        code_dirs_info['systemd_stateboard_code_dir'] = app_code_dir
+        bin_dirs_info['app_dir'] = app_dir
+        bin_dirs_info['instance_dir'] = app_dir
+        bin_dirs_info['systemd_instance_code_dir'] = app_dir
+        bin_dirs_info['systemd_stateboard_code_dir'] = app_dir
     else:
-        code_dirs_info['app_code_dir'] = get_multiversion_app_code_dir(
+        bin_dirs_info['app_dir'] = get_multiversion_app_code_dir(
             instance_vars['cartridge_install_dir'],
             instance_vars['cartridge_package_path']
         )
 
         instances_dir = instance_vars['cartridge_instances_dir']
 
-        code_dirs_info['instance_code_dir'] = get_multiversion_instance_code_dir(
+        bin_dirs_info['instance_dir'] = get_multiversion_instance_code_dir(
             instances_dir, app_name, instance_name, instance_vars['stateboard'],
         )
 
-        code_dirs_info['systemd_instance_code_dir'] = get_multiversion_instance_code_dir(
+        bin_dirs_info['systemd_instance_code_dir'] = get_multiversion_instance_code_dir(
             instances_dir, app_name, instance_name="%i",
         )
-        code_dirs_info['systemd_stateboard_code_dir'] = get_multiversion_instance_code_dir(
+        bin_dirs_info['systemd_stateboard_code_dir'] = get_multiversion_instance_code_dir(
             instances_dir, app_name, stateboard=True,
         )
 
-    return code_dirs_info
+    return bin_dirs_info
 
 
 def get_instance_info(params):
@@ -126,8 +126,8 @@ def get_instance_info(params):
     )
 
     # code dirs
-    code_dirs_info = get_code_dirs_info(app_name, instance_name, instance_vars)
-    instance_info.update(code_dirs_info)
+    bin_dirs_info = get_bin_dirs_info(app_name, instance_name, instance_vars)
+    instance_info.update(bin_dirs_info)
 
     return helpers.ModuleRes(changed=False, facts={
         'instance_info': instance_info
