@@ -1,6 +1,6 @@
 ---
 
-- name: 'Create group'
+- name: 'Create group {{ cartridge_app_group }}'
   group:
     name: '{{ cartridge_app_group }}'
     state: present
