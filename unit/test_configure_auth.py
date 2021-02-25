@@ -1,7 +1,7 @@
 import unittest
 
 from instance import Instance
-from library.cartridge_auth import manage_auth
+from library.cartridge_configure_auth import manage_auth
 
 
 def call_manage_auth(console_sock, enabled=None, cookie_max_age=None,

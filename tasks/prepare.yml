@@ -26,7 +26,7 @@
   run_once: true
 
 - name: 'Select one not expelled instance'
-  cartridge_set_one_not_expelled_instance:
+  cartridge_set_not_expelled_instance:
     hostvars: '{{ hostvars }}'
     play_hosts: '{{ play_hosts }}'
   run_once: true
