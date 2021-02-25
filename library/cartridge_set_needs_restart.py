@@ -112,7 +112,7 @@ def needs_restart(params):
     current_instance_conf, err = read_yaml_file_section(
         control_console,
         instance_info['conf_file'],
-        instance_info['conf_section']
+        instance_info['instance_id']
     )
     if err is not None:
         return helpers.ModuleRes(failed=True, msg="Failed to read current instance config: %s" % err)

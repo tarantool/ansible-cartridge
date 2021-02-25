@@ -37,7 +37,7 @@
       copy:
         content: >-
           {{
-            { instance_info.conf_section: config }
+            { instance_info.instance_id: config }
               | to_nice_yaml
           }}
         dest: '{{ instance_info.conf_file }}'

@@ -60,7 +60,7 @@ def get_instance_info(params):
     instance_info['conf_file'] = get_instance_conf_file(
         instance_vars['cartridge_conf_dir'], app_name, instance_name, instance_vars['stateboard'],
     )
-    instance_info['conf_section'] = get_instance_conf_section(
+    instance_info['instance_id'] = get_instance_conf_section(
         app_name, instance_name, instance_vars['stateboard']
     )
 

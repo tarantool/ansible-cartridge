@@ -106,7 +106,7 @@ class TestSetInstanceInfo(unittest.TestCase):
         self.assertEqual(res.facts, {'instance_info': {
             'app_conf_file': 'some/conf/dir/myapp.yml',
             'conf_file': 'some/conf/dir/myapp.instance-1.yml',
-            'conf_section': 'myapp.instance-1',
+            'instance_id': 'myapp.instance-1',
             'console_sock': 'some/run/dir/myapp.instance-1.control',
             'pid_file': 'some/run/dir/myapp.instance-1.pid',
             'work_dir': 'some/data/dir/myapp.instance-1',
@@ -136,7 +136,7 @@ class TestSetInstanceInfo(unittest.TestCase):
         self.assertEqual(res.facts, {'instance_info': {
             'app_conf_file': 'some/conf/dir/myapp.yml',
             'conf_file': 'some/conf/dir/myapp.instance-1.yml',
-            'conf_section': 'myapp.instance-1',
+            'instance_id': 'myapp.instance-1',
             'console_sock': 'some/run/dir/myapp.instance-1.control',
             'pid_file': 'some/run/dir/myapp.instance-1.pid',
             'work_dir': 'some/data/dir/myapp.instance-1',
@@ -166,7 +166,7 @@ class TestSetInstanceInfo(unittest.TestCase):
         self.assertEqual(res.facts, {'instance_info': {
             'app_conf_file': 'some/conf/dir/myapp.yml',
             'conf_file': 'some/conf/dir/myapp-stateboard.yml',
-            'conf_section': 'myapp-stateboard',
+            'instance_id': 'myapp-stateboard',
             'console_sock': 'some/run/dir/myapp-stateboard.control',
             'pid_file': 'some/run/dir/myapp-stateboard.pid',
             'work_dir': 'some/data/dir/myapp-stateboard',
@@ -196,7 +196,7 @@ class TestSetInstanceInfo(unittest.TestCase):
         self.assertEqual(res.facts, {'instance_info': {
             'app_conf_file': 'some/conf/dir/myapp.yml',
             'conf_file': 'some/conf/dir/myapp-stateboard.yml',
-            'conf_section': 'myapp-stateboard',
+            'instance_id': 'myapp-stateboard',
             'console_sock': 'some/run/dir/myapp-stateboard.control',
             'pid_file': 'some/run/dir/myapp-stateboard.pid',
             'work_dir': 'some/data/dir/myapp-stateboard',

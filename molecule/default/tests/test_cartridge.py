@@ -34,7 +34,7 @@ def get_authorized_session(cluster_cookie):
     return __authorized_session
 
 
-def check_conf_file(conf_file, conf_section, conf):
+def check_conf_file(conf_file, instance_id, conf):
     assert conf_file.exists
     assert conf_file.user == 'tarantool'
     assert conf_file.group == 'tarantool'
@@ -42,8 +42,8 @@ def check_conf_file(conf_file, conf_section, conf):
     loader = Loader(conf_file.content_string)
     conf_file_dict = loader.get_data()
 
-    assert conf_section in conf_file_dict
-    assert conf_file_dict[conf_section] == conf
+    assert instance_id in conf_file_dict
+    assert conf_file_dict[instance_id] == conf
 
 
 def get_configured_instances():
@@ -183,7 +183,7 @@ def test_services_status_and_config(host):
             assert instance_dist_dir.linked_to == dist_dir_path
 
         conf_file = host.file(os.path.join(conf_dir, '%s.yml' % instance_id))
-        conf_section = instance_id
+        instance_id = instance_id
 
         default_conf_file = host.file(os.path.join(conf_dir, '%s.yml' % APP_NAME))
         default_conf_section = APP_NAME
@@ -207,7 +207,7 @@ def test_services_status_and_config(host):
             assert service.is_running
             assert service.is_enabled
 
-            check_conf_file(conf_file, conf_section, instance_conf)
+            check_conf_file(conf_file, instance_id, instance_conf)
 
     check_conf_file(default_conf_file, default_conf_section, default_conf)
 
