@@ -52,7 +52,7 @@ jobs:
           git config --global user.email "test@tarantool.io" \
             && git config --global user.name "Tar Antool"
 
-          curl -L https://tarantool.io/installer.sh | sudo -E bash -s -- --repo-only
+          curl -L https://tarantool.io/release/${{ matrix.tarantool-version }}/installer.sh | sudo -E bash -s
           sudo apt-get install -y cartridge-cli ${{ env.CARTRIDGE_CLI_VERSION }}
 
           tarantool --version
