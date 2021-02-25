@@ -6,7 +6,7 @@ An Ansible role to easily deploy
 This role can deploy and configure applications packed in RPM using
 [`Cartridge CLI`](https://github.com/tarantool/cartridge-cli).
 
-See the [getting started guide](./examples/getting-started-app/README.md)
+See the [getting started guide](/examples/getting-started-app/README.md)
 to learn how to set up topology using this role.
 
 ## Table of contents
@@ -16,7 +16,7 @@ to learn how to set up topology using this role.
 * [Getting started](#getting-started)
 * [Role variables](#role-variables)
 * [Role tags](#role-tags)
-* [Example scenario](#example-scenario)
+* [Using scenario](#using-scenario)
 * [Configuration format](#configuration-format)
   * [Instances](#instances)
   * [Replica sets](#replica-sets)
@@ -45,7 +45,7 @@ $ ansible-galaxy install tarantool.cartridge,1.7.0
 
 Example cluster topology:
 
-![image](./examples/getting-started-app/images/example-topology.png)
+![image](/examples/getting-started-app/images/example-topology.png)
 
 To deploy an application and set up this topology:
 
@@ -146,55 +146,108 @@ all:
 
 ## Getting started
 
-See the [getting started guide](./examples/getting-started-app/README.md)
+See the [getting started guide](/examples/getting-started-app/README.md)
 to learn how to set up topology using this role.
 
 ## Role variables
 
-Role variables are used to configure started instances, cluster topology,
-vshard bootstrapping, and failover.
-
 Configuration format is described in detail in the
 [configuration format](#configuration-format) section.
 
-* `cartridge_package_path` (`string`, optional): path to Cartridge RPM package
-  (application name will be detected as package name);
-* `cartridge_app_name` (`string`): application name, required;
+Role variables are used to configure started instances, cluster topology,
+vshard bootstrapping, and failover.
+
+Common variables:
+
+* `cartridge_app_name` (`string`, required): application name;
 * `cartridge_cluster_cookie` (`string`, required): cluster cookie for all
   cluster instances;
-* `cartridge_defaults` (`dict`, optional, default: `{}`): default configuration
-  parameters values for instances;
-* `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean
-  flag that indicates if vshard should be bootstrapped;
-* `cartridge_wait_buckets_discovery` (`boolean`, optional, default: `true`): boolean
-  flag indicating whether the role should wait for buckets discovery after vshard bootstrap;
-* `cartridge_failover_params` (`dict`, optional): [failover](#failover) parameters;
-* `cartridge_app_config` (`dict`, optional): application config sections to patch;
-* `cartridge_auth`: (`dict`, optional): [authorization configuration](#cartridge-authorization);
-* `cartridge_enable_tarantool_repo` (`boolean`, optional, default: `true`):
+
+Role scenario configuration:
+
+* `cartridge_scenario` (`list-of-strings`): list of steps to be launched
+  (see [change scenario](#using-scenario) for more details)
+* `cartridge_custom_steps_dir` (`string`, default: `null`): path to directory
+  containing YAML files of custom steps (see [change scenario](#using-scenario) for more details)
+* `cartridge_custom_steps` (`list-of-dicts`, default: `[]`): list of custom steps
+  (see [change scenario](#using-scenario) for more details)
+
+Application package configuration:
+
+* `cartridge_package_path` (`string`): path to Cartridge RPM package
+  (application name will be detected as package name);
+* `cartridge_enable_tarantool_repo` (`boolean`, default: `true`):
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency);
-* `cartridge_scenario` (`list-of-strings`, optional): list of steps to be launched
-* `cartridge_custom_steps_dir` (`string`, optional, default: `null`): path to directory
-  containing YAML files of custom steps
-* `cartridge_custom_steps` (`list-of-dicts`, optional, default: `[]`): list of custom steps.
-  Use dictionary with  to define step: ``
+
+[TGZ](/doc/tgz.md)-specific configuration:
+
+* `cartridge_multiversion` (`boolean`, default: `false`): use [multiversion
+  approach](/doc/multiversion.md) for TGZ package.
+
+* `cartridge_install_tarantool_for_tgz` (`boolean`, default: `false`): flag indicates
+  that Tarantool should be installed if application distribution doesn't contain `tarantool`
+  binary; Tarantool version is got from `VERSION` file that is placed in distribution
+  by Cartridge CLI;
+
+* `cartridge_app_user` (`string`, default: `tarantool`): application user;
+* `cartridge_app_group` (`string`, default: `tarantool`): application group;
+
+* `cartridge_data_dir` (`string`, default: `/var/lib/tarantool`): directory
+  where instances working directorieas are placed;
+* `cartridge_run_dir`(`string`, default: `/var/run/tarantool`): directory where
+  PID and socket files are stored;
+* `cartridge_conf_dir` (`string`, default: `/etc/tarantool/conf.d`): path to
+  instances configuration;
+* `cartridge_app_install_dir` (`string`, default: `/usr/share/tarantool`): directory
+  where application distributions are placed;
+* `cartridge_app_instances_dir` (`string`, default: `/usr/share/tarantool`): directory
+  where instances distributions are placed in case of multiversion approcah.
+
+* `cartridge_configure_systemd_unit_files` (`boolean`, default: `true`): flag indicates that
+  systemd unit files should be configured;
+* `cartridge_systemd_dir` (`string`, default: `/etc/systemd/system`): directory where
+  systemd-unit files should be placed;
+
+* `cartridge_configure_tmpfiles` (`boolean`, default: `true`): flag indicates that tmpfiles
+  config should be configured for application run dir;
+* `cartridge_tmpfiles_dir` (`string`, default: `/usr/lib/tmpfiles.d/`): a directory where
+  tmpfile sonfiguration should be placed;
+
+
+Instances configuration:
+
+* `cartridge_defaults` (`dict`, default: `{}`): default configuration
+  parameters values for instances;
 * `config` (`dict`, required): [instance configuration](#instances);
-* `restarted` (`boolean`, optional): flag indicates if instance should be
+* `restarted` (`boolean`): flag indicates if instance should be
   restarted or not (if this flag isn't specified, instance will be restarted if
   it's needed to apply configuration changes);
-* `expelled` (`boolean`, optional, default: `false`): boolean flag that indicates if instance must be expelled from topology;
-* `stateboard` (`boolean`, optional, default: `false`): boolean flag that indicates
+* `expelled` (`boolean`, default: `false`): boolean flag that indicates if instance must be expelled from topology;
+* `stateboard` (`boolean`, default: `false`): boolean flag that indicates
    that the instance is a [stateboard](#stateboard-instance);
-* `instance_start_timeout` (`number`, optional, default: 60): time in seconds to wait for instance to be started;
-* `instance_discover_buckets_timeout` (`number`, optional, default: 60): time in seconds
+* `instance_start_timeout` (`number`, default: `60`): time in seconds to wait for instance to be started;
+* `cartridge_wait_buckets_discovery` (`boolean`, default: `true`): boolean
+  flag that indicates if routers should wait for buckets discovery after vshard bootstrap;
+* `instance_discover_buckets_timeout` (`number`, default: `60`): time in seconds
   to wait for instance to discover buckets;
-* `replicaset_alias` (`string`, optional): replicaset alias, will be displayed in Web UI;
+
+Replicasets configuration:
+
+* `replicaset_alias` (`string`): replicaset alias, will be displayed in Web UI;
 * `failover_priority` (`list-of-strings`): failover priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
-* `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
-* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
-* [DEPRECATED] `cartridge_failover` (`boolean`, optional): boolean flag that
+* `all_rw` (`boolean`): indicates that that all servers in the replicaset should be read-write;
+* `weight` (`number`): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
+
+Cluster configuration
+
+* `cartridge_bootstrap_vshard` (`boolean`, default: `false`): boolean
+  flag that indicates if vshard should be bootstrapped;
+* `cartridge_app_config` (`dict`): application config sections to patch;
+* `cartridge_auth`: (`dict`): [authorization configuration](#cartridge-authorization);
+* `cartridge_failover_params` (`dict`): [failover](#failover) parameters;
+* [DEPRECATED] `cartridge_failover` (`boolean`): boolean flag that
   indicates if eventual failover should be enabled or disabled;
 
 ### Role tags
@@ -212,76 +265,43 @@ Tasks are running in this order:
 
 **Note**, that `cartridge-config` tasks would be skipped if no one of `cartridge_auth`, `cartridge_app_config`, `cartridge_bootstrap_vshard` and `cartridge_failover_params` variables is specified.
 
-### Example scenario
+### Using scenario
 
-Using `--limits` and `--tags` options you can manage cluster different ways:
+It's possible to perform different actions with instances or replicasets
+by combining `cartridge_scenario` variable and Ansible limits.
 
-#### Run all tasks for all hosts
+For example, you can configure and start some instances.
+To do this, you should define `cartridge_scenario` variable like this:
 
-All instances will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
-Then, instances would be joined to replicasets.
-If cluster configuration was specified, it would be updated.
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml
+```yaml
+cartridge_scenario:
+  - configure_instances
+  - start_instance
+  - wait_instance_started
 ```
 
-#### Start one instance
-
-**Note**, that this instance will be joined to the replicaset if replicaset options are specified for it.
-To prevent it you need to specify `--tags cartridge-instances`.
+After you should run playbook with `--limit` option:
 
 ```bash
-ansible-playbook -i hosts.yml playbook.yml --limit core-1
+ansible-playbook -i hosts.yml playbook.yml --limit instance_1,instance_2
 ```
 
-#### Start and join one replicaset
+Or, for example, you can edit some replicaset.
+To do this, you should define `cartridge_scenario` variable like this:
+
+```yaml
+cartridge_scenario:
+  - edit_topology
+```
+
+After you should run playbook with `--limit` option:
 
 ```bash
-ansible-playbook -i hosts.yml playbook.yml --limit core_1_replicaset
+ansible-playbook -i hosts.yml playbook.yml --limit replicaset_1_group,replicaset_2_group
 ```
 
-#### Update instances in one replicaset
-
-Instances from `storage_1_replicaset` group will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml --limit storage_1_replicaset \
-                                          --tags cartridge-instances
-```
-
-#### Update instances on one machine
-
-Instances from `host1` machine will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml --limit host1 \
-                                          --tags cartridge-instances
-```
-
-#### Join instances to replicaset
-
-Instances from `storage_1_replicaset` group will be joined to replicaset.
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml --limit storage_1_replicaset \
-                                           --tags cartridge-replicasets
-```
-
-#### Start and join other replicaset instances
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml --limit core_1_replicaset \
-                        --tags cartridge-instances,cartridge-replicasets
-```
-
-#### Patch cluster configuration
-
-Manage cartridge configuration parameters.
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml --tags cartridge-config
-```
+Moreover, scenario allows you to describe custom steps for configuring cluster.
+For more details about using scenario, see [scenario documentation](doc/scenario.md).
 
 ## Configuration format
 
@@ -360,15 +380,15 @@ You can find more details about replicasets and automatic failover in [Tarantool
 
 To configure replicasets you need to specify replicaset parameters for each instance in replicaset:
 
-* `replicaset_alias` (`string`, optional) - replicaset alias, will be displayed in Web UI;
-* `failover_priority` (`list-of-strings`, optional) - failover priority order.
+* `replicaset_alias` (`string`) - replicaset alias, will be displayed in Web UI;
+* `failover_priority` (`list-of-strings`) - failover priority order.
   First instance will be replicaset leader.
   It isn't required to specify all instances here, you can specify only one or more.
   Other instances will have lower priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified) - roles to be enabled on the replicaset.
-* `all_rw` (`boolean`, optional): indicates that that all servers in the replicaset should be read-write;
-* `weight` (`number`, optional): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
-* `vshard_group` (`string`, optional): vshard group (please, read [this](#specifying-vshard-group) section before using this parameter);
+* `all_rw` (`boolean`): indicates that that all servers in the replicaset should be read-write;
+* `weight` (`number`): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
+* `vshard_group` (`string`): vshard group (please, read [this](#specifying-vshard-group) section before using this parameter);
 
 The easiest way to configure replicaset is to [group instances](https://docs.ansible.com/ansible/latest/user_guide/intro_inventory.html) and set replicaset parameters for all instances in a group.
 
@@ -486,19 +506,19 @@ cartridge_failover_params:
 
 - `etcd2_params`(`dict`, used for `etcd2` state provider) -
   configuration for stateboard:
-    - `prefix`(`string`, optional) - prefix used for etcd keys: `<prefix>/lock` and
+    - `prefix`(`string`) - prefix used for etcd keys: `<prefix>/lock` and
       `<prefix>/leaders`;
 
-    - `lock_delay`(`number`, optional) - timeout (in seconds), determines lock's
+    - `lock_delay`(`number`) - timeout (in seconds), determines lock's
       time-to-live (default value in Cartridge is `10`);
 
-    - `endpoints`(`list-of-strings`, optional) - URIs that are used to discover and to access
+    - `endpoints`(`list-of-strings`) - URIs that are used to discover and to access
       `etcd` cluster instances (default value in Cartridge is
       `['http://localhost:2379', 'http://localhost:4001']`);
 
-    - `username`(`string`, optional).
+    - `username`(`string`).
 
-    - `password`(`string`, optional).
+    - `password`(`string`).
 
 Read [the doc](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/topics/failover.md/#stateful-failover)
 to learn more about stateful failover.
@@ -519,21 +539,21 @@ cartridge_failover_params:
 
 `cartridge_auth` parameter is used to specify authorization settings:
 
-- `enabled`(`boolean`, optional) - indicates if authorization is enabled;
-- `cookie_max_age`(`number`, optional) - number of seconds until the authorization
+- `enabled`(`boolean`) - indicates if authorization is enabled;
+- `cookie_max_age`(`number`) - number of seconds until the authorization
   cookie expires;
-- `cookie_renew_age`(`number`, optional) - update the provided cookie if it's older
+- `cookie_renew_age`(`number`) - update the provided cookie if it's older
   than this age.
-- `users`(`list-of-dicts`, optional) - list of users to be configured on the
+- `users`(`list-of-dicts`) - list of users to be configured on the
   cluster (described below).
 
 **Users configuration:**
 
 - `username`(`string`, required);
-- `password`(`string`, optional) - is required for new users;
-- `fullname`(`string`, optional);
-- `email`(`string`, optional);
-- `deleted`(`boolean`, optional) - indicates if the user must be removed.
+- `password`(`string`) - is required for new users;
+- `fullname`(`string`);
+- `email`(`string`);
+- `deleted`(`boolean`) - indicates if the user must be removed.
 
 **Note:** The default user `admin` can't be managed here.
 
