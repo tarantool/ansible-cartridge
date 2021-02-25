@@ -48,7 +48,6 @@
 
 - name: 'Unpack TGZ'
   unarchive:
-    creates: '{{ instance_info.dist_dir }}'
     dest: '{{ instance_info.dist_dir }}'
     src: '{{ delivered_package_path }}'
     remote_src: true
