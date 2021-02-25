@@ -16,7 +16,7 @@ to learn how to set up topology using this role.
 * [Getting started](#getting-started)
 * [Role variables](#role-variables)
 * [Role tags](#role-tags)
-* [Example scenario](#example-scenario)
+* [Using scenario](#using-scenario)
 * [Configuration format](#configuration-format)
   * [Instances](#instances)
   * [Replica sets](#replica-sets)
@@ -167,7 +167,7 @@ Configuration format is described in detail in the
 * `cartridge_bootstrap_vshard` (`boolean`, optional, default: `false`): boolean
   flag that indicates if vshard should be bootstrapped;
 * `cartridge_wait_buckets_discovery` (`boolean`, optional, default: `true`): boolean
-  flag indicating whether the role should wait for buckets discovery after vshard bootstrap;
+  flag that indicates if routers should wait for buckets discovery after vshard bootstrap;
 * `cartridge_failover_params` (`dict`, optional): [failover](#failover) parameters;
 * `cartridge_app_config` (`dict`, optional): application config sections to patch;
 * `cartridge_auth`: (`dict`, optional): [authorization configuration](#cartridge-authorization);
@@ -175,10 +175,11 @@ Configuration format is described in detail in the
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency);
 * `cartridge_scenario` (`list-of-strings`, optional): list of steps to be launched
+  (see [change scenario](#using-scenario) for more details)
 * `cartridge_custom_steps_dir` (`string`, optional, default: `null`): path to directory
-  containing YAML files of custom steps
-* `cartridge_custom_steps` (`list-of-dicts`, optional, default: `[]`): list of custom steps.
-  Use dictionary with  to define step: ``
+  containing YAML files of custom steps (see [change scenario](#using-scenario) for more details)
+* `cartridge_custom_steps` (`list-of-dicts`, optional, default: `[]`): list of custom steps
+  (see [change scenario](#using-scenario) for more details)
 * `config` (`dict`, required): [instance configuration](#instances);
 * `restarted` (`boolean`, optional): flag indicates if instance should be
   restarted or not (if this flag isn't specified, instance will be restarted if
@@ -212,76 +213,43 @@ Tasks are running in this order:
 
 **Note**, that `cartridge-config` tasks would be skipped if no one of `cartridge_auth`, `cartridge_app_config`, `cartridge_bootstrap_vshard` and `cartridge_failover_params` variables is specified.
 
-### Example scenario
+### Using scenario
 
-Using `--limits` and `--tags` options you can manage cluster different ways:
+It's possible to perform different actions with instances or replicasets
+by combining `cartridge_scenario` variable and Ansible limits.
 
-#### Run all tasks for all hosts
+For example, you can configure and start some instances.
+To do this, you should define `cartridge_scenario` variable like this:
 
-All instances will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
-Then, instances would be joined to replicasets.
-If cluster configuration was specified, it would be updated.
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml
+```yaml
+cartridge_scenario:
+  - configure_instances
+  - start_instance
+  - wait_instance_started
 ```
 
-#### Start one instance
-
-**Note**, that this instance will be joined to the replicaset if replicaset options are specified for it.
-To prevent it you need to specify `--tags cartridge-instances`.
+After you should run playbook with `--limit` option:
 
 ```bash
-ansible-playbook -i hosts.yml playbook.yml --limit core-1
+ansible-playbook -i hosts.yml playbook.yml --limit instance_1,instance_2
 ```
 
-#### Start and join one replicaset
+Or, for example, you can edit some replicaset.
+To do this, you should define `cartridge_scenario` variable like this:
+
+```yaml
+cartridge_scenario:
+  - edit_topology
+```
+
+After you should run playbook with `--limit` option:
 
 ```bash
-ansible-playbook -i hosts.yml playbook.yml --limit core_1_replicaset
+ansible-playbook -i hosts.yml playbook.yml --limit replicaset_1_group,replicaset_2_group
 ```
 
-#### Update instances in one replicaset
-
-Instances from `storage_1_replicaset` group will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml --limit storage_1_replicaset \
-                                          --tags cartridge-instances
-```
-
-#### Update instances on one machine
-
-Instances from `host1` machine will be started (if not started yet) or updated (restarted) if instance configuration or package was updated.
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml --limit host1 \
-                                          --tags cartridge-instances
-```
-
-#### Join instances to replicaset
-
-Instances from `storage_1_replicaset` group will be joined to replicaset.
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml --limit storage_1_replicaset \
-                                           --tags cartridge-replicasets
-```
-
-#### Start and join other replicaset instances
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml --limit core_1_replicaset \
-                        --tags cartridge-instances,cartridge-replicasets
-```
-
-#### Patch cluster configuration
-
-Manage cartridge configuration parameters.
-
-```bash
-ansible-playbook -i hosts.yml playbook.yml --tags cartridge-config
-```
+Moreover, scenario allows you to describe custom steps for configuring cluster.
+For more details about using scenario, see [scenario documentation](doc/scenario.md).
 
 ## Configuration format
 
