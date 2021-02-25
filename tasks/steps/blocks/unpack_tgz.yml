@@ -4,7 +4,9 @@
   package:
     name: tarantool
     state: present
-  when: package_info.tnt_version is not none
+  when:
+    - package_info.tnt_version is not none
+    - cartridge_tgz_install_tarantool
 
 - name: 'Create group {{ cartridge_app_group }}'
   group:
