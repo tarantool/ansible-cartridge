@@ -1,5 +1,11 @@
 ---
 
+- name: 'Install Tarantool'
+  package:
+    name: tarantool
+    state: present
+  when: package_info.tnt_version is not none
+
 - name: 'Create group {{ cartridge_app_group }}'
   group:
     name: '{{ cartridge_app_group }}'
@@ -13,7 +19,7 @@
     append: true
   any_errors_fatal: true
 
-- name: 'Create userspace folders'
+- name: 'Create directories'
   file:
     path: '{{ dir_path }}'
     owner: '{{ cartridge_app_user }}'
@@ -39,12 +45,6 @@
     mode: 0644
   when: cartridge_configure_tmpfiles
   any_errors_fatal: true
-
-- name: 'Install Tarantool'
-  package:
-    name: tarantool
-    state: present
-  when: 'package_info.tnt_version is not none'
 
 - name: 'Unpack TGZ'
   unarchive:

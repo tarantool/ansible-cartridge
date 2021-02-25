@@ -6,15 +6,17 @@
     package_path: '{{ delivered_package_path }}'
     app_name: '{{ cartridge_app_name }}'
 
-- vars:
-    version: '{{ package_info.tnt_version }}'
-  when:
+- name: 'Debug package_info.tnt_version'
+  debug:
+    msg: '{{ package_info.tnt_version }}'
+
+- when:
     - cartridge_enable_tarantool_repo
     - package_info.tnt_version
   block:
     - name: 'Get repository setup script'
       get_url:
-        url: https://tarantool-io.hb.bizmrg.com/website-static/tarantool/downloads/tarantool_installer.sh
+        url: 'https://tarantool.io/release/{{ package_info.tnt_version }}/installer.sh'
         dest: '/tmp/tarantool-installer.sh'
       register: get_script
       until: not get_script.failed
@@ -24,9 +26,7 @@
 
     - name: 'Run repository setup script'
       any_errors_fatal: true
-      environment:
-        VER: '{{ version }}'
-      command: bash /tmp/tarantool-installer.sh --repo-only
+      command: bash /tmp/tarantool-installer.sh
       changed_when: false
 
 - name: 'Install RPM or DEB'
