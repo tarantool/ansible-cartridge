@@ -10,7 +10,8 @@ else:
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
-    'console_sock': {'requires': True, 'type': 'str'},
+    'console_sock': {'required': True, 'type': 'str'},
+    'app_name': {'required': True, 'type': 'str'},
 }
 
 
@@ -18,6 +19,7 @@ def get_control_instance(params):
     hostvars = params['hostvars']
     play_hosts = params['play_hosts']
     console_sock = params['console_sock']
+    app_name = params['app_name']
 
     control_console = helpers.get_control_console(console_sock)
     control_instance_name = None
@@ -49,16 +51,19 @@ def get_control_instance(params):
         errmsg = 'Not found any joined instance or instance to create a replicaset'
         return helpers.ModuleRes(failed=True, msg=errmsg)
 
+    # in the ideal imagined world we could just use
+    # instance_vars['instance_info'], but if control instance is not
+    # in play_hosts, instance_info isn't computed for it
     instance_vars = hostvars[control_instance_name]
-    if 'instance_info' not in instance_vars:
-        raise Exception('Instance %s has no instance_info set' % control_instance_name)
-
-    instance_info = instance_vars['instance_info']
+    run_dir = instance_vars.get('cartridge_run_dir', helpers.DEFAULT_RUN_DIR)
+    control_instance_console_sock = helpers.get_instance_console_sock(
+        run_dir, app_name, control_instance_name,
+    )
 
     return helpers.ModuleRes(changed=False, facts={
         'control_instance': {
             'name': control_instance_name,
-            'console_sock': instance_info['console_sock'],
+            'console_sock': control_instance_console_sock,
         }
     })
 
