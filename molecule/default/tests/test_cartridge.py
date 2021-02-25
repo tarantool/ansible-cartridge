@@ -300,7 +300,9 @@ def test_replicasets():
         if configured_replicaset['failover_priority'] is not None:
             configured_failover_priority = configured_replicaset['failover_priority']
             assert started_replicaset['master']['alias'] == configured_failover_priority[0]
-            assert aliases_in_priority_order(started_replicaset['servers']) == configured_failover_priority
+
+            failover_priority = aliases_in_priority_order(started_replicaset['servers'])
+            assert failover_priority[:len(configured_failover_priority)] == configured_failover_priority
 
         if configured_replicaset['all_rw'] is not None:
             assert started_replicaset['all_rw'] == configured_replicaset['all_rw']
