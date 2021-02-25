@@ -6,10 +6,6 @@
     package_path: '{{ delivered_package_path }}'
     app_name: '{{ cartridge_app_name }}'
 
-- name: 'Debug package_info.tnt_version'
-  debug:
-    msg: '{{ package_info.tnt_version }}'
-
 - when:
     - cartridge_enable_tarantool_repo
     - package_info.tnt_version

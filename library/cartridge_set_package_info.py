@@ -81,27 +81,31 @@ def get_deb_info(package_path):
 
 
 def get_tgz_info(package_path, app_name):
+    tnt_version = None
+
     with tarfile.open(package_path) as tar:
-        try:
-            tar.getmember(app_name)
-        except KeyError:
+        names = tar.getnames()
+        if app_name not in names:
             raise Exception("Package should contain '%s' directory" % app_name)
 
-        version_file_path = os.path.join(app_name, 'VERSION')
-        try:
-            member = tar.getmember(version_file_path)
-        except KeyError:
-            raise Exception("Package should contain %s file" % version_file_path)
+        tarantool_binary_path = os.path.join(app_name, 'tarantool')
+        tnt_is_enterprise = tarantool_binary_path in names
 
-        version_file = tar.extractfile(member)
-        version_file_lines = version_file.readlines()
+        if not tnt_is_enterprise:
+            version_file_path = os.path.join(app_name, 'VERSION')
+            try:
+                member = tar.getmember(version_file_path)
+            except KeyError:
+                raise Exception("Package should contain %s file" % version_file_path)
 
-    tnt_version = None
-    for line in version_file_lines:
-        m = re.search(r'TARANTOOL=(\d+\.\d+)\.', line.decode())
-        if m is not None:
-            tnt_version = m.groups()[0]
-            break
+            version_file = tar.extractfile(member)
+            version_file_lines = version_file.readlines()
+
+            for line in version_file_lines:
+                m = re.search(r'TARANTOOL=(\d+\.\d+)\.', line.decode())
+                if m is not None:
+                    tnt_version = m.groups()[0]
+                    break
 
     return {
         'tnt_version': tnt_version,

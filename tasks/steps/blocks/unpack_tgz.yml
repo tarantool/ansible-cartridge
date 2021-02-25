@@ -48,12 +48,12 @@
 
 - name: 'Unpack TGZ'
   unarchive:
+    creates: '{{ instance_info.dist_dir }}'
     dest: '{{ instance_info.dist_dir }}'
     src: '{{ delivered_package_path }}'
     remote_src: true
     owner: '{{ cartridge_app_user }}'
     group: '{{ cartridge_app_group }}'
-    keep_newer: true
     extra_opts: '--strip-components=1'
   any_errors_fatal: true
 
