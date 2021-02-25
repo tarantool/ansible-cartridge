@@ -17,7 +17,7 @@
         cartridge_defaults: '{{ cartridge_defaults }}'
         cluster_cookie: '{{ cartridge_cluster_cookie }}'
         stateboard: '{{ stateboard }}'
-        instance_info: '{{ instance_info}}'
+        instance_info: '{{ instance_info }}'
       when: restarted is none
 
     - name: 'Place default config'

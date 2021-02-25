@@ -6,8 +6,8 @@
     - import_tasks: 'blocks/set_control_instance.yml'
       when: control_instance is not defined
 
-    - name: 'Setup failover'
-      cartridge_manage_failover:
+    - name: 'Configure failover'
+      cartridge_configure_failover:
         failover_params: '{{ cartridge_failover_params | default(cartridge_failover) }}'
         console_sock: '{{ control_instance.console_sock }}'
       run_once: true

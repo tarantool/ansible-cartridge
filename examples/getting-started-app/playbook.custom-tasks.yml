@@ -19,7 +19,7 @@
         cartridge_scenario:
           - deliver_package
           - install_package
-          - setup_systemd_config
+          - configure_systemd_config
           - my_restart
 
     - name: Make replicasets
@@ -36,7 +36,7 @@
         name: tarantool-cartridge
       vars:
         cartridge_scenario:
-          - setup_auth
-          - setup_app_config
+          - configure_auth
+          - configure_app_config
           - bootstrap_vshard
           - manage_failover
