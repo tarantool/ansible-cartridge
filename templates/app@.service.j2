@@ -1,0 +1,34 @@
+[Unit]
+Description=Tarantool Cartridge app {{ cartridge_app_name }}@%i
+After=network.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/sh -c 'mkdir -p {{ systemd_units_info.instance_work_dir }}'
+ExecStart=/usr/bin/env {{ systemd_units_info.instance_tarantool_binary }} {{ systemd_units_info.instance_entrypoint }}
+Restart=on-failure
+RestartSec=2
+User=tarantool
+Group=tarantool
+
+Environment=TARANTOOL_APP_NAME={{ cartridge_app_name }}
+Environment=TARANTOOL_WORKDIR={{ systemd_units_info.instance_work_dir }}
+Environment=TARANTOOL_CFG={{ cartridge_conf_dir }}
+Environment=TARANTOOL_PID_FILE={{ systemd_units_info.instance_pid_file }}
+Environment=TARANTOOL_CONSOLE_SOCK={{ systemd_units_info.instance_console_sock }}
+Environment=TARANTOOL_INSTANCE_NAME=%i
+
+LimitCORE=infinity
+# Disable OOM killer
+OOMScoreAdjust=-1000
+# Increase fd limit for Vinyl
+LimitNOFILE=65535
+
+# Systemd waits until all xlogs are recovered
+TimeoutStartSec=86400s
+# Give a reasonable amount of time to close xlogs
+TimeoutStopSec=10s
+
+[Install]
+WantedBy=multi-user.target
+Alias={{ cartridge_app_name }}.%i

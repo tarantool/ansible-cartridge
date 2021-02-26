@@ -3,6 +3,7 @@ extends: default
 
 ignore: |
   .gitlab-ci.yml
+  .github
   venv
 
 rules:
