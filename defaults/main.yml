@@ -14,20 +14,26 @@ cartridge_wait_buckets_discovery: true
 restarted: null
 expelled: false
 stateboard: false
+cartridge_multiversion: false
 
 instance_start_timeout: 60
 instance_discover_buckets_timeout: 60
 
-cartridge_dist_dir: /usr/share/tarantool
+cartridge_app_install_dir: /usr/share/tarantool
+cartridge_app_instances_dir: /usr/share/tarantool
 cartridge_conf_dir: /etc/tarantool/conf.d
 cartridge_run_dir: /var/run/tarantool
 cartridge_data_dir: /var/lib/tarantool
+
+cartridge_app_user: tarantool
+cartridge_app_group: tarantool
 
 cartridge_custom_steps: []
 cartridge_custom_steps_dir: null
 cartridge_scenario:
   - deliver_package
   - update_package
+  - update_instance
   - configure_instance
   - restart_instance
   - wait_instance_started
@@ -38,3 +44,11 @@ cartridge_scenario:
   - configure_app_config
   - bootstrap_vshard
   - configure_failover
+
+cartridge_configure_systemd_unit_files: true
+cartridge_systemd_dir: /etc/systemd/system
+
+cartridge_configure_tmpfiles: true
+cartridge_tmpfiles_dir: /usr/lib/tmpfiles.d/
+
+cartridge_install_tarantool_for_tgz: true

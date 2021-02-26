@@ -89,8 +89,8 @@ if err ~= nil then
 end
 
 local ret = {
-    replicasets = {},
-    servers = {},
+    replicasets = setmetatable({}, {__serialize = 'map'}),
+    servers = setmetatable({}, {__serialize = 'map'}),
 }
 for _, r in ipairs(res.replicasets or {}) do
     if r.alias ~= nil then

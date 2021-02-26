@@ -103,8 +103,8 @@ def needs_restart(params):
     last_restart_time = os.path.getmtime(console_sock)
 
     # check if application code was updated
-    instance_code_dir = instance_info['instance_code_dir']
-    package_update_time = os.path.getmtime(instance_code_dir)
+    instance_dist_dir = instance_info['instance_dist_dir']
+    package_update_time = os.path.getmtime(instance_dist_dir)
     if last_restart_time < package_update_time:
         return helpers.ModuleRes(facts={'needs_restart': True})
 
@@ -112,7 +112,7 @@ def needs_restart(params):
     current_instance_conf, err = read_yaml_file_section(
         control_console,
         instance_info['conf_file'],
-        instance_info['conf_section']
+        instance_info['instance_id']
     )
     if err is not None:
         return helpers.ModuleRes(failed=True, msg="Failed to read current instance config: %s" % err)
