@@ -1,0 +1,30 @@
+---
+
+- name: 'Collect systemd unit files info'
+  cartridge_set_systemd_units_info:
+    app_name: '{{ cartridge_app_name }}'
+    tnt_version: '{{ package_info.tnt_version }}'
+    instance_vars:
+      dist_dir: '{{ instance_info.dist_dir }}'
+      cartridge_multiversion: '{{ cartridge_multiversion }}'
+      cartridge_app_instances_dir: '{{ cartridge_app_instances_dir }}'
+      cartridge_run_dir: '{{ cartridge_run_dir }}'
+      cartridge_data_dir: '{{ cartridge_data_dir }}'
+
+- name: 'Place systemd units files'
+  template:
+    src: '{{ systemd_unit.template }}'
+    dest: '{{ (cartridge_systemd_dir, systemd_unit.filename) | path_join }}'
+    force: true
+  loop_control:
+    loop_var: systemd_unit
+  with_items:
+    - filename: '{{ systemd_units_info.app_unit_file }}'
+      template: app@.service.j2
+    - filename: '{{ systemd_units_info.stateboard_unit_file }}'
+      template: app-stateboard.service.j2
+  any_errors_fatal: true
+
+- name: 'Reload systemd daemon'
+  systemd:
+    daemon_reload: true

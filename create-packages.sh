@@ -37,6 +37,7 @@ awk '{gsub(/cartridge.cfg\({/, "&\n    vshard_groups = { hot = { bucket_count = 
     ${appname}/init.lua >${appname}/temp.lua
 mv ${appname}/temp.lua ${appname}/init.lua
 
+cartridge pack tgz --version ${version} ${pack_flags} ${appname}
 cartridge pack rpm --version ${version} ${pack_flags} ${appname}
 cartridge pack deb --version ${version} ${pack_flags} ${appname}
 

@@ -13,10 +13,13 @@
     instance_name: '{{ inventory_hostname }}'
     instance_vars:
       cartridge_package_path: '{{ cartridge_package_path }}'
-      cartridge_dist_dir: '{{ cartridge_dist_dir }}'
+      cartridge_app_install_dir: '{{ cartridge_app_install_dir }}'
+      cartridge_app_instances_dir: '{{ cartridge_app_instances_dir }}'
       cartridge_conf_dir: '{{ cartridge_conf_dir }}'
       cartridge_run_dir: '{{ cartridge_run_dir }}'
       cartridge_data_dir: '{{ cartridge_data_dir }}'
+      cartridge_tmpfiles_dir: '{{ cartridge_tmpfiles_dir }}'
+      cartridge_multiversion: '{{ cartridge_multiversion }}'
       stateboard: '{{ stateboard }}'
 
 - name: 'Select one instance for each physical machine'
