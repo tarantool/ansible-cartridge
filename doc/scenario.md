@@ -29,6 +29,7 @@ In `cartridge_scenario` you should specify names of steps. The default scenario 
 There are additional steps that are not included in the default scenario, but can be used in a custom one:
 
 - [set_control_instance](#set_control_instance)
+- [rotate_dists](#rotate_dists)
 
 To replace the steps of the role with your own or add new steps, you should use `cartridge_custom_steps_dir`
 or `cartridge_custom_steps` options.
@@ -215,8 +216,9 @@ Input facts (set by config):
 - `cartridge_run_dir` - path to directory of instances sockets;
 - `cartridge_data_dir` - path to directory of instances data;
 - `cartridge_conf_dir` - path to directory of instances application configs;
-- `cartridge_app_install_dir` - path to directory with packages;
-- `cartridge_app_instances_dir` - path to directory with instances links to packages.
+- `cartridge_app_install_dir` - path to directory with application distributions;
+- `cartridge_app_instances_dir` - path to directory with instances links to
+  distributions (see [multiversion approach doc](/doc/multiversion.doc)).
 
 Output facts:
 
@@ -439,3 +441,18 @@ Input facts (set by config):
 
 - [DEPRECATED] `cartridge_failover` - indicates if eventual failover should be enabled or disabled;
 - `cartridge_failover_params` - failover parameters.
+
+### rotate_dists
+
+Rotate application distributions.
+
+When [multiversion approcah](/doc/multiversion.md) is used, each new application
+version is added to `cartridge_app_install_dir`.
+This step removes redundant distribution.
+
+Input facts (set by config):
+
+- `cartridge_app_name` - application name;
+- `cartridge_app_install_dir` - path to directory where application distributions
+  are placed;
+- `cartridge_dists_retention_num` - number of dists that should be kept.

@@ -142,6 +142,7 @@ def validate_types(vars):
         'weight': int,
         'vshard_group': str,
         'cartridge_enable_tarantool_repo': bool,
+        'cartridge_dists_retention_num': int,
         'config': {
             'advertise_uri': str,
             'memtx_memory': int,
@@ -504,6 +505,18 @@ def validate_config(params):
         errmsg = check_replicaset(host_vars, found_replicasets)
         if errmsg is not None:
             return helpers.ModuleRes(failed=True, msg=errmsg)
+
+        # Dist retention
+        if 'cartridge_dists_retention_num' in host_vars:
+            dists_retention_num = host_vars['cartridge_dists_retention_num']
+            if dists_retention_num <= 0:
+                errmsg = '"cartridge_dists_retention_num" should be greater than 0'
+                return helpers.ModuleRes(failed=True, msg=errmsg)
+            if dists_retention_num < 2:
+                warnings.append(
+                    'Using "cartridge_dists_retention_num" < 2 can be dangerous. '
+                    'Make sure that there are no instances that use old versions'
+                )
 
     # Authorization params
     errmsg = check_auth(found_common_params)

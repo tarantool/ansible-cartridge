@@ -1,0 +1,7 @@
+---
+
+- name: 'BLOCK : Rotate distributions'
+  include_tasks: 'blocks/rotate_dists.yml'
+  when:
+    - inventory_hostname in single_instances_for_each_machine
+  tags: cartridge-instances

@@ -46,6 +46,12 @@ and statebord.
     myapp-stateboard -> {{ cartridge_app_install_dir }}/myapp-1.0.0-0
   ```
 
+## Rotaing distributions
+
+Each new version is added to `cartridge_app_install_dir` and sometimes old version
+become redundant.
+To simply rotate distributions use [`rotate_dists` step](/doc/scenario.md#rotate_dists)
+
 ## Example
 
 Let's imagine that we already have `myapp-1.0.0-0` installed:
@@ -106,4 +112,37 @@ but `instance-2` continue to use `myapp-1.0.0-0`:
   myapp.storage-1 -> {{ cartridge_app_install_dir }}/myapp-2.0.0-0
   myapp.storage-2 -> {{ cartridge_app_install_dir }}/myapp-2.0.0-0
   myapp.core-1 -> {{ cartridge_app_install_dir }}/myapp-1.0.0-0
+```
+
+Sometimes we have a lot of distributions in `cartridge_app_install_dir`:
+
+```bash
+{{ cartridge_app_install_dir }}/
+  myapp-1.0.0-0/
+  myapp-2.0.0-0/
+  myapp-3.0.0-0/
+  myapp-4.0.0-0/
+  myapp-4.0.0-0/
+```
+
+Let's rotate them:
+
+```yaml
+- name: Update storages
+  hosts: all
+  tasks:
+    - import_role:
+        name: tarantool.cartridge
+      vars:
+        cartridge_dists_retention_num: 2
+        cartridge_scenario:
+          - rotate_dists
+```
+
+After running this playbook, there are only 2 last distributions:
+
+```bash
+{{ cartridge_app_install_dir }}/
+  myapp-4.0.0-0/
+  myapp-4.0.0-0/
 ```

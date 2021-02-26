@@ -1,0 +1,15 @@
+---
+
+- name: Get distribution directories to remove
+  cartridge_set_dist_dirs_to_remove:
+    app_name: '{{ cartridge_app_name }}'
+    app_install_dir: '{{ cartridge_app_install_dir }}'
+    dists_retention_num: '{{ cartridge_dists_retention_num }}'
+
+- name: Remove redundant distribution directories
+  file:
+    state: absent
+    path: '{{ dists_dir }}'
+  loop_control:
+    loop_var: dists_dir
+  with_items: '{{ dists_dirs_to_remove }}'
