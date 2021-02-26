@@ -6,7 +6,7 @@ from subprocess import Popen
 
 import tenacity
 
-from os_mock import OsPathExistsMock, OsPathGetMTimeMock
+from unit.os_mock import OsPathExistsMock, OsPathGetMTimeMock
 
 script_abspath = os.path.realpath(
     os.path.join(

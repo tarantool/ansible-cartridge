@@ -1,6 +1,6 @@
 import unittest
 
-from instance import Instance
+from unit.instance import Instance
 from library.cartridge_bootstrap_vshard import bootstrap_vshard
 
 

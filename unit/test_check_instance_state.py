@@ -1,6 +1,6 @@
 import unittest
 
-from instance import Instance
+from unit.instance import Instance
 from library.cartridge_check_instance_state import check_state
 
 
