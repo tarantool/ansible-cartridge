@@ -457,7 +457,6 @@ def check_scenario(found_common_params):
 def validate_config(params):
     found_replicasets = {}
     found_common_params = {}
-    found_stateboard_vars = None
 
     warnings = []
 
@@ -470,9 +469,9 @@ def validate_config(params):
             return helpers.ModuleRes(failed=True, msg=errmsg)
 
         if host_vars.get('stateboard') is True:
-            if found_stateboard_vars is not None:
-                return helpers.ModuleRes(failed=True, msg='Only one instance can be marked as a "stateboard"')
-            found_stateboard_vars = host_vars
+            errmsg = check_stateboard(host_vars)
+            if errmsg is not None:
+                return helpers.ModuleRes(failed=True, msg=errmsg)
             continue
 
         # All required params should be specified
@@ -520,12 +519,6 @@ def validate_config(params):
     errmsg = check_failover(found_common_params)
     if errmsg is not None:
         return helpers.ModuleRes(failed=True, msg=errmsg)
-
-    # Stateboard
-    if found_stateboard_vars is not None:
-        errmsg = check_stateboard(found_stateboard_vars)
-        if errmsg is not None:
-            return helpers.ModuleRes(failed=True, msg=errmsg)
 
     # Scenario
     errmsg = check_scenario(found_common_params)

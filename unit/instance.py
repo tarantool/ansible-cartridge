@@ -21,7 +21,7 @@ class Instance:
     COOKIE = 'cookie'
 
     INSTANCE_CONF_PATH = '/etc/tarantool/conf.d/{}.{}.yml'.format(APP_NAME, INSTANCE_NAME)
-    CONF_SECTION = '{}.{}'.format(APP_NAME, INSTANCE_NAME)
+    instance_id = '{}.{}'.format(APP_NAME, INSTANCE_NAME)
     APP_CONF_PATH = '/etc/tarantool/conf.d/{}.yml'.format(APP_NAME)
     APP_CODE_PATH = '/usr/share/tarantool/{}'.format(APP_NAME)
 
@@ -162,7 +162,7 @@ class Instance:
             instance_conf_file = Instance.INSTANCE_CONF_PATH
 
         if conf_section_name is None:
-            conf_section_name = Instance.CONF_SECTION
+            conf_section_name = Instance.instance_id
 
         params = ', '.join([
             '{}: {}'.format(k, v)
