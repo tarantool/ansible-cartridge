@@ -51,4 +51,4 @@ cartridge_systemd_dir: /etc/systemd/system
 cartridge_configure_tmpfiles: true
 cartridge_tmpfiles_dir: /usr/lib/tmpfiles.d/
 
-cartridge_tgz_install_tarantool: true
+cartridge_install_tarantool_for_tgz: true

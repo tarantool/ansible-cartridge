@@ -42,8 +42,7 @@ def get_multiversion_dist_dir(install_dir, package_path):
     if ext == '.gz' and package_name_version.endswith('.tar'):
         package_name_version, _ = os.path.splitext(package_name_version)
 
-    app_dir = os.path.join(install_dir, package_name_version)
-    return app_dir
+    return os.path.join(install_dir, package_name_version)
 
 
 def get_instance_info(params):
@@ -90,10 +89,10 @@ def get_instance_info(params):
 
     # code dirs
     if not instance_vars['cartridge_multiversion']:
-        app_dir = os.path.join(instance_vars['cartridge_install_dir'], app_name)
+        dist_dir = os.path.join(instance_vars['cartridge_install_dir'], app_name)
 
-        instance_info['dist_dir'] = app_dir
-        instance_info['instance_dist_dir'] = app_dir
+        instance_info['dist_dir'] = dist_dir
+        instance_info['instance_dist_dir'] = dist_dir
     else:
         instance_info['dist_dir'] = get_multiversion_dist_dir(
             instance_vars['cartridge_install_dir'],
