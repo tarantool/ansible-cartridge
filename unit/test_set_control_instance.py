@@ -1,10 +1,12 @@
 import unittest
 
+import os
+
 from instance import Instance
 from library.cartridge_set_control_instance import get_control_instance
 
 
-def call_get_control_instance(console_sock, hostvars=None, play_hosts=None):
+def call_get_control_instance(app_name, console_sock, hostvars=None, play_hosts=None):
     if hostvars is None:
         hostvars = {}
     if play_hosts is None:
@@ -14,6 +16,7 @@ def call_get_control_instance(console_sock, hostvars=None, play_hosts=None):
         'hostvars': hostvars,
         'play_hosts': play_hosts,
         'console_sock': console_sock,
+        'app_name': app_name,
     })
 
 
@@ -23,11 +26,16 @@ URI2 = '127.0.0.1:3302'
 UUID1 = 'uuid-1'
 UUID2 = 'uuid-2'
 
+APP_NAME = 'myapp'
+
 ALIAS1 = 'alias-1'
 ALIAS2 = 'alias-2'
 
-SOCK1 = '%s-sock-path' % ALIAS1
-SOCK2 = '%s-sock-path' % ALIAS2
+RUN_DIR1 = '%s-run-dir' % ALIAS1
+RUN_DIR2 = '%s-run-dir' % ALIAS2
+
+SOCK1 = os.path.join(RUN_DIR1, '%s.%s.control' % (APP_NAME, ALIAS1))
+SOCK2 = os.path.join(RUN_DIR2, '%s.%s.control' % (APP_NAME, ALIAS2))
 
 
 def set_membership_members(instance, members):
@@ -58,24 +66,36 @@ class TestSetControlInstance(unittest.TestCase):
         set_membership_members(self.instance, [
             {'uri': URI1, 'uuid': UUID1},
         ])
-        res = call_get_control_instance(self.console_sock)
+        res = call_get_control_instance(APP_NAME, self.console_sock)
         self.assertTrue(res.failed)
         self.assertIn('Unable to get instance alias', res.msg)
 
-    def test_one_instance(self):
+    def test_one_instance_without_run_dir(self):
         hostvars = {
-            ALIAS1: {
-                'instance_info': {
-                    'console_sock': SOCK1,
-                },
-            },
+            ALIAS1: {},
         }
 
         # with UUID and alias
         set_membership_members(self.instance, [
             {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
         ])
-        res = call_get_control_instance(self.console_sock, hostvars)
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.facts, {'control_instance': {
+            'name': ALIAS1,
+            'console_sock': os.path.join('/var/run/tarantool', '%s.%s.control' % (APP_NAME, ALIAS1)),
+        }})
+
+    def test_one_instance(self):
+        hostvars = {
+            ALIAS1: {'cartridge_run_dir': RUN_DIR1},
+        }
+
+        # with UUID and alias
+        set_membership_members(self.instance, [
+            {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
+        ])
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.facts, {'control_instance': {
             'name': ALIAS1,
@@ -86,22 +106,14 @@ class TestSetControlInstance(unittest.TestCase):
         set_membership_members(self.instance, [
             {'uri': URI1, 'alias': ALIAS1},
         ])
-        res = call_get_control_instance(self.console_sock, hostvars)
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertTrue(res.failed)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
 
     def test_two_instances(self):
         hostvars = {
-            ALIAS1: {
-                'instance_info': {
-                    'console_sock': SOCK1,
-                },
-            },
-            ALIAS2: {
-                'instance_info': {
-                    'console_sock': SOCK2,
-                },
-            },
+            ALIAS1: {'cartridge_run_dir': RUN_DIR1},
+            ALIAS2: {'cartridge_run_dir': RUN_DIR2},
         }
 
         # both with UUID and alias (one is selected)
@@ -109,7 +121,7 @@ class TestSetControlInstance(unittest.TestCase):
             {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
             {'uri': URI2, 'uuid': UUID2, 'alias': ALIAS2},
         ])
-        res = call_get_control_instance(self.console_sock, hostvars)
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertIn(res.facts['control_instance']['name'], [ALIAS1, ALIAS2])
         self.assertIn(res.facts['control_instance']['console_sock'], [SOCK1, SOCK2])
@@ -119,7 +131,7 @@ class TestSetControlInstance(unittest.TestCase):
             {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
             {'uri': URI2, 'alias': ALIAS2},
         ])
-        res = call_get_control_instance(self.console_sock, hostvars)
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.facts, {'control_instance': {
             'name': ALIAS1,
@@ -131,7 +143,7 @@ class TestSetControlInstance(unittest.TestCase):
             {'uri': URI1, 'uuid': UUID1},
             {'uri': URI2, 'alias': ALIAS2},
         ])
-        res = call_get_control_instance(self.console_sock, hostvars)
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertTrue(res.failed)
         self.assertIn("Unable to get instance alias", res.msg)
 
@@ -140,28 +152,20 @@ class TestSetControlInstance(unittest.TestCase):
             {'uri': URI1, 'alias': ALIAS1},
             {'uri': URI2, 'alias': ALIAS2},
         ])
-        res = call_get_control_instance(self.console_sock, hostvars)
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertTrue(res.failed)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
 
     def test_no_joined_instances(self):
         hostvars = {
-            ALIAS1: {
-                'instance_info': {
-                    'console_sock': SOCK1,
-                },
-            },
+            ALIAS1: {'cartridge_run_dir': RUN_DIR1},
             ALIAS2: {
+                'cartridge_run_dir': RUN_DIR2,
                 'replicaset_alias': 'some-rpl',
-                'instance_info': {
-                    'console_sock': SOCK2,
-                },
             },
             'expelled-instance': {
                 'replicaset_alias': 'some-rpl',
-                'instance_info': {
-                    'console_sock': 'some-sock',
-                },
+                'cartridge_run_dir': RUN_DIR1,
                 'expelled': True,
             },
             'my-stateboard': {
@@ -174,7 +178,7 @@ class TestSetControlInstance(unittest.TestCase):
             {'uri': URI1, 'alias': ALIAS1},
             {'uri': URI2, 'alias': ALIAS2},
         ])
-        res = call_get_control_instance(self.console_sock, hostvars)
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.facts, {'control_instance': {
             'name': ALIAS2,
@@ -187,7 +191,7 @@ class TestSetControlInstance(unittest.TestCase):
             {'uri': URI1, 'alias': ALIAS1},
             {'uri': URI2, 'alias': ALIAS2},
         ])
-        res = call_get_control_instance(self.console_sock, hostvars, play_hosts=[
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars, play_hosts=[
             ALIAS1, 'expelled-instance', 'my-stateboard',
         ])
         self.assertTrue(res.failed, res.facts)
