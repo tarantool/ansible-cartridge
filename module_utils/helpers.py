@@ -8,6 +8,9 @@ import socket
 from ansible.module_utils.basic import AnsibleModule
 
 
+DEFAULT_RUN_DIR = '/var/run/tarantool'
+
+
 class ModuleRes:
     def __init__(self, failed=False, changed=True, msg=None, exception=None, warnings=None, facts=None, **kwargs):
         self.failed = failed
