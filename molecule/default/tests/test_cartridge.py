@@ -34,7 +34,7 @@ def get_authorized_session(cluster_cookie):
     return __authorized_session
 
 
-def check_conf_file(conf_file, conf_section, conf):
+def check_conf_file(conf_file, instance_id, conf):
     assert conf_file.exists
     assert conf_file.user == 'tarantool'
     assert conf_file.group == 'tarantool'
@@ -42,8 +42,8 @@ def check_conf_file(conf_file, conf_section, conf):
     loader = Loader(conf_file.content_string)
     conf_file_dict = loader.get_data()
 
-    assert conf_section in conf_file_dict
-    assert conf_file_dict[conf_section] == conf
+    assert instance_id in conf_file_dict
+    assert conf_file_dict[instance_id] == conf
 
 
 def get_configured_instances():
@@ -151,14 +151,39 @@ def test_services_status_and_config(host):
         run_dir = instance_vars.get('cartridge_run_dir', '/var/run/tarantool')
         data_dir = instance_vars.get('cartridge_data_dir', '/var/lib/tarantool')
 
+        install_dir = instance_vars.get('cartridge_app_install_dir', '/usr/share/tarantool')
+        instances_dir = instance_vars.get('cartridge_app_instances_dir', '/usr/share/tarantool')
+
+        multiversion = instance_vars.get('cartridge_multiversion', False)
+
+        if not multiversion:
+            dist_dir_path = os.path.join(install_dir, APP_NAME)
+        else:
+            package_path = instance_vars.get('cartridge_package_path')
+            package_basename = os.path.basename(package_path)
+            package_name_version, ext = os.path.splitext(package_basename)
+            if ext == '.gz' and package_name_version.endswith('.tar'):
+                package_name_version, _ = os.path.splitext(package_name_version)
+
+            dist_dir_path = os.path.join(install_dir, package_name_version)
+
+        dist_dir = host.file(dist_dir_path)
+        assert dist_dir.exists
+
         if not instance_is_stateboard(instance_vars):
             service_name = '%s@%s' % (APP_NAME, instance_name)
             instance_id = '%s.%s' % (APP_NAME, instance_name)
         else:
             instance_id = service_name = '%s-stateboard' % APP_NAME
 
+        if multiversion:
+            instance_dist_dir = host.file(os.path.join(instances_dir, instance_id))
+            assert instance_dist_dir.exists
+            assert instance_dist_dir.is_symlink
+            assert instance_dist_dir.linked_to == dist_dir_path
+
         conf_file = host.file(os.path.join(conf_dir, '%s.yml' % instance_id))
-        conf_section = instance_id
+        instance_id = instance_id
 
         default_conf_file = host.file(os.path.join(conf_dir, '%s.yml' % APP_NAME))
         default_conf_section = APP_NAME
@@ -182,7 +207,7 @@ def test_services_status_and_config(host):
             assert service.is_running
             assert service.is_enabled
 
-            check_conf_file(conf_file, conf_section, instance_conf)
+            check_conf_file(conf_file, instance_id, instance_conf)
 
     check_conf_file(default_conf_file, default_conf_section, default_conf)
 
@@ -275,7 +300,9 @@ def test_replicasets():
         if configured_replicaset['failover_priority'] is not None:
             configured_failover_priority = configured_replicaset['failover_priority']
             assert started_replicaset['master']['alias'] == configured_failover_priority[0]
-            assert aliases_in_priority_order(started_replicaset['servers']) == configured_failover_priority
+
+            failover_priority = aliases_in_priority_order(started_replicaset['servers'])
+            assert failover_priority[:len(configured_failover_priority)] == configured_failover_priority
 
         if configured_replicaset['all_rw'] is not None:
             assert started_replicaset['all_rw'] == configured_replicaset['all_rw']

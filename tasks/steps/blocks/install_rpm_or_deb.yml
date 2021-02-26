@@ -1,0 +1,24 @@
+---
+
+- name: 'Install RPM'
+  any_errors_fatal: true
+  yum:
+    name: '{{ delivered_package_path }}'
+    state: present
+    update_cache: true
+  register: install_rpm
+  failed_when:
+    - install_rpm.rc != 0
+    - '"does not update installed package" not in install_rpm.results[0]'
+  when: package_info.type == 'rpm'
+
+- name: 'Install DEB'
+  any_errors_fatal: true
+  apt:
+    deb: '{{ delivered_package_path }}'
+    update_cache: true
+  when: package_info.type == 'deb'
+
+- name: 'Reload systemd daemon'
+  systemd:
+    daemon_reload: true
