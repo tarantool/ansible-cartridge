@@ -162,6 +162,8 @@ Common variables:
 * `cartridge_app_name` (`string`, required): application name;
 * `cartridge_cluster_cookie` (`string`, required): cluster cookie for all
   cluster instances;
+* `cartridge_remove_temporary_files` (`boolean`, optional, default: `false`): indicates if temporary
+  files should be removed (more details in description of `cleanup` [step API](/doc/scenario.md#cleanup));
 
 Role scenario configuration:
 

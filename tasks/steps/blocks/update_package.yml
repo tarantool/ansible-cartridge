@@ -14,16 +14,20 @@
       get_url:
         url: 'https://tarantool.io/release/{{ package_info.tnt_version }}/installer.sh'
         dest: '/tmp/tarantool-installer.sh'
-      register: get_script
-      until: not get_script.failed
+      register: enable_repo_script
+      until: not enable_repo_script.failed
       retries: 3
       delay: 5
       any_errors_fatal: true
 
     - name: 'Run repository setup script'
       any_errors_fatal: true
-      command: bash /tmp/tarantool-installer.sh
+      command: bash {{ enable_repo_script.dest }}
       changed_when: false
+
+    - name: Add repository setup script to temporary files list
+      set_fact:
+        temporary_files: "{{ temporary_files + [enable_repo_script.dest] }}"
 
 - name: 'Install RPM or DEB'
   include_tasks: install_rpm_or_deb.yml

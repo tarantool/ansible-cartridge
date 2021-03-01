@@ -1,5 +1,8 @@
 ---
 
+temporary_files: []
+cartridge_remove_temporary_files: false
+
 cartridge_package_path: null
 cartridge_defaults: {}
 cartridge_enable_tarantool_repo: true
@@ -44,6 +47,7 @@ cartridge_scenario:
   - configure_app_config
   - bootstrap_vshard
   - configure_failover
+  - cleanup
 
 cartridge_configure_systemd_unit_files: true
 cartridge_systemd_dir: /etc/systemd/system
