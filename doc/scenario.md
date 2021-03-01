@@ -241,7 +241,8 @@ Output facts:
 
 ### update_instance
 
-Update instance links for a new version of package (if multiple package versions is enabled).
+Update instance links for a new version of package (if
+[multiversion approach](./multiversion.md) is enabled).
 
 Input facts (set by role):
 
@@ -249,7 +250,8 @@ Input facts (set by role):
 
 Input facts (set by config):
 
-- `cartridge_multiversion` - indicates that multiple package versions is enabled;
+- `cartridge_multiversion` - indicates that
+  [multiversion approach](./multiversion.md) is enabled;
 - `cartridge_app_user` - user which will own the links;
 - `cartridge_app_group` - group which will own the links.
 
