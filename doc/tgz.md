@@ -9,6 +9,8 @@ that can be helpful to perform rolling update correclty.
 This approach uses links to specify version of application that is used by each
 instance.
 
+All TGZ-specific variables are described [here](/doc/variables.md#TGZ-specific-configuration)
+
 ## Unpacking TGZ
 
 TGZ package contains one directory named `cartridge_app_name` that contains application files.
