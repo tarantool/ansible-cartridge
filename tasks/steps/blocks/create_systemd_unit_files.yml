@@ -7,7 +7,7 @@
     instance_vars:
       dist_dir: '{{ instance_info.dist_dir }}'
       cartridge_multiversion: '{{ cartridge_multiversion }}'
-      cartridge_instances_dir: '{{ cartridge_instances_dir }}'
+      cartridge_app_instances_dir: '{{ cartridge_app_instances_dir }}'
       cartridge_run_dir: '{{ cartridge_run_dir }}'
       cartridge_data_dir: '{{ cartridge_data_dir }}'
 

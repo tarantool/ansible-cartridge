@@ -151,8 +151,8 @@ def test_services_status_and_config(host):
         run_dir = instance_vars.get('cartridge_run_dir', '/var/run/tarantool')
         data_dir = instance_vars.get('cartridge_data_dir', '/var/lib/tarantool')
 
-        install_dir = instance_vars.get('cartridge_install_dir', '/usr/share/tarantool')
-        instances_dir = instance_vars.get('cartridge_instances_dir', '/usr/share/tarantool')
+        install_dir = instance_vars.get('cartridge_app_install_dir', '/usr/share/tarantool')
+        instances_dir = instance_vars.get('cartridge_app_instances_dir', '/usr/share/tarantool')
 
         multiversion = instance_vars.get('cartridge_multiversion', False)
 

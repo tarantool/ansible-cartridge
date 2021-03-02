@@ -56,7 +56,7 @@ def get_systemd_units_info(params):
         instance_dist_dir = instance_vars['dist_dir']
         stateboard_dir = instance_vars['dist_dir']
     else:
-        instances_dir = instance_vars['cartridge_instances_dir']
+        instances_dir = instance_vars['cartridge_app_instances_dir']
 
         instance_dist_dir = helpers.get_multiversion_instance_code_dir(
             instances_dir, app_name, instance_name="%i",

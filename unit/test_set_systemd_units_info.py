@@ -23,7 +23,7 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
             'dist_dir': '/some/dist/dir',
-            'cartridge_instances_dir': 'some/instances/dir',
+            'cartridge_app_instances_dir': 'some/instances/dir',
         }
 
         res = call_get_systemd_units_info(app_name, instance_vars, tnt_version)
@@ -57,7 +57,7 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
             'dist_dir': '/some/dist/dir',
-            'cartridge_instances_dir': 'some/instances/dir',
+            'cartridge_app_instances_dir': 'some/instances/dir',
         }
 
         res = call_get_systemd_units_info(app_name, instance_vars, tnt_version)
@@ -91,7 +91,7 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
             'dist_dir': 'some/dist/dir',
-            'cartridge_instances_dir': 'some/instances/dir',
+            'cartridge_app_instances_dir': 'some/instances/dir',
         }
 
         res = call_get_systemd_units_info(app_name, instance_vars, tnt_version)
@@ -125,7 +125,7 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
             'dist_dir': 'some/dist/dir',
-            'cartridge_instances_dir': 'some/instances/dir',
+            'cartridge_app_instances_dir': 'some/instances/dir',
         }
 
         res = call_get_systemd_units_info(app_name, instance_vars, tnt_version)

@@ -19,8 +19,8 @@ cartridge_multiversion: false
 instance_start_timeout: 60
 instance_discover_buckets_timeout: 60
 
-cartridge_install_dir: /usr/share/tarantool
-cartridge_instances_dir: /usr/share/tarantool
+cartridge_app_install_dir: /usr/share/tarantool
+cartridge_app_instances_dir: /usr/share/tarantool
 cartridge_conf_dir: /etc/tarantool/conf.d
 cartridge_run_dir: /var/run/tarantool
 cartridge_data_dir: /var/lib/tarantool

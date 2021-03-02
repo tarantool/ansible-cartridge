@@ -89,18 +89,18 @@ def get_instance_info(params):
 
     # code dirs
     if not instance_vars['cartridge_multiversion']:
-        dist_dir = os.path.join(instance_vars['cartridge_install_dir'], app_name)
+        dist_dir = os.path.join(instance_vars['cartridge_app_install_dir'], app_name)
 
         instance_info['dist_dir'] = dist_dir
         instance_info['instance_dist_dir'] = dist_dir
     else:
         instance_info['dist_dir'] = get_multiversion_dist_dir(
-            instance_vars['cartridge_install_dir'],
+            instance_vars['cartridge_app_install_dir'],
             instance_vars['cartridge_package_path']
         )
 
         instance_info['instance_dist_dir'] = helpers.get_multiversion_instance_code_dir(
-            instance_vars['cartridge_instances_dir'],
+            instance_vars['cartridge_app_instances_dir'],
             app_name, instance_name, instance_vars['stateboard'],
         )
 
