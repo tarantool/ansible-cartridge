@@ -4,7 +4,7 @@ Deploying TGZ archive is different from deploying RPM or DEB.
 It requires additional actions such as configuring systemd units.
 All these actions can be disabled.
 
-Using TGZ package allows to use [multiversion approach](./multiversion.md)
+Using TGZ package allows to use [multiversion approach](/doc/multiversion.md)
 that can be helpful to perform rolling update correclty.
 This approach uses links to specify version of application that is used by each
 instance.
@@ -13,7 +13,7 @@ instance.
 
 TGZ package contains one directory named `cartridge_app_name` that contains application files.
 By default, it is unpacked to `cartridge_app_install_dir` directory according to
-[multiversion](./multiversion.md) policy.
+[multiversion](/doc/multiversion.md) policy.
 
 ### Installing Tarantool
 
@@ -34,11 +34,12 @@ can be configured using `cartridge_app_user` and `cartridge_app_group` variables
 Application directories are created before unpacking.
 To configure them use
 
-* `cartridge_data_dir`
-* `cartridge_run_dir`
-* `cartridge_conf_dir`
-* `cartridge_app_install_dir`
-* `cartridge_app_instances_dir` in case of using [multiversion](./multiversion.md)
+* `cartridge_data_dir` - directory where instances working directorieas are placed;
+* `cartridge_run_dir` - directory where PID and socket files are stored;
+* `cartridge_conf_dir` - path to instances configuration;
+* `cartridge_app_install_dir` - directory where application distributions are placed;
+* `cartridge_app_instances_dir` directory where instances distributions are placed in
+  case of [multiversion approcah](/doc/multiversion.md).
 
 ### `systemd` unit files
 

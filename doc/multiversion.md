@@ -8,7 +8,7 @@ The default versioning approach for Tarantool Cartridge applications is quite si
 Such approach doesn't protect from accidental updating instance, that can lead to
 errors (for example, if router starts to use new schema earlier than storages).
 The solution is using multiversion approach (currently it's fully supported only
-for [TGZ](./tgz.md) packages).
+for [TGZ](/doc/tgz.md) packages).
 
 Multiversion approach:
 
@@ -16,7 +16,7 @@ Multiversion approach:
 * each instance uses fixed version - it is achieved by using symbolic links;
 * updating instance consists of:
   * moving it's link to a newest version of application
-    (see [`update_instance` step](./scenario.md#update_instance));
+    (see [`update_instance` step](/doc/scenario.md#update_instance));
   * instance restart.
 
 ## Configuration
