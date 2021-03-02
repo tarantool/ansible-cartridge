@@ -38,19 +38,41 @@ SOCK1 = os.path.join(RUN_DIR1, '%s.%s.control' % (APP_NAME, ALIAS1))
 SOCK2 = os.path.join(RUN_DIR2, '%s.%s.control' % (APP_NAME, ALIAS2))
 
 
-def set_membership_members(instance, members):
-    instance.set_variable('membership_members', {
-        m['uri']: {
-            'uri': m['uri'],
+def set_membership_members(instance, specified_members, with_payload=True):
+    members = {}
+
+    for m in specified_members:
+        uri = m['uri']
+        member = {
+            'uri': uri,
             'status': m.get('status', 'alive'),
             'incarnation': 1,
-            'payload': {
-                'uuid': m.get('uuid'),
-                'alias': m.get('alias')
-            }
         }
-        for m in members
-    })
+
+        if with_payload:
+            member.update({
+                'payload': {
+                    'uuid': m.get('uuid'),
+                    'alias': m.get('alias')
+                }
+            })
+
+        members[uri] = member
+
+    instance.set_variable('membership_members', members)
+
+    # instance.set_variable('membership_members', {
+    #     m['uri']: {
+    #         'uri': m['uri'],
+    #         'status': m.get('status', 'alive'),
+    #         'incarnation': 1,
+    #         'payload': {
+    #             'uuid': m.get('uuid'),
+    #             'alias': m.get('alias')
+    #         }
+    #     }
+    #     for m in members
+    # })
 
 
 class TestSetControlInstance(unittest.TestCase):
@@ -61,6 +83,15 @@ class TestSetControlInstance(unittest.TestCase):
         self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
+    def test_instance_without_payload(self):
+        # with UUID (already bootstrapped) and without alias
+        set_membership_members(self.instance, [
+            {'uri': URI1, 'uuid': UUID1},
+        ], with_payload=False)
+        res = call_get_control_instance(APP_NAME, self.console_sock)
+        self.assertTrue(res.failed)
+        self.assertIn('Instance %s does not contain payload' % URI1, res.msg)
+
     def test_instance_without_alias(self):
         # with UUID (already bootstrapped) and without alias
         set_membership_members(self.instance, [
@@ -68,7 +99,7 @@ class TestSetControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(APP_NAME, self.console_sock)
         self.assertTrue(res.failed)
-        self.assertIn('Unable to get instance alias', res.msg)
+        self.assertIn('Instance %s payload does not contain alias' % URI1, res.msg)
 
     def test_one_instance_without_run_dir(self):
         hostvars = {
@@ -145,7 +176,7 @@ class TestSetControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertTrue(res.failed)
-        self.assertIn("Unable to get instance alias", res.msg)
+        self.assertIn('Instance %s payload does not contain alias' % URI1, res.msg)
 
         # both without UUID (no one selected)
         set_membership_members(self.instance, [

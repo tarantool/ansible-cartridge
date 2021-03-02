@@ -28,12 +28,14 @@ def get_control_instance(params):
         return require('membership').members()
     ''')
 
-    for _, member in members.items():
-        if 'payload' in member and member['payload'].get('uuid') is not None:
-            if member['payload'].get('alias') is None:
-                errmsg = 'Unable to get instance alias for "{}"'.format(member['payload']['uuid'])
-                return helpers.ModuleRes(failed=True, msg=errmsg)
+    for uri, member in members.items():
+        if 'payload' not in member or not member['payload']:
+            return helpers.ModuleRes(failed=True, msg='Instance %s does not contain payload' % uri)
 
+        if member['payload'].get('alias') is None:
+            return helpers.ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
+
+        if member['payload'].get('uuid') is not None:
             control_instance_name = member['payload']['alias']
             break
 
