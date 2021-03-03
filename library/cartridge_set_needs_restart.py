@@ -9,13 +9,29 @@ else:
     import module_utils.helpers as helpers
 
 argument_spec = {
-    'app_name': {'required': True, 'type': 'str'},
-    'config': {'required': True, 'type': 'dict'},
-    'cartridge_defaults': {'required': True, 'type': 'dict'},
-    'cluster_cookie': {'required': True, 'type': 'str'},
-    'stateboard': {'required': True, 'type': 'bool'},
+    'check_package_updated': {'required': False, 'type': 'bool', 'default': False},
+    'check_config_updated': {'required': False, 'type': 'bool', 'default': False},
+
     'instance_info': {'required': True, 'type': 'dict'},
+    'app_name': {'required': False, 'type': 'str'},
+    'config': {'required': False, 'type': 'dict'},
+    'cartridge_defaults': {'required': False, 'type': 'dict'},
+    'cluster_cookie': {'required': False, 'type': 'str'},
+    'stateboard': {'required': False, 'type': 'bool'},
 }
+
+
+def check_needs_restart_to_update_package(params):
+    instance_info = params['instance_info']
+    console_sock = instance_info['console_sock']
+    instance_dist_dir = instance_info['instance_dist_dir']
+
+    last_restart_time = os.path.getmtime(console_sock)
+
+    # check if application code was updated
+    package_update_time = os.path.getmtime(instance_dist_dir)
+    if last_restart_time < package_update_time:
+        return helpers.ModuleRes(facts={'needs_restart': True})
 
 
 def read_yaml_file_section(control_console, filepath, section):
@@ -72,41 +88,27 @@ def check_conf_updated(new_conf, old_conf, ignore_keys):
     return False
 
 
-def needs_restart(params):
-    stateboard = params['stateboard']
+def check_needs_restart_to_update_config(params, control_console):
+    required_args = {
+        'app_name',
+        'config',
+        'cartridge_defaults',
+        'cluster_cookie',
+        'stateboard',
+    }
+    for arg in required_args:
+        if params.get(arg) is None:
+            return helpers.ModuleRes(
+                failed=True,
+                msg="Argument '%s' is required to check for configuration updates" % arg,
+            )
 
+    instance_info = params['instance_info']
     app_name = params['app_name']
     new_instance_conf = params['config']
     new_default_conf = params['cartridge_defaults']
     cluster_cookie = params['cluster_cookie']
-    instance_info = params['instance_info']
-
-    console_sock = instance_info['console_sock']
-
-    # check if instance was not started yet
-    if not os.path.exists(console_sock):
-        return helpers.ModuleRes(facts={'needs_restart': True})
-
-    try:
-        control_console = helpers.get_control_console(console_sock)
-    except helpers.CartridgeException as e:
-        allowed_errcodes = [
-            helpers.cartridge_errcodes.SOCKET_NOT_FOUND,
-            helpers.cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
-            helpers.cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
-        ]
-        if e.code in allowed_errcodes:
-            return helpers.ModuleRes(facts={'needs_restart': True})
-
-        raise e
-
-    last_restart_time = os.path.getmtime(console_sock)
-
-    # check if application code was updated
-    instance_dist_dir = instance_info['instance_dist_dir']
-    package_update_time = os.path.getmtime(instance_dist_dir)
-    if last_restart_time < package_update_time:
-        return helpers.ModuleRes(facts={'needs_restart': True})
+    stateboard = params['stateboard']
 
     # check if instance config was changed (except dynamic params)
     current_instance_conf, err = read_yaml_file_section(
@@ -155,6 +157,38 @@ def needs_restart(params):
         if new_value is not None:
             if current_cfg.get(param_name) != new_value:
                 return helpers.ModuleRes(facts={'needs_restart': True})
+
+
+def needs_restart(params):
+    instance_info = params['instance_info']
+    console_sock = instance_info['console_sock']
+
+    # check if instance was not started yet
+    if not os.path.exists(console_sock):
+        return helpers.ModuleRes(facts={'needs_restart': True})
+
+    try:
+        control_console = helpers.get_control_console(console_sock)
+    except helpers.CartridgeException as e:
+        allowed_errcodes = [
+            helpers.cartridge_errcodes.SOCKET_NOT_FOUND,
+            helpers.cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
+            helpers.cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
+        ]
+        if e.code in allowed_errcodes:
+            return helpers.ModuleRes(facts={'needs_restart': True})
+
+        raise e
+
+    if params['check_package_updated']:
+        res = check_needs_restart_to_update_package(params)
+        if res is not None:
+            return res
+
+    if params['check_config_updated']:
+        res = check_needs_restart_to_update_config(params, control_console)
+        if res is not None:
+            return res
 
     return helpers.ModuleRes(changed=False)
 

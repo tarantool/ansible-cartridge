@@ -1,8 +1,19 @@
 ---
 
-- name: 'BLOCK : Install package'
-  include_tasks: 'blocks/update_package.yml'
-  when:
-    - delivered_package_path is not none
-    - inventory_hostname in single_instances_for_each_machine
+- when: delivered_package_path is not none
   tags: cartridge-instances
+  block:
+    - name: 'BLOCK : Install package'
+      include_tasks: 'blocks/update_package.yml'
+      when:
+        - inventory_hostname in single_instances_for_each_machine
+
+    - name: 'Check if instance restart is required to use new package'
+      cartridge_set_needs_restart:
+        instance_info: '{{ instance_info }}'
+        check_package_updated: true
+      when:
+        - not cartridge_multiversion
+        - not expelled
+        - restarted is none
+        - needs_restart is none

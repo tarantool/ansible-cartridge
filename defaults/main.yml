@@ -11,6 +11,7 @@ cartridge_failover: null
 cartridge_failover_params: null
 cartridge_wait_buckets_discovery: true
 
+needs_restart: null
 restarted: null
 expelled: false
 stateboard: false

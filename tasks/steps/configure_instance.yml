@@ -8,9 +8,9 @@
         console_sock: '{{ instance_info.console_sock }}'
         config: '{{ config }}'
         cartridge_defaults: '{{ cartridge_defaults }}'
-      when: not restarted
+      when: (restarted == false) or (restarted is none and not needs_restart)
 
-    - name: 'Check if instance restart is forced or required to apply changes'
+    - name: 'Check if instance restart is required to use new config'
       cartridge_set_needs_restart:
         app_name: '{{ cartridge_app_name }}'
         config: '{{ config }}'
@@ -18,7 +18,10 @@
         cluster_cookie: '{{ cartridge_cluster_cookie }}'
         stateboard: '{{ stateboard }}'
         instance_info: '{{ instance_info }}'
-      when: restarted is none
+        check_config_updated: true
+      when:
+        - restarted is none
+        - needs_restart is none
 
     - name: 'Place default config'
       copy:

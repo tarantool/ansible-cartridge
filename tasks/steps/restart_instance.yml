@@ -5,5 +5,5 @@
     name: '{{ instance_info.systemd_service }}'
     state: restarted
     enabled: true
-  when: (restarted is not none and restarted) or (needs_restart is defined and needs_restart)
+  when: (restarted) or (restarted is none and needs_restart)
   tags: cartridge-instances

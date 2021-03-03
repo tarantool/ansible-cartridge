@@ -1,11 +1,21 @@
 ---
 
-- name: 'Update instance'
-  file:
-    src: '{{ instance_info.dist_dir }}'
-    dest: '{{ instance_info.instance_dist_dir }}'
-    owner: '{{ cartridge_app_user }}'
-    group: '{{ cartridge_app_group }}'
-    state: link
-  when: cartridge_multiversion
+- when: cartridge_multiversion
   tags: cartridge-instances
+  block:
+    - name: 'Update instance link to application'
+      file:
+        src: '{{ instance_info.dist_dir }}'
+        dest: '{{ instance_info.instance_dist_dir }}'
+        owner: '{{ cartridge_app_user }}'
+        group: '{{ cartridge_app_group }}'
+        state: link
+
+    - name: 'Check if instance restart is required to use new package'
+      cartridge_set_needs_restart:
+        instance_info: '{{ instance_info }}'
+        check_package_updated: true
+      when:
+        - not expelled
+        - restarted is none
+        - needs_restart is none
