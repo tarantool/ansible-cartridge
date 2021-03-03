@@ -292,6 +292,10 @@ end
 
 cartridge.version = '2.1.2'
 
+function cartridge.is_healthy()
+    return true
+end
+
 function cartridge.cfg(opts)
     assert(type(opts.console_sock == 'string'))
 
@@ -323,7 +327,7 @@ cartridge.admin_get_replicasets = lua_api_topology.get_replicasets
 
 cartridge.admin_edit_topology = wrap_func('edit_topology', function(opts)
     -- set prettyfied uuids for join servers
-    for _, replicaset in ipairs(opts.replicasets) do
+    for _, replicaset in ipairs(opts.replicasets or {}) do
         for _, join_server in ipairs(replicaset.join_servers or {}) do
             if join_server.uuid == nil then
                 local member = membership.get_member(join_server.uri)

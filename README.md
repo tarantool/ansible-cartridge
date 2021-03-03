@@ -244,6 +244,8 @@ Replicasets configuration:
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
 * `all_rw` (`boolean`): indicates that that all servers in the replicaset should be read-write;
 * `weight` (`number`): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
+* `edit_topology_timeout` (`number`, default: `60`): time in seconds
+  to wait until cluster become healthy after editing topology;
 
 Cluster configuration
 

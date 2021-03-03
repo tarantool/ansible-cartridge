@@ -22,6 +22,7 @@ cartridge_multiversion: false
 
 instance_start_timeout: 60
 instance_discover_buckets_timeout: 60
+edit_topology_timeout: 60
 
 cartridge_app_install_dir: /usr/share/tarantool
 cartridge_app_instances_dir: /usr/share/tarantool

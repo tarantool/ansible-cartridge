@@ -10,5 +10,6 @@
         hostvars: '{{ hostvars }}'
         play_hosts: '{{ play_hosts }}'
         console_sock: '{{ control_instance.console_sock }}'
+        timeout: '{{ edit_topology_timeout }}'
       run_once: true
       delegate_to: '{{ control_instance.name }}'

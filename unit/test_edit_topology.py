@@ -4,7 +4,7 @@ from unit.instance import Instance
 from library.cartridge_edit_topology import edit_topology
 
 
-def call_edit_topology(console_sock, hostvars, play_hosts=None):
+def call_edit_topology(console_sock, hostvars, play_hosts=None, timeout=60):
     if play_hosts is None:
         play_hosts = hostvars.keys()
 
@@ -12,6 +12,7 @@ def call_edit_topology(console_sock, hostvars, play_hosts=None):
         'console_sock': console_sock,
         'hostvars': hostvars,
         'play_hosts': play_hosts,
+        'timeout': timeout,
     })
 
 
@@ -81,7 +82,7 @@ class TestEditTopology(unittest.TestCase):
             hostvars
         )
         self.assertTrue(res.failed, msg=res.msg)
-        self.assertEqual(res.msg, "Failed to edit failover priority: cartridge err")
+        self.assertEqual(res.msg, "Failed to edit failover priority and configure instances: cartridge err")
 
         calls = self.instance.get_calls('edit_topology')
         self.assertEqual(len(calls), 1)
@@ -658,6 +659,73 @@ class TestEditTopology(unittest.TestCase):
         ]
 
         self.assertEqual(servers_opts, exp_servers_opts)
+
+    def test_configure_instances(self):
+        self.instance.add_replicaset(
+            alias='r1',
+            instances=['r1-leader', 'r1-replica'],
+            roles=['role-1', 'role-2'],
+        )
+
+        self.instance.add_membership_members([
+            {'alias': 'r1-replica-2', 'uri': 'r1-replica-2-uri'},
+        ])
+
+        # join 'r1-replica-2', set ot to failover_priority top
+        # set zones for 'r1-replica' and 'r1-replica-2'
+        rpl1_vars = {
+            'replicaset_alias': 'r1',
+            'roles': ['role-1', 'role-2'],
+            'failover_priority': ['r1-replica-2'],
+        }
+
+        r1_leader_vars = rpl1_vars.copy()
+        r1_replica_vars = {'zone': 'Hogwarts'}
+        r1_replica_vars.update(rpl1_vars)
+        r1_replica_2_vars = {'zone': 'Mordor'}
+        r1_replica_2_vars.update(rpl1_vars)
+
+        hostvars = {
+            'r1-leader': r1_leader_vars,
+            'r1-replica': r1_replica_vars,
+            'r1-replica-2': r1_replica_2_vars,
+        }
+
+        # edit topology
+        self.instance.clear_calls('edit_topology')
+        res = call_edit_topology(
+            self.console_sock,
+            hostvars
+        )
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertTrue(res.changed)
+
+        calls = self.instance.get_calls('edit_topology')
+        self.assertEqual(len(calls), 2)
+
+        # first call - join new instance and set r1-replica zone
+        self.assertEqual(calls[0], {
+            'replicasets': [{
+                'uuid': 'r1-uuid',
+                'join_servers': [{'uri': 'r1-replica-2-uri'}],
+            }],
+            'servers': [{
+                'uuid': 'r1-replica-uuid',
+                'zone': 'Hogwarts'
+            }]
+        })
+
+        # first call - set failover_priority and r1-replica-2 zone
+        self.assertEqual(calls[1], {
+            'replicasets': [{
+                'uuid': 'r1-uuid',
+                'failover_priority': ['r1-replica-2-uuid'],
+            }],
+            'servers': [{
+                'uuid': 'r1-replica-2-uuid',
+                'zone': 'Mordor'
+            }]
+        })
 
     def tearDown(self):
         self.instance.stop()
