@@ -22,6 +22,9 @@ to use the newest tag with new release
 - `cartridge_wait_buckets_discovery` parameter to wait for instance to discover buckets
 - `instance_discover_buckets_timeout` parameter to configure time in seconds
   to wait for instance to discover buckets
+- Ability to deploy TGZ packages
+- `cartridge_multiversion` flag that allows to use specific version of application
+  for each instance and perform rolling update correctly (using new `update_instance` step)
 - `rotate_dists` step that allows to rotate application distributions
 
 ### Changed
