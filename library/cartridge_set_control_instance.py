@@ -32,10 +32,10 @@ def get_control_instance(params):
         if 'payload' not in member or not member['payload']:
             return helpers.ModuleRes(failed=True, msg='Instance %s does not contain payload' % uri)
 
-        if member['payload'].get('alias') is None:
-            return helpers.ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
-
         if member['payload'].get('uuid') is not None:
+            if member['payload'].get('alias') is None:
+                return helpers.ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
+
             control_instance_name = member['payload']['alias']
             break
 

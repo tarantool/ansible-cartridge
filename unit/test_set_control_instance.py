@@ -61,19 +61,6 @@ def set_membership_members(instance, specified_members, with_payload=True):
 
     instance.set_variable('membership_members', members)
 
-    # instance.set_variable('membership_members', {
-    #     m['uri']: {
-    #         'uri': m['uri'],
-    #         'status': m.get('status', 'alive'),
-    #         'incarnation': 1,
-    #         'payload': {
-    #             'uuid': m.get('uuid'),
-    #             'alias': m.get('alias')
-    #         }
-    #     }
-    #     for m in members
-    # })
-
 
 class TestSetControlInstance(unittest.TestCase):
     def setUp(self):
