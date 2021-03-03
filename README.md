@@ -223,13 +223,13 @@ Instances configuration:
 * `restarted` (`boolean`): flag indicates if instance should be
   restarted or not (if this flag isn't specified, instance will be restarted if
   it's needed to apply configuration changes);
-* `expelled` (`boolean`, default: `false`): boolean f that indicates if instance must be expelled from topology;
+* `expelled` (`boolean`, default: `false`): boolean flag that indicates if instance must be expelled from topology;
 * `stateboard` (`boolean`, default: `false`): boolean flag that indicates
    that the instance is a [stateboard](#stateboard-instance);
-* `instance_start_timeout` (`number`, default: 60): time in seconds to wait for instance to be started;
+* `instance_start_timeout` (`number`, default: `60`): time in seconds to wait for instance to be started;
 * `cartridge_wait_buckets_discovery` (`boolean`, default: `true`): boolean
   flag that indicates if routers should wait for buckets discovery after vshard bootstrap;
-* `instance_discover_buckets_timeout` (`number`, default: 60): time in seconds
+* `instance_discover_buckets_timeout` (`number`, default: `60`): time in seconds
   to wait for instance to discover buckets;
 
 Replicasets configuration:
