@@ -2,7 +2,7 @@ import unittest
 
 import os
 
-from instance import Instance
+from unit.instance import Instance
 from library.cartridge_set_control_instance import get_control_instance
 
 

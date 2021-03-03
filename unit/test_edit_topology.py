@@ -1,7 +1,7 @@
 import unittest
 
-from helpers import add_replicaset
-from instance import Instance
+from unit.helpers import add_replicaset
+from unit.instance import Instance
 from library.cartridge_edit_topology import edit_topology
 
 

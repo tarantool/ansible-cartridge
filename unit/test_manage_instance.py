@@ -2,8 +2,8 @@ import unittest
 
 from parameterized import parameterized
 
-from helpers import set_box_cfg
-from instance import Instance
+from unit.helpers import set_box_cfg
+from unit.instance import Instance
 from library.cartridge_instance import manage_instance
 
 
