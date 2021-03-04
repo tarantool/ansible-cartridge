@@ -160,7 +160,7 @@ def check_needs_restart_to_update_config(params, control_console):
     return False, None
 
 
-def needs_restart(params):
+def set_needs_restart(params):
     instance_info = params['instance_info']
     console_sock = instance_info['console_sock']
 
@@ -182,21 +182,21 @@ def needs_restart(params):
         raise e
 
     if params['check_package_updated']:
-        res, err = check_needs_restart_to_update_package(params)
+        needs_restart, err = check_needs_restart_to_update_package(params)
         if err is not None:
             return helpers.ModuleRes(failed=True, msg=err)
-        if res:
+        if needs_restart:
             return helpers.ModuleRes(facts={'needs_restart': True})
 
     if params['check_config_updated']:
-        res, err = check_needs_restart_to_update_config(params, control_console)
+        needs_restart, err = check_needs_restart_to_update_config(params, control_console)
         if err is not None:
             return helpers.ModuleRes(failed=True, msg=err)
-        if res:
+        if needs_restart:
             return helpers.ModuleRes(facts={'needs_restart': True})
 
     return helpers.ModuleRes(changed=False, facts={'needs_restart': False})
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, needs_restart)
+    helpers.execute_module(argument_spec, set_needs_restart)

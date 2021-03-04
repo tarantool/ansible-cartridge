@@ -5,7 +5,7 @@ from parameterized import parameterized
 
 from unit.helpers import set_box_cfg
 from unit.instance import Instance
-from library.cartridge_set_needs_restart import needs_restart
+from library.cartridge_set_needs_restart import set_needs_restart
 
 
 def call_needs_restart(
@@ -46,7 +46,7 @@ def call_needs_restart(
         for key in keys_to_remove:
             del params[key]
 
-    return needs_restart(params)
+    return set_needs_restart(params)
 
 
 class TestSetNeedsRestart(unittest.TestCase):
@@ -143,7 +143,7 @@ class TestSetNeedsRestart(unittest.TestCase):
         self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
     def test_code_was_updated(self):
-        # code was updated yesterday, socket today - needs restart
+        # code was updated yesterday, socket today - restart isn't needed
         self.instance.set_path_m_time(self.instance.APP_CODE_PATH, self.instance.DATE_YESTERDAY)
         self.instance.set_path_m_time(self.console_sock, self.instance.DATE_TODAY)
 
