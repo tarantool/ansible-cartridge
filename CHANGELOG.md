@@ -23,6 +23,7 @@ to use the newest tag with new release
 - `instance_discover_buckets_timeout` parameter to configure time in seconds
   to wait for instance to discover buckets
 - `rotate_dists` step that allows to rotate application distributions
+- `cleanup` step to remove temporary files from specific list (#187)
 
 ### Changed
 
