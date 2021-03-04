@@ -142,7 +142,7 @@ def validate_types(vars):
         'weight': int,
         'vshard_group': str,
         'cartridge_enable_tarantool_repo': bool,
-        'cartridge_dists_retention_num': int,
+        'cartridge_keep_num_latest_dists': int,
         'config': {
             'advertise_uri': str,
             'memtx_memory': int,
@@ -507,14 +507,14 @@ def validate_config(params):
             return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Dist retention
-        if 'cartridge_dists_retention_num' in host_vars:
-            dists_retention_num = host_vars['cartridge_dists_retention_num']
-            if dists_retention_num <= 0:
-                errmsg = '"cartridge_dists_retention_num" should be greater than 0'
+        if 'cartridge_keep_num_latest_dists' in host_vars:
+            keep_num_latest_dists = host_vars['cartridge_keep_num_latest_dists']
+            if keep_num_latest_dists <= 0:
+                errmsg = '"cartridge_keep_num_latest_dists" should be greater than 0'
                 return helpers.ModuleRes(failed=True, msg=errmsg)
-            if dists_retention_num == 1:
+            if keep_num_latest_dists == 1:
                 warnings.append(
-                    'Using "cartridge_dists_retention_num" equals to 1 can be dangerous. '
+                    'Using "cartridge_keep_num_latest_dists" equals to 1 can be dangerous. '
                     'Make sure that there are no instances that use old versions'
                 )
 

@@ -455,7 +455,7 @@ Input facts (set by config):
 - `cartridge_app_name` - application name;
 - `cartridge_app_install_dir` - path to directory where application distributions
   are placed;
-- `cartridge_dists_retention_num` - number of dists that should be kept.
+- `cartridge_keep_num_latest_dists` - number of dists that should be kept.
 
 Output facts:
 

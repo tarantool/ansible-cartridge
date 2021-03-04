@@ -134,7 +134,7 @@ Let's rotate them:
     - import_role:
         name: tarantool.cartridge
       vars:
-        cartridge_dists_retention_num: 2
+        cartridge_keep_num_latest_dists: 2
         cartridge_scenario:
           - rotate_dists
 ```

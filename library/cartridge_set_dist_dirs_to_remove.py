@@ -12,7 +12,7 @@ else:
 argument_spec = {
     'app_name': {'required': False, 'type': 'str'},
     'app_install_dir': {'required': True, 'type': 'str'},
-    'dists_retention_num': {'required': True, 'type': 'int'},
+    'keep_num_latest_dists': {'required': True, 'type': 'int'},
 }
 
 
@@ -28,11 +28,11 @@ def is_dist(filename, app_install_dir, app_name):
 
 def get_dist_dirs_to_remove(params):
     app_name = params['app_name']
-    dists_retention_num = params['dists_retention_num']
+    keep_num_latest_dists = params['keep_num_latest_dists']
     app_install_dir = params['app_install_dir']
 
-    if dists_retention_num <= 0:
-        return helpers.ModuleRes(failed=True, msg='"dists_retention_num" should be > 0')
+    if keep_num_latest_dists <= 0:
+        return helpers.ModuleRes(failed=True, msg='"keep_num_latest_dists" should be > 0')
 
     dists = list(filter(
         lambda filename: is_dist(filename, app_install_dir, app_name),
@@ -47,7 +47,7 @@ def get_dist_dirs_to_remove(params):
 
     dists_dirs_to_remove = [
         os.path.join(app_install_dir, filename)
-        for filename in dists[dists_retention_num:]
+        for filename in dists[keep_num_latest_dists:]
     ]
 
     return helpers.ModuleRes(facts={

@@ -8,11 +8,11 @@ import time
 from library.cartridge_set_dist_dirs_to_remove import get_dist_dirs_to_remove
 
 
-def call_get_dist_dirs_to_remove(app_name, app_install_dir, dists_retention_num):
+def call_get_dist_dirs_to_remove(app_name, app_install_dir, keep_num_latest_dists):
     return get_dist_dirs_to_remove({
         'app_name': app_name,
         'app_install_dir': app_install_dir,
-        'dists_retention_num': dists_retention_num,
+        'keep_num_latest_dists': keep_num_latest_dists,
     })
 
 
@@ -82,11 +82,11 @@ class TestSetNeedsRestart(unittest.TestCase):
     def test_negative_or_zero_retention(self):
         res = call_get_dist_dirs_to_remove(APP_NAME, self.app_install_dir, 0)
         self.assertTrue(res.failed)
-        self.assertIn('"dists_retention_num" should be > 0', res.msg)
+        self.assertIn('"keep_num_latest_dists" should be > 0', res.msg)
 
         res = call_get_dist_dirs_to_remove(APP_NAME, self.app_install_dir, -3)
         self.assertTrue(res.failed)
-        self.assertIn('"dists_retention_num" should be > 0', res.msg)
+        self.assertIn('"keep_num_latest_dists" should be > 0', res.msg)
 
     def tearDown(self):
         shutil.rmtree(self.app_install_dir)

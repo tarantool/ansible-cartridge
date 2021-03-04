@@ -53,4 +53,4 @@ cartridge_tmpfiles_dir: /usr/lib/tmpfiles.d/
 
 cartridge_install_tarantool_for_tgz: true
 
-cartridge_dists_retention_num: 2
+cartridge_keep_num_latest_dists: 2
