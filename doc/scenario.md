@@ -445,8 +445,9 @@ Input facts (set by config):
 
 ### cleanup
 
-Remove temporary files from `temporary_files` list. By default, `temporary_files` is an empty list. The role, depending
-on the scenario, can add the following files to this list:
+Removes temporary files specified in `temporary_files` list.
+By default, `temporary_files` is an empty list. The role,
+depending on the scenario, can add the following files to this list:
 
 - path to delivered package (`delivered_package_path` variable value);
 - path to repository setup script.
