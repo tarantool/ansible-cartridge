@@ -45,7 +45,7 @@ $ ansible-galaxy install tarantool.cartridge,1.7.0
 
 Example cluster topology:
 
-![image](/examples/getting-started-app/images/example-topology.png)
+![image](/examples/getting-started-app/images/topology.png)
 
 To deploy an application and set up this topology:
 
