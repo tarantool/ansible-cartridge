@@ -44,6 +44,13 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover_params.etcd2_params.username',
                 'cartridge_failover_params.etcd2_params.password',
                 'cartridge_custom_steps_dir',
+                'cartridge_install_dir',
+                'cartridge_instances_dir',
+                'cartridge_conf_dir',
+                'cartridge_run_dir',
+                'cartridge_data_dir',
+                'cartridge_systemd_dir',
+                'cartridge_tmpfiles_dir',
             },
             bool: {
                 'cartridge_bootstrap_vshard',
@@ -55,6 +62,11 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_enable_tarantool_repo',
                 'cartridge_auth.enabled',
                 'cartridge_auth.users[0].deleted',
+                'cartridge_multiversion',
+                'cartridge_configure_systemd_unit_files',
+                'cartridge_configure_tmpfiles',
+                'cartridge_install_tarantool_for_tgz',
+                'cartridge_remove_temporary_files',
             },
             dict: {
                 'cartridge_defaults',
@@ -71,6 +83,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_auth.cookie_max_age',
                 'cartridge_auth.cookie_renew_age',
                 'cartridge_failover_params.etcd2_params.lock_delay',
+                'cartridge_keep_num_latest_dists',
             },
             list: {
                 'roles',

@@ -154,6 +154,7 @@ def validate_types(vars):
         'cartridge_tmpfiles_dir': str,
         'cartridge_install_tarantool_for_tgz': bool,
         'cartridge_keep_num_latest_dists': int,
+        'cartridge_remove_temporary_files': bool,
         'config': {
             'advertise_uri': str,
             'memtx_memory': int,
