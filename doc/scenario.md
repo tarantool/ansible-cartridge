@@ -200,12 +200,18 @@ Install the delivered package on physical machines.
 
 Input facts (set by role):
 
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions));
 - `single_instances_for_each_machine` - list of instances (Ansible hosts), one for each physical machine;
-- `delivered_package_path` - remote path to file of delivered package.
+- `delivered_package_path` - remote path to file of delivered package;
+- `needs_restart` - if instance should be restarted to apply code or configuration changes
+  (to determine if it's should be checked if instance should be restarted).
 
 Input facts (set by config):
 
-- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions));
+- `expelled` - indicates if instance must be expelled from topology
+  (to determine if it's should be checked if instance should be restarted);
+- `restarted` - if instance should be restarted or not (user forced decision)
+  (to determine if it's should be checked if instance should be restarted);
 - `cartridge_app_name` - application name;
 - `cartridge_enable_tarantool_repo` - indicates if Tarantool repository should be enabled;
 - `cartridge_install_tarantool_for_tgz` - indicates if Tarantool should be enabled when use TGZ package;
@@ -240,7 +246,8 @@ Output facts:
   - `instance_entrypoint` - path to Lua entrypoint file of instance;
   - `stateboard_entrypoint` - path to Lua entrypoint file of stateboard;
   - `instance_tarantool_binary` - path Tarantool binary file of instance;
-  - `stateboard_tarantool_binary` - path Tarantool binary file of stateboard.
+  - `stateboard_tarantool_binary` - path Tarantool binary file of stateboard;
+- `needs_restart` - if instance should be restarted to apply code or configuration changes.
 
 ### update_instance
 
@@ -249,14 +256,22 @@ Update instance links for a new version of package (if
 
 Input facts (set by role):
 
-- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions));
+- `needs_restart` - if instance should be restarted to apply code or configuration changes
+  (to determine if it's should be checked if instance should be restarted).
 
 Input facts (set by config):
 
+- `expelled` - indicates if instance must be expelled from topology;
+- `restarted` - if instance should be restarted or not (user forced decision);
 - `cartridge_multiversion` - indicates that
   [multiversion approach](/doc/multiversion.md) is enabled;
 - `cartridge_app_user` - user which will own the links;
 - `cartridge_app_group` - group which will own the links.
+
+Output facts:
+
+- `needs_restart` - if instance should be restarted to apply code or configuration changes.
 
 ### configure_instance
 
@@ -264,7 +279,9 @@ Configure instance in runtime and change instance config.
 
 Input facts (set by role):
 
-- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions));
+- `needs_restart` - if instance should be restarted to apply code or configuration changes
+  (to determine if it's should be checked if instance should be restarted).
 
 Input facts (set by config):
 
@@ -334,13 +351,13 @@ Find some instance that is already in cluster. If there is no such instance, use
 Input facts (set by role):
 
 - `not_expelled_instance` - information about one not expelled instance ([more details here](#role-facts-descriptions)).
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
 
 Input facts (set by config):
 
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
 - `replicaset_alias` - replicaset alias, will be displayed in Web UI;
-- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
 
 Output facts:
 
