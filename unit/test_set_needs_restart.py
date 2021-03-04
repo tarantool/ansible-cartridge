@@ -143,6 +143,16 @@ class TestSetNeedsRestart(unittest.TestCase):
         self.assertTrue('needs_restart' in res.facts and res.facts['needs_restart'] is True)
 
     def test_code_was_updated(self):
+        # code was updated yesterday, socket today - needs restart
+        self.instance.set_path_m_time(self.instance.APP_CODE_PATH, self.instance.DATE_YESTERDAY)
+        self.instance.set_path_m_time(self.console_sock, self.instance.DATE_TODAY)
+
+        res = call_needs_restart(console_sock=self.console_sock, check_package_updated=True)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertFalse(res.changed)
+        self.assertIsNotNone(res.facts)
+        self.assertTrue('needs_restart' not in res.facts or res.facts['needs_restart'] is False)
+
         # code was updated today, socket yesterday - needs restart
         self.instance.set_path_m_time(self.instance.APP_CODE_PATH, self.instance.DATE_TODAY)
         self.instance.set_path_m_time(self.console_sock, self.instance.DATE_YESTERDAY)

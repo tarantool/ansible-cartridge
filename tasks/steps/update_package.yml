@@ -16,4 +16,4 @@
         - not cartridge_multiversion
         - not expelled
         - restarted is none
-        - needs_restart is none
+        - not needs_restart

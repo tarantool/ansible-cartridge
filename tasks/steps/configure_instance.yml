@@ -21,7 +21,7 @@
         check_config_updated: true
       when:
         - restarted is none
-        - needs_restart is none
+        - not needs_restart
 
     - name: 'Place default config'
       copy:

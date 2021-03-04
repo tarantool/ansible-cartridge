@@ -202,12 +202,15 @@ Input facts (set by role):
 - `instance_info` - information for a current instance ([more details here](#role-facts-descriptions));
 - `single_instances_for_each_machine` - list of instances (Ansible hosts), one for each physical machine;
 - `delivered_package_path` - remote path to file of delivered package;
-- `needs_restart` - if instance should be restarted to apply code or configuration changes.
+- `needs_restart` - if instance should be restarted to apply code or configuration changes
+  (to determine if it's should be checked if instance should be restarted).
 
 Input facts (set by config):
 
-- `expelled` - indicates if instance must be expelled from topology;
-- `restarted` - if instance should be restarted or not (user forced decision);
+- `expelled` - indicates if instance must be expelled from topology
+  (to determine if it's should be checked if instance should be restarted);
+- `restarted` - if instance should be restarted or not (user forced decision)
+  (to determine if it's should be checked if instance should be restarted);
 - `cartridge_app_name` - application name;
 - `cartridge_enable_tarantool_repo` - indicates if Tarantool repository should be enabled;
 - `cartridge_install_tarantool_for_tgz` - indicates if Tarantool should be enabled when use TGZ package;
@@ -253,7 +256,8 @@ Update instance links for a new version of package (if
 Input facts (set by role):
 
 - `instance_info` - information for a current instance ([more details here](#role-facts-descriptions));
-- `needs_restart` - if instance should be restarted to apply code or configuration changes.
+- `needs_restart` - if instance should be restarted to apply code or configuration changes
+  (to determine if it's should be checked if instance should be restarted).
 
 Input facts (set by config):
 
@@ -275,7 +279,8 @@ Configure instance in runtime and change instance config.
 Input facts (set by role):
 
 - `instance_info` - information for a current instance ([more details here](#role-facts-descriptions));
-- `needs_restart` - if instance should be restarted to apply code or configuration changes.
+- `needs_restart` - if instance should be restarted to apply code or configuration changes
+  (to determine if it's should be checked if instance should be restarted).
 
 Input facts (set by config):
 
