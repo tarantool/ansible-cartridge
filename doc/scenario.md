@@ -456,3 +456,8 @@ Input facts (set by config):
 - `cartridge_app_install_dir` - path to directory where application distributions
   are placed;
 - `cartridge_dists_retention_num` - number of dists that should be kept.
+
+Output facts:
+
+- `dists_dirs_to_remove` - list of distribution directories paths that
+  were removed.

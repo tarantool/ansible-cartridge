@@ -3,16 +3,17 @@
 import os
 import pkgutil
 
+if pkgutil.find_loader('ansible.module_utils.helpers'):
+    import ansible.module_utils.helpers as helpers
+else:
+    import module_utils.helpers as helpers
+
+
 argument_spec = {
     'app_name': {'required': False, 'type': 'str'},
     'app_install_dir': {'required': True, 'type': 'str'},
     'dists_retention_num': {'required': True, 'type': 'int'},
 }
-
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
 
 
 def is_dist(filename, app_install_dir, app_name):

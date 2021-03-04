@@ -122,7 +122,7 @@ Sometimes we have a lot of distributions in `cartridge_app_install_dir`:
   myapp-2.0.0-0/
   myapp-3.0.0-0/
   myapp-4.0.0-0/
-  myapp-4.0.0-0/
+  myapp-5.0.0-0/
 ```
 
 Let's rotate them:
@@ -144,5 +144,5 @@ After running this playbook, there are only 2 last distributions:
 ```bash
 {{ cartridge_app_install_dir }}/
   myapp-4.0.0-0/
-  myapp-4.0.0-0/
+  myapp-5.0.0-0/
 ```

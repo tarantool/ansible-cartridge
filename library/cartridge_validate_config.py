@@ -512,9 +512,9 @@ def validate_config(params):
             if dists_retention_num <= 0:
                 errmsg = '"cartridge_dists_retention_num" should be greater than 0'
                 return helpers.ModuleRes(failed=True, msg=errmsg)
-            if dists_retention_num < 2:
+            if dists_retention_num == 1:
                 warnings.append(
-                    'Using "cartridge_dists_retention_num" < 2 can be dangerous. '
+                    'Using "cartridge_dists_retention_num" equals to 1 can be dangerous. '
                     'Make sure that there are no instances that use old versions'
                 )
 
