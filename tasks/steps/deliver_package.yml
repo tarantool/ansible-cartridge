@@ -15,3 +15,4 @@
     - name: 'Set delivered package path'
       set_fact:
         delivered_package_path: '{{ copied_package.dest }}'
+        temporary_files: "{{ temporary_files + [copied_package.dest] }}"

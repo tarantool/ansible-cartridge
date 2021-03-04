@@ -25,6 +25,7 @@ In `cartridge_scenario` you should specify names of steps. The default scenario 
 - [configure_app_config](#configure_app_config)
 - [bootstrap_vshard](#bootstrap_vshard)
 - [configure_failover](#configure_failover)
+- [cleanup](#cleanup)
 
 There are additional steps that are not included in the default scenario, but can be used in a custom one:
 
@@ -441,6 +442,32 @@ Input facts (set by config):
 
 - [DEPRECATED] `cartridge_failover` - indicates if eventual failover should be enabled or disabled;
 - `cartridge_failover_params` - failover parameters.
+
+### cleanup
+
+Removes temporary files specified in `temporary_files` list.
+By default, `temporary_files` is an empty list. The role,
+depending on the scenario, can add the following files to this list:
+
+- path to delivered package (`delivered_package_path` variable value);
+- path to repository setup script.
+
+In addition, you can add any files to this list by specifying `temporary_files` in configuration or in any custom step.
+For example, you can make a step like this:
+
+```yaml
+- name: 'Add my temporary file'
+  set_fact:
+    temporary_files: "{{ temporary_files + ['/tmp/my_file'] }}"
+```
+
+Input facts (set by role):
+
+- `temporary_files` - list of temporary files to remove.
+
+Input facts (set by config):
+
+- `cartridge_remove_temporary_files` - indicates if temporary files should be removed.
 
 ### rotate_dists
 
