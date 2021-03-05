@@ -45,6 +45,10 @@ to use the newest tag with new release
 - Role divided into many steps (#141). It's possible to combine them using a scenario
   in the config by `cartridge_scenario`. It is also possible to use custom steps in a scenario.
   Custom steps can be defined by `cartridge_custom_steps_dir` and `cartridge_custom_steps`.
+- Now step `connect_to_membership` is executed only on one not expelled instance.
+  Before the patch, the difficulty of performing `connect_to_membership` step was `N^2`.
+  For 100 instances, the step took about 900 seconds. Now the complexity has decreased to N,
+  so for 100 instances the execution time is about 5 seconds.
 
 ## [1.7.0] - 2020-11-24
 

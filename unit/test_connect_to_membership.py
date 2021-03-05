@@ -1,14 +1,14 @@
 import unittest
 
 from unit.instance import Instance
-from library.cartridge_probe_instance import probe_server
+from library.cartridge_connect_to_membership import connect_to_membership
 
 
 def call_probe_instance(console_sock, hostvars, play_hosts=None):
     if play_hosts is None:
         play_hosts = hostvars.keys()
 
-    return probe_server({
+    return connect_to_membership({
         'console_sock': console_sock,
         'hostvars': hostvars,
         'play_hosts': play_hosts,
