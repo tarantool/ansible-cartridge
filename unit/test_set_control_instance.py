@@ -64,10 +64,10 @@ def set_membership_members(instance, specified_members, with_payload=True):
 
 class TestSetControlInstance(unittest.TestCase):
     def setUp(self):
-        self.cookie = 'secret'
-        self.console_sock = './tmp/x.sock'
+        self.instance = Instance()
+        self.console_sock = self.instance.console_sock
+        self.cookie = self.instance.cluster_cookie
 
-        self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
     def test_instance_without_payload(self):

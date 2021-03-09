@@ -2,7 +2,6 @@ import unittest
 
 from parameterized import parameterized
 
-from unit.helpers import set_box_cfg
 from unit.instance import Instance
 from library.cartridge_instance import manage_instance
 
@@ -17,10 +16,10 @@ def call_manage_instance(console_sock, config=None, cartridge_defaults=None):
 
 class TestManageInstance(unittest.TestCase):
     def setUp(self):
-        self.cookie = 'secret'
-        self.console_sock = './tmp/x.sock'
+        self.instance = Instance()
+        self.console_sock = self.instance.console_sock
+        self.cookie = self.instance.cluster_cookie
 
-        self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
     def test_instance_not_started(self):
@@ -51,7 +50,7 @@ class TestManageInstance(unittest.TestCase):
 
         # memtx_memory is nil
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, memtx_memory=None)
+        self.instance.set_box_cfg(memtx_memory=None)
 
         res = call_manage_instance(
             console_sock=self.console_sock
@@ -69,7 +68,7 @@ class TestManageInstance(unittest.TestCase):
 
         # changed only in instance config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: old_value})
+        self.instance.set_box_cfg(**{param_name: old_value})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -85,7 +84,7 @@ class TestManageInstance(unittest.TestCase):
 
         # changed only in app config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: old_value})
+        self.instance.set_box_cfg(**{param_name: old_value})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -101,7 +100,7 @@ class TestManageInstance(unittest.TestCase):
 
         # changed in both app and instance config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: old_value})
+        self.instance.set_box_cfg(**{param_name: old_value})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -127,7 +126,7 @@ class TestManageInstance(unittest.TestCase):
         SMALL_MEMORY = 512
 
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: BIG_MEMORY})
+        self.instance.set_box_cfg(**{param_name: BIG_MEMORY})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -151,7 +150,7 @@ class TestManageInstance(unittest.TestCase):
 
         # increased only in instance config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: SMALL_MEMORY})
+        self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -168,7 +167,7 @@ class TestManageInstance(unittest.TestCase):
 
         # increased only in app config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: SMALL_MEMORY})
+        self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -185,7 +184,7 @@ class TestManageInstance(unittest.TestCase):
 
         # increased in both app and instance config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: SMALL_MEMORY})
+        self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -216,7 +215,7 @@ class TestManageInstance(unittest.TestCase):
 
         # increased only in instance config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: SMALL_MEMORY})
+        self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -233,7 +232,7 @@ class TestManageInstance(unittest.TestCase):
 
         # increased only in app config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: SMALL_MEMORY})
+        self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -250,7 +249,7 @@ class TestManageInstance(unittest.TestCase):
 
         # increased in both app and instance config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: SMALL_MEMORY})
+        self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -296,7 +295,7 @@ class TestManageInstance(unittest.TestCase):
     def test_dynamic_params(self, _, param_name, old_value, new_instance_value, new_app_value):
         # changed only in instance config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: old_value})
+        self.instance.set_box_cfg(**{param_name: old_value})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -313,7 +312,7 @@ class TestManageInstance(unittest.TestCase):
 
         # changed only in app config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: old_value})
+        self.instance.set_box_cfg(**{param_name: old_value})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -330,7 +329,7 @@ class TestManageInstance(unittest.TestCase):
 
         # changed in both app and instance config
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: old_value})
+        self.instance.set_box_cfg(**{param_name: old_value})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -350,7 +349,7 @@ class TestManageInstance(unittest.TestCase):
 
         # specified in instance config, isn't changed
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: old_value})
+        self.instance.set_box_cfg(**{param_name: old_value})
 
         res = call_manage_instance(
             console_sock=self.console_sock,
@@ -367,7 +366,7 @@ class TestManageInstance(unittest.TestCase):
 
         # specified in app config, isn't changed
         self.instance.clear_calls('box_cfg')
-        set_box_cfg(self.instance, **{param_name: old_value})
+        self.instance.set_box_cfg(**{param_name: old_value})
 
         res = call_manage_instance(
             console_sock=self.console_sock,

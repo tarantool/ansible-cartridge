@@ -2,9 +2,17 @@
 require('strict').on()
 
 local fio = require('fio')
+local app_dir = fio.abspath(fio.dirname(arg[0]))
 
-local script_dir = fio.abspath(fio.dirname(arg[0]))
-package.path = package.path .. ';' .. script_dir .. '/?.lua'
+print('App dir set to ' .. app_dir)
+package.path = app_dir .. '/.rocks/share/tarantool/?.lua;' .. package.path
+package.path = app_dir .. '/.rocks/share/tarantool/?/init.lua;' .. package.path
+package.path = app_dir .. '/?/init.lua;' .. package.path
+package.path = app_dir .. '/?.lua;' .. package.path
+package.cpath = app_dir .. '/.rocks/lib/tarantool/?.so;' .. package.cpath
+package.cpath = app_dir .. '/.rocks/lib/tarantool/?.dylib;' .. package.cpath
+package.cpath = app_dir .. '/?.so;' .. package.cpath
+package.cpath = app_dir .. '/?.dylib;' .. package.cpath
 
 require('fio-patch')
 

@@ -29,10 +29,10 @@ def set_vshard_router_unknown_buckets(instance, groups_unknown_buckets):
 
 class TestInstanceStarted(unittest.TestCase):
     def setUp(self):
-        self.cookie = 'secret'
-        self.console_sock = './tmp/x.sock'
+        self.instance = Instance()
+        self.console_sock = self.instance.console_sock
+        self.cookie = self.instance.cluster_cookie
 
-        self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
     def template_test_instance_not_started(self, stateboard):
@@ -64,7 +64,7 @@ class TestInstanceStarted(unittest.TestCase):
     def test_stateboard_not_listen(self):
         # box.cfg.listen == nil
 
-        self.instance.set_box_cfg({})
+        self.instance.set_box_cfg()
         res = call_check_instance_state(self.console_sock, stateboard=True)
         self.assertTrue(res.failed)
         self.assertIn("Stateboard is not running: box hasn't been configured", res.msg)
@@ -72,7 +72,7 @@ class TestInstanceStarted(unittest.TestCase):
     def test_stateboard_started(self):
         # box.cfg.listen ~= nil
 
-        self.instance.set_box_cfg({'listen': 3333})
+        self.instance.set_box_cfg(listen=3333)
         res = call_check_instance_state(self.console_sock, stateboard=True)
         self.assertFalse(res.failed)
 

@@ -284,7 +284,7 @@ def get_edit_servers_params(instances_to_expel, cluster_instances):
             'expelled': True,
         }
         for instance_name in instances_to_expel
-        if instance_name in cluster_instances and cluster_instances[instance_name].get('uuid') is not None
+        if instance_name in cluster_instances and cluster_instances[instance_name].get('uuid')
     ]
 
     return edit_servers_params

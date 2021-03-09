@@ -3,7 +3,6 @@ import unittest
 
 from parameterized import parameterized
 
-from unit.helpers import set_box_cfg
 from unit.instance import Instance
 from library.cartridge_set_needs_restart import set_needs_restart
 
@@ -51,10 +50,10 @@ def call_needs_restart(
 
 class TestSetNeedsRestart(unittest.TestCase):
     def setUp(self):
-        self.cookie = 'secret'
-        self.console_sock = './tmp/x.sock'
+        self.instance = Instance()
+        self.console_sock = self.instance.console_sock
+        self.cookie = self.instance.cluster_cookie
 
-        self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
     def test_optional_fields(self):
@@ -188,7 +187,7 @@ class TestSetNeedsRestart(unittest.TestCase):
             param_name: param_current_value,
             memory_param_name: current_memory_size
         })
-        set_box_cfg(self.instance, **{memory_param_name: current_memory_size})
+        self.instance.set_box_cfg(**{memory_param_name: current_memory_size})
 
         # nothing changed
         res = call_needs_restart(
@@ -223,7 +222,7 @@ class TestSetNeedsRestart(unittest.TestCase):
         # param isn't changed
         # memory size is changed in config
         # but isn't changed on instance
-        set_box_cfg(self.instance, **{memory_param_name: current_memory_size})
+        self.instance.set_box_cfg(**{memory_param_name: current_memory_size})
         res = call_needs_restart(
             console_sock=self.console_sock,
             config={
@@ -241,7 +240,7 @@ class TestSetNeedsRestart(unittest.TestCase):
         # param isn't changed
         # memory size is changed in config
         # and changed on instance
-        set_box_cfg(self.instance, **{memory_param_name: memtx_memory_new_value})
+        self.instance.set_box_cfg(**{memory_param_name: memtx_memory_new_value})
         res = call_needs_restart(
             console_sock=self.console_sock,
             config={
@@ -259,7 +258,7 @@ class TestSetNeedsRestart(unittest.TestCase):
         # param is changed
         # memory size is changed in config
         # and changed on instance
-        set_box_cfg(self.instance, **{memory_param_name: memtx_memory_new_value})
+        self.instance.set_box_cfg(**{memory_param_name: memtx_memory_new_value})
         res = call_needs_restart(
             console_sock=self.console_sock,
             config={
@@ -294,7 +293,7 @@ class TestSetNeedsRestart(unittest.TestCase):
             param_name: param_current_value,
             memory_param_name: current_memory_size
         })
-        set_box_cfg(self.instance, **{memory_param_name: current_memory_size})
+        self.instance.set_box_cfg(**{memory_param_name: current_memory_size})
 
         # nothing changed
         res = call_needs_restart(
@@ -334,7 +333,7 @@ class TestSetNeedsRestart(unittest.TestCase):
         # param isn't changed
         # memory size is changed in config
         # but isn't changed on instance
-        set_box_cfg(self.instance, **{memory_param_name: current_memory_size})
+        self.instance.set_box_cfg(**{memory_param_name: current_memory_size})
         res = call_needs_restart(
             console_sock=self.console_sock,
             cartridge_defaults={
@@ -357,7 +356,7 @@ class TestSetNeedsRestart(unittest.TestCase):
         # param isn't changed
         # memory size is changed in config
         # and changed on instance
-        set_box_cfg(self.instance, **{memory_param_name: memtx_memory_new_value})
+        self.instance.set_box_cfg(**{memory_param_name: memtx_memory_new_value})
         res = call_needs_restart(
             console_sock=self.console_sock,
             cartridge_defaults={
@@ -375,7 +374,7 @@ class TestSetNeedsRestart(unittest.TestCase):
         # param is changed
         # memory size is changed in config
         # and changed on instance
-        set_box_cfg(self.instance, **{memory_param_name: memtx_memory_new_value})
+        self.instance.set_box_cfg(**{memory_param_name: memtx_memory_new_value})
         res = call_needs_restart(
             console_sock=self.console_sock,
             cartridge_defaults={
@@ -410,7 +409,7 @@ class TestSetNeedsRestart(unittest.TestCase):
         self.instance.set_instance_config({
             memory_param_name: current_memory_size
         })
-        set_box_cfg(self.instance, **{memory_param_name: current_memory_size})
+        self.instance.set_box_cfg(**{memory_param_name: current_memory_size})
 
         # nothing changed
         res = call_needs_restart(
@@ -462,7 +461,7 @@ class TestSetNeedsRestart(unittest.TestCase):
 
         # memory size changed both in cartridge_defaults and config
         # memory size on instance is equal to value from cartridge_defaults
-        set_box_cfg(self.instance, **{memory_param_name: new_memory_size_app})
+        self.instance.set_box_cfg(**{memory_param_name: new_memory_size_app})
         res = call_needs_restart(
             console_sock=self.console_sock,
             config={
@@ -480,7 +479,7 @@ class TestSetNeedsRestart(unittest.TestCase):
 
         # memory size changed both in cartridge_defaults and config
         # memory size on instance is equal to value from config
-        set_box_cfg(self.instance, **{memory_param_name: new_memory_size_instance})
+        self.instance.set_box_cfg(**{memory_param_name: new_memory_size_instance})
         res = call_needs_restart(
             console_sock=self.console_sock,
             config={

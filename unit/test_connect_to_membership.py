@@ -27,10 +27,10 @@ URI2 = '127.0.0.1:3302'
 
 class TestProbeInstance(unittest.TestCase):
     def setUp(self):
-        self.cookie = 'secret'
-        self.console_sock = './tmp/x.sock'
+        self.instance = Instance()
+        self.console_sock = self.instance.console_sock
+        self.cookie = self.instance.cluster_cookie
 
-        self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
     def test_probe_ok(self):
