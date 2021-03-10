@@ -21,6 +21,10 @@ jobs:
     steps:
       - uses: actions/checkout@v2
 
+      # This server starts and listen on 8084 port that is used for tests
+      - name: Stop Mono server
+        run: sudo kill -9 $(sudo lsof -t -i tcp:8084) || true
+
       - name: Setup python
         uses: actions/setup-python@v2
         with:
@@ -72,6 +76,10 @@ jobs:
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
+
+      # This server starts and listen on 8084 port that is used for tests
+      - name: Stop Mono server
+        run: sudo kill -9 $(sudo lsof -t -i tcp:8084) || true
 
       - name: Setup python
         uses: actions/setup-python@v2
