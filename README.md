@@ -3,8 +3,10 @@
 An Ansible role to easily deploy
 [Tarantool Cartridge](https://github.com/tarantool/cartridge) applications.
 
-This role can deploy and configure applications packed in RPM using
+This role can deploy and configure applications packed in RPM, DEB and TGZ using
 [`Cartridge CLI`](https://github.com/tarantool/cartridge-cli).
+
+Only `RedHat` and `Debian` OS families are supported.
 
 See the [getting started guide](/examples/getting-started-app/README.md)
 to learn how to set up topology using this role.
@@ -58,6 +60,7 @@ To deploy an application and set up this topology:
   become: true
   become_user: root
   any_errors_fatal: true
+  gather_facts: false
   tasks:
   - name: Import Tarantool Cartridge role
     import_role:

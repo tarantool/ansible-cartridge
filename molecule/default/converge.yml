@@ -5,3 +5,4 @@
     - role: ansible-cartridge
   become: true
   become_user: root
+  gather_facts: false
