@@ -40,8 +40,7 @@ jobs:
           key: ce-${{ matrix.tarantool-version }}-${{ hashFiles('./deps.sh') }}
 
       - name: Install unit tests requirements
-        run: |
-          ./deps.sh
+        run: ./deps.sh
 
       - name: Run linter
         run: |

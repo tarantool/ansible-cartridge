@@ -540,10 +540,11 @@ function cartridge.internal.add_replicaset(rpl)
 end
 
 function cartridge.internal.bootstrap_cluster()
-    return cartridge.internal.add_replicaset({
+    local _, err = cartridge.internal.add_replicaset({
         alias='r1',
         instances = {'instance-1'},
     })
+    assert(err == nil, tostring(err))
 end
 
 function cartridge.internal.set_auth(auth_cfg)
@@ -551,7 +552,8 @@ function cartridge.internal.set_auth(auth_cfg)
         auth = auth_cfg,
     }
 
-    return cartridge_twophase.patch_clusterwide(patch)
+    local _, err = cartridge_twophase.patch_clusterwide(patch)
+    assert(err == nil, tostring(err))
 end
 
 function cartridge.internal.set_users(users)

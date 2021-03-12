@@ -2,13 +2,14 @@ import json
 import os
 import re
 import socket
+import textwrap
 from subprocess import Popen
 
 import tenacity
 
 from unit.os_mock import OsPathExistsMock, OsPathGetMTimeMock
 
-instance_path = os.path.realpath(
+instance_app_dir = os.path.realpath(
     os.path.join(
         os.path.dirname(__file__), 'mock'
     )
@@ -30,7 +31,7 @@ class Instance:
     DATE_TOMORROW = 1
 
     def __init__(self):
-        self.console_sock = os.path.join(os.getcwd(), 'x.sock')
+        self.console_sock = os.path.join(os.getcwd(), 'instance.sock')
         self.cluster_cookie = 'secret'
 
         self.script = "init.lua"
@@ -61,7 +62,7 @@ class Instance:
 
     def start(self):
         command = ["./%s" % self.script]
-        cwd = instance_path
+        cwd = instance_app_dir
 
         env = os.environ.copy()
         env['TARANTOOL_CONSOLE_SOCK'] = self.console_sock
@@ -96,9 +97,10 @@ class Instance:
                 chunk = self.sock.recv(1024).decode()
                 # It is correct because of cmd structure: it always returns a value
                 if chunk == '':
-                    errmsg = 'Error: broken pipe. ' + \
-                             'Probably, the instance was not bootstrapped yet to perform this operation'
-                    raise Exception(errmsg)
+                    raise Exception(
+                        'Error: broken pipe. '
+                        'Probably, the instance was not bootstrapped yet to perform this operation'
+                    )
                 data = data + chunk
                 if data.endswith('\n...\n'):
                     break
@@ -108,19 +110,19 @@ class Instance:
             args = []
         args_encoded = json.dumps(args)
 
-        cmd_fmt = '''
-local function func(...)
-    {func_body}
-end
-local args = require('json').decode('{args_encoded}')
-local ret = {{
-    load(
-        'local func, args = ... return func(unpack(args))',
-        '@eval'
-    )(func, args)
-}}
-return string.hex(require('json').encode(ret))
-'''
+        cmd_fmt = textwrap.dedent('''
+            local function func(...)
+                {func_body}
+            end
+            local args = require('json').decode('{args_encoded}')
+            local ret = {{
+                load(
+                    'local func, args = ... return func(unpack(args))',
+                    '@eval'
+                )(func, args)
+            }}
+            return string.hex(require('json').encode(ret))
+        ''')
 
         cmd = cmd_fmt.format(func_body=func_body, args_encoded=args_encoded)
 
@@ -141,8 +143,7 @@ return string.hex(require('json').encode(ret))
 
         output = bytearray.fromhex(hex_output).decode('utf-8')
 
-        data = json.loads(output)
-        return data
+        return json.loads(output)
 
     def eval_res_err(self, func_body, *args):
         data = self.eval(func_body, *args)
@@ -281,10 +282,9 @@ return string.hex(require('json').encode(ret))
         ''', kwargs)
 
     def bootstrap_cluster(self):
-        res, err = self.eval_res_err('''
+        self.eval_res_err('''
             require('cartridge').internal.bootstrap_cluster()
         ''')
-        assert err is None, err
 
     def set_auth(self, auth_cfg):
         self.eval_res_err('''
