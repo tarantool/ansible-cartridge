@@ -645,6 +645,10 @@ function membership.members()
     return vars.membership_members
 end
 
+function membership.get_member(uri)
+    return vars.membership_members[uri]
+end
+
 -- * ---------------------- Vshard router --------------------------
 
 local function vshard_router_info(self)
