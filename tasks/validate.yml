@@ -11,4 +11,6 @@
 - name: 'Validate OS Family'
   fail:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
-  when: ansible_os_family not in ["RedHat", "Debian"]
+  when:
+    - ansible_os_family is defined
+    - ansible_os_family not in ["RedHat", "Debian"]

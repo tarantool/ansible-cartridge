@@ -1,13 +1,5 @@
 ---
 
-- name: 'Forced gathering facts'
-  setup:
-  when: module_setup is not defined
-  tags:
-    - cartridge-instances
-    - cartridge-replicasets
-    - cartridge-config
-
 - import_tasks: 'validate.yml'
   tags:
     - cartridge-instances
