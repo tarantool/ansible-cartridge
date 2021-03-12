@@ -1,6 +1,5 @@
 import unittest
 
-from unit.helpers import add_replicaset
 from unit.instance import Instance
 from library.cartridge_edit_topology import edit_topology
 
@@ -20,14 +19,18 @@ class TestEditTopology(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 
-        self.cookie = 'secret'
-        self.console_sock = './tmp/x.sock'
+        self.instance = Instance()
+        self.console_sock = self.instance.console_sock
+        self.cookie = self.instance.cluster_cookie
 
-        self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
     def test_edit_topology_fails(self):
-        add_replicaset(self.instance, 'r1', ['role-1'], ['r1-leader', 'r1-replica'])
+        self.instance.add_replicaset(
+            alias='r1',
+            instances=['r1-leader', 'r1-replica'],
+            roles=['role-1'],
+        )
 
         # first call fails
         # change roles
@@ -113,11 +116,13 @@ class TestEditTopology(unittest.TestCase):
             'r2-replica': rpl2_vars,
         }
 
-        # add unjoined instances
-        self.instance.add_unjoined_server(alias='r1-leader', uri='r1-leader-uri')
-        self.instance.add_unjoined_server(alias='r1-replica', uri='r1-replica-uri')
-        self.instance.add_unjoined_server(alias='r1-replica-2', uri='r1-replica-2-uri')
-        self.instance.add_unjoined_server(alias='r2-leader', uri='r2-leader-uri')
+        self.instance.add_membership_members([
+            {'alias': 'r1-leader', 'uri': 'r1-leader-uri'},
+            {'alias': 'r1-replica', 'uri': 'r1-replica-uri'},
+            {'alias': 'r1-replica-2', 'uri': 'r1-replica-2-uri'},
+            {'alias': 'r2-leader', 'uri': 'r2-leader-uri'},
+        ])
+
         # now we don't don't add r2-replica
 
         # create replicasets with instances not known by cluster (r2-replica)
@@ -131,7 +136,9 @@ class TestEditTopology(unittest.TestCase):
         self.assertEqual(len(self.instance.get_calls('edit_topology')), 0)
 
         # add r2-replica
-        self.instance.add_unjoined_server(alias='r2-replica', uri='r2-replica-uri')
+        self.instance.add_membership_members([
+            {'alias': 'r2-replica', 'uri': 'r2-replica-uri'},
+        ])
 
         # create replicasets
         self.instance.clear_calls('edit_topology')
@@ -181,18 +188,17 @@ class TestEditTopology(unittest.TestCase):
     def test_change_replicasets(self):
         rpl1_vars = {
             'replicaset_alias': 'r1',
-            'roles': ['role-1', 'role-2'],
+            'roles': ['vshard-storage', 'role-2'],
             'failover_priority': ['r1-leader', 'r1-replica'],
             'all_rw': True,
             'weight': 1,
             'vshard_group': 'group-1'
         }
 
-        add_replicaset(
-            instance=self.instance,
+        self.instance.add_replicaset(
             alias=rpl1_vars['replicaset_alias'],
+            instances=['r1-leader', 'r1-replica', 'r1-replica-2'],
             roles=rpl1_vars['roles'],
-            servers=['r1-leader', 'r1-replica', 'r1-replica-2'],
             all_rw=rpl1_vars['all_rw'],
             weight=rpl1_vars['weight'],
             vshard_group=rpl1_vars['vshard_group']
@@ -200,12 +206,13 @@ class TestEditTopology(unittest.TestCase):
 
         rpl2_vars = {
             'replicaset_alias': 'r2',
-            'roles': ['role-2'],
+            'roles': ['vshard-storage'],
         }
 
-        add_replicaset(
-            self.instance, rpl2_vars['replicaset_alias'], rpl2_vars['roles'],
-            ['r2-leader'],
+        self.instance.add_replicaset(
+            alias=rpl2_vars['replicaset_alias'],
+            instances=['r2-leader'],
+            roles=rpl2_vars['roles'],
         )
 
         hostvars = {
@@ -217,7 +224,9 @@ class TestEditTopology(unittest.TestCase):
         }
 
         # add unjoined r2-replica
-        self.instance.add_unjoined_server(alias='r2-replica', uri='r2-replica-uri')
+        self.instance.add_membership_members([
+            {'alias': 'r2-replica', 'uri': 'r2-replica-uri'},
+        ])
 
         # call with the same configuration
         self.instance.clear_calls('edit_topology')
@@ -337,14 +346,17 @@ class TestEditTopology(unittest.TestCase):
         self.assertEqual(replicasets_opts, exp_replicasets_opts)
 
     def test_change_failover_priority(self):
-        add_replicaset(
-            self.instance, 'r1', ['role-1', 'role-2'],
-            ['r1-leader', 'r1-replica'],
+        self.instance.add_replicaset(
+            alias='r1',
+            instances=['r1-leader', 'r1-replica'],
+            roles=['role-1', 'role-2'],
         )
 
         # add unjoined replicas
-        self.instance.add_unjoined_server(alias='r1-replica-2', uri='r1-replica-2-uri')
-        self.instance.add_unjoined_server(alias='r1-replica-3', uri='r1-replica-3-uri')
+        self.instance.add_membership_members([
+            {'alias': 'r1-replica-2', 'uri': 'r1-replica-2-uri'},
+            {'alias': 'r1-replica-3', 'uri': 'r1-replica-3-uri'},
+        ])
 
         # change failover priority, don't join any instances
         rpl1_vars = {
@@ -520,11 +532,13 @@ class TestEditTopology(unittest.TestCase):
         hostvars['r2-replica']['expelled'] = True
 
         # add unjoined instances
-        self.instance.add_unjoined_server(alias='r1-leader', uri='r1-leader-uri')
-        self.instance.add_unjoined_server(alias='r1-replica', uri='r1-replica-uri')
-        self.instance.add_unjoined_server(alias='r1-replica-2', uri='r1-replica-2-uri')
-        self.instance.add_unjoined_server(alias='r2-leader', uri='r2-leader-uri')
-        self.instance.add_unjoined_server(alias='r2-replica', uri='r2-replica-uri')
+        self.instance.add_membership_members([
+            {'alias': 'r1-leader', 'uri': 'r1-leader-uri'},
+            {'alias': 'r1-replica', 'uri': 'r1-replica-uri'},
+            {'alias': 'r1-replica-2', 'uri': 'r1-replica-2-uri'},
+            {'alias': 'r2-leader', 'uri': 'r2-leader-uri'},
+            {'alias': 'r2-replica', 'uri': 'r2-replica-uri'},
+        ])
 
         # edit topology
         self.instance.clear_calls('edit_topology')
@@ -569,14 +583,16 @@ class TestEditTopology(unittest.TestCase):
         self.assertEqual(replicasets_opts, exp_replicasets_opts)
 
     def test_expel_joined_instances(self):
-        add_replicaset(
-            self.instance, 'r1', ['role-1', 'role-2'],
-            ['r1-leader', 'r1-replica', 'r1-replica-2'],
+        self.instance.add_replicaset(
+            alias='r1',
+            instances=['r1-leader', 'r1-replica', 'r1-replica-2'],
+            roles=['role-1', 'role-2'],
         )
 
-        add_replicaset(
-            self.instance, 'r2', ['role-2'],
-            ['r2-leader', 'r2-replica'],
+        self.instance.add_replicaset(
+            alias='r2',
+            instances=['r2-leader', 'r2-replica'],
+            roles=['role-2'],
         )
 
         rpl1_vars = {

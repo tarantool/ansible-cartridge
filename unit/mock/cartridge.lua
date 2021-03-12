@@ -1,13 +1,14 @@
 local console = require('console')
+local checks = require('checks')
 
 local cartridge = {}
 cartridge.internal = {}
 
+local cartridge_roles = {}
+package.loaded['cartridge.roles'] = cartridge_roles
+
 local cartridge_vshard_utils = {}
 package.loaded['cartridge.vshard-utils'] = cartridge_vshard_utils
-
-local cartridge_auth = {}
-package.loaded['cartridge.auth'] = cartridge_auth
 
 local cartridge_webui_auth = {}
 package.loaded['cartridge.webui.api-auth'] = cartridge_webui_auth
@@ -16,108 +17,222 @@ local cartridge_admin = {}
 package.loaded['cartridge.admin'] = cartridge_admin
 
 local membership = {}
-membership.internal = {}
 package.loaded['membership'] = membership
 
-local cartridge_confapplier = {}
-package.loaded['cartridge.confapplier'] = cartridge_confapplier
+local confapplier = {}
+package.loaded['cartridge.confapplier'] = confapplier
 
 local cartridge_roles_vshard_router = {}
 package.loaded['cartridge.roles.vshard-router'] = cartridge_roles_vshard_router
 
+local cartridge_twophase = {}
+package.loaded['cartridge.twophase'] = cartridge_twophase
 
-local CARTRIDGE_ERR = 'cartridge err'
+local cartridge_auth_lib = require('cartridge.auth')
+local cartridge_auth = {}
+package.loaded['cartridge.auth'] = cartridge_auth
 
-local fail_on = {
-    increase_memory_size = false,
-    edit_topology = false,
-    bootstrap_vshard = false,
-    config_patch_clusterwide = false,
-    manage_failover = false,
-    failover_set_params = false,
-    auth_set_params = false,
-    auth_add_user = false,
-    auth_edit_user = false,
-    auth_remove_user = false,
-}
-
-local calls = {
-    edit_topology = {},
-    bootstrap_vshard = {},
-    config_patch_clusterwide = {},
-    manage_failover = {},
-    failover_set_params = {},
-    auth_set_params = {},
-    auth_add_user = {},
-    auth_edit_user = {},
-    auth_remove_user = {},
-    admin_probe_server = {},
-    box_cfg = {},
-    membership_myself = {},
-}
+local errors = require('errors')
+local CARTRIDGE_ERR = errors.new('CartridgeError', 'cartridge err')
 
 local vars = {
-    config = {},
-    failover = false,
-    failover_params = {},
     can_bootstrap_vshard = true,
     vshard_groups = {},
-    auth_params = {},
     webui_auth_params = {},
     users = {},
     membership_myself = {},
     membership_members = {},
     known_servers = {},
-    become_unhealthy_after_edit = false,
     user_has_version = true,
     cartridge_confapplier_state = '',
     unknown_buckets = {},
+    roles_map = {},
+
+    -- see below
+    -- clusterwide_config = clusterwide_config.new(),
 }
 
-local topology = {
-    replicasets = {
-        --[[
-            ['r1-uuid'] = {
-                uuid = 'r1-uuid',
-                alias = 'r1',
-                status = 'healthy',
-                roles = {'role-1', 'role-2'},
-                all_rw = true,
-                weight = 100,
-                servers = {{alias = 'r1-master', priority = 1}},
-            }
-        --]]
-    },
-    servers = {
-        --[[
-            ['r1-master-uuid'] = {
-                uuid = 'r1-master-uuid',
-                uri = 'r1-master-uri',
-                alias = 'r1-master',
-                status = 'healthy',
-                replicaset = {uuid = 'r1-uuid', alias = 'r1', roles = {'role-1', 'role-2'}}
-            }
-        --]]
-    },
-}
+local fail_on = {}
+local calls = {}
 
-local unjoined_servers = {
-    --[[
-    {
-        uuid = 'r1-master-uuid',
-        uri = 'r1-master-uri',
-        alias = 'r1-master',
-        status = 'healthy',
-        replicaset = {uuid = 'r1-uuid', alias = 'r1', roles = {'role-1', 'role-2'}}
+local function table_pack(...)
+    return { n = select("#", ...), ... }
+end
+
+local function wrap_func(name, func)
+    local function wrapper(...)
+        local call = {}
+
+        local args = table_pack(...)
+        for i=1,args.n do
+            call[i] = args[i]
+        end
+
+        call = table.deepcopy(call)
+
+        if args.n == 1 then
+            call = call[1]
+        end
+        calls[name] = calls[name] or {}
+        table.insert(calls[name], call)
+
+        if fail_on[name] then
+            return nil, CARTRIDGE_ERR
+        end
+
+        return func(...)
+    end
+
+    return wrapper
+end
+
+
+-- * --------------- Module cartridge.webui.api-auth ---------------
+
+function cartridge_webui_auth.get_auth_params()
+    return vars.webui_auth_params
+end
+
+-- * --------------- Module cartridge.confapplier ------------------
+
+function confapplier.get_state()
+    return vars.cartridge_confapplier_state
+end
+
+function confapplier.get_readonly(section)
+    return vars.clusterwide_config:get_readonly(section)
+end
+
+function confapplier.get_deepcopy(section)
+    return vars.clusterwide_config:get_deepcopy(section)
+end
+
+function confapplier.get_active_config()
+    return vars.clusterwide_config
+end
+
+function confapplier.validate_config()
+    return true
+end
+
+function confapplier.wish_state(state)
+    vars.cartridge_confapplier_state = state
+    return state
+end
+
+-- * ----------------- Module cartridge.twophase -------------------
+
+function cartridge_twophase.patch_clusterwide(patch)
+    local new_clusterwide_config = vars.clusterwide_config:copy()
+    for k, v in pairs(patch) do
+        new_clusterwide_config:set_plaintext(k .. ".yml", require('yaml').encode(v))
+    end
+
+    new_clusterwide_config:update_luatables()
+
+    local new_topology = new_clusterwide_config:get_readonly('topology')
+
+    if new_topology ~= nil then
+        for uuid, srv in pairs(new_topology.servers or {}) do
+            if srv ~= 'expelled' then
+                local member = vars.membership_members[srv.uri]
+                if member == nil then
+                    return nil, string.format('Server %s is not found in membership', srv.uri)
+                end
+
+                if srv.replicaset_uuid ~= nil and member.payload.uuid == nil then
+                    member.payload.uuid = uuid
+                    member.payload.state = 'RolesConfigured'
+                end
+            end
+        end
+    end
+
+    vars.clusterwide_config = new_clusterwide_config
+
+    return true
+end
+
+-- * ----------------- Module cartridge.roles -------------------
+
+function cartridge_roles.get_known_roles()
+    local known_roles = {}
+    for role_name in pairs(vars.roles_map) do
+        table.insert(known_roles, role_name)
+    end
+    return known_roles
+end
+
+function cartridge_roles.get_enabled_roles(rpl_roles)
+    local enabled_roles = {}
+
+    for k, v in pairs(rpl_roles) do
+        local role_name
+        if type(k) == 'number' and type(v) == 'string' then
+            role_name = v
+        else
+            role_name = k
+        end
+
+        enabled_roles[role_name] = true
+    end
+
+    return enabled_roles
+end
+
+-- * ---------------------- Module membership ----------------------
+
+membership.myself = wrap_func('membership_myself', function()
+    return vars.membership_myself
+end)
+
+function membership.members()
+    local members = {}
+    for uri, member in pairs(vars.membership_members) do
+        members[uri] = member
+    end
+    return members
+end
+
+function membership.subscribe()
+    return require('fiber').cond()
+end
+
+function membership.get_member(uri)
+    return membership.members()[uri]
+end
+
+local clusterwide_config = require('cartridge.clusterwide-config')
+local lua_api_topology = require('cartridge.lua-api.topology')
+
+
+-- * ---------------------- Vshard router --------------------------
+
+local function vshard_router_info(self)
+    return {
+        bucket = {
+            unknown = vars.unknown_buckets[self.group_name]
+        }
     }
-    --]]
-}
+end
+
+function cartridge_roles_vshard_router.get(group_name)
+    if vars.unknown_buckets[group_name] == nil then
+        return nil
+    end
+
+    return {
+        group_name = group_name,
+        info = vshard_router_info,
+    }
+end
 
 -- * ------------------------- box.cfg -------------------------
 
 -- box.cfg mock
 local mt = {}
 mt.__call = function(self, opts)
+    calls.box_cfg = calls.box_cfg or {}
     table.insert(calls.box_cfg, opts)
 
     for _, memory_size_param in ipairs({'memtx_memory', 'vinyl_memory'}) do
@@ -181,9 +296,7 @@ function cartridge.cfg(opts)
     assert(type(opts.console_sock == 'string'))
 
     local ok, err = pcall(console.listen, 'unix/:' .. opts.console_sock)
-    if not ok then
-        return nil, err
-    end
+    assert(ok, err)
 
     box.cfg = box_cfg_table
 
@@ -202,264 +315,54 @@ function cartridge.admin_probe_server(advertise_uri)
     return false, string.format('Probe %q failed', advertise_uri)
 end
 
-function cartridge.admin_get_servers()
-    local res = {}
-    for _, s in ipairs(unjoined_servers) do
-        table.insert(res, s)
-    end
+-- cartridge modules
+vars.clusterwide_config = clusterwide_config.new()
 
-    for _, s in pairs(topology.servers) do
-        table.insert(res, s)
-    end
+cartridge.admin_get_servers = lua_api_topology.get_servers
+cartridge.admin_get_replicasets = lua_api_topology.get_replicasets
 
-    return res
-end
-
-function cartridge.admin_get_replicasets()
-    local res = {}
-    for _, r in pairs(topology.replicasets) do
-        table.insert(res, r)
-    end
-    return res
-end
-
-local function __edit_replicaset(params)
-    local replicaset
-    local replicaset_uuid = params.uuid
-    if replicaset_uuid == nil or topology.replicasets[replicaset_uuid] == nil then
-        -- create replicaset
-        if replicaset_uuid == nil then
-            replicaset_uuid = string.format('%s-uuid', params.alias)
-        end
-
-        replicaset = {
-            uuid = replicaset_uuid,
-            alias = params.alias,
-            servers = {},
-            status = 'healthy',
-        }
-    else
-        replicaset = topology.replicasets[replicaset_uuid]
-    end
-
-    if params.roles ~= nil then
-        replicaset.roles = params.roles
-    end
-
-    if params.weight ~= nil then
-        replicaset.weight = params.weight
-    end
-
-    if params.all_rw ~= nil then
-        replicaset.all_rw = params.all_rw
-    end
-
-    if params.vshard_group ~= nil then
-        replicaset.vshard_group = params.vshard_group
-    end
-
-    if params.join_servers ~= nil then
-        for _, join_server in ipairs(params.join_servers) do
-            -- find unjoined server
-            local unjoined_server
-            for j, server in ipairs(unjoined_servers) do
-                if server.uri == join_server.uri then
-                    unjoined_server = table.deepcopy(server)
-                    table.remove(unjoined_servers, j)
-                    break
-                end
-            end
-
-            if unjoined_server == nil then
-                return nil, string.format('Server %q is unknown', join_server.uri)
-            end
-
-            local server_uuid = string.format('%s-uuid', unjoined_server.alias)
-
-            if topology.servers[server_uuid] ~= nil then
-                return nil, string.format('Server %q is already joined', server_uuid)
-            end
-
-            topology.servers[server_uuid] = {
-                uuid = server_uuid,
-                uri = unjoined_server.uri,
-                alias = unjoined_server.alias,
-                status = 'healthy',
-                replicaset = {
-                    uuid = replicaset_uuid,
-                    alias = replicaset.alias,
-                    roles = replicaset.roles,
-                }
-            }
-
-            table.insert(replicaset.servers, {
-                alias = unjoined_server.alias,
-                priority = #replicaset.servers + 1,
-            })
-        end
-    end
-
-    if params.failover_priority ~= nil then
-        local new_servers = {}
-        local added_servers = {}
-
-        for _, s_uuid in ipairs(params.failover_priority) do
-            assert(s_uuid ~= nil)
-            assert(topology.servers[s_uuid] ~= nil, require('json').encode(topology.servers))
-
-            local server = topology.servers[s_uuid]
-            table.insert(new_servers, {
-                alias = server.alias,
-                priority = #new_servers + 1
-            })
-
-            added_servers[server.alias] = true
-        end
-
-        local other_servers = {}
-        for _, s in ipairs(replicaset.servers) do
-            if not added_servers[s.alias] then
-                table.insert(other_servers, s.alias)
+cartridge.admin_edit_topology = wrap_func('edit_topology', function(opts)
+    -- set prettyfied uuids for join servers
+    for _, replicaset in ipairs(opts.replicasets) do
+        for _, join_server in ipairs(replicaset.join_servers or {}) do
+            if join_server.uuid == nil then
+                local member = membership.get_member(join_server.uri)
+                assert(member ~= nil, string.format('Member %s is not found', join_server.uri))
+                join_server.uuid = string.format('%s-uuid', member.payload.alias)
             end
         end
-
-        table.sort(other_servers)
-
-        for _, alias in ipairs(other_servers) do
-            table.insert(new_servers, {
-                alias = alias,
-                priority = #new_servers + 1,
-            })
-        end
-
-        replicaset.servers = new_servers
     end
 
-    if vars.become_unhealthy_after_edit then
-        replicaset.status = 'unhealthy'
-    end
+    return lua_api_topology.edit_topology(opts)
+end)
 
-    topology.replicasets[replicaset_uuid] = replicaset
-    return true
-end
+cartridge.config_get_readonly = confapplier.get_readonly
 
-local function __edit_server(params)
-    if params.expelled == true then
-        assert(params.uuid ~= nil)
-        assert(topology.servers[params.uuid] ~= nil)
-        local server = topology.servers[params.uuid]
+cartridge.config_patch_clusterwide = wrap_func(
+    'config_patch_clusterwide',
+    cartridge_twophase.patch_clusterwide
+)
 
-        topology.servers[params.uuid] = nil
-        local replicaset_uuid = server.replicaset.uuid
-        assert(topology.replicasets[replicaset_uuid] ~= nil)
+-- * -------------------------- Failover --------------------------
 
-        local replicaset = topology.replicasets[replicaset_uuid]
-        local new_servers = {}
-        for _, s in ipairs(replicaset.servers) do
-            if s.alias ~= server.alias then
-                table.insert(new_servers, {
-                    alias = s.alias,
-                    priority = #new_servers + 1
-                })
-            end
-        end
-        replicaset.servers = new_servers
-    end
+local lua_api_failover = require('cartridge.lua-api.failover')
 
-    return true
-end
+cartridge.failover_get_params = lua_api_failover.get_params
+cartridge.admin_get_failover = lua_api_failover.get_failover_enabled
 
-function cartridge.admin_edit_topology(opts)
-    table.insert(calls.edit_topology, opts)
-
-    if fail_on.edit_topology then
-        return false, {err = CARTRIDGE_ERR}
-    end
-
-    for _, replicaset in ipairs(opts.replicasets or {}) do
-        local ok, err = __edit_replicaset(replicaset)
-        if ok == nil then return nil, {err = err} end
-    end
-
-    for _, server in ipairs(opts.servers or {}) do
-        local ok, err = __edit_server(server)
-        if ok == nil then return nil, {err = err} end
-    end
-
-    return {
-        servers = cartridge.admin_get_servers(),
-        replicasets = cartridge.admin_get_replicasets(),
-    }
-end
-
-function cartridge.config_get_readonly()
-    return vars.config
-end
-
-function cartridge.config_patch_clusterwide(patch)
-    -- this function is used only to collect calls
-    -- or fail if required
-    table.insert(calls.config_patch_clusterwide, patch)
-
-    if fail_on.config_patch_clusterwide then
-        return nil, {err = CARTRIDGE_ERR}
-    end
-
-    return true
-end
-
-local function manage_failover(verb)
-    assert(verb == 'enable' or verb == 'disable')
-    table.insert(calls.manage_failover, verb)
-
-    if fail_on.manage_failover then
-        return nil, {err = CARTRIDGE_ERR}
-    end
-
-    return true
-end
-
-function cartridge.admin_get_failover()
-    return vars.failover
-end
+local admin_manage_failover = wrap_func('manage_failover', lua_api_failover.set_failover_enabled)
 
 function cartridge.admin_enable_failover()
-    return manage_failover('enable')
+    return admin_manage_failover(true)
 end
 
 function cartridge.admin_disable_failover()
-    return manage_failover('disable')
+    return admin_manage_failover(false)
 end
 
-function cartridge.failover_get_params()
-    return vars.failover_params
-end
-
-function cartridge.failover_set_params(params)
-    table.insert(calls.failover_set_params, params)
-
-    if fail_on.failover_set_params then
-        return nil, {err = CARTRIDGE_ERR}
-    end
-
-    if params.mode ~= nil then
-        vars.failover_params.mode = params.mode
-    end
-
-    if params.state_provider ~= nil then
-        vars.failover_params.state_provider = params.state_provider
-    end
-
-    if params.tarantool_params ~= nil then
-        vars.failover_params.tarantool_params = params.tarantool_params
-    end
-
-    if params.etcd2_params ~= nil then
-        vars.failover_params.etcd2_params = params.etcd2_params
-    end
-
-    return true
-end
+cartridge.failover_set_params = wrap_func(
+    'failover_set_params', lua_api_failover.set_params
+)
 
 -- * ---------------- Module cartridge.vshard-utils ---------------
 
@@ -471,71 +374,25 @@ function cartridge_vshard_utils.get_known_groups()
     return vars.vshard_groups
 end
 
--- * ------------------- Module cartridge.admin -------------------
-
-function cartridge_admin.bootstrap_vshard()
-    table.insert(calls.bootstrap_vshard, true)
-
-    if fail_on.bootstrap_vshard then
-        return nil, {err = CARTRIDGE_ERR}
-    end
-
+function cartridge_vshard_utils.validate_config()
     return true
 end
+
+-- * ------------------- Module cartridge.admin -------------------
+
+cartridge_admin.bootstrap_vshard = wrap_func('bootstrap_vshard', function()
+    return true
+end)
 
 -- * ------------------- Module cartridge.auth -------------------
 
-function cartridge_auth.get_params()
-    return vars.auth_params
+for func_name, func in pairs(cartridge_auth_lib) do
+    cartridge_auth[func_name] = func
 end
 
-function cartridge_auth.set_params(params)
-    table.insert(calls.auth_set_params, params)
+cartridge_auth.set_params = wrap_func('auth_set_params', cartridge_auth_lib.set_params)
 
-    if fail_on.auth_set_params then
-        return nil, {err = CARTRIDGE_ERR}
-    end
-
-    assert(type(params.enabled) == 'boolean' or params.enabled == nil)
-    assert(type(params.cookie_max_age) == 'number' or params.cookie_max_age == nil)
-    assert(type(params.cookie_renew_age) == 'number' or params.cookie_renew_age == nil)
-
-    if params.enabled ~= nil then
-        vars.auth_params.enabled = params.enabled
-    end
-
-    if params.cookie_max_age ~= nil then
-        vars.auth_params.cookie_max_age = params.cookie_max_age
-    end
-
-    if params.cookie_renew_age ~= nil then
-        vars.auth_params.cookie_renew_age = params.cookie_renew_age
-    end
-
-    return true
-end
-
-function cartridge_auth.list_users()
-    return vars.users
-end
-
-function cartridge_auth.add_user(username, password, fullname, email)
-    assert(type(username) == 'string')
-    assert(type(password) == 'string' or password == nil)
-    assert(type(fullname) == 'string' or fullname == nil)
-    assert(type(email) == 'string' or email == nil)
-
-    table.insert(calls.auth_add_user, {
-        username = username,
-        fullname= fullname,
-        email = email,
-        password = password,
-    })
-
-    if fail_on.auth_add_user then
-        return nil, {err = CARTRIDGE_ERR}
-    end
-
+local add_user_callback = wrap_func('auth_add_user', function(username, _, fullname, email)
     local user = {
         username = username,
         fullname= fullname,
@@ -546,48 +403,23 @@ function cartridge_auth.add_user(username, password, fullname, email)
         user.version = 1
     end
 
-    table.insert(vars.users, user)
+    vars.users[user.username] = user
     return user
-end
+end)
 
-function cartridge_auth.get_user(username)
-    if fail_on.auth_add_user then
-        return nil, {err = CARTRIDGE_ERR}
-    end
-
-    for _, user in ipairs(vars.users) do
-        if user.username == username then
-            return user
-        end
-    end
-
-    return nil, string.format('User %q not found', username)
-end
-
-function cartridge_auth.edit_user(username, password, fullname, email)
-    assert(type(username) == 'string')
-    assert(type(password) == 'string' or password == nil)
-    assert(type(fullname) == 'string' or fullname == nil)
-    assert(type(email) == 'string' or email == nil)
-
-    table.insert(calls.auth_edit_user, {
-        username = username,
-        fullname= fullname,
-        email = email,
-        password = password,
-    })
-
-    if fail_on.auth_edit_user then
-        return nil, {err = CARTRIDGE_ERR}
-    end
-
-    local user = cartridge_auth.get_user(username)
+local get_user_callback = wrap_func('auth_get_user', function(username)
+    local user = vars.users[username]
     if user == nil then
         return nil, string.format('User %q not found', username)
     end
 
-    if password ~= nil then
-        -- don't save password
+    return user
+end)
+
+local edit_user_callback = wrap_func('auth_edit_user', function(username, _, fullname, email)
+    local user = vars.users[username]
+    if user == nil then
+        return nil, string.format('User %q not found', username)
     end
 
     if fullname ~= nil then
@@ -603,143 +435,166 @@ function cartridge_auth.edit_user(username, password, fullname, email)
     end
 
     return user
-end
+end)
 
-function cartridge_auth.remove_user(username)
-    assert(type(username) == 'string')
+local list_users_callback = function()
+    local users_list = {}
 
-    table.insert(calls.auth_remove_user, username)
-
-    if fail_on.auth_remove_user then
-        return nil, {err = CARTRIDGE_ERR}
+    for _, user in pairs(vars.users) do
+        table.insert(users_list, user)
     end
 
+    return users_list
+end
+
+local remove_user_callback = wrap_func('auth_remove_user', function(username)
     local user = cartridge_auth.get_user(username)
     if user == nil then
         return nil, string.format('User %q not found', username)
     end
 
-    return true
-end
+    vars.users[username] = nil
 
--- * --------------- Module cartridge.webui.api-auth ---------------
+    return user
+end)
 
-function cartridge_webui_auth.get_auth_params()
-    return vars.webui_auth_params
-end
-
--- * --------------- Module cartridge.confapplier ------------------
-
-function cartridge_confapplier.get_state()
-    return vars.cartridge_confapplier_state
-end
-
--- * ---------------------- Module membership ----------------------
-
-function membership.myself()
-    table.insert(calls.membership_myself, {})
-    return vars.membership_myself
-end
-
-function membership.members()
-    return vars.membership_members
-end
-
-function membership.get_member(uri)
-    return vars.membership_members[uri]
-end
-
--- * ---------------------- Vshard router --------------------------
-
-local function vshard_router_info(self)
-    return {
-        bucket = {
-            unknown = vars.unknown_buckets[self.group_name]
-        }
-    }
-end
-
-function cartridge_roles_vshard_router.get(group_name)
-    if vars.unknown_buckets[group_name] == nil then
-        return nil
-    end
-
-    return {
-        group_name = group_name,
-        info = vshard_router_info,
-    }
-end
+cartridge_auth.set_callbacks({
+    add_user = add_user_callback,
+    get_user = get_user_callback,
+    edit_user = edit_user_callback,
+    list_users = list_users_callback,
+    remove_user = remove_user_callback,
+})
 
 -- * ----------------------- Internal helpers ----------------------
+
+function cartridge.internal.add_membership_members(specified_members)
+    for _, m in ipairs(specified_members) do
+        assert(m.uri ~= nil)
+        local member = {
+            uri = m.uri,
+            status = m.status or 'alive',
+            incarnation = 1,
+        }
+
+        if not member.no_payload then
+            member.payload = {
+                uuid = m.uuid,
+                alias = m.alias,
+            }
+        end
+
+        vars.membership_members[m.uri] = member
+    end
+end
+
+function cartridge.internal.add_replicaset(rpl)
+    checks({
+        alias = 'string',
+        instances = 'table',
+        roles = '?table',
+        all_rw = '?boolean',
+        weight = '?number',
+        vshard_group = '?string',
+    })
+
+    -- add membership memebrs
+    local new_members = {}
+    for _, alias in ipairs(rpl.instances) do
+        table.insert(new_members, {
+            alias = alias,
+            uri = string.format('%s-uri', alias),
+        })
+    end
+    cartridge.internal.add_membership_members(new_members)
+
+    local join_servers = {}
+    for _, member in ipairs(new_members) do
+        table.insert(join_servers, {
+            uri = member.uri,
+            uuid = string.format('%s-uuid', member.alias),
+        })
+    end
+
+    -- add roles
+    for _, role in ipairs(rpl.roles or {}) do
+        vars.roles_map[role] = true
+    end
+
+    -- call edit_topology
+    local _, err = lua_api_topology.edit_topology({
+        replicasets = {
+            {
+                alias = rpl.alias,
+                uuid = string.format('%s-uuid', rpl.alias),
+                join_servers = join_servers,
+                roles = rpl.roles,
+                all_rw = rpl.all_rw,
+                weight = rpl.weight,
+                vshard_group = rpl.vshard_group,
+            },
+        }
+    })
+
+    assert(err == nil, tostring(err))
+end
+
+function cartridge.internal.bootstrap_cluster()
+    local _, err = cartridge.internal.add_replicaset({
+        alias='r1',
+        instances = {'instance-1'},
+    })
+    assert(err == nil, tostring(err))
+end
+
+function cartridge.internal.set_auth(auth_cfg)
+    local patch = {
+        auth = auth_cfg,
+    }
+
+    local _, err = cartridge_twophase.patch_clusterwide(patch)
+    assert(err == nil, tostring(err))
+end
+
+function cartridge.internal.set_users(users)
+    vars.users = {}
+    for _, user in ipairs(users) do
+        vars.users[user.username] = user
+    end
+end
+
+function cartridge.internal.set_failover_params(params)
+    local _, err = lua_api_failover.set_params(params)
+    assert(err == nil, tostring(err))
+end
+
+function cartridge.internal.set_config(new_config)
+    vars.clusterwide_config = clusterwide_config.new()
+    local _, err = cartridge_twophase.patch_clusterwide(new_config)
+    assert(err == nil, tostring(err))
+end
 
 -- * ----------------------- functions calls -----------------------
 
 function cartridge.internal.set_fail(func, value)
-    assert(fail_on[func] ~= nil)
     assert(type(value) == 'boolean')
     fail_on[func] = value
 end
 
 function cartridge.internal.clear_calls(func)
-    assert(calls[func] ~= nil)
     calls[func] = {}
 end
 
 function cartridge.internal.get_calls(func)
-    assert(calls[func] ~= nil)
-    return calls[func]
+    return calls[func] or {}
 end
 
 -- * --------------------------- vars ---------------------------
 
 function cartridge.internal.set_variable(name, value)
-    assert(vars[name] ~= nil)
-    assert(type(value) == type(vars[name]))
     vars[name] = value
 end
 
--- * ------------------------- topology -------------------------
-
-function cartridge.internal.add_topology_server(s)
-    for _, p in ipairs({'uuid', 'uri', 'alias', 'status'}) do
-        assert(type(s[p]) == 'string')
-    end
-    assert(s.replicaset ~= nil)
-    assert(type(s.replicaset) == 'table')
-    assert(type(s.replicaset.alias) == 'string')
-    assert(type(s.replicaset.uuid) == 'string')
-    assert(type(s.replicaset.roles) == 'table')
-
-    assert(topology.servers[s.uuid] == nil)
-    topology.servers[s.uuid] = s
-end
-
-function cartridge.internal.add_topology_replicaset(r)
-    for _, p in ipairs({'uuid', 'alias', 'status'}) do
-        assert(type(r[p]) == 'string')
-    end
-    assert(type(r.roles) == 'table')
-    assert(type(r.weight) == 'number' or r.weight == nil)
-    assert(type(r.all_rw) == 'boolean' or r.all_rw == nil)
-
-    assert(type(r.servers) == 'table')
-    for _, s in ipairs(r.servers) do
-        assert(type(s.alias) == 'string')
-        assert(type(s.priority) == 'number')
-    end
-
-    assert(topology.replicasets[r.uuid] == nil)
-    topology.replicasets[r.uuid] = r
-end
-
-function cartridge.internal.add_unjoined_server(s)
-    for _, p in ipairs({'uri', 'alias', 'status'}) do
-        assert(type(s[p]) == 'string')
-    end
-    table.insert(unjoined_servers, s)
-end
-
-cartridge.internal.topology = topology
-cartridge.internal.unjoined_servers = unjoined_servers
+cartridge.internal.vars = vars
 
 return cartridge

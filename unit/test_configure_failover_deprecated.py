@@ -13,17 +13,18 @@ def call_manage_failover_deprecated(console_sock, failover):
 
 class TestFailoverDeprecated(unittest.TestCase):
     def setUp(self):
-        self.cookie = 'secret'
-        self.console_sock = './tmp/x.sock'
+        self.instance = Instance()
+        self.console_sock = self.instance.console_sock
+        self.cookie = self.instance.cluster_cookie
 
-        self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
     def test_enable_failover_old_cartridge(self):
         self.instance.set_cartridge_version('1.2.0')
+        self.instance.bootstrap_cluster()
 
         # failover disabled
-        self.instance.set_variable('failover', False)
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover_deprecated(self.console_sock, True)
@@ -32,10 +33,10 @@ class TestFailoverDeprecated(unittest.TestCase):
 
         calls = self.instance.get_calls('manage_failover')
         self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0], 'enable')
+        self.assertEqual(calls[0], True)
 
-        # failover enabled
-        self.instance.set_variable('failover', True)
+        # eventual failover enabled
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover_deprecated(self.console_sock, True)
@@ -47,9 +48,10 @@ class TestFailoverDeprecated(unittest.TestCase):
 
     def test_disable_failover_old_cartridge(self):
         self.instance.set_cartridge_version('1.2.0')
+        self.instance.bootstrap_cluster()
 
         # failover enabled
-        self.instance.set_variable('failover', True)
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover_deprecated(self.console_sock, False)
@@ -58,10 +60,10 @@ class TestFailoverDeprecated(unittest.TestCase):
 
         calls = self.instance.get_calls('manage_failover')
         self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0], 'disable')
+        self.assertEqual(calls[0], False)
 
         # failover disabled
-        self.instance.set_variable('failover', False)
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover_deprecated(self.console_sock, False)
@@ -73,9 +75,10 @@ class TestFailoverDeprecated(unittest.TestCase):
 
     def test_fail_on_manage_failover_old_cartridge(self):
         self.instance.set_cartridge_version('1.2.0')
+        self.instance.bootstrap_cluster()
 
         # enable failover
-        self.instance.set_variable('failover', False)
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('manage_failover')
         self.instance.set_fail_on('manage_failover')
 
@@ -85,7 +88,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.assertIn('cartridge err', res.msg)
 
         # disable failover
-        self.instance.set_variable('failover', True)
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('manage_failover')
         self.instance.set_fail_on('manage_failover')
 
@@ -96,9 +99,10 @@ class TestFailoverDeprecated(unittest.TestCase):
 
     def test_enable_failover(self):
         self.instance.set_cartridge_version('2.1.0')
+        self.instance.bootstrap_cluster()
 
         # failover disabled
-        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover_deprecated(self.console_sock, True)
@@ -110,7 +114,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.assertEqual(calls[0], {'mode': 'eventual'})
 
         # failover enabled
-        self.instance.set_variable('failover_params', {'mode': 'eventual'})
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover_deprecated(self.console_sock, True)
@@ -123,9 +127,10 @@ class TestFailoverDeprecated(unittest.TestCase):
 
     def test_disable_failover(self):
         self.instance.set_cartridge_version('2.1.0')
+        self.instance.bootstrap_cluster()
 
         # failover enabled
-        self.instance.set_variable('failover_params', {'mode': 'eventual'})
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover_deprecated(self.console_sock, False)
@@ -137,7 +142,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.assertEqual(calls[0], {'mode': 'disabled'})
 
         # failover disabled
-        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover_deprecated(self.console_sock, False)
@@ -150,9 +155,10 @@ class TestFailoverDeprecated(unittest.TestCase):
 
     def test_fail_on_manage_failover(self):
         self.instance.set_cartridge_version('2.1.0')
+        self.instance.bootstrap_cluster()
 
         # enable failover
-        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('failover_set_params')
         self.instance.set_fail_on('failover_set_params')
 
@@ -162,7 +168,7 @@ class TestFailoverDeprecated(unittest.TestCase):
         self.assertIn('cartridge err', res.msg)
 
         # disable failover
-        self.instance.set_variable('failover_params', {'mode': 'enabled'})
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('failover_set_params')
         self.instance.set_fail_on('failover_set_params')
 

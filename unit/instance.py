@@ -2,13 +2,15 @@ import json
 import os
 import re
 import socket
+import textwrap
+import sys
 from subprocess import Popen
 
 import tenacity
 
 from unit.os_mock import OsPathExistsMock, OsPathGetMTimeMock
 
-script_abspath = os.path.realpath(
+instance_app_dir = os.path.realpath(
     os.path.join(
         os.path.dirname(__file__), 'mock'
     )
@@ -29,10 +31,11 @@ class Instance:
     DATE_TODAY = 0
     DATE_TOMORROW = 1
 
-    def __init__(self, console_sock, cluster_cookie):
+    def __init__(self):
+        self.console_sock = os.path.join(os.getcwd(), 'instance.sock')
+        self.cluster_cookie = 'secret'
+
         self.script = "init.lua"
-        self.console_sock = console_sock
-        self.cluster_cookie = cluster_cookie
 
         self.process = None
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
@@ -44,6 +47,8 @@ class Instance:
         os.path.getmtime = OsPathGetMTimeMock()
 
     def __del__(self):
+        self.stop()
+
         os.path.exists = self.__original_exists
         os.path.getmtime = self.__original_getmtime
 
@@ -56,14 +61,21 @@ class Instance:
         self.sock.connect(self.console_sock)
         self.sock.recv(1024)
 
-    def start(self):
-        command = [os.path.join(script_abspath, self.script)]
+    def start(self, debug=False):
+        command = ["./%s" % self.script]
+        cwd = instance_app_dir
 
         env = os.environ.copy()
         env['TARANTOOL_CONSOLE_SOCK'] = self.console_sock
 
         with open(os.devnull, 'w') as FNULL:
-            self.process = Popen(command, env=env, stdout=FNULL, stderr=FNULL)
+            stdout = FNULL
+            stderr = FNULL
+            if debug:
+                stdout = sys.stdout
+                stderr = sys.stderr
+
+            self.process = Popen(command, env=env, cwd=cwd, stdout=stdout, stderr=stderr)
 
         self._connect()
 
@@ -78,7 +90,7 @@ class Instance:
         self.set_default_instance_config()
         self.set_default_app_config()
 
-    def eval(self, func_body):
+    def eval(self, func_body, *args):
         def sendall(msg):
             return self.sock.sendall(msg.encode())
 
@@ -97,19 +109,25 @@ class Instance:
                     break
             return data
 
-        cmd = '''
-            local ok, ret = pcall(function()
-                local function f()
-                    {}
-                end
-                return f()
-            end)
-            ret = require("json").encode({{
-                ok = ok,
-                ret = ret ~= nil and ret or box.NULL,
-            }})
-            return string.hex(ret)
-        '''.format(func_body)
+        if not args:
+            args = []
+        args_encoded = json.dumps(args)
+
+        cmd_fmt = textwrap.dedent('''
+            local function func(...)
+                {func_body}
+            end
+            local args = require('json').decode('{args_encoded}')
+            local ret = {{
+                load(
+                    'local func, args = ... return func(unpack(args))',
+                    '@eval'
+                )(func, args)
+            }}
+            return string.hex(require('json').encode(ret))
+        ''')
+
+        cmd = cmd_fmt.format(func_body=func_body, args_encoded=args_encoded)
 
         lines = [line.strip() for line in cmd.split('\n') if line.strip()]
         cmd = ' '.join(lines) + '\n'
@@ -122,17 +140,32 @@ class Instance:
         hex_output = re.sub(r"'?\n...\n$", '', hex_output)
         hex_output = re.sub(r"\n\s*", '', hex_output)
 
-        try:
-            output = bytearray.fromhex(hex_output).decode('utf-8')
-        except Exception:
-            raise Exception(hex_output)
+        if hex_output.startswith("error:"):
+            err = re.sub(r"error:\s+", '', hex_output)
+            raise Exception(err)
 
-        ret = json.loads(output)
-        if not ret['ok']:
-            errmsg = 'Error while running function: {}. (Function: {})'.format(ret['ret'], func_body)
-            raise Exception(errmsg)
+        output = bytearray.fromhex(hex_output).decode('utf-8')
 
-        return ret['ret']
+        return json.loads(output)
+
+    def eval_res_err(self, func_body, *args):
+        data = self.eval(func_body, *args)
+
+        assert len(data) <= 2
+
+        if len(data) == 0:
+            # return nil
+            data.append(None)
+
+        if len(data) == 1:
+            # return res
+            data.append(None)
+
+        # err can be tarantool/errors instance
+        if isinstance(data[1], dict) and data[1].get('err') is not None:
+            data[1] = data[1].get('err')
+
+        return data
 
     def stop(self):
         self.sock.close()
@@ -142,18 +175,19 @@ class Instance:
 
     def write_file(self, path, content=''):
         os.path.exists.set_exists(path)
-        self.eval('''
-            require('fio').path.write_file({{
-                path = '{}',
-                content = '{}',
-            }})
-        '''.format(path, content))
+        self.eval_res_err('''
+            local path, content = ...
+            require('fio').path.write_file({
+                path = path,
+                content = content,
+            })
+        ''', path, content)
 
     def remove_file(self, path):
         os.path.exists.set_not_exists(path)
-        self.eval('''
-            require('fio').path.remove_file('{}')
-        '''.format(path))
+        self.eval_res_err('''
+            require('fio').path.remove_file(...)
+        ''', path)
 
     def set_instance_config(self, config,
                             instance_conf_file=None,
@@ -201,129 +235,74 @@ class Instance:
         os.path.getmtime.set_m_time(path, m_time)
 
     def set_box_cfg_function(self, value=True):
-        self.eval('''
-            require('cartridge').internal.set_box_cfg_function({})
-        '''.format('true' if value else 'false'))
+        self.eval_res_err('''
+            require('cartridge').internal.set_box_cfg_function(...)
+        ''', value)
 
     def set_cartridge_version(self, version):
-        self.eval('''
-            require('cartridge').VERSION = '{}'
-        '''.format(version))
+        self.eval_res_err('''
+            require('cartridge').VERSION = ...
+        ''', version)
 
-    def set_fail_on(self, func, value=True):
-        self.eval('''
-            require('cartridge').internal.set_fail('{func}', {value})
-        '''.format(
-            func=func,
-            value='true' if value else 'false'
-        ))
+    def set_fail_on(self, func_name, value=True):
+        self.eval_res_err('''
+            local func_name, value = ...
+            require('cartridge').internal.set_fail(func_name, value)
+        ''', func_name, value)
 
-    def clear_calls(self, func):
-        self.eval('''
-            require('cartridge').internal.clear_calls('{func}')
-        '''.format(func=func))
+    def clear_calls(self, func_name):
+        self.eval_res_err('''
+            require('cartridge').internal.clear_calls(...)
+        ''', func_name)
 
-    def get_calls(self, func):
-        return self.eval('''
-            return require('cartridge').internal.get_calls('{func}')
-        '''.format(func=func))
+    def get_calls(self, func_name):
+        calls, _ = self.eval_res_err('''
+            return require('cartridge').internal.get_calls(...)
+        ''', func_name)
+        return calls
 
     def set_variable(self, name, value):
-        self.eval('''
-            local value = require('json').decode('{encoded_value}')
-            require('cartridge').internal.set_variable('{name}', value)
-        '''.format(
-            name=name,
-            encoded_value=json.dumps(value)
-        ))
+        self.eval_res_err('''
+            local name, value = ...
+            require('cartridge').internal.set_variable(name, value)
+        ''', name, value)
 
-    def set_box_cfg(self, new_box_cfg):
-        self.eval('''
-            local value = require('json').decode('{encoded_value}')
-            require('cartridge').internal.set_box_cfg(value)
-        '''.format(
-            encoded_value=json.dumps(new_box_cfg)
-        ))
+    def set_box_cfg(self, **new_box_cfg):
+        self.eval_res_err('''
+            require('cartridge').internal.set_box_cfg(...)
+        ''', new_box_cfg)
 
-    def add_topology_servers(self, servers):
-        for s in servers:
-            s_replicaset = '{{ alias = "{alias}", uuid = "{uuid}", roles = {roles} }}'.format(
-                alias=s['replicaset']['alias'],
-                uuid=s['replicaset']['uuid'],
-                roles='{{ {} }}'.format(', '.join([
-                    '"{}"'.format(role) for role in s['replicaset']['roles']
-                ]))
-            )
+    def add_membership_members(self, members):
+        self.eval_res_err('''
+            require('cartridge').internal.add_membership_members(...)
+        ''', members)
 
-            self.eval('''
-                require('cartridge').internal.add_topology_server({{
-                    uuid = '{uuid}',
-                    uri = '{uri}',
-                    alias = '{alias}',
-                    status = '{status}',
-                    replicaset = {replicaset}
-                }})
-            '''.format(
-                uuid=s['uuid'],
-                uri=s['uri'],
-                alias=s['alias'],
-                status=s.get('status', 'healthy'),
-                replicaset=s_replicaset
-            ))
+    def add_replicaset(self, **kwargs):
+        self.eval_res_err('''
+            require('cartridge').internal.add_replicaset(...)
+        ''', kwargs)
 
-    def add_topology_replicaset(self, r):
-        r_servers = '{{ {} }}'.format(
-            ', '.join([
-                "{{ alias = '{}', priority = {} }}".format(s['alias'], s['priority'])
-                for s in r['servers']
-            ])
-        )
+    def bootstrap_cluster(self):
+        self.eval_res_err('''
+            require('cartridge').internal.bootstrap_cluster()
+        ''')
 
-        weight = 'nil'
-        if 'weight' in r and r['weight'] is not None:
-            weight = r['weight']
+    def set_auth(self, auth_cfg):
+        self.eval_res_err('''
+            require('cartridge').internal.set_auth(...)
+        ''', auth_cfg)
 
-        vshard_group = 'nil'
-        if 'vshard_group' in r and r['vshard_group'] is not None:
-            vshard_group = "'%s'" % r['vshard_group']
+    def set_users(self, users):
+        self.eval_res_err('''
+            require('cartridge').internal.set_users(...)
+        ''', users)
 
-        all_rw = 'nil'
-        if 'all_rw' in r and r['all_rw'] is not None:
-            all_rw = 'true' if r['all_rw'] else 'false'
+    def set_failover_params(self, **kwargs):
+        self.eval_res_err('''
+            require('cartridge').internal.set_failover_params(...)
+        ''', kwargs)
 
-        self.eval('''
-            require('cartridge').internal.add_topology_replicaset({{
-                uuid = '{uuid}',
-                alias = '{alias}',
-                status = '{status}',
-                roles = {roles},
-                weight = {weight},
-                all_rw = {all_rw},
-                vshard_group = {vshard_group},
-                servers = {servers},
-            }})
-        '''.format(
-            uuid=r['uuid'],
-            alias=r['alias'],
-            status=r.get('status', 'healthy'),
-            roles='{{ {} }}'.format(', '.join([
-                '"{}"'.format(role) for role in r['roles']
-            ])),
-            weight=weight,
-            all_rw=all_rw,
-            vshard_group=vshard_group,
-            servers=r_servers
-        ))
-
-    def add_unjoined_server(self, alias, uri, status='healthy'):
-        self.eval('''
-            require('cartridge').internal.add_unjoined_server({{
-                uri = '{uri}',
-                alias = '{alias}',
-                status = '{status}',
-            }})
-        '''.format(
-            uri=uri,
-            alias=alias,
-            status=status,
-        ))
+    def set_config(self, config):
+        self.eval_res_err('''
+            require('cartridge').internal.set_config(...)
+        ''', config)

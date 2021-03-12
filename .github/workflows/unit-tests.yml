@@ -32,8 +32,20 @@ jobs:
         run: |
           pip3 install --upgrade -r requirements.txt
 
+      - name: Cache unit tests requirements
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: 'unit/mock/.rocks'
+          key: ce-${{ matrix.tarantool-version }}-${{ hashFiles('./deps.sh') }}
+
+      - name: Install unit tests requirements
+        run: ./deps.sh
+
       - name: Run linter
-        run: python3 -m flake8 library unit
+        run: |
+          python3 -m flake8 library unit
+          ./unit/mock/.rocks/bin/luacheck unit/mock
 
       - name: Run unit tests
         run: python3 -m unittest discover -v unit

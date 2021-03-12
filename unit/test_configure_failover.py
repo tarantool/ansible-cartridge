@@ -19,17 +19,18 @@ def call_manage_failover(console_sock, mode,
 
 class TestFailover(unittest.TestCase):
     def setUp(self):
-        self.cookie = 'secret'
-        self.console_sock = './tmp/x.sock'
+        self.instance = Instance()
+        self.console_sock = self.instance.console_sock
+        self.cookie = self.instance.cluster_cookie
 
-        self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
     def test_enable_failover_old_cartridge(self):
         self.instance.set_cartridge_version('1.2.0')
+        self.instance.bootstrap_cluster()
 
         # failover disabled -> enable eventual
-        self.instance.set_variable('failover', False)
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='eventual')
@@ -38,10 +39,10 @@ class TestFailover(unittest.TestCase):
 
         calls = self.instance.get_calls('manage_failover')
         self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0], 'enable')
+        self.assertEqual(calls[0], True)
 
         # failover enabled -> enable eventual
-        self.instance.set_variable('failover', True)
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='eventual')
@@ -52,7 +53,7 @@ class TestFailover(unittest.TestCase):
         self.assertEqual(len(calls), 0)
 
         # failover disabled -> enable stateful
-        self.instance.set_variable('failover', False)
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='stateful')
@@ -64,9 +65,10 @@ class TestFailover(unittest.TestCase):
 
     def test_disable_failover_old_cartridge(self):
         self.instance.set_cartridge_version('1.2.0')
+        self.instance.bootstrap_cluster()
 
         # failover enabled -> disable
-        self.instance.set_variable('failover', True)
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='disabled')
@@ -75,10 +77,10 @@ class TestFailover(unittest.TestCase):
 
         calls = self.instance.get_calls('manage_failover')
         self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0], 'disable')
+        self.assertEqual(calls[0], False)
 
         # failover disabled -> disable
-        self.instance.set_variable('failover', False)
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('manage_failover')
 
         res = call_manage_failover(self.console_sock, mode='disabled')
@@ -90,9 +92,10 @@ class TestFailover(unittest.TestCase):
 
     def test_fail_on_manage_failover_old_cartridge(self):
         self.instance.set_cartridge_version('1.2.0')
+        self.instance.bootstrap_cluster()
 
         # enable eventual failover
-        self.instance.set_variable('failover', False)
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('manage_failover')
         self.instance.set_fail_on('manage_failover')
 
@@ -102,7 +105,7 @@ class TestFailover(unittest.TestCase):
         self.assertIn('cartridge err', res.msg)
 
         # disable failover
-        self.instance.set_variable('failover', True)
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('manage_failover')
         self.instance.set_fail_on('manage_failover')
 
@@ -113,9 +116,10 @@ class TestFailover(unittest.TestCase):
 
     def test_enable_eventual_failover(self):
         self.instance.set_cartridge_version('2.1.0')
+        self.instance.bootstrap_cluster()
 
         # failover disabled
-        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='eventual')
@@ -127,7 +131,7 @@ class TestFailover(unittest.TestCase):
         self.assertEqual(calls[0], {'mode': 'eventual'})
 
         # failover enabled
-        self.instance.set_variable('failover_params', {'mode': 'eventual'})
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='eventual')
@@ -140,9 +144,10 @@ class TestFailover(unittest.TestCase):
 
     def test_disable_eventual_failover(self):
         self.instance.set_cartridge_version('2.1.0')
+        self.instance.bootstrap_cluster()
 
         # failover enabled
-        self.instance.set_variable('failover_params', {'mode': 'eventual'})
+        self.instance.set_failover_params(mode='eventual')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='disabled')
@@ -154,7 +159,7 @@ class TestFailover(unittest.TestCase):
         self.assertEqual(calls[0], {'mode': 'disabled'})
 
         # failover disabled
-        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='disabled')
@@ -167,6 +172,7 @@ class TestFailover(unittest.TestCase):
 
     def test_stateful_failover_with_stateboard(self):
         self.instance.set_cartridge_version('2.1.0')
+        self.instance.bootstrap_cluster()
 
         STATEBOARD_PARAMS = {
             'uri': 'localhost:3310',
@@ -174,7 +180,7 @@ class TestFailover(unittest.TestCase):
         }
 
         # failover disabled
-        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='stateful',
@@ -192,11 +198,11 @@ class TestFailover(unittest.TestCase):
         })
 
         # stateful failover enabled - params aren't changed
-        self.instance.set_variable('failover_params', {
-            'mode': 'stateful',
-            'state_provider': 'tarantool',
-            'tarantool_params': STATEBOARD_PARAMS,
-        })
+        self.instance.set_failover_params(
+            mode='stateful',
+            state_provider='tarantool',
+            tarantool_params=STATEBOARD_PARAMS,
+        )
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='stateful',
@@ -241,6 +247,7 @@ class TestFailover(unittest.TestCase):
 
     def test_stateful_failover_with_etcd2(self):
         self.instance.set_cartridge_version('2.1.0')
+        self.instance.bootstrap_cluster()
 
         ETCD2_PARAMS = {
             'prefix': '/',
@@ -251,7 +258,7 @@ class TestFailover(unittest.TestCase):
         }
 
         # failover disabled
-        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='stateful',
@@ -269,7 +276,7 @@ class TestFailover(unittest.TestCase):
         })
 
         # failover disabled
-        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='stateful',
@@ -286,11 +293,11 @@ class TestFailover(unittest.TestCase):
         })
 
         # stateful failover enabled - params aren't changed
-        self.instance.set_variable('failover_params', {
-            'mode': 'stateful',
-            'state_provider': 'etcd2',
-            'etcd2_params': ETCD2_PARAMS,
-        })
+        self.instance.set_failover_params(
+            mode='stateful',
+            state_provider='etcd2',
+            etcd2_params=ETCD2_PARAMS,
+        )
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='stateful',
@@ -309,11 +316,11 @@ class TestFailover(unittest.TestCase):
 
         for p in ['prefix', 'lock_delay', 'username', 'password', 'endpoints']:
             # stateful failover enabled - one param is changed
-            self.instance.set_variable('failover_params', {
-                'mode': 'stateful',
-                'state_provider': 'etcd2',
-                'etcd2_params': ETCD2_PARAMS,
-            })
+            self.instance.set_failover_params(
+                mode='stateful',
+                state_provider='etcd2',
+                etcd2_params=ETCD2_PARAMS,
+            )
             self.instance.clear_calls('failover_set_params')
 
             new_params = ETCD2_PARAMS.copy()
@@ -340,6 +347,7 @@ class TestFailover(unittest.TestCase):
 
     def test_stateful_failover_mixed(self):
         self.instance.set_cartridge_version('2.1.0')
+        self.instance.bootstrap_cluster()
 
         STATEBOARD_PARAMS = {
             'uri': 'localhost:3310',
@@ -355,7 +363,7 @@ class TestFailover(unittest.TestCase):
         }
 
         # failover disabled -> enable stateboard
-        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='stateful',
@@ -375,7 +383,7 @@ class TestFailover(unittest.TestCase):
         })
 
         # failover disabled -> enable etcd2
-        self.instance.set_variable('failover_params', {'mode': 'disabled'})
+        self.instance.set_failover_params(mode='disabled')
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='stateful',
@@ -395,12 +403,12 @@ class TestFailover(unittest.TestCase):
         })
 
         # stateboard state provider enabled -> switch to etcd2
-        self.instance.set_variable('failover_params', {
-            'mode': 'stateful',
-            'state_provider': 'tarantool',
-            'tarantool_params': STATEBOARD_PARAMS,
-            'etcd2_params': ETCD2_PARAMS,
-        })
+        self.instance.set_failover_params(
+            mode='stateful',
+            state_provider='tarantool',
+            tarantool_params=STATEBOARD_PARAMS,
+            etcd2_params=ETCD2_PARAMS,
+        )
         self.instance.clear_calls('failover_set_params')
 
         res = call_manage_failover(self.console_sock, mode='stateful',

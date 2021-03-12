@@ -13,10 +13,10 @@ def call_config_app(console_sock, config):
 
 class TestAppConfig(unittest.TestCase):
     def setUp(self):
-        self.cookie = 'secret'
-        self.console_sock = './tmp/x.sock'
+        self.instance = Instance()
+        self.console_sock = self.instance.console_sock
+        self.cookie = self.instance.cluster_cookie
 
-        self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
     def test_empty_config(self):
@@ -49,7 +49,7 @@ class TestAppConfig(unittest.TestCase):
         SECTION_BODY = 'SECTION BODY'
 
         # config is empty
-        self.instance.set_variable('config', {})
+        self.instance.set_config({})
         self.instance.clear_calls('config_patch_clusterwide')
 
         res = call_config_app(self.console_sock, {
@@ -67,7 +67,7 @@ class TestAppConfig(unittest.TestCase):
         })
 
         # config is already set (res.changed should be false)
-        self.instance.set_variable('config', {
+        self.instance.set_config({
             SECTION_NAME: SECTION_BODY
         })
         self.instance.clear_calls('config_patch_clusterwide')
@@ -90,7 +90,7 @@ class TestAppConfig(unittest.TestCase):
         SECTION2_BODY = 'SECTION-2 BODY'
 
         # set two sections
-        self.instance.set_variable('config', {
+        self.instance.set_config({
             SECTION1_NAME: SECTION1_BODY,
             SECTION2_NAME: SECTION2_BODY,
         })
@@ -112,7 +112,7 @@ class TestAppConfig(unittest.TestCase):
         })
 
         # set only section-2
-        self.instance.set_variable('config', {
+        self.instance.set_config({
             SECTION2_NAME: SECTION2_BODY,
         })
         self.instance.clear_calls('config_patch_clusterwide')
@@ -130,7 +130,7 @@ class TestAppConfig(unittest.TestCase):
         self.assertEqual(len(calls), 0)
 
         # set two sections
-        self.instance.set_variable('config', {
+        self.instance.set_config({
             SECTION1_NAME: SECTION1_BODY,
             SECTION2_NAME: SECTION2_BODY,
         })
@@ -158,7 +158,7 @@ class TestAppConfig(unittest.TestCase):
         SECTION1_NEW_BODY = {'hi': 'I am section-1 new body'}
 
         # set two sections
-        self.instance.set_variable('config', {
+        self.instance.set_config({
             SECTION1_NAME: SECTION1_BODY,
             SECTION2_NAME: SECTION2_BODY,
         })
@@ -187,7 +187,7 @@ class TestAppConfig(unittest.TestCase):
         SECTION_BODY = 'SECTION BODY'
         SECTION_NEW_BODY = 'NEW SECTION BODY'
 
-        self.instance.set_variable('config', {
+        self.instance.set_config({
             SECTION_NAME: SECTION_BODY
         })
         self.instance.clear_calls('config_patch_clusterwide')

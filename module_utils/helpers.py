@@ -4,6 +4,7 @@ import json
 import os
 import re
 import socket
+import textwrap
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -159,19 +160,19 @@ class Console:
             args = []
         args_encoded = json.dumps(args)
 
-        cmd_fmt = '''
-local function func(...)
-    {func_body}
-end
-local args = require('json').decode('{args_encoded}')
-local ret = {{
-    load(
-        'local func, args = ... return func(unpack(args))',
-        '@eval'
-    )(func, args)
-}}
-return string.hex(require('json').encode(ret))
-'''
+        cmd_fmt = textwrap.dedent('''
+            local function func(...)
+                {func_body}
+            end
+            local args = require('json').decode('{args_encoded}')
+            local ret = {{
+                load(
+                    'local func, args = ... return func(unpack(args))',
+                    '@eval'
+                )(func, args)
+            }}
+            return string.hex(require('json').encode(ret))
+        ''')
 
         cmd = cmd_fmt.format(func_body=func_body, args_encoded=args_encoded)
 

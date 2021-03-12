@@ -4,6 +4,13 @@ from unit.instance import Instance
 from library.cartridge_configure_auth import manage_auth
 
 
+def remove_trailing_nones(specified_list):
+    while specified_list[-1] is None:
+        specified_list.pop()
+
+    return specified_list
+
+
 def call_manage_auth(console_sock, enabled=None, cookie_max_age=None,
                      cookie_renew_age=None, users=None):
     return manage_auth({
@@ -30,13 +37,15 @@ def set_user_functions_implemented(instance):
 
 class TestAuth(unittest.TestCase):
     def setUp(self):
-        self.cookie = 'secret'
-        self.console_sock = './tmp/x.sock'
+        self.instance = Instance()
+        self.console_sock = self.instance.console_sock
+        self.cookie = self.instance.cluster_cookie
 
-        self.instance = Instance(self.console_sock, self.cookie)
         self.instance.start()
 
     def test_empty(self):
+        self.instance.bootstrap_cluster()
+
         res = call_manage_auth(self.console_sock)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
@@ -54,7 +63,8 @@ class TestAuth(unittest.TestCase):
             'cookie_renew_age': 20,
         }
 
-        self.instance.set_variable('auth_params', current_auth)
+        self.instance.bootstrap_cluster()
+        self.instance.set_auth(current_auth)
 
         for p in ['enabled', 'cookie_max_age', 'cookie_renew_age']:
             # call with current value (res.changed is False)
@@ -85,7 +95,6 @@ class TestAuth(unittest.TestCase):
 
         # fail on auth_set_params
         self.instance.set_fail_on('auth_set_params')
-        self.instance.set_variable('auth_params', {})
 
         res = call_manage_auth(self.console_sock, enabled=True)
         self.assertTrue(res.failed)
@@ -96,6 +105,8 @@ class TestAuth(unittest.TestCase):
             'username': 'dokshina',
             'password': 'iloverandompasswords',
         }
+
+        self.instance.bootstrap_cluster()
 
         # no one operation is implemented
         self.instance.set_variable('webui_auth_params', {})
@@ -119,22 +130,30 @@ class TestAuth(unittest.TestCase):
             self.assertIn('backend must implement all user management functions', res.msg)
 
     def test_add_user(self):
+        self.instance.bootstrap_cluster()
+
         # all required operations are implemented
         set_user_functions_implemented(self.instance)
 
         USER1 = {
             'username': 'dokshina',
+            'password': 'qwerty',
             'email': 'dokshina@tarantool.love',
             'fullname': 'Elizaveta Dokshina',
         }
         USER2 = {
             'username': 'elizabeth',
+            'password': 'qwerty',
             'email': 'dokshina@tarantool.hate',
             'fullname': 'The Princess',
         }
+        USER3 = {
+            'username': 'marina',
+            'password': 'qwerty',
+        }
 
         # add a new user
-        self.instance.set_variable('users', [USER1])
+        self.instance.set_users([USER1])
         self.instance.clear_calls('auth_add_user')
         self.instance.clear_calls('auth_edit_user')
         self.instance.clear_calls('auth_remove_user')
@@ -145,17 +164,21 @@ class TestAuth(unittest.TestCase):
 
         calls = self.instance.get_calls('auth_add_user')
         self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0], USER2)
+        self.assertEqual(calls[0], [
+            USER2.get(p) for p in ['username', 'password', 'fullname', 'email']
+        ])
 
         calls = self.instance.get_calls('auth_edit_user')
         self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0], USER1)
+        self.assertEqual(calls[0], [
+            USER1.get(p) for p in ['username', 'password', 'fullname', 'email']
+        ])
 
         calls = self.instance.get_calls('auth_remove_user')
         self.assertEqual(len(calls), 0)
 
         # add existed user
-        self.instance.set_variable('users', [USER1, USER2])
+        self.instance.set_users([USER1, USER2])
         self.instance.clear_calls('auth_add_user')
         self.instance.clear_calls('auth_edit_user')
         self.instance.clear_calls('auth_remove_user')
@@ -169,21 +192,27 @@ class TestAuth(unittest.TestCase):
 
         calls = self.instance.get_calls('auth_edit_user')
         self.assertEqual(len(calls), 2)
-        self.assertIn(USER1, calls)
-        self.assertIn(USER2, calls)
+        self.assertEqual(calls[0], [
+            USER1.get(p) for p in ['username', 'password', 'fullname', 'email']
+        ])
+        self.assertEqual(calls[1], [
+            USER2.get(p) for p in ['username', 'password', 'fullname', 'email']
+        ])
 
         calls = self.instance.get_calls('auth_remove_user')
         self.assertEqual(len(calls), 0)
 
         # fail on auth_add_user
         self.instance.set_fail_on('auth_add_user')
-        self.instance.set_variable('users', [])
+        self.instance.set_users([])
 
-        res = call_manage_auth(self.console_sock, users=[USER1])
+        res = call_manage_auth(self.console_sock, users=[USER1, USER2, USER3])
         self.assertTrue(res.failed)
         self.assertIn('cartridge err', res.msg)
 
     def test_edit_user(self):
+        self.instance.bootstrap_cluster()
+
         # all required operations are implemented
         set_user_functions_implemented(self.instance)
 
@@ -200,7 +229,7 @@ class TestAuth(unittest.TestCase):
         }
 
         for param, value in new_params.items():
-            self.instance.set_variable('users', [USER])
+            self.instance.set_users([USER])
 
             self.instance.clear_calls('auth_add_user')
             self.instance.clear_calls('auth_edit_user')
@@ -223,7 +252,9 @@ class TestAuth(unittest.TestCase):
 
             calls = self.instance.get_calls('auth_edit_user')
             self.assertEqual(len(calls), 1)
-            self.assertEqual(calls[0], user_patch)
+            self.assertEqual(calls[0], remove_trailing_nones([
+                user_patch.get(p) for p in ['username', 'password', 'fullname', 'email']
+            ]))
 
             calls = self.instance.get_calls('auth_remove_user')
             self.assertEqual(len(calls), 0)
@@ -242,6 +273,8 @@ class TestAuth(unittest.TestCase):
         self.assertIn('cartridge err', res.msg)
 
     def test_edit_user_no_version(self):
+        self.instance.bootstrap_cluster()
+
         # all required operations are implemented
         set_user_functions_implemented(self.instance)
         self.instance.set_variable('user_has_version', False)
@@ -259,7 +292,7 @@ class TestAuth(unittest.TestCase):
         }
 
         for param, value in new_params.items():
-            self.instance.set_variable('users', [USER])
+            self.instance.set_users([USER])
 
             self.instance.clear_calls('auth_add_user')
             self.instance.clear_calls('auth_edit_user')
@@ -282,14 +315,16 @@ class TestAuth(unittest.TestCase):
 
             calls = self.instance.get_calls('auth_edit_user')
             self.assertEqual(len(calls), 1)
-            self.assertEqual(calls[0], user_patch)
+            self.assertEqual(calls[0], remove_trailing_nones([
+                user_patch.get(p) for p in ['username', 'password', 'fullname', 'email']
+            ]))
 
             calls = self.instance.get_calls('auth_remove_user')
             self.assertEqual(len(calls), 0)
 
         # fail on auth_edit_user
         self.instance.set_fail_on('auth_edit_user')
-        self.instance.set_variable('users', [USER])
+        self.instance.set_users([USER])
 
         user_patch = {
             'username': USER['username'],
@@ -301,6 +336,8 @@ class TestAuth(unittest.TestCase):
         self.assertIn('cartridge err', res.msg)
 
     def test_delete_user(self):
+        self.instance.bootstrap_cluster()
+
         # all required operations are implemented
         set_user_functions_implemented(self.instance)
 
@@ -316,7 +353,7 @@ class TestAuth(unittest.TestCase):
         }
 
         # delete existed user
-        self.instance.set_variable('users', [USER1, USER2])
+        self.instance.set_users([USER1, USER2])
         self.instance.clear_calls('auth_add_user')
         self.instance.clear_calls('auth_edit_user')
         self.instance.clear_calls('auth_remove_user')
@@ -333,14 +370,16 @@ class TestAuth(unittest.TestCase):
 
         calls = self.instance.get_calls('auth_edit_user')
         self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0], USER1)
+        self.assertEqual(calls[0], [
+            USER1.get(p) for p in ['username', 'password', 'fullname', 'email']
+        ])
 
         calls = self.instance.get_calls('auth_remove_user')
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0], USER2['username'])
 
         # delete non-existed user
-        self.instance.set_variable('users', [USER1])
+        self.instance.set_users([USER1])
         self.instance.clear_calls('auth_add_user')
         self.instance.clear_calls('auth_edit_user')
         self.instance.clear_calls('auth_remove_user')
@@ -357,14 +396,16 @@ class TestAuth(unittest.TestCase):
 
         calls = self.instance.get_calls('auth_edit_user')
         self.assertEqual(len(calls), 1)
-        self.assertEqual(calls[0], USER1)
+        self.assertEqual(calls[0], [
+            USER1.get(p) for p in ['username', 'password', 'fullname', 'email']
+        ])
 
         calls = self.instance.get_calls('auth_remove_user')
         self.assertEqual(len(calls), 0)
 
         # fail on auth_remove_user
         self.instance.set_fail_on('auth_remove_user')
-        self.instance.set_variable('users', [USER1])
+        self.instance.set_users([USER1])
 
         deleted_user1 = USER1.copy()
         deleted_user1['deleted'] = True
@@ -374,6 +415,8 @@ class TestAuth(unittest.TestCase):
         self.assertIn('cartridge err', res.msg)
 
     def test_empty_users(self):
+        self.instance.bootstrap_cluster()
+
         # all required operations are implemented
         set_user_functions_implemented(self.instance)
 
@@ -384,7 +427,7 @@ class TestAuth(unittest.TestCase):
         }
 
         # delete existed user
-        self.instance.set_variable('users', [USER])
+        self.instance.set_users([USER])
         self.instance.clear_calls('auth_add_user')
         self.instance.clear_calls('auth_edit_user')
         self.instance.clear_calls('auth_remove_user')
