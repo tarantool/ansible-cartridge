@@ -57,7 +57,10 @@ class TestTags(unittest.TestCase):
             'Collect instance info',
             'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'Collect scenario steps',
+            'Collect scenarios',
+            'Check scenario name',
+            'Collect names of scenario steps',
+            'Collect tasks for scenario steps',
             'Include steps by scenario',
         ])
 
@@ -70,7 +73,10 @@ class TestTags(unittest.TestCase):
             'Collect instance info',
             'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'Collect scenario steps',
+            'Collect scenarios',
+            'Check scenario name',
+            'Collect names of scenario steps',
+            'Collect tasks for scenario steps',
             'Include steps by scenario',
         ])
 
@@ -83,7 +89,10 @@ class TestTags(unittest.TestCase):
             'Collect instance info',
             'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'Collect scenario steps',
+            'Collect scenarios',
+            'Check scenario name',
+            'Collect names of scenario steps',
+            'Collect tasks for scenario steps',
             'Include steps by scenario',
         ])
 
@@ -96,7 +105,10 @@ class TestTags(unittest.TestCase):
             'Collect instance info',
             'Select one instance for each physical machine',
             'Select one not expelled instance',
-            'Collect scenario steps',
+            'Collect scenarios',
+            'Check scenario name',
+            'Collect names of scenario steps',
+            'Collect tasks for scenario steps',
             'Include steps by scenario',
         ])
 

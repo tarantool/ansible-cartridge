@@ -34,21 +34,44 @@ cartridge_app_group: tarantool
 
 cartridge_custom_steps: []
 cartridge_custom_steps_dir: null
-cartridge_scenario:
-  - deliver_package
-  - update_package
-  - update_instance
-  - configure_instance
-  - restart_instance
-  - wait_instance_started
-  - connect_to_membership
-  - edit_topology
-  - cleanup_expelled
-  - configure_auth
-  - configure_app_config
-  - bootstrap_vshard
-  - configure_failover
-  - cleanup
+cartridge_scenario: null
+
+cartridge_scenario_name: 'default'
+cartridge_custom_scenarios: {}
+cartridge_role_scenarios:
+  default:
+    - deliver_package
+    - update_package
+    - update_instance
+    - configure_instance
+    - restart_instance
+    - wait_instance_started
+    - connect_to_membership
+    - edit_topology
+    - cleanup_expelled
+    - configure_auth
+    - configure_app_config
+    - bootstrap_vshard
+    - configure_failover
+  configure_instances:
+    - deliver_package
+    - update_package
+    - update_instance
+    - configure_instance
+    - restart_instance
+    - wait_instance_started
+    - cleanup
+  configure_topology:
+    - connect_to_membership
+    - edit_topology
+    - cleanup_expelled
+    - cleanup
+  configure_app:
+    - configure_auth
+    - configure_app_config
+    - bootstrap_vshard
+    - configure_failover
+    - cleanup
 
 cartridge_configure_systemd_unit_files: true
 cartridge_systemd_dir: /etc/systemd/system

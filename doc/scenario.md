@@ -8,6 +8,11 @@ Using a scenario of steps, you can:
 - replace the steps of the role with your own or add new steps
   (with `cartridge_custom_steps_dir` or `cartridge_custom_steps`).
 
+To specify `cartridge_scenario`, you can use the following options:
+
+- specify `cartridge_scenario` directly;
+- specify a name of defined scenario by `cartridge_scenario_name` (see [scenarios](#scenarios)).
+
 ## Steps
 
 In `cartridge_scenario` you should specify names of steps. The default scenario includes the following steps:
@@ -34,6 +39,31 @@ There are additional steps that are not included in the default scenario, but ca
 
 To replace the steps of the role with your own or add new steps, you should use `cartridge_custom_steps_dir`
 or `cartridge_custom_steps` options.
+
+## Scenarios
+
+In addition to the default scenario (see [steps](#steps)), there are also the following scenarios:
+- `configure_instances`:
+  - [deliver_package](#deliver_package)
+  - [update_package](#update_package)
+  - [update_instance](#update_instance)
+  - [configure_instance](#configure_instance)
+  - [restart_instance](#restart_instance)
+  - [wait_instance_started](#wait_instance_started)
+  - [cleanup](#cleanup)
+- `configure_topology`:
+  - [connect_to_membership](#connect_to_membership)
+  - [edit_topology](#edit_topology)
+  - [cleanup_expelled](#cleanup_expelled)
+  - [cleanup](#cleanup)
+- `configure_app`:
+  - [configure_auth](#configure_auth)
+  - [configure_app_config](#configure_app_config)
+  - [bootstrap_vshard](#bootstrap_vshard)
+  - [configure_failover](#configure_failover)
+  - [cleanup](#cleanup)
+
+To add new scenarios or replace the role scenarios with your own, you should use `cartridge_custom_scenarios` option.
 
 ## Examples
 
@@ -151,6 +181,65 @@ step from scenario:
           console_sock: '/var/run/tarantool/core_1.control'
 ```
 
+### Add custom scenario to gradually update to a new version of TGZ
+
+If you are using multiversion, then most likely you are upgrading to the new version of the package gradually:
+first storages, then routers, etc. To do this, the same scenario to update the package version is used several times.
+Let's remove duplication by declaring a custom script and then using it!
+
+Firstly you should to define custom scenarios in hosts file:
+
+```yaml
+cartridge_multiversion: true
+cartridge_package_path: "./myapp-2.0.0-0.tgz"
+cartridge_custom_scenarios:
+  # To deploy TGZ without instances update
+  deploy_tgz:
+    - deliver_package
+    - update_package
+  # To update instances to new TGZ
+  update_instance_tgz:
+    - update_instance
+    - restart_instance
+    - wait_instance_started
+```
+
+Then you can use them in your playbook:
+
+```yaml
+- name: Deploy new TGZ
+  hosts: all
+  vars:
+    cartridge_scenario_name: "deploy_tgz"
+  roles: tarantool.cartridge
+
+- name: Update storages
+  hosts: "*storage*"
+  vars:
+    cartridge_scenario_name: "update_instance_tgz"
+  roles: tarantool.cartridge
+
+- name: Update routers
+  hosts: "*router*"
+  vars:
+    cartridge_scenario_name: "update_instance_tgz"
+  roles: tarantool.cartridge
+```
+
+### Replace a role scenario with a custom scenario
+
+To replace any role scenario with a custom one, you only should define your own scenario
+in `cartridge_custom_scenarios` with the same name as the role script.
+
+For example, you can replace `configure_topology` with a scenario without `connect_to_membership` step (see
+[example for editing topology without connecting to membership](#editing-topology-without-connecting-to-membership))
+```yaml
+cartridge_custom_scenarios:
+  configure_topology:
+    - edit_topology
+    - cleanup_expelled
+```
+
 ## Role Facts Descriptions
 
 Role facts are established during preparation, so you can use them at any step.
@@ -172,6 +261,8 @@ List of facts:
 - `not_expelled_instance` - information about one not expelled instance. It's a dictionary with fields:
   - `name` - instance name (Ansible host);
   - `console_sock` - path to control socket of instance;
+- `cartridge_scenarios` - finally dictionary with scenarios (combination of role and user scenarios);
+- `cartridge_scenario` - steps of selected scenario (if not previously defined);
 - `scenario_steps` - description of scenario steps. It's a dictionary with fields:
   - `name` - name of step;
   - `path` - path to YAML file of step.

@@ -12,6 +12,12 @@
     - cartridge-replicasets
     - cartridge-config
 
+- import_tasks: 'prepare_scenario.yml'
+  tags:
+    - cartridge-instances
+    - cartridge-replicasets
+    - cartridge-config
+
 - name: 'Include steps by scenario'
   include_tasks: "{{ item.path }}"
   loop_control:
