@@ -3,6 +3,7 @@ import os
 import re
 import socket
 import textwrap
+import sys
 from subprocess import Popen
 
 import tenacity
@@ -60,7 +61,7 @@ class Instance:
         self.sock.connect(self.console_sock)
         self.sock.recv(1024)
 
-    def start(self):
+    def start(self, debug=False):
         command = ["./%s" % self.script]
         cwd = instance_app_dir
 
@@ -68,11 +69,13 @@ class Instance:
         env['TARANTOOL_CONSOLE_SOCK'] = self.console_sock
 
         with open(os.devnull, 'w') as FNULL:
-            self.process = Popen(command, env=env, cwd=cwd, stdout=FNULL, stderr=FNULL)
+            stdout = FNULL
+            stderr = FNULL
+            if debug:
+                stdout = sys.stdout
+                stderr = sys.stderr
 
-        # # verbose output
-        # import sys
-        # self.process = Popen(command, env=env, cwd=cwd, stdout=sys.stdout, stderr=sys.stderr)
+            self.process = Popen(command, env=env, cwd=cwd, stdout=stdout, stderr=stderr)
 
         self._connect()
 
