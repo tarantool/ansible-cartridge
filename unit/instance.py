@@ -161,8 +161,6 @@ class Instance:
             # return res
             data.append(None)
 
-        # return res, err
-
         # err can be tarantool/errors instance
         if isinstance(data[1], dict) and data[1].get('err') is not None:
             data[1] = data[1].get('err')
