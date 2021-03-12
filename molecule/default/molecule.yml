@@ -63,6 +63,9 @@ lint: |
 
 provisioner:
   name: ansible
+  config_options:
+    ssh_connection:
+      pipelining: true
   inventory:
     links:
       hosts: hosts.yml
