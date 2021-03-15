@@ -1,0 +1,29 @@
+---
+
+- run_once: true
+  delegate_to: localhost
+  become: false
+  when: cartridge_scenario is none
+  block:
+    - name: 'Collect scenarios'
+      set_fact:
+        cartridge_scenarios: "{{ cartridge_role_scenarios | combine(cartridge_custom_scenarios) }}"
+
+    - name: 'Check scenario name'
+      fail:
+        msg: "Unknown scenario name '{{ cartridge_scenario_name }}'"
+      when: cartridge_scenario_name not in cartridge_scenarios
+
+    - name: 'Collect names of scenario steps'
+      set_fact:
+        cartridge_scenario: "{{ cartridge_scenarios[cartridge_scenario_name] }}"
+
+- name: 'Collect tasks for scenario steps'
+  cartridge_set_scenario_steps:
+    scenario: '{{ cartridge_scenario }}'
+    role_path: '{{ role_path }}'
+    custom_steps_dir: '{{ cartridge_custom_steps_dir }}'
+    custom_steps: '{{ cartridge_custom_steps }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
