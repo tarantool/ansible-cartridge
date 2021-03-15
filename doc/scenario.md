@@ -11,7 +11,7 @@ Using a scenario, you can:
 
 ## Steps
 
-It's possible to specified what steps should be launched by `cartridge_scenario` variable or `tasks_from` option.
+It's possible to specify what steps should be launched by `cartridge_scenario` variable or `tasks_from` option.
 
 ### Variable `cartridge_scenario`
 
@@ -53,7 +53,8 @@ or `cartridge_custom_steps` options (see [examples](#examples)).
 You can also select a step when importing a role.
 To do this, you just need to specify in the `tasks_from` option
 the name of the role step with the prefix `step_`.
-Unfortunately, you cannot import custom steps using this method.
+Unfortunately, using this method you cannot import custom steps
+(defined by `cartridge_custom_steps_dir` or `cartridge_custom_steps` options).
 
 For example:
 
