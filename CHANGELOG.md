@@ -29,6 +29,7 @@ to use the newest tag with new release
 - `cleanup` step to remove temporary files from specific list
 - Added availability to import steps by scenario name. Added some default scenarios.
   Added availability to create custom scenarios.
+- availability to use `tasks_from` to import any step
 
 ### Changed
 
