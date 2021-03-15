@@ -53,6 +53,7 @@ cartridge_role_scenarios:
     - configure_app_config
     - bootstrap_vshard
     - configure_failover
+    - cleanup
   configure_instances:
     - deliver_package
     - update_package

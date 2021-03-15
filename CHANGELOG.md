@@ -27,6 +27,8 @@ to use the newest tag with new release
   for each instance and perform rolling update correctly (using new `update_instance` step)
 - `rotate_dists` step that allows to rotate application distributions
 - `cleanup` step to remove temporary files from specific list
+- Added availability to import steps by scenario name. Added some default scenarios.
+  Added availability to create custom scenarios.
 
 ### Changed
 
