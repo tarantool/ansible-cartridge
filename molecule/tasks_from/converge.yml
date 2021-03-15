@@ -1,0 +1,78 @@
+---
+
+- name: Test default scenario steps imported by 'tasks_from'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+
+    - name: Import step 'deliver_package'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_deliver_package
+
+    - name: Import step 'update_package'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_update_package
+
+    - name: Import step 'update_instance'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_update_instance
+
+    - name: Import step 'configure_instance'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_configure_instance
+
+    - name: Import step 'restart_instance'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_restart_instance
+
+    - name: Import step 'wait_instance_started'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_wait_instance_started
+
+    - name: Import step 'connect_to_membership'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_connect_to_membership
+
+    - name: Import step 'edit_topology'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_edit_topology
+
+    - name: Import step 'cleanup_expelled'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_cleanup_expelled
+
+    - name: Import step 'configure_auth'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_configure_auth
+
+    - name: Import step 'configure_app_config'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_configure_app_config
+
+    - name: Import step 'bootstrap_vshard'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_bootstrap_vshard
+
+    - name: Import step 'configure_failover'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_configure_failover
+
+    - name: Import step 'cleanup'
+      import_role:
+        name: ansible-cartridge
+        tasks_from: step_cleanup

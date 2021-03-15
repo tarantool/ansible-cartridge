@@ -67,6 +67,64 @@ jobs:
       - name: Molecule tests
         run: molecule test
 
+  molecule-tests-ce-tasks-from:
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login != 'tarantool'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tarantool-version: ["2.5"]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+
+      # This server starts and listen on 8084 port that is used for tests
+      - name: Stop Mono server
+        run: sudo kill -9 $(sudo lsof -t -i tcp:8084) || true
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install molecule requirements
+        run: |
+          pip3 install --upgrade -r requirements.txt
+
+      - name: Cache test packages
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: 'packages'
+          key: ce-${{ matrix.tarantool-version }}-${{ env.CARTRIDGE_CLI_VERSION }}-${{ hashFiles('./create-packages.sh') }}
+
+      - name: Install Tarantool
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        uses: tarantool/setup-tarantool@v1
+        with:
+          tarantool-version: '${{ matrix.tarantool-version }}'
+
+      - name: Create test packages
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          sudo apt-get update
+
+          sudo apt-get -y install git gcc make cmake unzip
+          git config --global user.email "test@tarantool.io" \
+            && git config --global user.name "Tar Antool"
+
+          curl -L https://tarantool.io/release/${{ matrix.tarantool-version }}/installer.sh | sudo -E bash -s
+          sudo apt-get install -y cartridge-cli ${{ env.CARTRIDGE_CLI_VERSION }}
+
+          tarantool --version
+          cartridge version
+
+          ./create-packages.sh
+
+      - name: Molecule tests
+        run: molecule test -s tasks_from
+
   molecule-tests-ee:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest

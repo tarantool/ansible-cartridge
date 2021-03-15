@@ -1,5 +1,20 @@
 ---
 
+- name: 'Validate config'
+  cartridge_validate_config:
+    hosts: '{{ play_hosts }}'
+    hostvars: '{{ hostvars }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+
+- name: 'Validate OS Family'
+  fail:
+    msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
+  when:
+    - ansible_os_family is defined
+    - ansible_os_family not in ["RedHat", "Debian"]
+
 - name: "Set 'remote_user' for delegated tasks"
   set_fact:
     remote_user: '{{ ansible_user }}'

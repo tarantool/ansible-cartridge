@@ -1,21 +1,27 @@
 # Role Scenario
 
-The role uses a scenario to determine what to do. Scenario consists of steps that can be configured.
+The role uses a scenario to determine what to do.
+Any scenario consists of the previously defined steps.
+Using a scenario, you can:
 
-Using a scenario of steps, you can:
-
-- run the specified steps in any order, but API must be followed (with `cartridge_scenario`);
+- run the specified steps in any order, but API must be followed
+  (with `cartridge_scenario` or `tasks_from`);
 - replace the steps of the role with your own or add new steps
   (with `cartridge_custom_steps_dir` or `cartridge_custom_steps`).
+
+## Steps
+
+It's possible to specify what steps should be launched by `cartridge_scenario` variable or `tasks_from` option.
+
+### Variable `cartridge_scenario`
 
 To specify `cartridge_scenario`, you can use the following options:
 
 - specify `cartridge_scenario` directly;
-- specify a name of defined scenario by `cartridge_scenario_name` (see [scenarios](#scenarios)).
+- specify a name of defined (by the role or by you) scenario by `cartridge_scenario_name`.
 
-## Steps
-
-In `cartridge_scenario` you should specify names of steps. The default scenario includes the following steps:
+If you want to specify `cartridge_scenario` variable, you should specify names of steps.
+The default scenario includes the following steps:
 
 - [deliver_package](#deliver_package)
 - [update_package](#update_package)
@@ -32,13 +38,35 @@ In `cartridge_scenario` you should specify names of steps. The default scenario 
 - [configure_failover](#configure_failover)
 - [cleanup](#cleanup)
 
+More scenarios you can see in [scenarios](#scenarios) section.
+
 There are additional steps that are not included in the default scenario, but can be used in a custom one:
 
 - [set_control_instance](#set_control_instance)
 - [rotate_dists](#rotate_dists)
 
 To replace the steps of the role with your own or add new steps, you should use `cartridge_custom_steps_dir`
-or `cartridge_custom_steps` options.
+or `cartridge_custom_steps` options (see [examples](#examples)).
+
+### Option `tasks_from`
+
+You can also select a step when importing a role.
+To do this, you just need to specify in the `tasks_from` option
+the name of the role step with the prefix `step_`.
+Unfortunately, using this method you cannot import custom steps
+(defined by `cartridge_custom_steps_dir` or `cartridge_custom_steps` options).
+
+For example:
+
+```yaml
+- name: Step imported by 'tasks_from'
+  hosts: all
+  tasks:
+    - name: Import step 'deliver_package'
+      import_role:
+        name: ansible.cartridge
+        tasks_from: step_deliver_package
+```
 
 ## Scenarios
 
@@ -63,7 +91,8 @@ In addition to the default scenario (see [steps](#steps)), there are also the fo
   - [configure_failover](#configure_failover)
   - [cleanup](#cleanup)
 
-To add new scenarios or replace the role scenarios with your own, you should use `cartridge_custom_scenarios` option.
+To add new scenarios or replace the role scenarios with your own, you should use `cartridge_custom_scenarios` option
+(see [example](#add-custom-scenario-to-gradually-update-to-a-new-version-of-TGZ)).
 
 ## Examples
 

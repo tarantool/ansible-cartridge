@@ -1,11 +1,5 @@
 ---
 
-- import_tasks: 'validate.yml'
-  tags:
-    - cartridge-instances
-    - cartridge-replicasets
-    - cartridge-config
-
 - import_tasks: 'prepare.yml'
   tags:
     - cartridge-instances
