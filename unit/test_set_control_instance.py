@@ -22,14 +22,17 @@ def call_get_control_instance(app_name, console_sock, hostvars=None, play_hosts=
 
 URI1 = '127.0.0.1:3301'
 URI2 = '127.0.0.1:3302'
+URI3 = '127.0.0.1:3303'
 
 UUID1 = 'uuid-1'
 UUID2 = 'uuid-2'
+UUID3 = 'uuid-3'
 
 APP_NAME = 'myapp'
 
 ALIAS1 = 'alias-1'
 ALIAS2 = 'alias-2'
+ALIAS3 = 'alias-3'
 
 RUN_DIR1 = '%s-run-dir' % ALIAS1
 RUN_DIR2 = '%s-run-dir' % ALIAS2
@@ -212,6 +215,37 @@ class TestSetControlInstance(unittest.TestCase):
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars, play_hosts=[
             ALIAS1, 'expelled-instance', 'my-stateboard',
         ])
+        self.assertTrue(res.failed, res.facts)
+        self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
+
+    def test_instance_not_in_hostvars(self):
+        hostvars = {
+            ALIAS1: {},
+            ALIAS2: {},
+        }
+
+        set_membership_members(self.instance, [
+            {'uri': URI1, 'alias': ALIAS1},
+            {'uri': URI2, 'alias': ALIAS2},
+            {'uri': URI3, 'alias': ALIAS3, 'uuid': UUID3},  # has UUID but not in hostvars
+        ])
+
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        self.assertTrue(res.failed, res.facts)
+        self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
+
+    def test_instance_is_not_alive(self):
+        hostvars = {
+            ALIAS1: {},
+            ALIAS2: {},
+        }
+
+        set_membership_members(self.instance, [
+            {'uri': URI1, 'alias': ALIAS1},
+            {'uri': URI2, 'alias': ALIAS2, 'uuid': UUID3, 'status': 'dead'},  # has UUID but dead
+        ])
+
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertTrue(res.failed, res.facts)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
 
