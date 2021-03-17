@@ -28,15 +28,23 @@ def get_control_instance(params):
         return require('membership').members()
     ''')
 
-    for uri, member in members.items():
+    for uri, member in sorted(members.items()):
         if 'payload' not in member or not member['payload']:
             return helpers.ModuleRes(failed=True, msg='Instance %s does not contain payload' % uri)
 
-        if member['payload'].get('uuid') is not None:
-            if member['payload'].get('alias') is None:
+        if member.get('status') != 'alive':
+            continue
+
+        member_payload = member['payload']
+        if member_payload.get('uuid') is not None:
+            if member_payload.get('alias') is None:
                 return helpers.ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
 
-            control_instance_name = member['payload']['alias']
+            instance_name = member_payload['alias']
+            if instance_name not in hostvars:
+                continue
+
+            control_instance_name = instance_name
             break
 
     if control_instance_name is None:

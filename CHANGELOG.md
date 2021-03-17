@@ -15,6 +15,11 @@ to use the newest tag with new release
 
 - Role installation will be completely skipped
   if you specify a tag other than the tags for this role
+- Fixed selecting control instance that doesn't belong to cluster or isn't alive.
+  The following rules are currently used:
+  * Members are checked in lexicographic order by URIs
+  * Members not mentioned in hostvars aren't selected to be control
+  * Members with status not `alive` aren't selected to be control
 
 ### Added
 
