@@ -20,6 +20,7 @@ to use the newest tag with new release
   * Members are checked in lexicographic order by URIs
   * Members not mentioned in hostvars aren't selected to be control
   * Members with status not `alive` aren't selected to be control
+- Fixed setting `needs_restart` when configuration files don't exist
 
 ### Added
 

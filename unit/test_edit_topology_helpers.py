@@ -1,9 +1,9 @@
 import unittest
 
 from library.cartridge_edit_topology import get_configured_replicasets
-from library.cartridge_edit_topology import get_edit_replicaset_params
+from library.cartridge_edit_topology import get_replicaset_params
 from library.cartridge_edit_topology import get_instances_to_configure
-from library.cartridge_edit_topology import get_edit_server_params
+from library.cartridge_edit_topology import get_server_params
 
 
 def call_get_configured_replicasets(hostvars, play_hosts=None):
@@ -153,7 +153,7 @@ class TestGetInstancesToConfigure(unittest.TestCase):
         self.assertEqual(len(instances), 0)
 
 
-class TestGetEditReplicasetParams(unittest.TestCase):
+class TestGetReplicasetParams(unittest.TestCase):
     def test_create_replicaset(self):
         cluster_instances = {
             alias: {'uri': '%s-uri' % alias, 'alias': alias}
@@ -169,7 +169,7 @@ class TestGetEditReplicasetParams(unittest.TestCase):
             'failover_priority': ['i1', 'i2', 'i3'],
         }
 
-        params, err = get_edit_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
         self.assertIsNone(err)
         self.assertEqual(params, {
             'alias': 'r1',
@@ -195,7 +195,7 @@ class TestGetEditReplicasetParams(unittest.TestCase):
                 param_name: param_value,
             }
 
-            params, err = get_edit_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+            params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
             self.assertIsNone(err)
             self.assertEqual(params, {
                 'alias': 'r1',
@@ -213,7 +213,7 @@ class TestGetEditReplicasetParams(unittest.TestCase):
             'failover_priority': ['i1', 'i2', 'i3'],
         }
 
-        params, err = get_edit_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
         self.assertIsNone(params)
         self.assertIn("Some of replicaset instances aren't found in cluster: ", err)
         self.assertTrue(
@@ -227,7 +227,7 @@ class TestGetEditReplicasetParams(unittest.TestCase):
             'failover_priority': ['i1', 'unknown-2', 'i2', 'i3', 'unknown-1'],
         }
 
-        params, err = get_edit_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
         self.assertIsNone(params)
         self.assertIn("Some of instances specified in failover_priority aren't found in cluster: ", err)
         self.assertTrue(
@@ -261,7 +261,7 @@ class TestGetEditReplicasetParams(unittest.TestCase):
             'vshard_group': 'cold',
         }
 
-        params, err = get_edit_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
         self.assertIsNone(err)
         self.assertIsNone(params)
 
@@ -298,7 +298,7 @@ class TestGetEditReplicasetParams(unittest.TestCase):
                 param_name: new_param_value,
             }
 
-            params, err = get_edit_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+            params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
             self.assertIsNone(err)
             self.assertEqual(params, {
                 'uuid': 'r1-uuid',
@@ -319,7 +319,7 @@ class TestGetEditReplicasetParams(unittest.TestCase):
                 param_name: new_param_value,
             }
 
-            params, err = get_edit_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+            params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
             self.assertIsNone(err)
             self.assertEqual(params, {
                 'uuid': 'r1-uuid',
@@ -340,7 +340,7 @@ class TestGetEditReplicasetParams(unittest.TestCase):
                 'failover_priority': ['i1', 'i2', 'i3'],
             }
 
-            params, err = get_edit_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+            params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
             self.assertIsNone(err)
             self.assertIsNone(params)
 
@@ -363,7 +363,7 @@ class TestGetEditReplicasetParams(unittest.TestCase):
             'failover_priority': ['i1', 'i2', 'i3'],
         }
 
-        params, err = get_edit_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
         self.assertIsNone(err)
 
         self.assertEqual(len(params), 2)
@@ -391,13 +391,13 @@ class TestGetEditReplicasetParams(unittest.TestCase):
             'instances': ['i3'],
         }
 
-        params, err = get_edit_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
         self.assertIsNone(err)
         self.assertIsNone(params)
 
 
-class TestGetEditServerParams(unittest.TestCase):
-    def test_get_edit_server_params(self):
+class TestGetServerParams(unittest.TestCase):
+    def test_server_params(self):
         cluster_instances = {
             alias: {'uri': '%s-uri' % alias, 'alias': alias}
             for alias in ['joined', 'not-joined']
@@ -410,7 +410,7 @@ class TestGetEditServerParams(unittest.TestCase):
             'expelled': True,
             'zone': 'some-zone',
         }
-        params, err = get_edit_server_params('unknown', instance_params, cluster_instances)
+        params, err = get_server_params('unknown', instance_params, cluster_instances)
         self.assertIsNone(err)
         self.assertIsNone(params)
 
@@ -418,7 +418,7 @@ class TestGetEditServerParams(unittest.TestCase):
         instance_params = {
             'zone': 'some-zone',
         }
-        params, err = get_edit_server_params('unknown', instance_params, cluster_instances)
+        params, err = get_server_params('unknown', instance_params, cluster_instances)
         self.assertEqual(err, "Instance unknown isn't found in cluster")
         self.assertIsNone(params)
 
@@ -427,7 +427,7 @@ class TestGetEditServerParams(unittest.TestCase):
             'expelled': True,
             'zone': 'some-zone',
         }
-        params, err = get_edit_server_params('not-joined', instance_params, cluster_instances)
+        params, err = get_server_params('not-joined', instance_params, cluster_instances)
         self.assertIsNone(err)
         self.assertIsNone(params)
 
@@ -436,7 +436,7 @@ class TestGetEditServerParams(unittest.TestCase):
             'expelled': True,
             'zone': 'some-zone',
         }
-        params, err = get_edit_server_params('joined', instance_params, cluster_instances)
+        params, err = get_server_params('joined', instance_params, cluster_instances)
         self.assertIsNone(err)
         self.assertEqual(params, {
             'uuid': 'joined-uuid',
@@ -447,7 +447,7 @@ class TestGetEditServerParams(unittest.TestCase):
         instance_params = {
             'zone': 'some-zone',
         }
-        params, err = get_edit_server_params('joined', instance_params, cluster_instances)
+        params, err = get_server_params('joined', instance_params, cluster_instances)
         self.assertIsNone(err)
         self.assertEqual(params, {
             'uuid': 'joined-uuid',
@@ -459,7 +459,7 @@ class TestGetEditServerParams(unittest.TestCase):
         instance_params = {
             'zone': 'some-zone',
         }
-        params, err = get_edit_server_params('joined', instance_params, cluster_instances)
+        params, err = get_server_params('joined', instance_params, cluster_instances)
         self.assertIsNone(err)
         self.assertIsNone(params)
 
@@ -468,7 +468,7 @@ class TestGetEditServerParams(unittest.TestCase):
         instance_params = {
             'zone': 'other-zone',
         }
-        params, err = get_edit_server_params('joined', instance_params, cluster_instances)
+        params, err = get_server_params('joined', instance_params, cluster_instances)
         self.assertIsNone(err)
         self.assertEqual(params, {
             'uuid': 'joined-uuid',
