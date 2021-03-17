@@ -24,7 +24,7 @@ def get_uuids(control_console, instances_to_find, replicasets, hostvars):
         response = control_console.eval('''
             local membership = require('membership')
             local member = membership.get_member('{}')
-            if member.status ~= 'alive' or member.payload.state ~= 'RolesConfigured' then
+            if member == nil or member.status ~= 'alive' or member.payload.state ~= 'RolesConfigured' then
                 return box.NULL
             end
             local replicasets = require('cartridge').admin_get_replicasets()
