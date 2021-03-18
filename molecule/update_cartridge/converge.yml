@@ -1,0 +1,91 @@
+---
+- name: Bootstrap cluster with Cartridge 2.1.2 on all instances
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_enable_tarantool_repo: true
+    cartridge_configure_systemd_unit_files: true
+    cartridge_configure_tmpfiles: true
+    cartridge_install_tarantool_for_tgz: true
+    cartridge_package_path: ./packages/myapp-1.0.0-0-with-c-2.1.2.tar.gz
+
+- name: Update storage-with-c-2.2.0 to Cartridge 2.2.0
+  hosts: storage-with-c-2.2.0
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: update_tgz
+    cartridge_package_path: ./packages/myapp-2.0.0-0-with-c-2.2.0.tar.gz
+
+- name: Update storage-with-c-2.3.0 to Cartridge 2.3.0
+  hosts: storage-with-c-2.3.0
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: update_tgz
+    cartridge_package_path: ./packages/myapp-3.0.0-0-with-c-2.3.0.tar.gz
+
+- name: Update storage-with-c-2.4.0 to Cartridge 2.4.0
+  hosts: storage-with-c-2.4.0
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: update_tgz
+    cartridge_package_path: ./packages/myapp-4.0.0-0-with-c-2.4.0.tar.gz
+
+- name: Update storage-with-c-2.5.0 to Cartridge 2.5.0
+  hosts: storage-with-c-2.5.0
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: update_tgz
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+
+# This play affects two-phase commmit
+# We need to be sure that role selects such control instance
+# that two-phase commit doesn't fail for that
+- name: Configure application
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: configure_app
+    cartridge_app_config:
+      my-section:
+        body:
+          some-section: some-other-value
+    cartridge_failover_params:
+      mode: eventual
+    cartridge_auth:
+      enabled: true
+      cookie_max_age: 1000
+
+- name: Update all instances to Cartridge 2.5.0
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+    cartridge_scenario_name: update_tgz

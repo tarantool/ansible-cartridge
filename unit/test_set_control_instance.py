@@ -4,6 +4,20 @@ import os
 
 from unit.instance import Instance
 from library.cartridge_set_control_instance import get_control_instance
+import library.cartridge_set_control_instance as set_control_instance_lib
+
+
+twophase_commit_versions = {}
+
+
+def get_twophase_commit_versions_mock(_, advertise_uris):
+    versions = [
+        twophase_commit_versions.get(uri, 1) for uri in advertise_uris
+    ]
+    return versions, None
+
+
+set_control_instance_lib.get_twophase_commit_versions = get_twophase_commit_versions_mock
 
 
 def call_get_control_instance(app_name, console_sock, hostvars=None, play_hosts=None):
@@ -36,9 +50,11 @@ ALIAS3 = 'alias-3'
 
 RUN_DIR1 = '%s-run-dir' % ALIAS1
 RUN_DIR2 = '%s-run-dir' % ALIAS2
+RUN_DIR3 = '%s-run-dir' % ALIAS3
 
 SOCK1 = os.path.join(RUN_DIR1, '%s.%s.control' % (APP_NAME, ALIAS1))
 SOCK2 = os.path.join(RUN_DIR2, '%s.%s.control' % (APP_NAME, ALIAS2))
+SOCK3 = os.path.join(RUN_DIR3, '%s.%s.control' % (APP_NAME, ALIAS3))
 
 
 def set_membership_members(instance, specified_members, with_payload=True):
@@ -93,7 +109,7 @@ class TestSetControlInstance(unittest.TestCase):
 
     def test_one_instance_without_run_dir(self):
         hostvars = {
-            ALIAS1: {},
+            ALIAS1: {'config': {'advertise_uri': URI1}},
         }
 
         # with UUID and alias
@@ -109,7 +125,7 @@ class TestSetControlInstance(unittest.TestCase):
 
     def test_one_instance(self):
         hostvars = {
-            ALIAS1: {'cartridge_run_dir': RUN_DIR1},
+            ALIAS1: {'cartridge_run_dir': RUN_DIR1, 'config': {'advertise_uri': URI1}},
         }
 
         # with UUID and alias
@@ -133,19 +149,22 @@ class TestSetControlInstance(unittest.TestCase):
 
     def test_two_instances(self):
         hostvars = {
-            ALIAS1: {'cartridge_run_dir': RUN_DIR1},
-            ALIAS2: {'cartridge_run_dir': RUN_DIR2},
+            ALIAS1: {'cartridge_run_dir': RUN_DIR1, 'config': {'advertise_uri': URI1}},
+            ALIAS2: {'cartridge_run_dir': RUN_DIR2, 'config': {'advertise_uri': URI2}},
         }
 
-        # both with UUID and alias (one is selected)
+        # both with UUID and alias
+        # URI1 is selected since it's first lexicographically
         set_membership_members(self.instance, [
             {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
             {'uri': URI2, 'uuid': UUID2, 'alias': ALIAS2},
         ])
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
-        self.assertIn(res.facts['control_instance']['name'], [ALIAS1, ALIAS2])
-        self.assertIn(res.facts['control_instance']['console_sock'], [SOCK1, SOCK2])
+        self.assertEqual(res.facts, {'control_instance': {
+            'name': ALIAS1,
+            'console_sock': SOCK1,
+        }})
 
         # one with UUID (it is selected)
         set_membership_members(self.instance, [
@@ -179,12 +198,21 @@ class TestSetControlInstance(unittest.TestCase):
 
     def test_no_joined_instances(self):
         hostvars = {
-            ALIAS1: {'cartridge_run_dir': RUN_DIR1},
+            ALIAS1: {
+                'config': {'advertise_uri': URI1},
+                'cartridge_run_dir': RUN_DIR1,
+                'replicaset_alias': 'some-rpl',
+            },
             ALIAS2: {
+                'config': {'advertise_uri': URI2},
                 'cartridge_run_dir': RUN_DIR2,
                 'replicaset_alias': 'some-rpl',
             },
+            'instance-not-in-replicaset': {
+                'config': {'advertise_uri': 'uri-not-in-replicaset'},
+            },
             'expelled-instance': {
+                'config': {'advertise_uri': 'uri-expelled'},
                 'replicaset_alias': 'some-rpl',
                 'cartridge_run_dir': RUN_DIR1,
                 'expelled': True,
@@ -194,26 +222,24 @@ class TestSetControlInstance(unittest.TestCase):
             },
         }
 
-        # all instances are in play_hosts
         set_membership_members(self.instance, [
             {'uri': URI1, 'alias': ALIAS1},
             {'uri': URI2, 'alias': ALIAS2},
         ])
+
+        # all instances are in play_hosts
+        # URI1 is selected by lexicographic order
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.facts, {'control_instance': {
-            'name': ALIAS2,
-            'console_sock': SOCK2,
+            'name': ALIAS1,
+            'console_sock': SOCK1,
         }})
 
         # only instances w/o replicaset_alias, expelled and stateboard
         # are in play_hosts
-        set_membership_members(self.instance, [
-            {'uri': URI1, 'alias': ALIAS1},
-            {'uri': URI2, 'alias': ALIAS2},
-        ])
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars, play_hosts=[
-            ALIAS1, 'expelled-instance', 'my-stateboard',
+            'instance-not-in-replicaset', 'expelled-instance', 'my-stateboard',
         ])
         self.assertTrue(res.failed, res.facts)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
@@ -248,6 +274,76 @@ class TestSetControlInstance(unittest.TestCase):
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertTrue(res.failed, res.facts)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
+
+    def test_twophase_commit_versions(self):
+        hostvars = {
+            ALIAS1: {
+                'cartridge_run_dir': RUN_DIR1,
+                'config': {'advertise_uri': URI1},
+                'replicaset_alias': 'rpl-1',
+            },
+            ALIAS2: {
+                'cartridge_run_dir': RUN_DIR2,
+                'config': {'advertise_uri': URI2},
+                'replicaset_alias': 'rpl-1',
+            },
+            ALIAS3: {
+                'cartridge_run_dir': RUN_DIR3,
+                'config': {'advertise_uri': URI3},
+                'replicaset_alias': 'rpl-1',
+            },
+        }
+
+        # URI3 has lower version of twophase commit
+        global twophase_commit_versions
+        twophase_commit_versions = {
+            URI1: 3,
+            URI2: 2,
+            URI3: 1,
+        }
+
+        # all with UUID and alias - URI3 is selected
+        # (instead of URI1 by lexicographic order)
+        set_membership_members(self.instance, [
+            {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
+            {'uri': URI2, 'uuid': UUID2, 'alias': ALIAS2},
+            {'uri': URI3, 'uuid': UUID3, 'alias': ALIAS3},
+        ])
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.facts, {'control_instance': {
+            'name': ALIAS3,
+            'console_sock': SOCK3,
+        }})
+
+        # both without UUID and alias - URI3 is selected
+        # (instead of URI1 by lexicographic order)
+        set_membership_members(self.instance, [
+            {'uri': URI1, 'alias': ALIAS1},
+            {'uri': URI2, 'alias': ALIAS2},
+            {'uri': URI3, 'alias': ALIAS3},
+        ])
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.facts, {'control_instance': {
+            'name': ALIAS3,
+            'console_sock': SOCK3,
+        }})
+
+        # URI1 and URI2 has UUIDs
+        # URI2 is chosen instead of URI3 with minimal twophase commit version
+        # because URI2 has minimal twophase commit version between instances with UUIDS
+        set_membership_members(self.instance, [
+            {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
+            {'uri': URI2, 'uuid': UUID2, 'alias': ALIAS2},
+            {'uri': URI3, 'alias': ALIAS3},
+        ])
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.facts, {'control_instance': {
+            'name': ALIAS2,
+            'console_sock': SOCK2,
+        }})
 
     def tearDown(self):
         self.instance.stop()

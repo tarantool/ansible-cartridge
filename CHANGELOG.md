@@ -43,6 +43,9 @@ to use the newest tag with new release
   after editing topology
 - availability to specify instance `memtx_dir`, `vinyl_dir` and `wal_dir` params
   by `cartridge_memtx_dir_parent`, `cartridge_vinyl_dir_parent`, `cartridge_wal_dir_parent` variables.
+- Control instance is selected considering two-phase commit version of instances.
+  The reason is that all operations that modify cluster-wide config should be performed via instance
+  that has lowest Cartridge version (in fact, only two-phase commit version matters).
 
 ### Changed
 
