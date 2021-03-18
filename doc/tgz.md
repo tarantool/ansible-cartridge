@@ -36,7 +36,10 @@ can be configured using `cartridge_app_user` and `cartridge_app_group` variables
 Application directories are created before unpacking.
 To configure them use
 
-* `cartridge_data_dir` - directory where instances working directorieas are placed;
+* `cartridge_data_dir` - directory where instances working directories are placed;
+* `cartridge_memtx_dir_parent` - directory where instances memtx directories are placed;
+* `cartridge_vinyl_dir_parent` - directory where instances vinyl directories are placed;
+* `cartridge_wal_dir_parent` - directory where instances WAL directories are placed;
 * `cartridge_run_dir` - directory where PID and socket files are stored;
 * `cartridge_conf_dir` - path to instances configuration;
 * `cartridge_app_install_dir` - directory where application distributions are placed;

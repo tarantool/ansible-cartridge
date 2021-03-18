@@ -50,7 +50,10 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `cartridge_app_group` (`string`, default: `tarantool`): application group;
 
 * `cartridge_data_dir` (`string`, default: `/var/lib/tarantool`): directory
-  where instances working directorieas are placed;
+  where instances working directories are placed;
+* `cartridge_memtx_dir_parent` (`string`): directory where instances memtx directories are placed;
+* `cartridge_vinyl_dir_parent` (`string`): directory where instances vinyl directories are placed;
+* `cartridge_wal_dir_parent` (`string`): directory where instances WAL directories are placed;
 * `cartridge_run_dir`(`string`, default: `/var/run/tarantool`): directory where
   PID and socket files are stored;
 * `cartridge_conf_dir` (`string`, default: `/etc/tarantool/conf.d`): path to

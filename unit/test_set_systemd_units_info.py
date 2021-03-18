@@ -22,6 +22,9 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_multiversion': True,
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
+            'cartridge_memtx_dir_parent': 'some/memtx/dir',
+            'cartridge_vinyl_dir_parent': 'some/vinyl/dir',
+            'cartridge_wal_dir_parent': 'some/wal/dir',
             'dist_dir': '/some/dist/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
         }
@@ -36,6 +39,15 @@ class TestSetInstanceInfo(unittest.TestCase):
 
             'instance_work_dir': 'some/data/dir/myapp.%i',
             'stateboard_work_dir': 'some/data/dir/myapp-stateboard',
+
+            'instance_memtx_dir': 'some/memtx/dir/myapp.%i',
+            'stateboard_memtx_dir': 'some/memtx/dir/myapp-stateboard',
+
+            'instance_vinyl_dir': 'some/vinyl/dir/myapp.%i',
+            'stateboard_vinyl_dir': 'some/vinyl/dir/myapp-stateboard',
+
+            'instance_wal_dir': 'some/wal/dir/myapp.%i',
+            'stateboard_wal_dir': 'some/wal/dir/myapp-stateboard',
 
             'instance_pid_file': 'some/run/dir/myapp.%i.pid',
             'stateboard_pid_file': 'some/run/dir/myapp-stateboard.pid',
@@ -56,6 +68,9 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_multiversion': True,
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
+            'cartridge_memtx_dir_parent': None,
+            'cartridge_vinyl_dir_parent': None,
+            'cartridge_wal_dir_parent': None,
             'dist_dir': '/some/dist/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
         }
@@ -70,6 +85,15 @@ class TestSetInstanceInfo(unittest.TestCase):
 
             'instance_work_dir': 'some/data/dir/myapp.%i',
             'stateboard_work_dir': 'some/data/dir/myapp-stateboard',
+
+            'instance_memtx_dir': None,
+            'stateboard_memtx_dir': None,
+
+            'instance_vinyl_dir': None,
+            'stateboard_vinyl_dir': None,
+
+            'instance_wal_dir': None,
+            'stateboard_wal_dir': None,
 
             'instance_pid_file': 'some/run/dir/myapp.%i.pid',
             'stateboard_pid_file': 'some/run/dir/myapp-stateboard.pid',
@@ -90,6 +114,9 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_multiversion': False,
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
+            'cartridge_memtx_dir_parent': 'some/memtx/dir',
+            'cartridge_vinyl_dir_parent': 'some/vinyl/dir',
+            'cartridge_wal_dir_parent': 'some/wal/dir',
             'dist_dir': 'some/dist/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
         }
@@ -104,6 +131,15 @@ class TestSetInstanceInfo(unittest.TestCase):
 
             'instance_work_dir': 'some/data/dir/myapp.%i',
             'stateboard_work_dir': 'some/data/dir/myapp-stateboard',
+
+            'instance_memtx_dir': 'some/memtx/dir/myapp.%i',
+            'stateboard_memtx_dir': 'some/memtx/dir/myapp-stateboard',
+
+            'instance_vinyl_dir': 'some/vinyl/dir/myapp.%i',
+            'stateboard_vinyl_dir': 'some/vinyl/dir/myapp-stateboard',
+
+            'instance_wal_dir': 'some/wal/dir/myapp.%i',
+            'stateboard_wal_dir': 'some/wal/dir/myapp-stateboard',
 
             'instance_pid_file': 'some/run/dir/myapp.%i.pid',
             'stateboard_pid_file': 'some/run/dir/myapp-stateboard.pid',
@@ -124,6 +160,9 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_multiversion': False,
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
+            'cartridge_memtx_dir_parent': None,
+            'cartridge_vinyl_dir_parent': None,
+            'cartridge_wal_dir_parent': None,
             'dist_dir': 'some/dist/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
         }
@@ -138,6 +177,15 @@ class TestSetInstanceInfo(unittest.TestCase):
 
             'instance_work_dir': 'some/data/dir/myapp.%i',
             'stateboard_work_dir': 'some/data/dir/myapp-stateboard',
+
+            'instance_memtx_dir': None,
+            'stateboard_memtx_dir': None,
+
+            'instance_vinyl_dir': None,
+            'stateboard_vinyl_dir': None,
+
+            'instance_wal_dir': None,
+            'stateboard_wal_dir': None,
 
             'instance_pid_file': 'some/run/dir/myapp.%i.pid',
             'stateboard_pid_file': 'some/run/dir/myapp-stateboard.pid',

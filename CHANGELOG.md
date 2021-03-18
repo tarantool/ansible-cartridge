@@ -39,6 +39,8 @@ to use the newest tag with new release
 - `zone` variable to edit instance zone
 - `edit_topology_timeout` variable to wait until cluster become healthy
   after editing topology
+- availability to specify instance `memtx_dir`, `vinyl_dir` and `wal_dir` params
+  by `cartridge_memtx_dir_parent`, `cartridge_vinyl_dir_parent`, `cartridge_wal_dir_parent` variables.
 
 ### Changed
 

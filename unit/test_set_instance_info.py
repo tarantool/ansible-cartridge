@@ -6,10 +6,9 @@ from library.cartridge_set_instance_info import get_instance_conf_section
 from library.cartridge_set_instance_info import get_instance_info
 from library.cartridge_set_instance_info import get_instance_systemd_service
 from library.cartridge_set_instance_info import get_multiversion_dist_dir
-
 from module_utils.helpers import get_instance_console_sock
+from module_utils.helpers import get_instance_dir
 from module_utils.helpers import get_instance_pid_file
-from module_utils.helpers import get_instance_work_dir
 
 
 def call_get_instance_info(app_name, instance_name, instance_vars):
@@ -56,11 +55,11 @@ class TestSetInstanceInfo(unittest.TestCase):
         instance_conf_section = get_instance_conf_section('myapp', 'instance-1', stateboard=True)
         self.assertEqual(instance_conf_section, 'myapp-stateboard')
 
-    def test_get_instance_work_dir(self):
-        instance_work_dir = get_instance_work_dir('some/data/dir', 'myapp', 'instance-1')
+    def test_get_instance_dir(self):
+        instance_work_dir = get_instance_dir('some/data/dir', 'myapp', 'instance-1')
         self.assertEqual(instance_work_dir, 'some/data/dir/myapp.instance-1')
 
-        instance_work_dir = get_instance_work_dir('some/data/dir', 'myapp', 'instance-1', stateboard=True)
+        instance_work_dir = get_instance_dir('some/data/dir', 'myapp', 'instance-1', stateboard=True)
         self.assertEqual(instance_work_dir, 'some/data/dir/myapp-stateboard')
 
     def test_get_instance_systemd_service(self):
@@ -94,6 +93,9 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_conf_dir': 'some/conf/dir',
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
+            'cartridge_memtx_dir_parent': 'some/memtx/dir',
+            'cartridge_vinyl_dir_parent': 'some/vinyl/dir',
+            'cartridge_wal_dir_parent': 'some/wal/dir',
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
@@ -110,10 +112,21 @@ class TestSetInstanceInfo(unittest.TestCase):
             'console_sock': 'some/run/dir/myapp.instance-1.control',
             'pid_file': 'some/run/dir/myapp.instance-1.pid',
             'work_dir': 'some/data/dir/myapp.instance-1',
+            'memtx_dir': 'some/memtx/dir/myapp.instance-1',
+            'vinyl_dir': 'some/vinyl/dir/myapp.instance-1',
+            'wal_dir': 'some/wal/dir/myapp.instance-1',
             'systemd_service': 'myapp@instance-1',
             'tmpfiles_conf': '/some/tmpfiles/dir/myapp.conf',
             'dist_dir': 'some/install/dir/myapp',
             'instance_dist_dir': 'some/install/dir/myapp',
+            'paths_to_remove_on_expel': [
+                'some/conf/dir/myapp.instance-1.yml',
+                'some/run/dir/myapp.instance-1.control',
+                'some/data/dir/myapp.instance-1',
+                'some/memtx/dir/myapp.instance-1',
+                'some/vinyl/dir/myapp.instance-1',
+                'some/wal/dir/myapp.instance-1',
+            ]
         }})
 
     def test_get_instance_info_multiversion(self):
@@ -124,6 +137,9 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_conf_dir': 'some/conf/dir',
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
+            'cartridge_memtx_dir_parent': None,
+            'cartridge_vinyl_dir_parent': None,
+            'cartridge_wal_dir_parent': None,
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
@@ -140,10 +156,18 @@ class TestSetInstanceInfo(unittest.TestCase):
             'console_sock': 'some/run/dir/myapp.instance-1.control',
             'pid_file': 'some/run/dir/myapp.instance-1.pid',
             'work_dir': 'some/data/dir/myapp.instance-1',
+            'memtx_dir': None,
+            'vinyl_dir': None,
+            'wal_dir': None,
             'systemd_service': 'myapp@instance-1',
             'tmpfiles_conf': '/some/tmpfiles/dir/myapp.conf',
             'dist_dir': 'some/install/dir/myapp-0.1.0-1',
             'instance_dist_dir': 'some/instances/dir/myapp.instance-1',
+            'paths_to_remove_on_expel': [
+                'some/conf/dir/myapp.instance-1.yml',
+                'some/run/dir/myapp.instance-1.control',
+                'some/data/dir/myapp.instance-1',
+            ]
         }})
 
     def test_get_stateboard_info(self):
@@ -154,11 +178,19 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_conf_dir': 'some/conf/dir',
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
+            'cartridge_memtx_dir_parent': None,
+            'cartridge_vinyl_dir_parent': None,
+            'cartridge_wal_dir_parent': None,
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
             'cartridge_multiversion': False,
             'stateboard': True,
+            'paths_to_remove_on_expel': [
+                'some/conf/dir/myapp.instance-1.yml',
+                'some/run/dir/myapp.instance-1.control',
+                'some/data/dir/myapp.instance-1',
+            ],
         }
 
         res = call_get_instance_info(app_name, instance_name, instance_vars)
@@ -170,10 +202,18 @@ class TestSetInstanceInfo(unittest.TestCase):
             'console_sock': 'some/run/dir/myapp-stateboard.control',
             'pid_file': 'some/run/dir/myapp-stateboard.pid',
             'work_dir': 'some/data/dir/myapp-stateboard',
+            'memtx_dir': None,
+            'vinyl_dir': None,
+            'wal_dir': None,
             'systemd_service': 'myapp-stateboard',
             'tmpfiles_conf': '/some/tmpfiles/dir/myapp.conf',
             'dist_dir': 'some/install/dir/myapp',
             'instance_dist_dir': 'some/install/dir/myapp',
+            'paths_to_remove_on_expel': [
+                'some/conf/dir/myapp-stateboard.yml',
+                'some/run/dir/myapp-stateboard.control',
+                'some/data/dir/myapp-stateboard',
+            ],
         }})
 
     def test_get_stateboard_info_multiversion(self):
@@ -184,6 +224,9 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_conf_dir': 'some/conf/dir',
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
+            'cartridge_memtx_dir_parent': 'some/memtx/dir',
+            'cartridge_vinyl_dir_parent': 'some/vinyl/dir',
+            'cartridge_wal_dir_parent': 'some/wal/dir',
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
@@ -200,8 +243,19 @@ class TestSetInstanceInfo(unittest.TestCase):
             'console_sock': 'some/run/dir/myapp-stateboard.control',
             'pid_file': 'some/run/dir/myapp-stateboard.pid',
             'work_dir': 'some/data/dir/myapp-stateboard',
+            'memtx_dir': 'some/memtx/dir/myapp-stateboard',
+            'vinyl_dir': 'some/vinyl/dir/myapp-stateboard',
+            'wal_dir': 'some/wal/dir/myapp-stateboard',
             'systemd_service': 'myapp-stateboard',
             'tmpfiles_conf': '/some/tmpfiles/dir/myapp.conf',
             'dist_dir': 'some/install/dir/myapp-0.1.0-1',
             'instance_dist_dir': 'some/instances/dir/myapp-stateboard',
+            'paths_to_remove_on_expel': [
+                'some/conf/dir/myapp-stateboard.yml',
+                'some/run/dir/myapp-stateboard.control',
+                'some/data/dir/myapp-stateboard',
+                'some/memtx/dir/myapp-stateboard',
+                'some/vinyl/dir/myapp-stateboard',
+                'some/wal/dir/myapp-stateboard',
+            ]
         }})

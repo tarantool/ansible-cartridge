@@ -10,6 +10,9 @@
       cartridge_app_instances_dir: '{{ cartridge_app_instances_dir }}'
       cartridge_run_dir: '{{ cartridge_run_dir }}'
       cartridge_data_dir: '{{ cartridge_data_dir }}'
+      cartridge_memtx_dir_parent: '{{ cartridge_memtx_dir_parent }}'
+      cartridge_vinyl_dir_parent: '{{ cartridge_vinyl_dir_parent }}'
+      cartridge_wal_dir_parent: '{{ cartridge_wal_dir_parent }}'
 
 - name: 'Place systemd units files'
   template:
