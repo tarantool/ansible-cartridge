@@ -51,6 +51,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_data_dir',
                 'cartridge_systemd_dir',
                 'cartridge_tmpfiles_dir',
+                'zone',
             },
             bool: {
                 'cartridge_bootstrap_vshard',

@@ -224,6 +224,7 @@ def test_instances():
           servers {
             uri
             alias
+            zone
           }
         }
     '''
@@ -244,6 +245,11 @@ def test_instances():
     assert set(configured_instances.keys()) == set(started_instances.keys())
     assert all([
         configured_instances[i]['config']['advertise_uri'] == started_instances[i]['uri']
+        for i in configured_instances
+    ])
+
+    assert all([
+        configured_instances[i].get('zone') == started_instances[i]['zone']
         for i in configured_instances
     ])
 

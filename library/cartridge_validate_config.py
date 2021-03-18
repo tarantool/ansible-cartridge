@@ -136,6 +136,7 @@ def validate_types(vars):
         'cartridge_multiversion': bool,
         'instance_start_timeout': int,
         'instance_discover_buckets_timeout': int,
+        'edit_topology_timeout': int,
         'replicaset_alias': str,
         'failover_priority': [str],
         'roles': [str],
@@ -155,6 +156,7 @@ def validate_types(vars):
         'cartridge_install_tarantool_for_tgz': bool,
         'cartridge_keep_num_latest_dists': int,
         'cartridge_remove_temporary_files': bool,
+        'zone': str,
         'config': {
             'advertise_uri': str,
             'memtx_memory': int,

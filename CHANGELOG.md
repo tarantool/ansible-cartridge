@@ -20,6 +20,7 @@ to use the newest tag with new release
   * Members are checked in lexicographic order by URIs
   * Members not mentioned in hostvars aren't selected to be control
   * Members with status not `alive` aren't selected to be control
+- Fixed setting `needs_restart` when configuration files don't exist
 
 ### Added
 
@@ -35,6 +36,9 @@ to use the newest tag with new release
 - Added availability to import steps by scenario name. Added some default scenarios.
   Added availability to create custom scenarios.
 - availability to use `tasks_from` to import any step
+- `zone` variable to edit instance zone
+- `edit_topology_timeout` variable to wait until cluster become healthy
+  after editing topology
 
 ### Changed
 

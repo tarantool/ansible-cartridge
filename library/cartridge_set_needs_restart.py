@@ -109,6 +109,9 @@ def check_needs_restart_to_update_config(params, control_console):
     cluster_cookie = params['cluster_cookie']
     stateboard = params['stateboard']
 
+    if not os.path.exists(instance_info['conf_file']):
+        return True, None
+
     # check if instance config was changed (except dynamic params)
     current_instance_conf, err = read_yaml_file_section(
         control_console,
@@ -122,6 +125,9 @@ def check_needs_restart_to_update_config(params, control_console):
         return True, None
 
     if not stateboard:
+        if not os.path.exists(instance_info['app_conf_file']):
+            return True, None
+
         # check if default config was changed (except dynamic params)
         current_default_conf, err = read_yaml_file_section(
             control_console,
