@@ -64,12 +64,12 @@ all:
     storage-1:
       config:
         advertise_uri: '172.19.0.2:3301'
-        http_port: 8081
+        http_port: 8181
 
     storage-1-replica:
       config:
         advertise_uri: '172.19.0.2:3302'
-        http_port: 8082
+        http_port: 8182
 
   children:
     # group instances by machines
@@ -121,7 +121,7 @@ Then run the playbook with created inventory:
 ansible-playbook -i hosts.yml playbook.yml
 ```
 
-Now, visit  http://localhost:8081
+Now, visit http://localhost:8181
 
 ![image](/doc/images/quck-start.png)
 
