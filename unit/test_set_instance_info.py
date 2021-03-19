@@ -146,6 +146,33 @@ class TestSetInstanceInfo(unittest.TestCase):
             'instance_dist_dir': 'some/instances/dir/myapp.instance-1',
         }})
 
+        # cartridge_package_path isn't specified
+        instance_vars = {
+            'cartridge_conf_dir': 'some/conf/dir',
+            'cartridge_run_dir': 'some/run/dir',
+            'cartridge_data_dir': 'some/data/dir',
+            'cartridge_app_install_dir': 'some/install/dir',
+            'cartridge_app_instances_dir': 'some/instances/dir',
+            'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
+            'cartridge_multiversion': True,
+            'stateboard': False,
+        }
+
+        res = call_get_instance_info(app_name, instance_name, instance_vars)
+        self.assertFalse(res.failed)
+        self.assertEqual(res.facts, {'instance_info': {
+            'app_conf_file': 'some/conf/dir/myapp.yml',
+            'conf_file': 'some/conf/dir/myapp.instance-1.yml',
+            'instance_id': 'myapp.instance-1',
+            'console_sock': 'some/run/dir/myapp.instance-1.control',
+            'pid_file': 'some/run/dir/myapp.instance-1.pid',
+            'work_dir': 'some/data/dir/myapp.instance-1',
+            'systemd_service': 'myapp@instance-1',
+            'tmpfiles_conf': '/some/tmpfiles/dir/myapp.conf',
+            'dist_dir': None,
+            'instance_dist_dir': 'some/instances/dir/myapp.instance-1',
+        }})
+
     def test_get_stateboard_info(self):
         app_name = 'myapp'
         instance_name = 'instance-1'

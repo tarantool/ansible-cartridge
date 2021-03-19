@@ -35,6 +35,9 @@ def get_instance_systemd_service(app_name, instance_name, stateboard=False):
 
 
 def get_multiversion_dist_dir(install_dir, package_path):
+    if package_path is None:
+        return None
+
     package_basename = os.path.basename(package_path)
 
     # get name and version
@@ -96,7 +99,7 @@ def get_instance_info(params):
     else:
         instance_info['dist_dir'] = get_multiversion_dist_dir(
             instance_vars['cartridge_app_install_dir'],
-            instance_vars['cartridge_package_path']
+            instance_vars.get('cartridge_package_path')
         )
 
         instance_info['instance_dist_dir'] = helpers.get_multiversion_instance_code_dir(
