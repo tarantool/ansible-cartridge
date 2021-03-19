@@ -253,7 +253,7 @@ def get_instance_pid_file(run_dir, app_name, instance_name=None, stateboard=Fals
     return os.path.join(run_dir, '%s.pid' % instance_id)
 
 
-def get_instance_work_dir(data_dir, app_name, instance_name=None, stateboard=False):
+def get_instance_dir(data_dir, app_name, instance_name=None, stateboard=False):
     instance_id = get_instance_id(app_name, instance_name, stateboard)
     return os.path.join(data_dir, instance_id)
 

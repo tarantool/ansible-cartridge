@@ -29,6 +29,9 @@ cartridge_app_instances_dir: /usr/share/tarantool
 cartridge_conf_dir: /etc/tarantool/conf.d
 cartridge_run_dir: /var/run/tarantool
 cartridge_data_dir: /var/lib/tarantool
+cartridge_memtx_dir_parent: null
+cartridge_vinyl_dir_parent: null
+cartridge_wal_dir_parent: null
 
 cartridge_app_user: tarantool
 cartridge_app_group: tarantool

@@ -12,7 +12,4 @@
     state: absent
   loop_control:
     loop_var: filepath
-  with_items:
-    - '{{ instance_info.conf_file }}'
-    - '{{ instance_info.console_sock }}'
-    - '{{ instance_info.work_dir }}'
+  with_items: "{{ instance_info.paths_to_remove_on_expel }}"

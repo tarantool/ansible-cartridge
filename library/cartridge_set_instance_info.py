@@ -50,15 +50,22 @@ def get_instance_info(params):
     instance_name = params['instance_name']
     instance_vars = params['instance_vars']
 
-    instance_info = {}
+    instance_info = {
+        'paths_to_remove_on_expel': []
+    }
 
-    # app conf file, instance conf file, instance conf section
+    # app conf file
     instance_info['app_conf_file'] = get_app_conf_file(
         instance_vars['cartridge_conf_dir'], app_name
     )
+
+    # instance conf file
     instance_info['conf_file'] = get_instance_conf_file(
         instance_vars['cartridge_conf_dir'], app_name, instance_name, instance_vars['stateboard'],
     )
+    instance_info['paths_to_remove_on_expel'].append(instance_info['conf_file'])
+
+    # instance id (e.g. used for conf section name)
     instance_info['instance_id'] = get_instance_conf_section(
         app_name, instance_name, instance_vars['stateboard']
     )
@@ -67,15 +74,41 @@ def get_instance_info(params):
     instance_info['console_sock'] = helpers.get_instance_console_sock(
         instance_vars['cartridge_run_dir'], app_name, instance_name, instance_vars['stateboard']
     )
+    instance_info['paths_to_remove_on_expel'].append(instance_info['console_sock'])
 
     instance_info['pid_file'] = helpers.get_instance_pid_file(
         instance_vars['cartridge_run_dir'], app_name, instance_name, instance_vars['stateboard']
     )
 
     # instance work dir
-    instance_info['work_dir'] = helpers.get_instance_work_dir(
+    instance_info['work_dir'] = helpers.get_instance_dir(
         instance_vars['cartridge_data_dir'], app_name, instance_name, instance_vars['stateboard']
     )
+    instance_info['paths_to_remove_on_expel'].append(instance_info['work_dir'])
+
+    # instance memtx dir
+    instance_info['memtx_dir'] = None
+    if instance_vars['cartridge_memtx_dir_parent']:
+        instance_info['memtx_dir'] = helpers.get_instance_dir(
+            instance_vars['cartridge_memtx_dir_parent'], app_name, instance_name, instance_vars['stateboard']
+        )
+        instance_info['paths_to_remove_on_expel'].append(instance_info['memtx_dir'])
+
+    # instance vinyl dir
+    instance_info['vinyl_dir'] = None
+    if instance_vars['cartridge_vinyl_dir_parent']:
+        instance_info['vinyl_dir'] = helpers.get_instance_dir(
+            instance_vars['cartridge_vinyl_dir_parent'], app_name, instance_name, instance_vars['stateboard']
+        )
+        instance_info['paths_to_remove_on_expel'].append(instance_info['vinyl_dir'])
+
+    # instance wal dir
+    instance_info['wal_dir'] = None
+    if instance_vars['cartridge_wal_dir_parent']:
+        instance_info['wal_dir'] = helpers.get_instance_dir(
+            instance_vars['cartridge_wal_dir_parent'], app_name, instance_name, instance_vars['stateboard']
+        )
+        instance_info['paths_to_remove_on_expel'].append(instance_info['wal_dir'])
 
     # systemd service name
     instance_info['systemd_service'] = get_instance_systemd_service(

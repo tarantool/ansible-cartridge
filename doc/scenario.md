@@ -341,7 +341,10 @@ Input facts (set by config):
 - `cartridge_app_user` - user which will own the links;
 - `cartridge_app_group` - group which will own the links;
 - `cartridge_run_dir` - path to directory of instances sockets;
-- `cartridge_data_dir` - path to directory of instances data;
+- `cartridge_data_dir` - path to directory of instance data;
+- `cartridge_memtx_dir` - path to memtx directory of instance;
+- `cartridge_vinyl_dir` - path to vinyl directory of instance;
+- `cartridge_wal_dir` - path to wal directory of instance;
 - `cartridge_conf_dir` - path to directory of instances application configs;
 - `cartridge_app_install_dir` - path to directory with application distributions;
 - `cartridge_app_instances_dir` - path to directory with instances links to
@@ -359,6 +362,12 @@ Output facts:
   - `stateboard_unit_file` - filename of stateboard Unit file;
   - `instance_work_dir` - path to working directory of instance;
   - `stateboard_work_dir` - path to working directory of stateboard;
+  - `instance_memtx_dir` - path to memtx directory of instance;
+  - `stateboard_memtx_dir` - path to memtx directory of stateboard;
+  - `instance_vinyl_dir` - path to vinyl directory of instance;
+  - `stateboard_vinyl_dir` - path to vinyl directory of stateboard;
+  - `instance_wal_dir` - path to wal directory of instance;
+  - `stateboard_wal_dir` - path to wal directory of stateboard;
   - `instance_pid_file` - path to pid file of instance;
   - `stateboard_pid_file` - path to pid file of stateboard;
   - `instance_console_sock` - path to control socket of instance;

@@ -10,7 +10,6 @@ if pkgutil.find_loader('ansible.module_utils.helpers'):
 else:
     import module_utils.helpers as helpers
 
-
 argument_spec = {
     'app_name': {'required': False, 'type': 'str'},
     'instance_vars': {'required': True, 'type': 'dict'},
@@ -31,12 +30,42 @@ def get_systemd_units_info(params):
     systemd_units_info['app_unit_file'] = '%s@.service' % app_name
     systemd_units_info['stateboard_unit_file'] = '%s.service' % stateboard_name
 
-    systemd_units_info['instance_work_dir'] = helpers.get_instance_work_dir(
+    systemd_units_info['instance_work_dir'] = helpers.get_instance_dir(
         instance_vars['cartridge_data_dir'], app_name, instance_name="%i"
     )
-    systemd_units_info['stateboard_work_dir'] = helpers.get_instance_work_dir(
+    systemd_units_info['stateboard_work_dir'] = helpers.get_instance_dir(
         instance_vars['cartridge_data_dir'], app_name, stateboard=True
     )
+
+    systemd_units_info['instance_memtx_dir'] = None
+    systemd_units_info['stateboard_memtx_dir'] = None
+    if instance_vars['cartridge_memtx_dir_parent']:
+        systemd_units_info['instance_memtx_dir'] = helpers.get_instance_dir(
+            instance_vars['cartridge_memtx_dir_parent'], app_name, instance_name="%i"
+        )
+        systemd_units_info['stateboard_memtx_dir'] = helpers.get_instance_dir(
+            instance_vars['cartridge_memtx_dir_parent'], app_name, stateboard=True
+        )
+
+    systemd_units_info['instance_vinyl_dir'] = None
+    systemd_units_info['stateboard_vinyl_dir'] = None
+    if instance_vars['cartridge_vinyl_dir_parent']:
+        systemd_units_info['instance_vinyl_dir'] = helpers.get_instance_dir(
+            instance_vars['cartridge_vinyl_dir_parent'], app_name, instance_name="%i"
+        )
+        systemd_units_info['stateboard_vinyl_dir'] = helpers.get_instance_dir(
+            instance_vars['cartridge_vinyl_dir_parent'], app_name, stateboard=True
+        )
+
+    systemd_units_info['instance_wal_dir'] = None
+    systemd_units_info['stateboard_wal_dir'] = None
+    if instance_vars['cartridge_wal_dir_parent']:
+        systemd_units_info['instance_wal_dir'] = helpers.get_instance_dir(
+            instance_vars['cartridge_wal_dir_parent'], app_name, instance_name="%i"
+        )
+        systemd_units_info['stateboard_wal_dir'] = helpers.get_instance_dir(
+            instance_vars['cartridge_wal_dir_parent'], app_name, stateboard=True
+        )
 
     systemd_units_info['instance_pid_file'] = helpers.get_instance_pid_file(
         instance_vars['cartridge_run_dir'], app_name, instance_name="%i"

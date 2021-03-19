@@ -30,13 +30,17 @@
     mode: 0755
   loop_control:
     loop_var: dir_path
-  with_items:
-    - '{{ cartridge_run_dir }}'
-    - '{{ cartridge_data_dir }}'
-    - '{{ cartridge_conf_dir }}'
-    - '{{ cartridge_app_install_dir }}'
-    - '{{ cartridge_app_instances_dir }}'
-    - '{{ instance_info.dist_dir }}'
+  with_items: "{{ [
+      cartridge_run_dir,
+      cartridge_data_dir,
+      cartridge_memtx_dir_parent,
+      cartridge_vinyl_dir_parent,
+      cartridge_wal_dir_parent,
+      cartridge_conf_dir,
+      cartridge_app_install_dir,
+      cartridge_app_instances_dir,
+      instance_info.dist_dir,
+    ] | reject('equalto', none) }}"
   any_errors_fatal: true
 
 - name: 'Configure tmpfiles'
