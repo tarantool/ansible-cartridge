@@ -291,7 +291,7 @@ List of facts:
   - `name` - instance name (Ansible host);
   - `console_sock` - path to control socket of instance;
 - `cartridge_scenarios` - finally dictionary with scenarios (combination of role and user scenarios);
-- `cartridge_scenario` - steps of selected scenario (if not previously defined);
+- `scenario_steps_names` - names of scenario steps;
 - `scenario_steps` - description of scenario steps. It's a dictionary with fields:
   - `name` - name of step;
   - `path` - path to YAML file of step.
