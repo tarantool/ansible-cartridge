@@ -36,9 +36,9 @@ class TestSetSteps(unittest.TestCase):
         os.listdir = test_listdir
 
     @staticmethod
-    def call_get_tasks_paths(scenario, role_path, custom_steps_dir=None, custom_steps=None):
+    def call_get_tasks_paths(steps_names, role_path, custom_steps_dir=None, custom_steps=None):
         return get_scenario_steps({
-            'scenario': scenario,
+            'scenario_steps_names': steps_names,
             'role_path': role_path,
             'custom_steps_dir': custom_steps_dir,
             'custom_steps': custom_steps,
@@ -46,7 +46,7 @@ class TestSetSteps(unittest.TestCase):
 
     def test_role_path(self):
         tasks = self.call_get_tasks_paths(
-            scenario=['task_1', 'task_2', 'task_3'],
+            steps_names=['task_1', 'task_2', 'task_3'],
             role_path=self.role_path,
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
@@ -57,7 +57,7 @@ class TestSetSteps(unittest.TestCase):
 
     def test_custom_steps_dir(self):
         tasks = self.call_get_tasks_paths(
-            scenario=['task_1', 'task_2', 'task_3', 'task_4', 'task_5'],
+            steps_names=['task_1', 'task_2', 'task_3', 'task_4', 'task_5'],
             role_path=self.role_path,
             custom_steps_dir=self.custom_steps_dir,
         )
@@ -71,7 +71,7 @@ class TestSetSteps(unittest.TestCase):
 
     def test_custom_steps(self):
         tasks = self.call_get_tasks_paths(
-            scenario=['task_1', 'task_2', 'task_3', 'task_5', 'task_6'],
+            steps_names=['task_1', 'task_2', 'task_3', 'task_5', 'task_6'],
             role_path=self.role_path,
             custom_steps=[
                 {'name': 'task_3', 'file': '/custom_steps/task_3.yml'},
@@ -89,7 +89,7 @@ class TestSetSteps(unittest.TestCase):
 
     def test_all(self):
         tasks = self.call_get_tasks_paths(
-            scenario=['task_1', 'task_2', 'task_3', 'task_4', 'task_5', 'task_6'],
+            steps_names=['task_1', 'task_2', 'task_3', 'task_4', 'task_5', 'task_6'],
             role_path=self.role_path,
             custom_steps_dir=self.custom_steps_dir,
             custom_steps=[
@@ -109,7 +109,7 @@ class TestSetSteps(unittest.TestCase):
 
     def test_rewrite(self):
         tasks = self.call_get_tasks_paths(
-            scenario=['task_2'],
+            steps_names=['task_2'],
             role_path=self.role_path,
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
@@ -117,7 +117,7 @@ class TestSetSteps(unittest.TestCase):
         ])
 
         tasks = self.call_get_tasks_paths(
-            scenario=['task_2'],
+            steps_names=['task_2'],
             role_path=self.role_path,
             custom_steps_dir=self.custom_steps_dir,
         )
@@ -126,7 +126,7 @@ class TestSetSteps(unittest.TestCase):
         ])
 
         tasks = self.call_get_tasks_paths(
-            scenario=['task_2'],
+            steps_names=['task_2'],
             role_path=self.role_path,
             custom_steps_dir=self.custom_steps_dir,
             custom_steps=[
@@ -139,7 +139,7 @@ class TestSetSteps(unittest.TestCase):
 
     def test_task_not_found(self):
         res = self.call_get_tasks_paths(
-            scenario=['unknown_task'],
+            steps_names=['unknown_task'],
             role_path=self.role_path,
         )
         self.assertEqual(res.msg, "Unknown step 'unknown_task'")

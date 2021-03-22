@@ -7,7 +7,7 @@ else:
     import module_utils.helpers as helpers
 
 argument_spec = {
-    'scenario': {'required': True, 'type': 'list'},
+    'scenario_steps_names': {'required': True, 'type': 'list'},
     'role_path': {'required': True, 'type': 'str'},
     'custom_steps_dir': {'required': True, 'type': 'str'},
     'custom_steps': {'required': True, 'type': 'list'},
@@ -54,7 +54,7 @@ def get_scenario_steps(params):
     }
 
     scenario_steps = []
-    for step_name in params['scenario']:
+    for step_name in params['scenario_steps_names']:
         if step_name not in steps_paths:
             return helpers.ModuleRes(failed=True, msg=f"Unknown step '{step_name}'")
 
