@@ -13,14 +13,18 @@ def remove_trailing_nones(specified_list):
 
 def call_manage_auth(console_sock, enabled=None, cookie_max_age=None,
                      cookie_renew_age=None, users=None):
+    auth = {}
+    if enabled is not None:
+        auth['enabled'] = enabled
+    if cookie_max_age is not None:
+        auth['cookie_max_age'] = cookie_max_age
+    if cookie_renew_age is not None:
+        auth['cookie_renew_age'] = cookie_renew_age
+    if users is not None:
+        auth['users'] = users
     return manage_auth({
         'console_sock': console_sock,
-        'auth': {
-            'enabled': enabled,
-            'cookie_max_age': cookie_max_age,
-            'cookie_renew_age': cookie_renew_age,
-            'users': users,
-        }
+        'auth': auth,
     })
 
 

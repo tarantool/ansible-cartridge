@@ -167,7 +167,8 @@ def manage_auth(params):
 
     # Manage auth params
     common_auth_params = auth_params.copy()
-    del common_auth_params['users']
+    if 'users' in common_auth_params:
+        del common_auth_params['users']
 
     current_auth_params = get_cluster_auth_params(control_console)
 
