@@ -175,6 +175,9 @@ class TestSetInstanceInfo(unittest.TestCase):
             'cartridge_conf_dir': 'some/conf/dir',
             'cartridge_run_dir': 'some/run/dir',
             'cartridge_data_dir': 'some/data/dir',
+            'cartridge_memtx_dir_parent': None,
+            'cartridge_vinyl_dir_parent': None,
+            'cartridge_wal_dir_parent': None,
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
@@ -191,10 +194,18 @@ class TestSetInstanceInfo(unittest.TestCase):
             'console_sock': 'some/run/dir/myapp.instance-1.control',
             'pid_file': 'some/run/dir/myapp.instance-1.pid',
             'work_dir': 'some/data/dir/myapp.instance-1',
+            'memtx_dir': None,
+            'vinyl_dir': None,
+            'wal_dir': None,
             'systemd_service': 'myapp@instance-1',
             'tmpfiles_conf': '/some/tmpfiles/dir/myapp.conf',
             'dist_dir': None,
             'instance_dist_dir': 'some/instances/dir/myapp.instance-1',
+            'paths_to_remove_on_expel': [
+                'some/conf/dir/myapp.instance-1.yml',
+                'some/run/dir/myapp.instance-1.control',
+                'some/data/dir/myapp.instance-1',
+            ],
         }})
 
     def test_get_stateboard_info(self):
