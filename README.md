@@ -109,10 +109,8 @@ Write simple playbook that imports role:
   become_user: root
   any_errors_fatal: true
   gather_facts: false
-  tasks:
-  - name: Import Tarantool Cartridge role
-    import_role:
-      name: tarantool.cartridge
+  roles:
+    - tarantool.cartridge
 ```
 
 Then run the playbook with created inventory:

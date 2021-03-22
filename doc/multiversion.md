@@ -78,24 +78,22 @@ Let's write a playbook that installs new version and updates storages.
 ```yaml
 - name: Update package
   hosts: all
-  tasks:
-    - import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_package_path: "./myapp-2.0.0-0.tgz"
-        cartridge_scenario:
-          - update_package
+  vars:
+    cartridge_package_path: "./myapp-2.0.0-0.tgz"
+    cartridge_scenario:
+      - update_package
+  roles:
+    - tarantool.cartridge
 
 - name: Update storages
   hosts: "*storage*"
-  tasks:
-    - import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_package_path: "./myapp-2.0.0-0.tgz"
-        cartridge_scenario:
-          - update_instance
-          - restart_instance
+  vars:
+    cartridge_package_path: "./myapp-2.0.0-0.tgz"
+    cartridge_scenario:
+      - update_instance
+      - restart_instance
+  roles:
+    - tarantool.cartridge
 ```
 
 After running this playbook `instance-1` and stateboard use `myapp-2.0.0-0`,
@@ -130,13 +128,12 @@ Let's rotate them:
 ```yaml
 - name: Update storages
   hosts: all
-  tasks:
-    - import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_keep_num_latest_dists: 2
-        cartridge_scenario:
-          - rotate_dists
+  vars:
+    cartridge_keep_num_latest_dists: 2
+    cartridge_scenario:
+      - rotate_dists
+  roles:
+    - tarantool.cartridge
 ```
 
 After running this playbook, there are only 2 last distributions:

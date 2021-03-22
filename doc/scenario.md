@@ -102,17 +102,15 @@ You can create your own step and include it to scenario. Let's create `./custom_
 you can add `special_magic` step to scenario. Just pass path to a directory where your custom steps are placed:
 
 ```yaml
-- name: My playbook
+- name: Deploy application
   hosts: all
-  tasks:
-    - name: Deploy application
-      import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_custom_steps_dir: "./custom_steps"
-        cartridge_scenario:
-          - restart_instance
-          - special_magic
+  vars:
+    cartridge_custom_steps_dir: "./custom_steps"
+    cartridge_scenario:
+      - restart_instance
+      - special_magic
+  roles:
+    - tarantool.cartridge
 ```
 
 ### Importing steps from different directories
@@ -171,14 +169,12 @@ Import role and say where to find our custom steps:
 ```yaml
 # deploy_application.yml
 
-- name: My playbook
+- name: Deploy application
   hosts: all
-  tasks:
-    - name: Deploy application
-      import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_custom_steps_dir: "./custom_steps"
+  vars:
+    cartridge_custom_steps_dir: "./custom_steps"
+  roles:
+    - tarantool.cartridge
 ```
 
 ### Editing topology without connecting to membership
@@ -196,18 +192,16 @@ step from scenario:
 ```yaml
 # edit_topology_playbook.yml
 
-- name: Edit topology of my cluster
+- name: Edit topology by core 1
   hosts: all
-  tasks:
-    - name: Edit topology by core 1
-      import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_scenario:
-          - edit_topology
-        control_instance:
-          name: core_1
-          console_sock: '/var/run/tarantool/core_1.control'
+  vars:
+    cartridge_scenario:
+      - edit_topology
+    cartridge_control_instance:
+      name: core_1
+      console_sock: '/var/run/tarantool/core_1.control'
+  roles:
+    - tarantool.cartridge
 ```
 
 ### Add custom scenario to gradually update to a new version of TGZ
