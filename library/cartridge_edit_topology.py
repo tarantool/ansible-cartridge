@@ -156,8 +156,12 @@ def get_instances_to_configure(hostvars, play_hosts):
 
         if helpers.is_expelled(instance_vars):
             instance['expelled'] = True
-        elif 'zone' in instance_vars:
-            instance['zone'] = instance_vars['zone']
+        else:
+            if 'zone' in instance_vars:
+                instance['zone'] = instance_vars['zone']
+            if 'config' in instance_vars:
+                if 'advertise_uri' in instance_vars['config']:
+                    instance['uri'] = instance_vars['config']['advertise_uri']
 
         if instance:
             instances[instance_name] = instance
@@ -352,6 +356,9 @@ def get_server_params(instance_name, instance_params, cluster_instances):
         add_server_param_if_required(
             server_params, instance_params, cluster_instance, 'zone'
         )
+        add_server_param_if_required(
+            server_params, instance_params, cluster_instance, 'uri'
+        )
 
     if len(server_params) == 1:
         # there are only `uuid`, all instance parameters are the same as configured
@@ -474,7 +481,7 @@ def edit_topology(params):
     #   In this case failover_priority isn't changed since
     #   new instances hasn't UUIDs before join.
     # * Expel instances.
-    # * Configure instances that are alredy joined.
+    # * Configure instances that are already joined.
     #   New instances aren't configured here since they don't have
     #   UUIDs before join.
     topology_params, err = get_topology_params(
@@ -519,8 +526,7 @@ def edit_topology(params):
 
     # Configure failover_priority and instances that were joined on previous call:
     # * Edit failover_priority of replicasets if it's needed.
-    # * Configure instances that weren't configurent on first
-    #   `edit_topology` call.
+    # * Configure instances that weren't configured on first `edit_topology` call.
     topology_params, err = get_replicasets_failover_priority_and_instances_params(
         replicasets, cluster_replicasets, instances, cluster_instances
     )

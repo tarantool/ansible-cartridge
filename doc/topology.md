@@ -110,3 +110,55 @@ and disabled.
 After that, all instance files
 (configuration file, socket and working directory)
 are removed on [`cleanup_expelled`](/doc/scenario.md#cleanup_expelled) step.
+
+## Advertise URIs changing
+
+It is possible to change the advertise URIs of the servers. However, this should be done carefully.
+
+The main problem that arises when changing URIs: after restart, the instance tries
+to connect to all its replicas and remains in the ConnectingFullmesh state until it succeeds.
+If it can’t (due to replica URI unavailability or for any other reason) – it’s stuck forever.
+
+To solve the problem, you should set the `replication_connect_quorum` option to zero.
+To do it, you should add the option to `cartridge_defaults` or to `config` section of instances
+from the replicasets that include instances with new URIs.
+
+After changing replication connect quorum, you can run `edit_topology` step to change URIs.
+
+Example of playbook for URIs changing:
+
+```yaml
+- name: Change URIs of some servers
+  hosts: all
+  gather_facts: no
+  vars:
+    cartridge_custom_scenarios:
+      update_config:
+        - configure_instance
+        - restart_instance
+        - wait_instance_started
+      edit_topology:
+        - connect_to_membership
+        - edit_topology
+  tasks:
+    - name: Set quorum to zero
+      import_role:
+        name: tarantool.cartridge
+      vars:
+        cartridge_scenario_name: "update_config"
+        cartridge_defaults:
+          # don't forget to add other options from your cartridge_defaults variable
+          replication_connect_quorum: 0
+
+    - name: Change URIs
+      import_role:
+        name: tarantool.cartridge
+      vars:
+        cartridge_scenario_name: "edit_topology"
+
+    - name: Reset quorum to default value
+      import_role:
+        name: tarantool.cartridge
+      vars:
+        cartridge_scenario_name: "update_config"
+```
