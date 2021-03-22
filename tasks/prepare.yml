@@ -55,3 +55,18 @@
   run_once: true
   delegate_to: localhost
   become: false
+
+- name: 'Set with role module those facts that can be set by the user'
+  cartridge_set_facts:
+    facts:
+      control_instance: '{{ cartridge_control_instance | default(omit) }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+
+- name: 'Set with "set_fact" module those facts that can be set by the user'
+  set_fact:
+    delivered_package_path: '{{ cartridge_delivered_package_path | default(omit) }}'
+  run_once: true
+  delegate_to: localhost
+  become: false

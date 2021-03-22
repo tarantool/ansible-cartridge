@@ -186,8 +186,8 @@ In fact `connect_to_membership` is used in [`set_control_instance` step](#set_co
 that is already in cluster. This instance should be used for joining other instances (otherwise two different clusters
 are created). This instance is called `control_instance` and is used for editing topology and configuring cluster (auth,
 config and so on). Generally, `connect_to_membership` step can be skipped if you definitely know some instance that is
-already joined to cluster. The solution is to set `control_instance` fact manually and remove `connect_to_membership`
-step from scenario:
+already joined to cluster. The solution is to set `cartridge_control_instance` fact manually and
+remove `connect_to_membership` step from scenario:
 
 ```yaml
 # edit_topology_playbook.yml
@@ -284,11 +284,12 @@ List of facts:
 - `not_expelled_instance` - information about one not expelled instance. It's a dictionary with fields:
   - `name` - instance name (Ansible host);
   - `console_sock` - path to control socket of instance;
-- `scenarios` - finally dictionary with scenarios (combination of role and user scenarios). Is set only when `cartridge_scenario` isn't specified;
-- `scenario_steps_names` - names of scenario steps;
 - `scenario_steps` - description of scenario steps. Each step is a dictionary with fields:
   - `name` - name of step;
-  - `path` - path to YAML file of step.
+  - `path` - path to YAML file of step;
+- `control_instance` - information about control instance (will be set if `cartridge_control_instance` is specified);
+- `delivered_package_path` - remote path to file of delivered package
+  (will be set if `cartridge_delivered_package_path` is specified).
 
 ## Role Steps Description
 
