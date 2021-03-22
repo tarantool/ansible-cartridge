@@ -8,33 +8,87 @@ import textwrap
 
 from ansible.module_utils.basic import AnsibleModule
 
-
 DEFAULT_RUN_DIR = '/var/run/tarantool'
+DEBUG_MESSAGES = []
+
+
+# To print any string or object using warnings, you just need to call this function:
+# helpers.debug('my_str')
+# helpers.debug({'my_dict': ['str', 2]})
+# In this case, you get the following output:
+# [WARNING]: [001]: my_str
+# [WARNING]: [002]: {
+# [WARNING]: [003]:   "my_dict": [
+# [WARNING]: [004]:     "str",
+# [WARNING]: [005]:     2
+# [WARNING]: [007]:   ]
+# [WARNING]: [008]: }
+
+# Also you can specify a string key to print it before each output line:
+# helpers.debug('my_str', key='test_1')
+# helpers.debug({'my_dict': ['str', 2]}, 'test_2')
+# In this case, you get the following output:
+# [WARNING]: [001]: [test_1]: my_str
+# [WARNING]: [002]: [test_2]: {
+# [WARNING]: [003]: [test_2]:   "my_dict": [
+# [WARNING]: [004]: [test_2]:     "str",
+# [WARNING]: [005]: [test_2]:     2
+# [WARNING]: [006]: [test_2]:   ]
+# [WARNING]: [007]: [test_2]: }
+
+def debug(value, key=None):
+    global DEBUG_MESSAGES
+
+    if type(value) != str:
+        value = json.dumps(value, indent=2)
+    value = value.split('\n')
+    if key:
+        value = map(lambda v: '[%s]: %s' % (key, v), value)
+
+    # We should add line numbers because Ansible removes the same warnings.
+    # So, for example, some `}` characters from a JSON object will not be printed.
+    last_line = len(DEBUG_MESSAGES) + 1
+    value = map(lambda v: '[%03d]: %s' % (last_line + v[0], v[1]), enumerate(value))
+
+    DEBUG_MESSAGES += value
 
 
 class ModuleRes:
     def __init__(self, failed=False, changed=True, msg=None, exception=None, warnings=None, facts=None, **kwargs):
         self.failed = failed
-        self.msg = msg
         self.changed = changed
         self.warnings = warnings
         self.facts = facts
         self.kwargs = kwargs
 
+        self.msg = None
+        if msg:
+            self.failed = True
+            self.msg = str(msg)
         if exception:
             self.failed = True
             self.msg = str(exception)
 
     def get_exit_json(self):
-        res = {'changed': self.changed}
+        res = {}
+
+        if not self.failed:
+            res['changed'] = self.changed
+
         if self.msg is not None:
             res['msg'] = self.msg
-        if self.warnings is not None:
-            res['warnings'] = self.warnings
+
         if self.facts is not None:
             res['ansible_facts'] = self.facts
+
+        if self.warnings is None:
+            self.warnings = []
+        self.warnings += DEBUG_MESSAGES
+        res['warnings'] = self.warnings
+
         for key, value in self.kwargs.items():
             res[key] = value
+
         return res
 
     def exit(self, module):
