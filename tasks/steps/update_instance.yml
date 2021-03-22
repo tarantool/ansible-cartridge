@@ -1,6 +1,6 @@
 ---
 
-- when: cartridge_multiversion
+- when: cartridge_multiversion and cartridge_package_path is not none
   tags: cartridge-instances
   block:
     - name: 'Update instance link to application'

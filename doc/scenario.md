@@ -391,6 +391,8 @@ Input facts (set by role):
 
 Input facts (set by config):
 
+- `cartridge_package_path` - should be specified to compute app distribution directory
+  (otherwise, `update_instance` is skipped);
 - `expelled` - indicates if instance must be expelled from topology;
 - `restarted` - if instance should be restarted or not (user forced decision);
 - `cartridge_multiversion` - indicates that
