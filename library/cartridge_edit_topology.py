@@ -353,12 +353,8 @@ def get_server_params(instance_name, instance_params, cluster_instances):
     if instance_params.get('expelled') is True:
         server_params['expelled'] = True
     else:
-        add_server_param_if_required(
-            server_params, instance_params, cluster_instance, 'zone'
-        )
-        add_server_param_if_required(
-            server_params, instance_params, cluster_instance, 'uri'
-        )
+        for param_name in ['zone', 'uri']:
+            add_server_param_if_required(server_params, instance_params, cluster_instance, param_name)
 
     if len(server_params) == 1:
         # there are only `uuid`, all instance parameters are the same as configured

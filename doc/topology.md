@@ -123,7 +123,15 @@ To solve the problem, you should set the `replication_connect_quorum` option to 
 To do it, you should add the option to `cartridge_defaults` or to `config` section of instances
 from the replicasets that include instances with new URIs.
 
-After changing replication connect quorum, you can run `edit_topology` step to change URIs.
+So, after changing advertise URIs and `replication_connect_quorum` options in configuration files,
+you should run `configure_instance` and `restart_instance` steps to apply changes
+(`replication_connect_quorum` can be changed without restarting,
+but to change advertise URI you should restart instance).
+
+After changing replication connect quorum and advertise URIs,
+you can run `edit_topology` step to change URIs in cluster-wide config.
+
+Now you can reset replication connect quorum to default value.
 
 Example of playbook for URIs changing:
 
@@ -137,9 +145,6 @@ Example of playbook for URIs changing:
         - configure_instance
         - restart_instance
         - wait_instance_started
-      edit_topology:
-        - connect_to_membership
-        - edit_topology
   tasks:
     - name: Set quorum to zero
       import_role:
@@ -150,11 +155,12 @@ Example of playbook for URIs changing:
           # don't forget to add other options from your cartridge_defaults variable
           replication_connect_quorum: 0
 
-    - name: Change URIs
+    - name: Update advertise URIs in cluster-wide config
       import_role:
         name: tarantool.cartridge
       vars:
-        cartridge_scenario_name: "edit_topology"
+        cartridge_scenario:
+          - edit_topology
 
     - name: Reset quorum to default value
       import_role:

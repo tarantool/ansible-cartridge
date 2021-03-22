@@ -112,7 +112,7 @@ class TestGetInstancesToConfigure(unittest.TestCase):
                 'replicaset_alias': 'replicaset-1',
                 'expelled': True,
             },
-            'instance-expelled-zone': {  # expelled, with zone
+            'instance-expelled-zone': {  # expelled, with zone, but zone will be skipped
                 'replicaset_alias': 'replicaset-1',
                 'expelled': True,
                 'zone': 'Hogwarts',
