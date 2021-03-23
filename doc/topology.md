@@ -114,9 +114,11 @@ are removed on [`cleanup_expelled`](/doc/scenario.md#cleanup_expelled) step.
 ## Advertise URIs changing
 
 It is possible to change the advertise URIs of the servers. However, this should be done carefully.
+You can read about manually changing the URIs here:
+https://tarantool.io/en/doc/latest/book/cartridge/troubleshooting/#i-want-to-run-an-instance-with-a-new-advertise-uri
 
 The main problem that arises when changing URIs: after restart, the instance tries
-to connect to all its replicas and remains in the ConnectingFullmesh state until it succeeds.
+to connect to all its replicas and remains in the `ConnectingFullmesh` state until it succeeds.
 If it can’t (due to replica URI unavailability or for any other reason) – it’s stuck forever.
 
 To solve the problem, you should set the `replication_connect_quorum` option to zero.
@@ -133,38 +135,49 @@ you can run `edit_topology` step to change URIs in cluster-wide config.
 
 Now you can reset replication connect quorum to default value.
 
-Example of playbook for URIs changing:
+For example, add a config update scenario to your `hosts.yml` file:
 
 ```yaml
-- name: Change URIs of some servers
-  hosts: all
-  gather_facts: no
+all:
   vars:
     cartridge_custom_scenarios:
       update_config:
         - configure_instance
         - restart_instance
         - wait_instance_started
-  tasks:
-    - name: Set quorum to zero
-      import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_scenario_name: "update_config"
-        cartridge_defaults:
-          # don't forget to add other options from your cartridge_defaults variable
-          replication_connect_quorum: 0
+```
 
-    - name: Update advertise URIs in cluster-wide config
-      import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_scenario:
-          - edit_topology
+After that create a playbook like this to change the URI:
 
-    - name: Reset quorum to default value
-      import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_scenario_name: "update_config"
+```yaml
+- name: Set quorum to zero
+  hosts: cluster
+  become: true
+  gather_facts: no
+  vars:
+    cartridge_scenario_name: "update_config"
+    cartridge_defaults:
+      # don't forget to add other options from your cartridge_defaults variable
+      replication_connect_quorum: 0
+  roles:
+    - tarantool.cartridge
+
+- name: Update advertise URIs in cluster-wide config
+  hosts: cluster
+  become: true
+  gather_facts: no
+  vars:
+    cartridge_scenario:
+      - edit_topology
+  roles:
+    - tarantool.cartridge
+
+- name: Reset quorum to default value
+  hosts: cluster
+  become: true
+  gather_facts: no
+  vars:
+    cartridge_scenario_name: "update_config"
+  roles:
+    - tarantool.cartridge
 ```
