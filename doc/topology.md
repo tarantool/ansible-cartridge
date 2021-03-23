@@ -114,8 +114,8 @@ are removed on [`cleanup_expelled`](/doc/scenario.md#cleanup_expelled) step.
 ## Advertise URIs changing
 
 It is possible to change the advertise URIs of the servers. However, this should be done carefully.
-You can read about manually changing the URIs here:
-https://tarantool.io/en/doc/latest/book/cartridge/troubleshooting/#i-want-to-run-an-instance-with-a-new-advertise-uri
+You can read about manually changing the URIs in the [troubleshooting doc](
+https://tarantool.io/en/doc/latest/book/cartridge/troubleshooting/#i-want-to-run-an-instance-with-a-new-advertise-uri).
 
 The main problem that arises when changing URIs: after restart, the instance tries
 to connect to all its replicas and remains in the `ConnectingFullmesh` state until it succeeds.
@@ -135,19 +135,7 @@ you can run `edit_topology` step to change URIs in cluster-wide config.
 
 Now you can reset replication connect quorum to default value.
 
-For example, add a config update scenario to your `hosts.yml` file:
-
-```yaml
-all:
-  vars:
-    cartridge_custom_scenarios:
-      update_config:
-        - configure_instance
-        - restart_instance
-        - wait_instance_started
-```
-
-After that create a playbook like this to change the URI:
+For example, you can create a playbook like this to change the URI:
 
 ```yaml
 - name: Set quorum to zero
@@ -155,7 +143,10 @@ After that create a playbook like this to change the URI:
   become: true
   gather_facts: no
   vars:
-    cartridge_scenario_name: "update_config"
+    cartridge_scenario:
+      - configure_instance
+      - restart_instance
+      - wait_instance_started
     cartridge_defaults:
       # don't forget to add other options from your cartridge_defaults variable
       replication_connect_quorum: 0
@@ -177,7 +168,8 @@ After that create a playbook like this to change the URI:
   become: true
   gather_facts: no
   vars:
-    cartridge_scenario_name: "update_config"
+    cartridge_scenario:
+      - configure_instance
   roles:
     - tarantool.cartridge
 ```
