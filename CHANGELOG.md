@@ -7,9 +7,10 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [Unreleased]
 <!--
 Please update `ansible-galaxy install` command in
-README.md and examples/getting-started-app/README.md
-to use the newest tag with new release
+README.md to use the newest tag with new release
 -->
+
+## [1.8.0] - 2021-03-23
 
 ### Fixed
 
