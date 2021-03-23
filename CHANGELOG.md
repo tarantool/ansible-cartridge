@@ -22,6 +22,7 @@ to use the newest tag with new release
   * Members with status not `alive` aren't selected to be control
 - Fixed setting `needs_restart` when configuration files don't exist
 - Fixed error on configuring auth without users specified
+- Reset role variables before each run
 
 ### Added
 

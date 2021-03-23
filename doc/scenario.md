@@ -102,17 +102,15 @@ You can create your own step and include it to scenario. Let's create `./custom_
 you can add `special_magic` step to scenario. Just pass path to a directory where your custom steps are placed:
 
 ```yaml
-- name: My playbook
+- name: Deploy application
   hosts: all
-  tasks:
-    - name: Deploy application
-      import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_custom_steps_dir: "./custom_steps"
-        cartridge_scenario:
-          - restart_instance
-          - special_magic
+  vars:
+    cartridge_custom_steps_dir: "./custom_steps"
+    cartridge_scenario:
+      - restart_instance
+      - special_magic
+  roles:
+    - tarantool.cartridge
 ```
 
 ### Importing steps from different directories
@@ -171,14 +169,12 @@ Import role and say where to find our custom steps:
 ```yaml
 # deploy_application.yml
 
-- name: My playbook
+- name: Deploy application
   hosts: all
-  tasks:
-    - name: Deploy application
-      import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_custom_steps_dir: "./custom_steps"
+  vars:
+    cartridge_custom_steps_dir: "./custom_steps"
+  roles:
+    - tarantool.cartridge
 ```
 
 ### Editing topology without connecting to membership
@@ -190,24 +186,22 @@ In fact `connect_to_membership` is used in [`set_control_instance` step](#set_co
 that is already in cluster. This instance should be used for joining other instances (otherwise two different clusters
 are created). This instance is called `control_instance` and is used for editing topology and configuring cluster (auth,
 config and so on). Generally, `connect_to_membership` step can be skipped if you definitely know some instance that is
-already joined to cluster. The solution is to set `control_instance` fact manually and remove `connect_to_membership`
-step from scenario:
+already joined to cluster. The solution is to set `cartridge_control_instance` fact manually and
+remove `connect_to_membership` step from scenario:
 
 ```yaml
 # edit_topology_playbook.yml
 
-- name: Edit topology of my cluster
+- name: Edit topology by core 1
   hosts: all
-  tasks:
-    - name: Edit topology by core 1
-      import_role:
-        name: tarantool.cartridge
-      vars:
-        cartridge_scenario:
-          - edit_topology
-        control_instance:
-          name: core_1
-          console_sock: '/var/run/tarantool/core_1.control'
+  vars:
+    cartridge_scenario:
+      - edit_topology
+    cartridge_control_instance:
+      name: core_1
+      console_sock: '/var/run/tarantool/core_1.control'
+  roles:
+    - tarantool.cartridge
 ```
 
 ### Add custom scenario to gradually update to a new version of TGZ
@@ -290,11 +284,12 @@ List of facts:
 - `not_expelled_instance` - information about one not expelled instance. It's a dictionary with fields:
   - `name` - instance name (Ansible host);
   - `console_sock` - path to control socket of instance;
-- `scenarios` - finally dictionary with scenarios (combination of role and user scenarios). Is set only when `cartridge_scenario` isn't specified;
-- `scenario_steps_names` - names of scenario steps;
 - `scenario_steps` - description of scenario steps. Each step is a dictionary with fields:
   - `name` - name of step;
-  - `path` - path to YAML file of step.
+  - `path` - path to YAML file of step;
+- `control_instance` - information about control instance (will be set if `cartridge_control_instance` is specified);
+- `delivered_package_path` - remote path to file of delivered package
+  (will be set if `cartridge_delivered_package_path` is specified).
 
 ## Role Steps Description
 

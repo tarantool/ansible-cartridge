@@ -1,10 +1,5 @@
 import os
-import sys
 import unittest
-
-import module_utils.helpers as helpers
-
-sys.modules['ansible.module_utils.helpers'] = helpers
 
 from library.cartridge_set_scenario_steps import get_scenario_steps
 
@@ -35,19 +30,34 @@ class TestSetSteps(unittest.TestCase):
         self.original_listdir = os.listdir
         os.listdir = test_listdir
 
-    @staticmethod
-    def call_get_tasks_paths(steps_names, role_path, custom_steps_dir=None, custom_steps=None):
+    def call_get_tasks_paths(
+        self,
+        scenario=None,
+        custom_steps_dir=None,
+        custom_steps=None,
+        role_scenarios=None,
+        custom_scenarios=None,
+        scenario_name='default',
+    ):
+        custom_steps = custom_steps or []
+        role_scenarios = role_scenarios or {
+            'default': ['task_1', 'task_2']
+        }
+        custom_scenarios = custom_scenarios or {}
+
         return get_scenario_steps({
-            'scenario_steps_names': steps_names,
-            'role_path': role_path,
+            'role_path': self.role_path,
             'custom_steps_dir': custom_steps_dir,
             'custom_steps': custom_steps,
+            'role_scenarios': role_scenarios,
+            'custom_scenarios': custom_scenarios,
+            'scenario_name': scenario_name,
+            'scenario': scenario,
         })
 
     def test_role_path(self):
         tasks = self.call_get_tasks_paths(
-            steps_names=['task_1', 'task_2', 'task_3'],
-            role_path=self.role_path,
+            scenario=['task_1', 'task_2', 'task_3'],
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
@@ -57,8 +67,7 @@ class TestSetSteps(unittest.TestCase):
 
     def test_custom_steps_dir(self):
         tasks = self.call_get_tasks_paths(
-            steps_names=['task_1', 'task_2', 'task_3', 'task_4', 'task_5'],
-            role_path=self.role_path,
+            scenario=['task_1', 'task_2', 'task_3', 'task_4', 'task_5'],
             custom_steps_dir=self.custom_steps_dir,
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
@@ -71,8 +80,7 @@ class TestSetSteps(unittest.TestCase):
 
     def test_custom_steps(self):
         tasks = self.call_get_tasks_paths(
-            steps_names=['task_1', 'task_2', 'task_3', 'task_5', 'task_6'],
-            role_path=self.role_path,
+            scenario=['task_1', 'task_2', 'task_3', 'task_5', 'task_6'],
             custom_steps=[
                 {'name': 'task_3', 'file': '/custom_steps/task_3.yml'},
                 {'name': 'task_5', 'file': '/custom_steps/task_5.yml'},
@@ -89,8 +97,7 @@ class TestSetSteps(unittest.TestCase):
 
     def test_all(self):
         tasks = self.call_get_tasks_paths(
-            steps_names=['task_1', 'task_2', 'task_3', 'task_4', 'task_5', 'task_6'],
-            role_path=self.role_path,
+            scenario=['task_1', 'task_2', 'task_3', 'task_4', 'task_5', 'task_6'],
             custom_steps_dir=self.custom_steps_dir,
             custom_steps=[
                 {'name': 'task_3', 'file': '/custom_steps/task_3.yml'},
@@ -109,16 +116,14 @@ class TestSetSteps(unittest.TestCase):
 
     def test_rewrite(self):
         tasks = self.call_get_tasks_paths(
-            steps_names=['task_2'],
-            role_path=self.role_path,
+            scenario=['task_2'],
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
             {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
         ])
 
         tasks = self.call_get_tasks_paths(
-            steps_names=['task_2'],
-            role_path=self.role_path,
+            scenario=['task_2'],
             custom_steps_dir=self.custom_steps_dir,
         )
         self.assertEqual(tasks.facts['scenario_steps'], [
@@ -126,8 +131,7 @@ class TestSetSteps(unittest.TestCase):
         ])
 
         tasks = self.call_get_tasks_paths(
-            steps_names=['task_2'],
-            role_path=self.role_path,
+            scenario=['task_2'],
             custom_steps_dir=self.custom_steps_dir,
             custom_steps=[
                 {'name': 'task_2', 'file': '/custom_steps/task_2.yaml'},
@@ -139,10 +143,88 @@ class TestSetSteps(unittest.TestCase):
 
     def test_task_not_found(self):
         res = self.call_get_tasks_paths(
-            steps_names=['unknown_task'],
-            role_path=self.role_path,
+            scenario=['unknown_task'],
         )
         self.assertEqual(res.msg, "Unknown step 'unknown_task'")
+
+    def test_default_role_scenario(self):
+        tasks = self.call_get_tasks_paths()
+        self.assertEqual(tasks.facts['scenario_steps'], [
+            {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
+            {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
+        ])
+
+    def test_unknown_scenario_name(self):
+        res = self.call_get_tasks_paths(
+            scenario_name='unknown_scenario'
+        )
+        self.assertEqual(res.msg, "Unknown scenario 'unknown_scenario'")
+
+    def test_custom_scenarios(self):
+        role_scenarios = {
+            'default_1': ['task_1'],
+            'default_2': ['task_2'],
+        }
+        custom_scenarios = {
+            'default_2': ['task_3'],
+            'custom_1': ['task_1', 'task_2'],
+        }
+
+        tasks = self.call_get_tasks_paths(
+            scenario_name='default_1',
+            role_scenarios=role_scenarios,
+            custom_scenarios=custom_scenarios,
+        )
+        self.assertEqual(tasks.facts['scenario_steps'], [
+            {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
+        ])
+
+        tasks = self.call_get_tasks_paths(
+            scenario_name='default_2',
+            role_scenarios=role_scenarios,
+            custom_scenarios=custom_scenarios,
+        )
+        self.assertEqual(tasks.facts['scenario_steps'], [
+            {'name': 'task_3', 'path': os.path.join(self.full_role_path, 'task_3.yml')},
+        ])
+
+        tasks = self.call_get_tasks_paths(
+            scenario_name='custom_1',
+            role_scenarios=role_scenarios,
+            custom_scenarios=custom_scenarios,
+        )
+        self.assertEqual(tasks.facts['scenario_steps'], [
+            {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
+            {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
+        ])
+
+    def test_scenario_priority(self):
+        role_scenarios = {
+            'default_1': ['task_1'],
+        }
+        custom_scenarios = {
+            'custom_1': ['task_2'],
+        }
+
+        tasks = self.call_get_tasks_paths(
+            scenario_name='default_1',
+            role_scenarios=role_scenarios,
+            custom_scenarios=custom_scenarios,
+            scenario=['task_3']
+        )
+        self.assertEqual(tasks.facts['scenario_steps'], [
+            {'name': 'task_3', 'path': os.path.join(self.full_role_path, 'task_3.yml')},
+        ])
+
+        tasks = self.call_get_tasks_paths(
+            scenario_name='custom_1',
+            role_scenarios=role_scenarios,
+            custom_scenarios=custom_scenarios,
+            scenario=['task_3']
+        )
+        self.assertEqual(tasks.facts['scenario_steps'], [
+            {'name': 'task_3', 'path': os.path.join(self.full_role_path, 'task_3.yml')},
+        ])
 
     def tearDown(self):
         os.listdir = self.original_listdir

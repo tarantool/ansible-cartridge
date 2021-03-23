@@ -6,7 +6,7 @@
   tags: cartridge-config
   block:
     - import_tasks: 'blocks/set_control_instance.yml'
-      when: control_instance is not defined
+      when: not control_instance
 
     - name: 'Bootstrap VShard'
       cartridge_bootstrap_vshard:

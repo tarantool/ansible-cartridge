@@ -7,10 +7,13 @@ else:
     import module_utils.helpers as helpers
 
 argument_spec = {
-    'scenario_steps_names': {'required': True, 'type': 'list'},
     'role_path': {'required': True, 'type': 'str'},
     'custom_steps_dir': {'required': True, 'type': 'str'},
     'custom_steps': {'required': True, 'type': 'list'},
+    'role_scenarios': {'required': True, 'type': 'dict'},
+    'custom_scenarios': {'required': True, 'type': 'dict'},
+    'scenario_name': {'required': True, 'type': 'str'},
+    'scenario': {'required': True, 'type': 'list'},
 }
 
 
@@ -40,21 +43,42 @@ def get_steps_paths_from_list(steps_list):
     }
 
 
-def get_scenario_steps(params):
-    role_steps_dir = os.path.join(params['role_path'], 'tasks', 'steps')
+def get_steps_paths(role_path, custom_steps_dir, custom_steps):
+    role_steps_dir = os.path.join(role_path, 'tasks', 'steps')
 
-    role_steps = get_steps_paths_from_dir(role_steps_dir)
-    custom_steps_from_dir = get_steps_paths_from_dir(params['custom_steps_dir'])
-    custom_steps = get_steps_paths_from_list(params['custom_steps'] or [])
+    role_steps_paths = get_steps_paths_from_dir(role_steps_dir)
+    custom_steps_paths_from_dir = get_steps_paths_from_dir(custom_steps_dir)
+    custom_steps_paths = get_steps_paths_from_list(custom_steps)
 
-    steps_paths = {
-        **role_steps,
-        **custom_steps_from_dir,
-        **custom_steps,
+    return {
+        **role_steps_paths,
+        **custom_steps_paths_from_dir,
+        **custom_steps_paths,
     }
 
+
+def get_scenario(scenario, role_scenarios, custom_scenarios, scenario_name):
+    if not scenario:
+        scenarios = role_scenarios.copy()
+        scenarios.update(custom_scenarios)
+        if scenario_name not in scenarios:
+            return None, "Unknown scenario '%s'" % scenario_name
+        scenario = scenarios[scenario_name]
+
+    return scenario, None
+
+
+def get_scenario_steps(params):
+    steps_paths = get_steps_paths(params['role_path'], params['custom_steps_dir'], params['custom_steps'])
+    scenario, err = get_scenario(
+        params['scenario'],
+        params['role_scenarios'], params['custom_scenarios'], params['scenario_name'],
+    )
+    if err:
+        return helpers.ModuleRes(failed=True, msg=err)
+
     scenario_steps = []
-    for step_name in params['scenario_steps_names']:
+    for step_name in scenario:
         if step_name not in steps_paths:
             return helpers.ModuleRes(failed=True, msg=f"Unknown step '{step_name}'")
 
