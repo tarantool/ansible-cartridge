@@ -46,6 +46,7 @@ to use the newest tag with new release
 - Control instance is selected considering two-phase commit version of instances.
   The reason is that all operations that modify cluster-wide config should be performed via instance
   that has lowest Cartridge version (in fact, only two-phase commit version matters).
+- Availability to change advertise URIs of any instance
 
 ### Changed
 

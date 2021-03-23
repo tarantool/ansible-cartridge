@@ -1,8 +1,8 @@
 import unittest
 
 from library.cartridge_edit_topology import get_configured_replicasets
-from library.cartridge_edit_topology import get_replicaset_params
 from library.cartridge_edit_topology import get_instances_to_configure
+from library.cartridge_edit_topology import get_replicaset_params
 from library.cartridge_edit_topology import get_server_params
 
 
@@ -106,13 +106,13 @@ class TestGetConfiguredReplicasets(unittest.TestCase):
 
 
 class TestGetInstancesToConfigure(unittest.TestCase):
-    def get_instances_to_configure(self):
+    def test_get_instances_to_configure(self):
         hostvars = {
             'instance-expelled': {  # expelled
                 'replicaset_alias': 'replicaset-1',
                 'expelled': True,
             },
-            'instance-expelled-zone': {  # expelled, with zone
+            'instance-expelled-zone': {  # expelled, with zone, but zone will be skipped
                 'replicaset_alias': 'replicaset-1',
                 'expelled': True,
                 'zone': 'Hogwarts',
@@ -127,6 +127,11 @@ class TestGetInstancesToConfigure(unittest.TestCase):
             'instance-2': {
                 'replicaset_alias': 'replicaset-1',
             },
+            'instance-3': {
+                'config': {
+                    'advertise_uri': '10.0.0.103:3301'
+                },
+            },
             'instance-stateboard': {  # stateboard
                 'expelled': True,
                 'stateboard': True,
@@ -140,8 +145,9 @@ class TestGetInstancesToConfigure(unittest.TestCase):
         instances = get_instances_to_configure(hostvars, play_hosts)
         self.assertEqual(instances, {
             'instance-expelled': {'expelled': True},
-            'instance-expelled-zone': {'expelled': True, 'zone': 'Hogwarts'},
+            'instance-expelled-zone': {'expelled': True},
             'instance-zone': {'zone': 'Narnia'},
+            'instance-3': {'uri': '10.0.0.103:3301'},
         })
 
         # not found instances to configure

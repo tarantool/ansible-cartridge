@@ -110,3 +110,66 @@ and disabled.
 After that, all instance files
 (configuration file, socket and working directory)
 are removed on [`cleanup_expelled`](/doc/scenario.md#cleanup_expelled) step.
+
+## Advertise URIs changing
+
+It is possible to change the advertise URIs of the servers. However, this should be done carefully.
+You can read about manually changing the URIs in the [troubleshooting doc](
+https://tarantool.io/en/doc/latest/book/cartridge/troubleshooting/#i-want-to-run-an-instance-with-a-new-advertise-uri).
+
+The main problem that arises when changing URIs: after restart, the instance tries
+to connect to all its replicas and remains in the `ConnectingFullmesh` state until it succeeds.
+If it can’t (due to replica URI unavailability or for any other reason) – it’s stuck forever.
+
+To solve the problem, you should set the `replication_connect_quorum` option to zero.
+To do it, you should add the option to `cartridge_defaults` or to `config` section of instances
+from the replicasets that include instances with new URIs.
+
+So, after changing advertise URIs and `replication_connect_quorum` options in configuration files,
+you should run `configure_instance` and `restart_instance` steps to apply changes
+(`replication_connect_quorum` can be changed without restarting,
+but to change advertise URI you should restart instance).
+
+After changing replication connect quorum and advertise URIs,
+you can run `edit_topology` step to change URIs in cluster-wide config.
+
+Now you can reset replication connect quorum to default value.
+
+For example, you can create a playbook like this to change the URI:
+
+```yaml
+- name: Set quorum to zero
+  hosts: cluster
+  become: true
+  gather_facts: no
+  vars:
+    cartridge_scenario:
+      - configure_instance
+      - restart_instance
+      - wait_instance_started
+    cartridge_defaults:
+      # don't forget to add other options from your cartridge_defaults variable
+      replication_connect_quorum: 0
+  roles:
+    - tarantool.cartridge
+
+- name: Update advertise URIs in cluster-wide config
+  hosts: cluster
+  become: true
+  gather_facts: no
+  vars:
+    cartridge_scenario:
+      - edit_topology
+  roles:
+    - tarantool.cartridge
+
+- name: Reset quorum to default value
+  hosts: cluster
+  become: true
+  gather_facts: no
+  vars:
+    cartridge_scenario:
+      - configure_instance
+  roles:
+    - tarantool.cartridge
+```
