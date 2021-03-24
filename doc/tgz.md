@@ -5,7 +5,7 @@ It requires additional actions such as configuring systemd units.
 All these actions can be disabled.
 
 Using TGZ package allows to use [multiversion approach](/doc/multiversion.md)
-that can be helpful to perform rolling update correclty.
+that can be helpful to perform rolling update correctly.
 This approach uses links to specify version of application that is used by each
 instance.
 
@@ -26,7 +26,7 @@ on application packing.
 Use `cartridge_install_tarantool_for_tgz` flag to disable installation
 of Tarantool.
 
-### Application user ang group
+### Application user and group
 
 Application user that owns all application files and instances processes
 can be configured using `cartridge_app_user` and `cartridge_app_group` variables.
@@ -44,7 +44,7 @@ To configure them use
 * `cartridge_conf_dir` - path to instances configuration;
 * `cartridge_app_install_dir` - directory where application distributions are placed;
 * `cartridge_app_instances_dir` directory where instances distributions are placed in
-  case of [multiversion approcah](/doc/multiversion.md).
+  case of [multiversion approach](/doc/multiversion.md).
 
 ### `systemd` unit files
 
