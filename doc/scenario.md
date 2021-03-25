@@ -92,7 +92,7 @@ In addition to the default scenario (see [steps](#steps)), there are also the fo
   - [cleanup](#cleanup)
 
 To add new scenarios or replace the role scenarios with your own, you should use `cartridge_custom_scenarios` option
-(see [example](#add-custom-scenario-to-gradually-update-to-a-new-version-of-TGZ)).
+(see [example](#add-a-custom-scenario-to-gradually-update-to-a-new-version-of-TGZ)).
 
 ## Examples
 
@@ -139,7 +139,7 @@ Let's take a look on it's [API](#deliver_package). It requires two variables:
 - `single_instances_for_each_machine` that allows us to run this task once per each machine.
 
 As a result of this module we should set `delivered_package_path` variable
-(a path of package on remote machine).
+(a path of package on a remote machine).
 
 Now, choose a directory where our custom steps are placed, for example `./custom_steps`.
 
@@ -183,7 +183,7 @@ Now there is a big problem on deploying huge clusters - [`connect_to_membership`
 long. Using scenario, we can solve this problem until it isn't solved in `cartridge`.
 
 In fact `connect_to_membership` is used in [`set_control_instance` step](#set_control_instance) to find some instance
-that is already in cluster. This instance should be used for joining other instances (otherwise two different clusters
+that is already in a cluster. This instance should be used for joining other instances (otherwise two different clusters
 are created). This instance is called `control_instance` and is used for editing topology and configuring cluster (auth,
 config and so on). Generally, `connect_to_membership` step can be skipped if you definitely know some instance that is
 already joined to cluster. The solution is to set `cartridge_control_instance` fact manually and
@@ -204,7 +204,7 @@ remove `connect_to_membership` step from scenario:
     - tarantool.cartridge
 ```
 
-### Add custom scenario to gradually update to a new version of TGZ
+### Add a custom scenario to gradually update to a new version of TGZ
 
 If you are using multiversion, then most likely you are upgrading to the new version of the package gradually:
 first storages, then routers, etc. To do this, the same scenario to update the package version is used several times.
@@ -343,7 +343,7 @@ Input facts (set by config):
 - `cartridge_conf_dir` - path to directory of instances application configs;
 - `cartridge_app_install_dir` - path to directory with application distributions;
 - `cartridge_app_instances_dir` - path to directory with instances links to
-  distributions (see [multiversion approach doc](/doc/multiversion.doc)).
+  distributions (see [multiversion approach doc](/doc/multiversion.md)).
 
 Output facts:
 
@@ -411,13 +411,13 @@ Input facts (set by role):
 
 Input facts (set by config):
 
-- `config` - instance configuration ([more details here](/README.md#instances));
+- `config` - instance configuration ([more details here](/doc/instances.md));
 - `restarted` - if instance should be restarted or not (user forced decision);
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
 - `cartridge_app_name` - application name;
 - `cartridge_cluster_cookie` - cluster cookie for all cluster instances;
-- `cartridge_defaults` - default configuration parameters values for instancesж
+- `cartridge_defaults` - default configuration parameters values for instances;
 - `cartridge_app_user` - user which will own the links;
 - `cartridge_app_group` - group which will own the links.
 
@@ -440,7 +440,7 @@ Input facts (set by config):
 
 ### wait_instance_started
 
-Wait until instance is fully started.
+Wait until an instance is fully started.
 
 Input facts (set by role):
 
@@ -455,7 +455,7 @@ Input facts (set by config):
 
 ### connect_to_membership
 
-Connect instance to membership.
+Connect an instance to membership.
 
 Input facts (set by role):
 
@@ -466,7 +466,7 @@ Input facts (set by config):
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
 - `cartridge_app_name` - application name;
-- `config` - instance configuration ([more details here](/README.md#instances)).
+- `config` - instance configuration ([more details here](/doc/instances.md)).
 
 ### set_control_instance
 
@@ -616,7 +616,7 @@ Input facts (set by config):
 
 Rotate application distributions.
 
-When [multiversion approcah](/doc/multiversion.md) is used, each new application
+When [multiversion approach](/doc/multiversion.md) is used, each new application
 version is added to `cartridge_app_install_dir`.
 This step removes redundant distribution.
 

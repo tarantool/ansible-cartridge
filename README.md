@@ -3,13 +3,10 @@
 An Ansible role to easily deploy
 [Tarantool Cartridge](https://github.com/tarantool/cartridge) applications.
 
-This role can deploy and configure applications packed in RPM, DEB and TGZ using
+This role can deploy and configure applications packed in `RPM`, `DEB` and `TGZ` using
 [`Cartridge CLI`](https://github.com/tarantool/cartridge-cli).
 
 Only `RedHat` and `Debian` OS families are supported.
-
-See the [getting started guide](/examples/getting-started-app/README.md)
-to learn how to set up topology using this role.
 
 ## Table of contents
 
@@ -35,7 +32,7 @@ First, you need to install this role using `ansible-galaxy`:
 $ ansible-galaxy install tarantool.cartridge,1.8.0
 ```
 
-## Quck start
+## Quick start
 
 You can start two virtual machines using example
 [Vagrantfile](/doc/files/Vagrantfile).
@@ -98,7 +95,7 @@ all:
           - storage-1-replica
 ```
 
-Write simple playbook that imports role:
+Write a simple playbook that imports role:
 
 ```yaml
 # playbook.yml
@@ -145,7 +142,7 @@ ansible-playbook -i hosts.yml playbook.yml --limit instance_1,instance_2
 ```
 
 You can also simply edit some replicaset.
-To do this define `cartridge_scenario` variable like this:
+To do this, define `cartridge_scenario` variable like this:
 
 ```yaml
 cartridge_scenario:
@@ -174,4 +171,4 @@ For more details about using scenario, see [scenario documentation](doc/scenario
 * [Configuring auth](/doc/auth.md)
 * [Configuring failover](/doc/failover.md)
 * [Configuring stateboard](/doc/stateboard.md)
-* [Application config](./app_config.md)
+* [Application config](/doc/app_config.md)

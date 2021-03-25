@@ -2,20 +2,20 @@
 
 The default versioning approach for Tarantool Cartridge applications is quite simple:
 
-* only one version of application is installed on machine;
+* only one version of application is installed on a machine;
 * updating instance happens on instance restart.
 
 Such approach doesn't protect from accidental updating instance, that can lead to
-errors (for example, if router starts to use new schema earlier than storages).
+errors (for example, if router starts to use a new schema earlier than storages).
 The solution is using multiversion approach (currently it's fully supported only
 for [TGZ](/doc/tgz.md) packages).
 
 Multiversion approach:
 
-* several versions of application can be installed on machine;
+* several versions of application can be installed on a machine;
 * each instance uses fixed version - it is achieved by using symbolic links;
 * updating instance consists of:
-  * moving it's link to a newest version of application
+  * moving its link to the newest version of application
     (see [`update_instance` step](/doc/scenario.md#update_instance));
   * instance restart.
 
@@ -29,7 +29,7 @@ Symbolic links for instances are placed in
 `{{ cartridge_app_instances_dir }}/{{ cartridge_app_name }}.{{ instance-name }}`.
 
 For example, we deploy `myapp-1.0.0-0.tgz` and start `instance-1`, `instance-2`
-and statebord.
+and stateboard.
 
 * Application files are placed in `{{ cartridge_app_install_dir }}/myapp-1.0.0-0`:
   ```bash
@@ -46,7 +46,7 @@ and statebord.
     myapp-stateboard -> {{ cartridge_app_install_dir }}/myapp-1.0.0-0
   ```
 
-## Rotaing distributions
+## Rotating distributions
 
 Each new version is added to `cartridge_app_install_dir` and sometimes old version
 become redundant.
@@ -70,8 +70,8 @@ Let's imagine that we already have `myapp-1.0.0-0` installed:
   myapp.core-1 -> {{ cartridge_app_install_dir }}/myapp-1.0.0-0
 ```
 
-And now the day has come and we want to deploy next version: `myapp-2.0.0-0.tgz`.
-Let's write a playbook that installs new version and updates storages.
+Now the day has come, and we want to deploy next version: `myapp-2.0.0-0.tgz`.
+Let's write a playbook that installs a new version and updates storages.
 
 **Note**: it may be useful to specify hosts pattern, e.g. `hosts: *storage*`.
 

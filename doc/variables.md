@@ -1,9 +1,5 @@
 # Role variables
 
-
-Configuration format is described in detail in the
-[configuration format](#configuration-format) section.
-
 Role variables are used to configure started instances, cluster topology,
 vshard bootstrapping, and failover.
 
@@ -23,11 +19,11 @@ vshard bootstrapping, and failover.
 For more details see [scenario documentation](/doc/scenario.md).
 
 * `cartridge_scenario` (`list-of-strings`): list of steps to be launched
-  (see [change scenario](#using-scenario) for more details)
+  (see [change scenario](/README.md#using-scenario) for more details)
 * `cartridge_custom_steps_dir` (`string`, default: `null`): path to directory
-  containing YAML files of custom steps (see [change scenario](#using-scenario) for more details)
+  containing YAML files of custom steps (see [change scenario](/README.md#using-scenario) for more details)
 * `cartridge_custom_steps` (`list-of-dicts`, default: `[]`): list of custom steps
-  (see [change scenario](#using-scenario) for more details)
+  (see [change scenario](/README.md#using-scenario) for more details)
 
 ## Application package configuration
 
@@ -36,7 +32,7 @@ For more details see [scenario documentation](/doc/scenario.md).
   indicates if the Tarantool repository should be enabled (for packages with
   open-source Tarantool dependency);
 
-## TGZ-specific configuration:
+## TGZ specific configuration
 
 * `cartridge_multiversion` (`boolean`, default: `false`): use [multiversion
   approach](/doc/multiversion.md) for TGZ package.
@@ -61,7 +57,7 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `cartridge_app_install_dir` (`string`, default: `/usr/share/tarantool`): directory
   where application distributions are placed;
 * `cartridge_app_instances_dir` (`string`, default: `/usr/share/tarantool`): directory
-  where instances distributions are placed in case of multiversion approcah.
+  where instances distributions are placed in case of multiversion approach.
 
 * `cartridge_configure_systemd_unit_files` (`boolean`, default: `true`): flag indicates that
   systemd unit files should be configured;
@@ -71,11 +67,11 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `cartridge_configure_tmpfiles` (`boolean`, default: `true`): flag indicates that tmpfiles
   config should be configured for application run dir;
 * `cartridge_tmpfiles_dir` (`string`, default: `/usr/lib/tmpfiles.d/`): a directory where
-  tmpfile sonfiguration should be placed;
+  tmpfile configuration should be placed;
 
-## Instances configuration:
+## Instances configuration
 
-* `config` (`dict`, required): [instance configuration](#instances);
+* `config` (`dict`, required): [instance configuration](/doc/instances.md);
 * `zone` (`string`): instance zone (available since
   [Cartridge 2.4.0](https://github.com/tarantool/cartridge/releases/tag/2.4.0));
 * `cartridge_defaults` (`dict`, default: `{}`): default configuration
@@ -83,11 +79,11 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `restarted` (`boolean`): flag indicates if instance should be
   restarted or not (if this flag isn't specified, instance will be restarted if
   it's needed to apply configuration changes);
-* `expelled` (`boolean`, default: `false`): boolean flag that indicates if instance must be expelled from topology;
-* `stateboard` (`boolean`, default: `false`): boolean flag that indicates
-   that the instance is a [stateboard](#stateboard-instance);
+* `expelled` (`boolean`, default: `false`): a boolean flag that indicates if instance must be expelled from topology;
+* `stateboard` (`boolean`, default: `false`): a boolean flag that indicates
+   that the instance is a [stateboard](/doc/stateboard.md);
 * `instance_start_timeout` (`number`, default: 60): time in seconds to wait for instance to be started;
-* `cartridge_wait_buckets_discovery` (`boolean`, default: `true`): boolean
+* `cartridge_wait_buckets_discovery` (`boolean`, default: `true`): a boolean
   flag that indicates if routers should wait for buckets discovery after vshard bootstrap;
 * `instance_discover_buckets_timeout` (`number`, default: 60): time in seconds
   to wait for instance to discover buckets;
@@ -99,15 +95,15 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
 * `all_rw` (`boolean`): indicates that that all servers in the replicaset should be read-write;
 * `weight` (`number`): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
-* `edit_topology_timeout` (`number`, default: `60`): time in seconds to wait until cluster become
+* `edit_topology_timeout` (`number`, default: `60`): time in seconds to wait until a cluster become
   healthy after editing topology;
 
 ## Cluster configuration
 
-* `cartridge_bootstrap_vshard` (`boolean`, default: `false`): boolean
+* `cartridge_bootstrap_vshard` (`boolean`, default: `false`): a boolean
   flag that indicates if vshard should be bootstrapped;
 * `cartridge_app_config` (`dict`): application config sections to patch;
-* `cartridge_auth`: (`dict`): [authorization configuration](#cartridge-authorization);
-* `cartridge_failover_params` (`dict`): [failover](#failover) parameters;
-* [DEPRECATED] `cartridge_failover` (`boolean`): boolean flag that
+* `cartridge_auth`: (`dict`): [authorization configuration](/doc/auth.md);
+* `cartridge_failover_params` (`dict`): [failover](/doc/failover.md) parameters;
+* [DEPRECATED] `cartridge_failover` (`boolean`): a boolean flag that
   indicates if eventual failover should be enabled or disabled;

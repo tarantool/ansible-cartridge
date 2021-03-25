@@ -1,6 +1,5 @@
 # Configuring failover
 
-
 [`cartridge_failover_params`](/doc/variables.md#cluster-configuration)
 is used to specify failover parameters:
 

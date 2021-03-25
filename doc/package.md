@@ -1,10 +1,10 @@
 # Package
 
-This role can work with RPM, DEB and [TGZ](/doc/tgz.md) packages created by
+This role can work with `RPM`, `DEB` and [`TGZ`](/doc/tgz.md) packages created by
 Tarantool Cartridge CLI.
 
 You can specify a path to the application package `cartridge_package_path`.
-Note, that package path shuold be the same for instances on one machine.
+Note, that package path should be the same for instances on one machine.
 
 This role does not allow package downgrades because this may drive the cluster
 inoperative.
