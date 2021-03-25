@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tarantool-version: ["2.5"]
+        tarantool-version: ["2.6"]
         molecule-scenario: ["default", "tasks_from", "update_cartridge"]
         include:
           - tarantool-version: "1.10"
