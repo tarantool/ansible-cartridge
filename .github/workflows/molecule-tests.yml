@@ -6,7 +6,7 @@ on:
   pull_request:
 
 env:
-  CARTRIDGE_CLI_VERSION: '2.7.1'
+  CARTRIDGE_CLI_VERSION: '2.7.2'
 
 jobs:
   molecule-tests-ce:
@@ -17,10 +17,10 @@ jobs:
     strategy:
       matrix:
         tarantool-version: ["2.5"]
-        molecule-tag: ["default", "tasks_from", "update_cartridge"]
+        molecule-scenario: ["default", "tasks_from", "update_cartridge"]
         include:
           - tarantool-version: "1.10"
-            molecule-tag: "default"
+            molecule-scenario: "default"
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
@@ -64,14 +64,14 @@ jobs:
           ./create-packages.sh
 
       - name: Molecule tests
-        run: molecule test -s '${{ matrix.molecule-tag }}'
+        run: molecule test -s '${{ matrix.molecule-scenario }}'
 
   molecule-tests-ee:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        sdk-version: ["2.6.2-0-g34d504d7d-r388"]
+        sdk-version: ["2.6.2-124-g2c3b91439-r391"]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2

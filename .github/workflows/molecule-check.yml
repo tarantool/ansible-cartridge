@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
 
 env:
-  CARTRIDGE_CLI_VERSION: '2.7.1'
+  CARTRIDGE_CLI_VERSION: '2.7.2'
 
 jobs:
   molecule-check:
