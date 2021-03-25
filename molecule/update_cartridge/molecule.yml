@@ -15,7 +15,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     published_ports:
-      - 8081-8090:8081-8090/tcp
+      - 8100-8199:8100-8199/tcp
     networks:
       - name: cartridge-network
 

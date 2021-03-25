@@ -29,8 +29,7 @@ jobs:
           tarantool-version: '${{ matrix.tarantool-version }}'
 
       - name: Install Python requirements
-        run: |
-          pip3 install --upgrade -r requirements.txt
+        run: pip3 install --upgrade -r requirements.txt
 
       - name: Cache unit tests requirements
         id: cache-packages

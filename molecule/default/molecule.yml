@@ -15,7 +15,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     published_ports:
-      - 8081-8090:8081-8090/tcp
+      - 8101-8199:8101-8199/tcp
     networks:
       - name: cartridge-network
   - name: vm2
@@ -27,7 +27,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     published_ports:
-      - 8091-8099:8091-8099/tcp
+      - 8201-8299:8201-8299/tcp
     networks:
       - name: cartridge-network
     privileged: true
@@ -40,7 +40,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     published_ports:
-      - 8071-8080:8071-8080/tcp
+      - 8301-8399:8301-8399/tcp
     networks:
       - name: cartridge-network
   - name: vm4
@@ -52,7 +52,7 @@ platforms:
     volumes:
       - /sys/fs/cgroup:/sys/fs/cgroup:ro
     published_ports:
-      - 8061-8070:8061-8070/tcp
+      - 8401-8499:8401-8499/tcp
     networks:
       - name: cartridge-network
 
