@@ -117,7 +117,7 @@ It is possible to change the advertise URIs of the servers. However, this should
 You can read about manually changing the URIs in the [troubleshooting doc](
 https://tarantool.io/en/doc/latest/book/cartridge/troubleshooting/#i-want-to-run-an-instance-with-a-new-advertise-uri).
 
-The main problem that arises when changing URIs: after restart, the instance tries
+The main problem that arises when changing URIs: after a restart, the instance tries
 to connect to all its replicas and remains in the `ConnectingFullmesh` state until it succeeds.
 If it can’t (due to replica URI unavailability or for any other reason) – it’s stuck forever.
 

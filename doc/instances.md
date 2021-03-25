@@ -9,21 +9,22 @@ Instances are identified by aliases that are set equal to Ansible host names.
 
 Instance is restarted only if it's required to apply changes
 (instance configuration was changed or package was updated).
-But instance restart can be forced or disabled by `restarted` flag.
+However, instance restart can be forced or disabled by `restarted` flag.
 If this flag isn't set, role decides if instance should be restarted.
 
 ## Expelling instances
 
-To expel instance from topology specify `expelled: true`.
-See [topology doc](/doc/topology.md#expelling-instances) for deatils
+To expel an instance from topology specify `expelled: true`.
+See [topology doc](/doc/topology.md#expelling-instances) for details
 
 ## Instance config
 
 Instance can be configured using the [`config`](/doc/variables.md#instances-configuration) variable.
-Fro specifying parameters that are common for all instances, use
-[`cartridge_defaults`](/doc/variables.md#instances-configuration) varieble.
-This variables describe instance parameters that would be passed to cartridge configuration.
-It can contain [cluster-specific](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/modules/cartridge.argparse/#cluster-opts) parameters or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/modules/cartridge.argparse) module).
+For specifying parameters that are common for all instances, use
+[`cartridge_defaults`](/doc/variables.md#instances-configuration) variable.
+These variables describe instance parameters that would be passed to cartridge configuration.
+It can contain [cluster-specific](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/modules/cartridge.argparse/#cluster-opts)
+or some application-specific parameters (can be parsed in application using the [`cartridge.argparse`](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/modules/cartridge.argparse) module).
 
 ### Required parameters
 
