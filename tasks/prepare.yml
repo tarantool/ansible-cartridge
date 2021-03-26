@@ -23,7 +23,7 @@
     - ansible_os_family is defined
     - ansible_os_family not in ["RedHat", "Debian"]
 
-- name: "Set 'remote_user' for delegated tasks"
+- name: 'Set "remote_user" for delegated tasks'
   set_fact:
     remote_user: '{{ ansible_user }}'
   when:
@@ -49,7 +49,7 @@
       stateboard: '{{ stateboard }}'
   register: instance_info_res
 
-- name: 'Remember instance info'
+- name: 'Set "instance_info" fact'
   set_fact:
     instance_info: '{{ instance_info_res.fact }}'
 
@@ -62,7 +62,7 @@
   become: false
   register: single_instances_for_each_machine_res
 
-- name: 'Remember one instance for each physical machine'
+- name: 'Set "single_instances_for_each_machine" fact'
   set_fact:
     single_instances_for_each_machine: '{{ single_instances_for_each_machine_res.fact }}'
   run_once: true
@@ -78,7 +78,7 @@
   become: false
   register: not_expelled_instance_res
 
-- name: 'Remember one not expelled instance'
+- name: 'Set "not_expelled_instance" fact'
   set_fact:
     not_expelled_instance: '{{ not_expelled_instance_res.fact }}'
   run_once: true

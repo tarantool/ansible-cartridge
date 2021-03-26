@@ -12,7 +12,7 @@
         dest: /tmp/
       register: copied_package
 
-    - name: 'Set delivered package path'
+    - name: 'Set "delivered_package_path" fact'
       set_fact:
         delivered_package_path: '{{ copied_package.dest }}'
         temporary_files: "{{ temporary_files + [copied_package.dest] }}"

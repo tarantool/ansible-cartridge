@@ -7,7 +7,7 @@
     keep_num_latest_dists: '{{ cartridge_keep_num_latest_dists }}'
   register: dist_dirs_to_remove_res
 
-- name: 'Remember distribution directories to remove'
+- name: 'Set "dists_dirs_to_remove" fact'
   set_fact:
     dists_dirs_to_remove: '{{ dist_dirs_to_remove_res.fact }}'
 

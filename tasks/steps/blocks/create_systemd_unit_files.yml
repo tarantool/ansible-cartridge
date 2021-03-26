@@ -15,7 +15,7 @@
       cartridge_wal_dir_parent: '{{ cartridge_wal_dir_parent }}'
   register: systemd_units_info_res
 
-- name: 'Remember systemd unit files info'
+- name: 'Set "systemd_units_info" fact'
   set_fact:
     systemd_units_info: '{{ systemd_units_info_res.fact }}'
 

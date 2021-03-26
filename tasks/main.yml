@@ -37,7 +37,7 @@
     - cartridge-replicasets
     - cartridge-config
 
-- name: 'Remember tasks for scenario steps'
+- name: 'Set "scenario_steps" fact'
   set_fact:
     scenario_steps: '{{ scenario_steps_res.fact }}'
   run_once: true

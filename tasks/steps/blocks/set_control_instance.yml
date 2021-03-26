@@ -10,7 +10,7 @@
   delegate_to: '{{ not_expelled_instance.name }}'
   register: control_instance_res
 
-- name: 'Remember control instance'
+- name: 'Set "control_instance" fact'
   set_fact:
     control_instance: '{{ control_instance_res.fact }}'
   run_once: true
