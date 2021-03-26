@@ -38,6 +38,13 @@ class TestGetNeedsRestart(unittest.TestCase):
         # create app dist dir
         create_dir(os.path.join(self.app_install_dir, '%s-0.0.1-0' % APP_NAME))
 
+        # create stateboard dist dir - it shouldn't be removed
+        create_dir(os.path.join(self.app_install_dir, '%s-stateboard' % APP_NAME))
+
+        # create instances dist dirs - it shouldn't be removed
+        for instance_name in ['i-1', 'i-2', 'i-3']:
+            create_dir(os.path.join(self.app_install_dir, '%s.%s' % (APP_NAME, instance_name)))
+
         # create file with <app-name>-<version> name
         create_file(os.path.join(self.app_install_dir, '%s-0.1.0-0' % APP_NAME))
 

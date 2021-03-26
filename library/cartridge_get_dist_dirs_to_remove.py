@@ -23,6 +23,9 @@ def is_dist(filename, app_install_dir, app_name):
     if not filename.startswith('%s-' % app_name):
         return False
 
+    if filename == helpers.get_instance_id(app_name, stateboard=True):
+        return False
+
     return True
 
 
