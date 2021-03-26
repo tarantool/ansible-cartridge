@@ -50,9 +50,7 @@ def get_dist_dirs_to_remove(params):
         for filename in dists[keep_num_latest_dists:]
     ]
 
-    return helpers.ModuleRes(facts={
-        'dists_dirs_to_remove': dists_dirs_to_remove,
-    })
+    return helpers.ModuleRes(fact=dists_dirs_to_remove)
 
 
 if __name__ == '__main__':

@@ -1,22 +1,14 @@
 ---
 
-- name: 'Initialize facts set by role modules'
-  cartridge_set_facts:
-    facts:
-      scenario_steps: null
-      package_info: null
-      systemd_units_info: null
-      needs_restart: null
-      control_instance: null
-      dists_dirs_to_remove: null
-  run_once: true
-  delegate_to: localhost
-  become: false
-
-- name: 'Initialize facts set by "set_fact" module'
+- name: 'Initialize facts'
   set_fact:
     temporary_files: []
     delivered_package_path: null
+    package_info: null
+    systemd_units_info: null
+    needs_restart: null
+    control_instance: null
+    dists_dirs_to_remove: null
   run_once: true
   delegate_to: localhost
   become: false
@@ -28,7 +20,7 @@
     - cartridge-config
 
 - name: 'Collect tasks for scenario steps'
-  cartridge_set_scenario_steps:
+  cartridge_get_scenario_steps:
     role_path: '{{ role_path }}'
     custom_steps_dir: '{{ cartridge_custom_steps_dir }}'
     custom_steps: '{{ cartridge_custom_steps }}'
@@ -36,6 +28,18 @@
     custom_scenarios: '{{ cartridge_custom_scenarios }}'
     scenario_name: '{{ cartridge_scenario_name }}'
     scenario: '{{ cartridge_scenario }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+  register: scenario_steps_res
+  tags:
+    - cartridge-instances
+    - cartridge-replicasets
+    - cartridge-config
+
+- name: 'Set "scenario_steps" fact'
+  set_fact:
+    scenario_steps: '{{ scenario_steps_res.fact }}'
   run_once: true
   delegate_to: localhost
   become: false

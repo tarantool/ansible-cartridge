@@ -11,7 +11,7 @@
       when: (restarted == false) or (restarted is none and not needs_restart)
 
     - name: 'Check if instance restart is required to use new config'
-      cartridge_set_needs_restart:
+      cartridge_get_needs_restart:
         app_name: '{{ cartridge_app_name }}'
         config: '{{ config }}'
         cartridge_defaults: '{{ cartridge_defaults }}'
@@ -22,6 +22,12 @@
       when:
         - restarted is none
         - not needs_restart
+      register: needs_restart_res
+
+    - name: 'Set "needs_restart" fact'
+      set_fact:
+        needs_restart: '{{ needs_restart_res.fact }}'
+      when: "'fact' in needs_restart_res"
 
     - name: 'Place default config'
       copy:

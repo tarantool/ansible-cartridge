@@ -155,9 +155,7 @@ def get_package_info(params):
 
     package_info['type'] = package_type
 
-    return helpers.ModuleRes(changed=False, facts={
-        'package_info': package_info,
-    })
+    return helpers.ModuleRes(changed=False, fact=package_info)
 
 
 if __name__ == '__main__':

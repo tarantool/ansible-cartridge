@@ -1,7 +1,7 @@
 ---
 
 - name: 'Collect systemd unit files info'
-  cartridge_set_systemd_units_info:
+  cartridge_get_systemd_units_info:
     app_name: '{{ cartridge_app_name }}'
     tnt_version: '{{ package_info.tnt_version }}'
     instance_vars:
@@ -13,6 +13,11 @@
       cartridge_memtx_dir_parent: '{{ cartridge_memtx_dir_parent }}'
       cartridge_vinyl_dir_parent: '{{ cartridge_vinyl_dir_parent }}'
       cartridge_wal_dir_parent: '{{ cartridge_wal_dir_parent }}'
+  register: systemd_units_info_res
+
+- name: 'Set "systemd_units_info" fact'
+  set_fact:
+    systemd_units_info: '{{ systemd_units_info_res.fact }}'
 
 - name: 'Place systemd units files'
   template:

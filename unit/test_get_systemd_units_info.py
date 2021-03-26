@@ -1,6 +1,6 @@
 import unittest
 
-from library.cartridge_set_systemd_units_info import get_systemd_units_info
+from library.cartridge_get_systemd_units_info import get_systemd_units_info
 
 
 def call_get_systemd_units_info(app_name, instance_vars, tnt_version):
@@ -11,7 +11,7 @@ def call_get_systemd_units_info(app_name, instance_vars, tnt_version):
     })
 
 
-class TestSetInstanceInfo(unittest.TestCase):
+class TestGetInstanceInfo(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 
@@ -31,7 +31,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
         res = call_get_systemd_units_info(app_name, instance_vars, tnt_version)
         self.assertFalse(res.failed)
-        self.assertEqual(res.facts, {'systemd_units_info': {
+        self.assertEqual(res.fact, {
             'stateboard_name': 'myapp-stateboard',
 
             'app_unit_file': 'myapp@.service',
@@ -59,7 +59,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
             'instance_tarantool_binary': '/usr/bin/tarantool',
             'stateboard_tarantool_binary': '/usr/bin/tarantool',
-        }})
+        })
 
     def test_multiversion_tnt_ee(self):
         app_name = 'myapp'
@@ -77,7 +77,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
         res = call_get_systemd_units_info(app_name, instance_vars, tnt_version)
         self.assertFalse(res.failed)
-        self.assertEqual(res.facts, {'systemd_units_info': {
+        self.assertEqual(res.fact, {
             'stateboard_name': 'myapp-stateboard',
 
             'app_unit_file': 'myapp@.service',
@@ -105,7 +105,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
             'instance_tarantool_binary': 'some/instances/dir/myapp.%i/tarantool',
             'stateboard_tarantool_binary': 'some/instances/dir/myapp-stateboard/tarantool',
-        }})
+        })
 
     def test_not_multiversion_tnt_ce(self):
         app_name = 'myapp'
@@ -123,7 +123,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
         res = call_get_systemd_units_info(app_name, instance_vars, tnt_version)
         self.assertFalse(res.failed)
-        self.assertEqual(res.facts, {'systemd_units_info': {
+        self.assertEqual(res.fact, {
             'stateboard_name': 'myapp-stateboard',
 
             'app_unit_file': 'myapp@.service',
@@ -151,7 +151,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
             'instance_tarantool_binary': '/usr/bin/tarantool',
             'stateboard_tarantool_binary': '/usr/bin/tarantool',
-        }})
+        })
 
     def test_not_multiversion_tnt_ee(self):
         app_name = 'myapp'
@@ -169,7 +169,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
         res = call_get_systemd_units_info(app_name, instance_vars, tnt_version)
         self.assertFalse(res.failed)
-        self.assertEqual(res.facts, {'systemd_units_info': {
+        self.assertEqual(res.fact, {
             'stateboard_name': 'myapp-stateboard',
 
             'app_unit_file': 'myapp@.service',
@@ -197,4 +197,4 @@ class TestSetInstanceInfo(unittest.TestCase):
 
             'instance_tarantool_binary': 'some/dist/dir/tarantool',
             'stateboard_tarantool_binary': 'some/dist/dir/tarantool',
-        }})
+        })

@@ -1,6 +1,6 @@
 import unittest
 
-from library.cartridge_set_single_instances_for_each_machine import get_one_not_expelled_instance_for_machine
+from library.cartridge_get_single_instances_for_each_machine import get_one_not_expelled_instance_for_machine
 
 
 def call_get_one_not_expelled_instance_for_machine(hostvars, play_hosts=None):
@@ -13,7 +13,7 @@ def call_get_one_not_expelled_instance_for_machine(hostvars, play_hosts=None):
     })
 
 
-class TestSetOneInstanceForMachine(unittest.TestCase):
+class TestGetOneInstanceForMachine(unittest.TestCase):
     def setUp(self):
         self.hostvars = {
             'stateboard-1': {
@@ -45,14 +45,14 @@ class TestSetOneInstanceForMachine(unittest.TestCase):
             'expelled-1', 'expelled-2',
         ])
         self.assertFalse(res.failed, res.msg)
-        self.assertEqual(len(res.facts['single_instances_for_each_machine']), 0)
+        self.assertEqual(len(res.fact), 0)
 
     def test_stateboard_found(self):
         res = call_get_one_not_expelled_instance_for_machine(self.hostvars, [
             'expelled-1', 'expelled-2', 'stateboard-1', 'stateboard-2',
         ])
         self.assertFalse(res.failed, res.msg)
-        self.assertEqual(res.facts['single_instances_for_each_machine'], ['stateboard-1', 'stateboard-2'])
+        self.assertEqual(res.fact, ['stateboard-1', 'stateboard-2'])
 
     def test_instances_found(self):
         res = call_get_one_not_expelled_instance_for_machine(self.hostvars, [
@@ -60,7 +60,7 @@ class TestSetOneInstanceForMachine(unittest.TestCase):
         ])
         self.assertFalse(res.failed, res.msg)
 
-        single_instances = res.facts['single_instances_for_each_machine']
+        single_instances = res.fact
         self.assertEqual(len(single_instances), 2)
         self.assertTrue('instance-1' in single_instances or 'stateboard-1' in single_instances)
         self.assertTrue('instance-2' in single_instances or 'stateboard-2' in single_instances)

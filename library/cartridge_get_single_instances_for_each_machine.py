@@ -38,9 +38,7 @@ def get_one_not_expelled_instance_for_machine(params):
             machine_hostnames.add(machine_hostname)
             instance_names.append(instance_name)
 
-    return helpers.ModuleRes(changed=False, facts={
-        'single_instances_for_each_machine': instance_names,
-    })
+    return helpers.ModuleRes(changed=False, fact=instance_names)
 
 
 if __name__ == '__main__':

@@ -172,7 +172,7 @@ def set_needs_restart(params):
 
     # check if instance was not started yet
     if not os.path.exists(console_sock):
-        return helpers.ModuleRes(changed=True, facts={'needs_restart': True})
+        return helpers.ModuleRes(changed=True, fact=True)
 
     try:
         control_console = helpers.get_control_console(console_sock)
@@ -183,7 +183,7 @@ def set_needs_restart(params):
             helpers.cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
         ]
         if e.code in allowed_errcodes:
-            return helpers.ModuleRes(changed=True, facts={'needs_restart': True})
+            return helpers.ModuleRes(changed=True, fact=True)
 
         raise e
 
@@ -192,16 +192,16 @@ def set_needs_restart(params):
         if err is not None:
             return helpers.ModuleRes(failed=True, msg=err)
         if needs_restart:
-            return helpers.ModuleRes(changed=True, facts={'needs_restart': True})
+            return helpers.ModuleRes(changed=True, fact=True)
 
     if params['check_config_updated']:
         needs_restart, err = check_needs_restart_to_update_config(params, control_console)
         if err is not None:
             return helpers.ModuleRes(failed=True, msg=err)
         if needs_restart:
-            return helpers.ModuleRes(changed=True, facts={'needs_restart': True})
+            return helpers.ModuleRes(changed=True, fact=True)
 
-    return helpers.ModuleRes(changed=False, facts={'needs_restart': False})
+    return helpers.ModuleRes(changed=False, fact=False)
 
 
 if __name__ == '__main__':

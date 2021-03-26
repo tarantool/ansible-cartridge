@@ -14,7 +14,6 @@ argument_spec = {
     'app_name': {'required': True, 'type': 'str'},
 }
 
-
 GET_TWOPHASE_COMMIT_VERSION_TIMEOUT = 60
 
 
@@ -143,11 +142,9 @@ def get_control_instance(params):
         run_dir, app_name, control_instance_name,
     )
 
-    return helpers.ModuleRes(changed=False, facts={
-        'control_instance': {
-            'name': control_instance_name,
-            'console_sock': control_instance_console_sock,
-        }
+    return helpers.ModuleRes(changed=False, fact={
+        'name': control_instance_name,
+        'console_sock': control_instance_console_sock,
     })
 
 

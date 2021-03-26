@@ -87,9 +87,7 @@ def get_scenario_steps(params):
             'path': steps_paths[step_name],
         })
 
-    return helpers.ModuleRes(changed=False, facts={
-        'scenario_steps': scenario_steps,
-    })
+    return helpers.ModuleRes(changed=False, fact=scenario_steps)
 
 
 if __name__ == '__main__':

@@ -2,9 +2,14 @@
 
 - name: 'Get package meta info'
   any_errors_fatal: true
-  cartridge_set_package_info:
+  cartridge_get_package_info:
     package_path: '{{ delivered_package_path }}'
     app_name: '{{ cartridge_app_name }}'
+  register: package_info_res
+
+- name: 'Set "package_info" fact'
+  set_fact:
+    package_info: '{{ package_info_res.fact }}'
 
 - when:
     - cartridge_enable_tarantool_repo
@@ -25,7 +30,7 @@
       command: bash {{ enable_repo_script.dest }}
       changed_when: false
 
-    - name: Add repository setup script to temporary files list
+    - name: 'Add repository setup script to temporary files list'
       set_fact:
         temporary_files: "{{ temporary_files + [enable_repo_script.dest] }}"
 

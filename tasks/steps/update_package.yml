@@ -9,7 +9,7 @@
         - inventory_hostname in single_instances_for_each_machine
 
     - name: 'Check if instance restart is required to use new package'
-      cartridge_set_needs_restart:
+      cartridge_get_needs_restart:
         instance_info: '{{ instance_info }}'
         check_package_updated: true
       when:
@@ -17,3 +17,9 @@
         - not expelled
         - restarted is none
         - not needs_restart
+      register: needs_restart_res
+
+    - name: 'Set "needs_restart" fact'
+      set_fact:
+        needs_restart: '{{ needs_restart_res.fact }}'
+      when: "'fact' in needs_restart_res"

@@ -1,10 +1,10 @@
 import os
 import unittest
 
-from library.cartridge_set_scenario_steps import get_scenario_steps
+from library.cartridge_get_scenario_steps import get_scenario_steps
 
 
-class TestSetSteps(unittest.TestCase):
+class TestGetSteps(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 
@@ -59,7 +59,7 @@ class TestSetSteps(unittest.TestCase):
         tasks = self.call_get_tasks_paths(
             scenario=['task_1', 'task_2', 'task_3'],
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
             {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
             {'name': 'task_3', 'path': os.path.join(self.full_role_path, 'task_3.yml')},
@@ -70,7 +70,7 @@ class TestSetSteps(unittest.TestCase):
             scenario=['task_1', 'task_2', 'task_3', 'task_4', 'task_5'],
             custom_steps_dir=self.custom_steps_dir,
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
             {'name': 'task_2', 'path': os.path.join(self.custom_steps_dir, 'task_2.yaml')},
             {'name': 'task_3', 'path': os.path.join(self.full_role_path, 'task_3.yml')},
@@ -87,7 +87,7 @@ class TestSetSteps(unittest.TestCase):
                 {'name': 'task_6', 'file': '/custom_steps/task_6.yml'},
             ],
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
             {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
             {'name': 'task_3', 'path': '/custom_steps/task_3.yml'},
@@ -105,7 +105,7 @@ class TestSetSteps(unittest.TestCase):
                 {'name': 'task_6', 'file': '/custom_steps/task_6.yml'},
             ],
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
             {'name': 'task_2', 'path': os.path.join(self.custom_steps_dir, 'task_2.yaml')},
             {'name': 'task_3', 'path': '/custom_steps/task_3.yml'},
@@ -118,7 +118,7 @@ class TestSetSteps(unittest.TestCase):
         tasks = self.call_get_tasks_paths(
             scenario=['task_2'],
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
         ])
 
@@ -126,7 +126,7 @@ class TestSetSteps(unittest.TestCase):
             scenario=['task_2'],
             custom_steps_dir=self.custom_steps_dir,
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_2', 'path': os.path.join(self.custom_steps_dir, 'task_2.yaml')},
         ])
 
@@ -137,7 +137,7 @@ class TestSetSteps(unittest.TestCase):
                 {'name': 'task_2', 'file': '/custom_steps/task_2.yaml'},
             ],
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_2', 'path': '/custom_steps/task_2.yaml'},
         ])
 
@@ -149,7 +149,7 @@ class TestSetSteps(unittest.TestCase):
 
     def test_default_role_scenario(self):
         tasks = self.call_get_tasks_paths()
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
             {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
         ])
@@ -175,7 +175,7 @@ class TestSetSteps(unittest.TestCase):
             role_scenarios=role_scenarios,
             custom_scenarios=custom_scenarios,
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
         ])
 
@@ -184,7 +184,7 @@ class TestSetSteps(unittest.TestCase):
             role_scenarios=role_scenarios,
             custom_scenarios=custom_scenarios,
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_3', 'path': os.path.join(self.full_role_path, 'task_3.yml')},
         ])
 
@@ -193,7 +193,7 @@ class TestSetSteps(unittest.TestCase):
             role_scenarios=role_scenarios,
             custom_scenarios=custom_scenarios,
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_1', 'path': os.path.join(self.full_role_path, 'task_1.yml')},
             {'name': 'task_2', 'path': os.path.join(self.full_role_path, 'task_2.yaml')},
         ])
@@ -212,7 +212,7 @@ class TestSetSteps(unittest.TestCase):
             custom_scenarios=custom_scenarios,
             scenario=['task_3']
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_3', 'path': os.path.join(self.full_role_path, 'task_3.yml')},
         ])
 
@@ -222,7 +222,7 @@ class TestSetSteps(unittest.TestCase):
             custom_scenarios=custom_scenarios,
             scenario=['task_3']
         )
-        self.assertEqual(tasks.facts['scenario_steps'], [
+        self.assertEqual(tasks.fact, [
             {'name': 'task_3', 'path': os.path.join(self.full_role_path, 'task_3.yml')},
         ])
 

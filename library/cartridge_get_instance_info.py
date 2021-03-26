@@ -140,9 +140,7 @@ def get_instance_info(params):
             app_name, instance_name, instance_vars['stateboard'],
         )
 
-    return helpers.ModuleRes(changed=False, facts={
-        'instance_info': instance_info
-    })
+    return helpers.ModuleRes(changed=False, fact=instance_info)
 
 
 if __name__ == '__main__':
