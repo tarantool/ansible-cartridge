@@ -1,10 +1,17 @@
 ---
 
 - name: 'Select control instance to manage topology and configuration'
-  cartridge_set_control_instance:
+  cartridge_get_control_instance:
     hostvars: '{{ hostvars }}'
     play_hosts: '{{ play_hosts }}'
     console_sock: '{{ not_expelled_instance.console_sock }}'
     app_name: '{{ cartridge_app_name }}'
+  run_once: true
+  delegate_to: '{{ not_expelled_instance.name }}'
+  register: control_instance_res
+
+- name: 'Remember control instance'
+  set_fact:
+    control_instance: '{{ control_instance_res.fact }}'
   run_once: true
   delegate_to: '{{ not_expelled_instance.name }}'

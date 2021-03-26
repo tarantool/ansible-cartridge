@@ -1,6 +1,6 @@
 import unittest
 
-from library.cartridge_set_not_expelled_instance import get_one_not_expelled_instance
+from library.cartridge_get_not_expelled_instance import get_one_not_expelled_instance
 
 
 def call_get_one_not_expelled_instance(hostvars, play_hosts=None):
@@ -13,7 +13,7 @@ def call_get_one_not_expelled_instance(hostvars, play_hosts=None):
     })
 
 
-class TestSetOneNotExpelledInstance(unittest.TestCase):
+class TestGetOneNotExpelledInstance(unittest.TestCase):
     def setUp(self):
         self.hostvars = {
             'expelled-1': {'expelled': True},
@@ -48,4 +48,4 @@ class TestSetOneNotExpelledInstance(unittest.TestCase):
             {'name': 'instance-2', 'console_sock': 'sock-2'},
         ]
 
-        self.assertIn(res.facts['not_expelled_instance'], possible_meta)
+        self.assertIn(res.fact, possible_meta)

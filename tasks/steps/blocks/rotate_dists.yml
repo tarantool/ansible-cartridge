@@ -1,12 +1,17 @@
 ---
 
-- name: Get distribution directories to remove
-  cartridge_set_dist_dirs_to_remove:
+- name: 'Get distribution directories to remove'
+  cartridge_get_dist_dirs_to_remove:
     app_name: '{{ cartridge_app_name }}'
     app_install_dir: '{{ cartridge_app_install_dir }}'
     keep_num_latest_dists: '{{ cartridge_keep_num_latest_dists }}'
+  register: dist_dirs_to_remove_res
 
-- name: Remove redundant distribution directories
+- name: 'Remember distribution directories to remove'
+  set_fact:
+    dists_dirs_to_remove: '{{ dist_dirs_to_remove_res.fact }}'
+
+- name: 'Remove redundant distribution directories'
   file:
     state: absent
     path: '{{ dists_dir }}'

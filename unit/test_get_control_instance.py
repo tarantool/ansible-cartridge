@@ -1,11 +1,9 @@
+import os
 import unittest
 
-import os
-
+import library.cartridge_get_control_instance as get_control_instance_lib
+from library.cartridge_get_control_instance import get_control_instance
 from unit.instance import Instance
-from library.cartridge_set_control_instance import get_control_instance
-import library.cartridge_set_control_instance as set_control_instance_lib
-
 
 twophase_commit_versions = {}
 
@@ -17,7 +15,7 @@ def get_twophase_commit_versions_mock(_, advertise_uris):
     return versions, None
 
 
-set_control_instance_lib.get_twophase_commit_versions = get_twophase_commit_versions_mock
+get_control_instance_lib.get_twophase_commit_versions = get_twophase_commit_versions_mock
 
 
 def call_get_control_instance(app_name, console_sock, hostvars=None, play_hosts=None):
@@ -81,7 +79,7 @@ def set_membership_members(instance, specified_members, with_payload=True):
     instance.set_variable('membership_members', members)
 
 
-class TestSetControlInstance(unittest.TestCase):
+class TestGetControlInstance(unittest.TestCase):
     def setUp(self):
         self.instance = Instance()
         self.console_sock = self.instance.console_sock
@@ -118,10 +116,10 @@ class TestSetControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
-        self.assertEqual(res.facts, {'control_instance': {
+        self.assertEqual(res.fact, {
             'name': ALIAS1,
             'console_sock': os.path.join('/var/run/tarantool', '%s.%s.control' % (APP_NAME, ALIAS1)),
-        }})
+        })
 
     def test_one_instance(self):
         hostvars = {
@@ -134,10 +132,10 @@ class TestSetControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
-        self.assertEqual(res.facts, {'control_instance': {
+        self.assertEqual(res.fact, {
             'name': ALIAS1,
             'console_sock': SOCK1,
-        }})
+        })
 
         # without UUID
         set_membership_members(self.instance, [
@@ -161,10 +159,10 @@ class TestSetControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
-        self.assertEqual(res.facts, {'control_instance': {
+        self.assertEqual(res.fact, {
             'name': ALIAS1,
             'console_sock': SOCK1,
-        }})
+        })
 
         # one with UUID (it is selected)
         set_membership_members(self.instance, [
@@ -173,10 +171,10 @@ class TestSetControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
-        self.assertEqual(res.facts, {'control_instance': {
+        self.assertEqual(res.fact, {
             'name': ALIAS1,
             'console_sock': SOCK1,
-        }})
+        })
 
         # one with UUID (but without alias)
         set_membership_members(self.instance, [
@@ -231,17 +229,17 @@ class TestSetControlInstance(unittest.TestCase):
         # URI1 is selected by lexicographic order
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
-        self.assertEqual(res.facts, {'control_instance': {
+        self.assertEqual(res.fact, {
             'name': ALIAS1,
             'console_sock': SOCK1,
-        }})
+        })
 
         # only instances w/o replicaset_alias, expelled and stateboard
         # are in play_hosts
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars, play_hosts=[
             'instance-not-in-replicaset', 'expelled-instance', 'my-stateboard',
         ])
-        self.assertTrue(res.failed, res.facts)
+        self.assertTrue(res.failed, res.fact)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
 
     def test_instance_not_in_hostvars(self):
@@ -257,7 +255,7 @@ class TestSetControlInstance(unittest.TestCase):
         ])
 
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
-        self.assertTrue(res.failed, res.facts)
+        self.assertTrue(res.failed, res.fact)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
 
     def test_instance_is_not_alive(self):
@@ -272,7 +270,7 @@ class TestSetControlInstance(unittest.TestCase):
         ])
 
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
-        self.assertTrue(res.failed, res.facts)
+        self.assertTrue(res.failed, res.fact)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
 
     def test_twophase_commit_versions(self):
@@ -311,10 +309,10 @@ class TestSetControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
-        self.assertEqual(res.facts, {'control_instance': {
+        self.assertEqual(res.fact, {
             'name': ALIAS3,
             'console_sock': SOCK3,
-        }})
+        })
 
         # both without UUID and alias - URI3 is selected
         # (instead of URI1 by lexicographic order)
@@ -325,10 +323,10 @@ class TestSetControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
-        self.assertEqual(res.facts, {'control_instance': {
+        self.assertEqual(res.fact, {
             'name': ALIAS3,
             'console_sock': SOCK3,
-        }})
+        })
 
         # URI1 and URI2 has UUIDs
         # URI2 is chosen instead of URI3 with minimal twophase commit version
@@ -340,10 +338,10 @@ class TestSetControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
-        self.assertEqual(res.facts, {'control_instance': {
+        self.assertEqual(res.fact, {
             'name': ALIAS2,
             'console_sock': SOCK2,
-        }})
+        })
 
     def tearDown(self):
         self.instance.stop()

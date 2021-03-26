@@ -1,11 +1,11 @@
 import unittest
 
-from library.cartridge_set_instance_info import get_app_conf_file
-from library.cartridge_set_instance_info import get_instance_conf_file
-from library.cartridge_set_instance_info import get_instance_conf_section
-from library.cartridge_set_instance_info import get_instance_info
-from library.cartridge_set_instance_info import get_instance_systemd_service
-from library.cartridge_set_instance_info import get_multiversion_dist_dir
+from library.cartridge_get_instance_info import get_app_conf_file
+from library.cartridge_get_instance_info import get_instance_conf_file
+from library.cartridge_get_instance_info import get_instance_conf_section
+from library.cartridge_get_instance_info import get_instance_info
+from library.cartridge_get_instance_info import get_instance_systemd_service
+from library.cartridge_get_instance_info import get_multiversion_dist_dir
 from module_utils.helpers import get_instance_console_sock
 from module_utils.helpers import get_instance_dir
 from module_utils.helpers import get_instance_pid_file
@@ -19,7 +19,7 @@ def call_get_instance_info(app_name, instance_name, instance_vars):
     })
 
 
-class TestSetInstanceInfo(unittest.TestCase):
+class TestGetInstanceInfo(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 
@@ -105,7 +105,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
         res = call_get_instance_info(app_name, instance_name, instance_vars)
         self.assertFalse(res.failed)
-        self.assertEqual(res.facts, {'instance_info': {
+        self.assertEqual(res.fact, {
             'app_conf_file': 'some/conf/dir/myapp.yml',
             'conf_file': 'some/conf/dir/myapp.instance-1.yml',
             'instance_id': 'myapp.instance-1',
@@ -127,7 +127,7 @@ class TestSetInstanceInfo(unittest.TestCase):
                 'some/vinyl/dir/myapp.instance-1',
                 'some/wal/dir/myapp.instance-1',
             ]
-        }})
+        })
 
     def test_get_instance_info_multiversion(self):
         app_name = 'myapp'
@@ -149,7 +149,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
         res = call_get_instance_info(app_name, instance_name, instance_vars)
         self.assertFalse(res.failed)
-        self.assertEqual(res.facts, {'instance_info': {
+        self.assertEqual(res.fact, {
             'app_conf_file': 'some/conf/dir/myapp.yml',
             'conf_file': 'some/conf/dir/myapp.instance-1.yml',
             'instance_id': 'myapp.instance-1',
@@ -168,7 +168,7 @@ class TestSetInstanceInfo(unittest.TestCase):
                 'some/run/dir/myapp.instance-1.control',
                 'some/data/dir/myapp.instance-1',
             ]
-        }})
+        })
 
         # cartridge_package_path isn't specified
         instance_vars = {
@@ -187,7 +187,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
         res = call_get_instance_info(app_name, instance_name, instance_vars)
         self.assertFalse(res.failed)
-        self.assertEqual(res.facts, {'instance_info': {
+        self.assertEqual(res.fact, {
             'app_conf_file': 'some/conf/dir/myapp.yml',
             'conf_file': 'some/conf/dir/myapp.instance-1.yml',
             'instance_id': 'myapp.instance-1',
@@ -206,7 +206,7 @@ class TestSetInstanceInfo(unittest.TestCase):
                 'some/run/dir/myapp.instance-1.control',
                 'some/data/dir/myapp.instance-1',
             ],
-        }})
+        })
 
     def test_get_stateboard_info(self):
         app_name = 'myapp'
@@ -233,7 +233,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
         res = call_get_instance_info(app_name, instance_name, instance_vars)
         self.assertFalse(res.failed)
-        self.assertEqual(res.facts, {'instance_info': {
+        self.assertEqual(res.fact, {
             'app_conf_file': 'some/conf/dir/myapp.yml',
             'conf_file': 'some/conf/dir/myapp-stateboard.yml',
             'instance_id': 'myapp-stateboard',
@@ -252,7 +252,7 @@ class TestSetInstanceInfo(unittest.TestCase):
                 'some/run/dir/myapp-stateboard.control',
                 'some/data/dir/myapp-stateboard',
             ],
-        }})
+        })
 
     def test_get_stateboard_info_multiversion(self):
         app_name = 'myapp'
@@ -274,7 +274,7 @@ class TestSetInstanceInfo(unittest.TestCase):
 
         res = call_get_instance_info(app_name, instance_name, instance_vars)
         self.assertFalse(res.failed)
-        self.assertEqual(res.facts, {'instance_info': {
+        self.assertEqual(res.fact, {
             'app_conf_file': 'some/conf/dir/myapp.yml',
             'conf_file': 'some/conf/dir/myapp-stateboard.yml',
             'instance_id': 'myapp-stateboard',
@@ -296,4 +296,4 @@ class TestSetInstanceInfo(unittest.TestCase):
                 'some/vinyl/dir/myapp-stateboard',
                 'some/wal/dir/myapp-stateboard',
             ]
-        }})
+        })

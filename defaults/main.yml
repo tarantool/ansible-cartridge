@@ -86,13 +86,11 @@ cartridge_install_tarantool_for_tgz: true
 
 cartridge_keep_num_latest_dists: 2
 
-# Facts set by role module in 'main.yml' (for correct 'tasks_from' option usage)
+# Facts initialized in 'main.yml' (for correct 'tasks_from' option usage)
+temporary_files: []
+delivered_package_path: null
 package_info: null
 systemd_units_info: null
 needs_restart: null
 control_instance: null
 dists_dirs_to_remove: null
-
-# Facts set by "set_fact" module in 'main.yml' (for correct 'tasks_from' option usage)
-temporary_files: []
-delivered_package_path: null

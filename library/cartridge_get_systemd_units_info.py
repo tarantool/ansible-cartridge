@@ -105,9 +105,7 @@ def get_systemd_units_info(params):
         systemd_units_info['instance_tarantool_binary'] = os.path.join(instance_dist_dir, 'tarantool')
         systemd_units_info['stateboard_tarantool_binary'] = os.path.join(stateboard_dir, 'tarantool')
 
-    return helpers.ModuleRes(changed=False, facts={
-        'systemd_units_info': systemd_units_info
-    })
+    return helpers.ModuleRes(changed=False, fact=systemd_units_info)
 
 
 def main():

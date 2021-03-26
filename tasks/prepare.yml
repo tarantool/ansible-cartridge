@@ -1,5 +1,13 @@
 ---
 
+- name: 'Set facts that can be set by the user'
+  set_fact:
+    delivered_package_path: '{{ cartridge_delivered_package_path | default(omit) }}'
+    control_instance: '{{ cartridge_control_instance | default(omit) }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+
 - name: 'Validate config'
   cartridge_validate_config:
     hosts: '{{ play_hosts }}'
@@ -23,7 +31,7 @@
     - ansible_user is defined
 
 - name: 'Collect instance info'
-  cartridge_set_instance_info:
+  cartridge_get_instance_info:
     app_name: '{{ cartridge_app_name }}'
     instance_name: '{{ inventory_hostname }}'
     instance_vars:
@@ -39,34 +47,40 @@
       cartridge_tmpfiles_dir: '{{ cartridge_tmpfiles_dir }}'
       cartridge_multiversion: '{{ cartridge_multiversion }}'
       stateboard: '{{ stateboard }}'
+  register: instance_info_res
+
+- name: 'Remember instance info'
+  set_fact:
+    instance_info: '{{ instance_info_res.fact }}'
 
 - name: 'Select one instance for each physical machine'
-  cartridge_set_single_instances_for_each_machine:
+  cartridge_get_single_instances_for_each_machine:
     hostvars: '{{ hostvars }}'
     play_hosts: '{{ play_hosts }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+  register: single_instances_for_each_machine_res
+
+- name: 'Remember one instance for each physical machine'
+  set_fact:
+    single_instances_for_each_machine: '{{ single_instances_for_each_machine_res.fact }}'
   run_once: true
   delegate_to: localhost
   become: false
 
 - name: 'Select one not expelled instance'
-  cartridge_set_not_expelled_instance:
+  cartridge_get_not_expelled_instance:
     hostvars: '{{ hostvars }}'
     play_hosts: '{{ play_hosts }}'
   run_once: true
   delegate_to: localhost
   become: false
+  register: not_expelled_instance_res
 
-- name: 'Set with role module those facts that can be set by the user'
-  cartridge_set_facts:
-    facts:
-      control_instance: '{{ cartridge_control_instance | default(omit) }}'
-  run_once: true
-  delegate_to: localhost
-  become: false
-
-- name: 'Set with "set_fact" module those facts that can be set by the user'
+- name: 'Remember one not expelled instance'
   set_fact:
-    delivered_package_path: '{{ cartridge_delivered_package_path | default(omit) }}'
+    not_expelled_instance: '{{ not_expelled_instance_res.fact }}'
   run_once: true
   delegate_to: localhost
   become: false

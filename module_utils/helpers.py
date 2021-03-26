@@ -54,11 +54,11 @@ def debug(value, key=None):
 
 
 class ModuleRes:
-    def __init__(self, failed=False, changed=True, msg=None, exception=None, warnings=None, facts=None, **kwargs):
+    def __init__(self, failed=False, changed=True, msg=None, exception=None, warnings=None, fact=None, **kwargs):
         self.failed = failed
         self.changed = changed
         self.warnings = warnings
-        self.facts = facts
+        self.fact = fact
         self.kwargs = kwargs
 
         self.msg = None
@@ -78,8 +78,8 @@ class ModuleRes:
         if self.msg is not None:
             res['msg'] = self.msg
 
-        if self.facts is not None:
-            res['ansible_facts'] = self.facts
+        if self.fact is not None:
+            res['fact'] = self.fact
 
         if self.warnings is None:
             self.warnings = []

@@ -1,11 +1,10 @@
+import os
+import shutil
+import tempfile
+import time
 import unittest
 
-import tempfile
-import shutil
-import os
-import time
-
-from library.cartridge_set_dist_dirs_to_remove import get_dist_dirs_to_remove
+from library.cartridge_get_dist_dirs_to_remove import get_dist_dirs_to_remove
 
 
 def call_get_dist_dirs_to_remove(app_name, app_install_dir, keep_num_latest_dists):
@@ -30,7 +29,7 @@ def create_file(path):
     time.sleep(0.01)
 
 
-class TestSetNeedsRestart(unittest.TestCase):
+class TestGetNeedsRestart(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 
@@ -67,7 +66,7 @@ class TestSetNeedsRestart(unittest.TestCase):
         res = call_get_dist_dirs_to_remove(APP_NAME, self.app_install_dir, 2)
         self.assertFalse(res.failed)
         self.assertEqual(
-            set(res.facts['dists_dirs_to_remove']),
+            set(res.fact),
             {
                 os.path.join(self.app_install_dir, '%s-%s' % (APP_NAME, version))
                 for version in ['3.0.0-0-bbbbb', '2.0.0-0', '1.0.0-0', '0.0.1-0']
@@ -77,7 +76,7 @@ class TestSetNeedsRestart(unittest.TestCase):
     def test_retention_is_big(self):
         res = call_get_dist_dirs_to_remove(APP_NAME, self.app_install_dir, 20)
         self.assertFalse(res.failed)
-        self.assertEqual(len(res.facts['dists_dirs_to_remove']), 0)
+        self.assertEqual(len(res.fact), 0)
 
     def test_negative_or_zero_retention(self):
         res = call_get_dist_dirs_to_remove(APP_NAME, self.app_install_dir, 0)

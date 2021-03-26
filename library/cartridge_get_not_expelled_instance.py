@@ -33,11 +33,9 @@ def get_one_not_expelled_instance(params):
 
     instance_info = hostvars[not_expelled_instance_name]['instance_info']
 
-    return helpers.ModuleRes(changed=False, facts={
-        'not_expelled_instance': {
-            'name': not_expelled_instance_name,
-            'console_sock': instance_info['console_sock'],
-        }
+    return helpers.ModuleRes(changed=False, fact={
+        'name': not_expelled_instance_name,
+        'console_sock': instance_info['console_sock'],
     })
 
 
