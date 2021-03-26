@@ -112,6 +112,7 @@ cartridge_app_config: null
 cartridge_auth: null
 cartridge_failover: null
 cartridge_failover_params: null
+cartridge_failover_promote_params: null
 
 # Internal role facts that can be set by the user
 

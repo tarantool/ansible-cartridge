@@ -111,3 +111,4 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `cartridge_failover_params` (`dict`): [failover](/doc/failover.md) parameters;
 * [DEPRECATED] `cartridge_failover` (`boolean`): a boolean flag that
   indicates if eventual failover should be enabled or disabled;
+* `cartridge_failover_promote_params` (`dict`): [failover promote](/doc/rolling_update.md#leaders-promotion) params.
