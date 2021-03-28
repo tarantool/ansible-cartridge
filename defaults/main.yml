@@ -1,42 +1,16 @@
 ---
 
+# Common variables
+
+cartridge_app_name: null
+cartridge_cluster_cookie: null
 cartridge_remove_temporary_files: false
 
-cartridge_package_path: null
-cartridge_defaults: {}
-cartridge_enable_tarantool_repo: true
+# Role scenario configuration
 
-cartridge_bootstrap_vshard: false
-cartridge_app_config: null
-cartridge_auth: null
-cartridge_failover: null
-cartridge_failover_params: null
-cartridge_wait_buckets_discovery: true
-
-restarted: null
-expelled: false
-stateboard: false
-cartridge_multiversion: false
-
-instance_start_timeout: 60
-instance_discover_buckets_timeout: 60
-edit_topology_timeout: 60
-
-cartridge_app_install_dir: /usr/share/tarantool
-cartridge_app_instances_dir: /usr/share/tarantool
-cartridge_conf_dir: /etc/tarantool/conf.d
-cartridge_run_dir: /var/run/tarantool
-cartridge_data_dir: /var/lib/tarantool
-cartridge_memtx_dir_parent: null
-cartridge_vinyl_dir_parent: null
-cartridge_wal_dir_parent: null
-
-cartridge_app_user: tarantool
-cartridge_app_group: tarantool
-
-cartridge_custom_steps: []
-cartridge_custom_steps_dir: null
 cartridge_scenario: null
+cartridge_custom_steps_dir: null
+cartridge_custom_steps: []
 
 cartridge_scenario_name: 'default'
 cartridge_custom_scenarios: {}
@@ -76,22 +50,78 @@ cartridge_role_scenarios:
     - configure_failover
     - cleanup
 
+# Application package configuration
+
+cartridge_package_path: null
+cartridge_enable_tarantool_repo: true
+
+# TGZ specific configuration
+
+cartridge_multiversion: false
+
+cartridge_install_tarantool_for_tgz: true
+
+cartridge_app_user: tarantool
+cartridge_app_group: tarantool
+
+cartridge_data_dir: /var/lib/tarantool
+cartridge_memtx_dir_parent: null
+cartridge_vinyl_dir_parent: null
+cartridge_wal_dir_parent: null
+cartridge_run_dir: /var/run/tarantool
+cartridge_conf_dir: /etc/tarantool/conf.d
+cartridge_app_install_dir: /usr/share/tarantool
+cartridge_app_instances_dir: /usr/share/tarantool
+
 cartridge_configure_systemd_unit_files: true
 cartridge_systemd_dir: /etc/systemd/system
 
 cartridge_configure_tmpfiles: true
 cartridge_tmpfiles_dir: /usr/lib/tmpfiles.d/
 
-cartridge_install_tarantool_for_tgz: true
-
 cartridge_keep_num_latest_dists: 2
 
-# Facts initialized in 'main.yml' (for correct 'tasks_from' option usage)
-temporary_files: []
+# Instances configuration
+
+cartridge_defaults: {}
+config: null
+zone: null
+
+restarted: null
+expelled: false
+stateboard: false
+
+cartridge_wait_buckets_discovery: true
+instance_start_timeout: 60
+instance_discover_buckets_timeout: 60
+
+# Replicasets configuration
+
+replicaset_alias: null
+failover_priority: null
+roles: null
+all_rw: null
+vshard_group: null
+weight: null
+edit_topology_timeout: 60
+
+## Cluster configuration
+
+cartridge_bootstrap_vshard: false
+cartridge_app_config: null
+cartridge_auth: null
+cartridge_failover: null
+cartridge_failover_params: null
+
+# Internal role facts that can be set by the user
+
+cartridge_delivered_package_path: null
+cartridge_control_instance: null
+
+# Cross-step facts (for correct 'tasks_from' option usage)
+
 delivered_package_path: null
-package_info: null
-systemd_units_info: null
+control_instance: null
+temporary_files: []
 needs_restart: null
 non_expelled_instance: null
-control_instance: null
-dists_dirs_to_remove: null

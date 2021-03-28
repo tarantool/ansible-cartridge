@@ -8,8 +8,6 @@ vshard bootstrapping, and failover.
 * `cartridge_app_name` (`string`): application name, required;
 * `cartridge_cluster_cookie` (`string`, required): cluster cookie for all
   cluster instances;
-* `cartridge_multiversion` (`boolean`, default: `false`): use multiversion
-  approach for TGZ package.
 * `cartridge_remove_temporary_files` (`boolean`, optional, default: `false`):
   indicates if temporary files should be removed
   (more details in description of [`cleanup` step API](/doc/scenario.md#cleanup));
@@ -19,11 +17,13 @@ vshard bootstrapping, and failover.
 For more details see [scenario documentation](/doc/scenario.md).
 
 * `cartridge_scenario` (`list-of-strings`): list of steps to be launched
-  (see [change scenario](/README.md#using-scenario) for more details)
+  (see [change scenario](/README.md#using-scenario) for more details);
 * `cartridge_custom_steps_dir` (`string`, default: `null`): path to directory
-  containing YAML files of custom steps (see [change scenario](/README.md#using-scenario) for more details)
+  containing YAML files of custom steps (see [change scenario](/README.md#using-scenario) for more details);
 * `cartridge_custom_steps` (`list-of-dicts`, default: `[]`): list of custom steps
-  (see [change scenario](/README.md#using-scenario) for more details)
+  (see [change scenario](/README.md#using-scenario) for more details);
+* `cartridge_scenario_name` (`string`, default: `default`): name of scenario to be launched;
+* `cartridge_custom_scenarios` (`dict-of-lists`, default: `{}`): dictionary of custom scenarios;
 
 ## Application package configuration
 
@@ -69,6 +69,9 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `cartridge_tmpfiles_dir` (`string`, default: `/usr/lib/tmpfiles.d/`): a directory where
   tmpfile configuration should be placed;
 
+* `cartridge_keep_num_latest_dists` (`number`, default: 2): the number of application
+  versions that should be kept during distribution rotation;
+
 ## Instances configuration
 
 * `config` (`dict`, required): [instance configuration](/doc/instances.md);
@@ -94,6 +97,7 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `failover_priority` (`list-of-strings`): failover priority;
 * `roles` (`list-of-strings`, required if `replicaset_alias` specified): roles to be enabled on the replicaset;
 * `all_rw` (`boolean`): indicates that that all servers in the replicaset should be read-write;
+* `vshard_group` (`string`): name of vshard group the replicaset belongs to;
 * `weight` (`number`): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
 * `edit_topology_timeout` (`number`, default: `60`): time in seconds to wait until a cluster become
   healthy after editing topology;

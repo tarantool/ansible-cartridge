@@ -208,7 +208,7 @@ remove `connect_to_membership` step from scenario:
 
 If you are using multiversion, then most likely you are upgrading to the new version of the package gradually:
 first storages, then routers, etc. To do this, the same scenario to update the package version is used several times.
-Let's remove duplication by declaring a custom script and then using it!
+Let's remove duplication by declaring a custom scenario and then using it!
 
 Firstly you should to define custom scenarios in hosts file:
 
@@ -282,6 +282,7 @@ Some of useful facts are established during preparation, so you can use them at 
 - `scenario_steps` - description of scenario steps. Each step is a dictionary with fields:
   - `name` - name of step;
   - `path` - path to YAML file of step;
+- `role_vars` - dictionary with all role variables.
 
 ## Role Steps Description
 

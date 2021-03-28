@@ -5,8 +5,7 @@
   block:
     - name: 'BLOCK : Install package'
       include_tasks: 'blocks/update_package.yml'
-      when:
-        - inventory_hostname in single_instances_for_each_machine
+      when: inventory_hostname in single_instances_for_each_machine
 
     - name: 'Check if instance restart is required to use new package'
       cartridge_get_needs_restart:

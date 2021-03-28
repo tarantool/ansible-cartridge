@@ -16,17 +16,26 @@ def call_get_one_not_expelled_instance(hostvars, play_hosts=None):
 class TestGetOneNotExpelledInstance(unittest.TestCase):
     def setUp(self):
         self.hostvars = {
-            'expelled-1': {'expelled': True},
-            'my-stateboard': {'stateboard': True},
-            'expelled-2': {'expelled': True},
+            'expelled-1': {
+                'role_vars': {'expelled': True},
+            },
+            'my-stateboard': {
+                'role_vars': {'stateboard': True},
+            },
+            'expelled-2': {
+                'role_vars': {'expelled': True},
+            },
             'instance-1': {
-                'instance_info': {'console_sock': 'sock-1'}
+                'instance_info': {'console_sock': 'sock-1'},
+                'role_vars': {},
             },
             'instance-2': {
-                'instance_info': {'console_sock': 'sock-2'}
+                'instance_info': {'console_sock': 'sock-2'},
+                'role_vars': {},
             },
             'instance-3': {
-                'instance_info': {'console_sock': 'sock-3'}
+                'instance_info': {'console_sock': 'sock-3'},
+                'role_vars': {},
             },
         }
 

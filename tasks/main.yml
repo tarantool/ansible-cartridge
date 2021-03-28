@@ -1,14 +1,12 @@
 ---
 
-- name: 'Initialize facts'
+- name: 'Initialize cross-step facts'
   set_fact:
-    temporary_files: []
     delivered_package_path: null
-    package_info: null
-    systemd_units_info: null
-    needs_restart: null
     control_instance: null
-    dists_dirs_to_remove: null
+    temporary_files: []
+    needs_restart: null
+    non_expelled_instance: null
   run_once: true
   delegate_to: localhost
   become: false

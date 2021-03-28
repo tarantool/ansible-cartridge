@@ -4,9 +4,15 @@ from unit.instance import Instance
 from library.cartridge_edit_topology import edit_topology
 
 
-def call_edit_topology(console_sock, hostvars, play_hosts=None, timeout=60):
+def call_edit_topology(console_sock, role_vars, play_hosts=None, timeout=60):
     if play_hosts is None:
-        play_hosts = hostvars.keys()
+        play_hosts = role_vars.keys()
+
+    hostvars = {}
+    for instance_name, instance_role_vars in role_vars.items():
+        hostvars[instance_name] = {
+            'role_vars': instance_role_vars
+        }
 
     return edit_topology({
         'console_sock': console_sock,

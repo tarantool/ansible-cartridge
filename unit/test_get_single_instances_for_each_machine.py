@@ -17,26 +17,36 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
     def setUp(self):
         self.hostvars = {
             'stateboard-1': {
-                'stateboard': True,
                 'ansible_host': 'host-1',
+                'role_vars': {
+                    'stateboard': True,
+                },
             },
             'expelled-1': {
-                'expelled': True,
                 'ansible_host': 'host-1',
+                'role_vars': {
+                    'expelled': True,
+                },
             },
             'instance-1': {
                 'ansible_host': 'host-1',
+                'role_vars': {},
             },
             'stateboard-2': {
-                'stateboard': True,
                 'ansible_host': 'host-2',
+                'role_vars': {
+                    'stateboard': True,
+                },
             },
             'expelled-2': {
-                'expelled': True,
                 'ansible_host': 'host-2',
+                'role_vars': {
+                    'expelled': True,
+                },
             },
             'instance-2': {
                 'ansible_host': 'host-2',
+                'role_vars': {},
             },
         }
 

@@ -32,6 +32,9 @@ def connect_to_membership(params):
     changed = False
 
     for instance_name, instance_vars in hostvars.items():
+        if 'role_vars' in instance_vars:
+            instance_vars = instance_vars['role_vars']
+
         if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
             continue
 

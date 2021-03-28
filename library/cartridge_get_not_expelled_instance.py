@@ -20,7 +20,7 @@ def get_one_not_expelled_instance(params):
     not_expelled_instance_name = None
 
     for instance_name in play_hosts:
-        instance_vars = hostvars[instance_name]
+        instance_vars = hostvars[instance_name]['role_vars']
         if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
             continue
 
