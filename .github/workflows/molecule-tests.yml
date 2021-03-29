@@ -22,6 +22,7 @@ jobs:
       - name: Setup matrix for Molecule tests
         id: setup-matrix
         run: |
+          echo "${{ toJson(github.event.pull_request) }}"
           python3 .github/helpers/count_molecule_matrix.py \
             --event_name "${{ github.event_name }}" \
             --repo_owner "${{ github.event.pull_request.head.repo.owner.login }}" \
