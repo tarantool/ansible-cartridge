@@ -4,23 +4,41 @@ name: Molecule tests
 on:
   push:
   pull_request:
+  pull_request_review:
+  workflow_dispatch:
 
 env:
   CARTRIDGE_CLI_VERSION: '2.7.2'
 
 jobs:
-  molecule-tests-ce:
-    if: |
-      github.event_name == 'push' ||
-      github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login != 'tarantool'
+  setup-molecule-test-matrix:
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+      - name: Setup matrix for Molecule tests
+        id: setup-matrix
+        run: |
+          python3 .github/helpers/count_molecule_matrix.py \
+            --event_name "${{ github.event_name }}" \
+            --repo_owner "${{ github.event.pull_request.head.repo.owner.login }}" \
+            --review_state "${{ github.event.review.state }}" \
+            --ref "${{ github.ref }}"
+    outputs:
+      ce-matrix: ${{ steps.setup-matrix.outputs.ce-matrix }}
+      ce-tests-found: ${{ steps.setup-matrix.outputs.ce-tests-found }}
+      ee-matrix: ${{ steps.setup-matrix.outputs.ee-matrix }}
+      ee-tests-found: ${{ steps.setup-matrix.outputs.ee-tests-found }}
+
+  molecule-tests-ce:
+    needs: setup-molecule-test-matrix
+    runs-on: ubuntu-latest
+    if: needs.setup-molecule-test-matrix.outputs.ce-tests-found == 'true'
     strategy:
-      matrix:
-        tarantool-version: ["2.6"]
-        molecule-scenario: ["default", "tasks_from", "update_cartridge"]
-        include:
-          - tarantool-version: "1.10"
-            molecule-scenario: "default"
+      matrix: ${{ fromJson(needs.setup-molecule-test-matrix.outputs.ce-matrix) }}
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
@@ -31,20 +49,23 @@ jobs:
           python-version: '3.x'
 
       - name: Install molecule requirements
-        run: pip3 install --upgrade -r requirements.txt
+        run: |
+          pip3 install --upgrade -r requirements.txt
+          pip3 uninstall -y ansible ansible-base
+          pip3 install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache test packages
         id: cache-packages
         uses: actions/cache@v2
         with:
           path: 'packages'
-          key: ce-${{ matrix.tarantool-version }}-${{ env.CARTRIDGE_CLI_VERSION }}-${{ hashFiles('./create-packages.sh') }}
+          key: ce-${{ matrix.tarantool_version }}-${{ env.CARTRIDGE_CLI_VERSION }}-${{ hashFiles('./create-packages.sh') }}
 
       - name: Install Tarantool
         if: steps.cache-packages.outputs.cache-hit != 'true'
         uses: tarantool/setup-tarantool@v1
         with:
-          tarantool-version: '${{ matrix.tarantool-version }}'
+          tarantool-version: '${{ matrix.tarantool_version }}'
 
       - name: Create test packages
         if: steps.cache-packages.outputs.cache-hit != 'true'
@@ -55,7 +76,7 @@ jobs:
           git config --global user.email "test@tarantool.io" \
             && git config --global user.name "Tar Antool"
 
-          curl -L https://tarantool.io/release/${{ matrix.tarantool-version }}/installer.sh | sudo -E bash -s
+          curl -L https://tarantool.io/release/${{ matrix.tarantool_version }}/installer.sh | sudo -E bash -s
           sudo apt-get install -y cartridge-cli ${{ env.CARTRIDGE_CLI_VERSION }}
 
           tarantool --version
@@ -63,15 +84,15 @@ jobs:
 
           ./create-packages.sh
 
-      - name: Molecule tests
-        run: molecule test -s '${{ matrix.molecule-scenario }}'
+      - name: Molecule test
+        run: molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
 
   molecule-tests-ee:
-    if: github.event_name == 'push'
+    needs: setup-molecule-test-matrix
     runs-on: ubuntu-latest
+    if: needs.setup-molecule-test-matrix.outputs.ee-tests-found == 'true'
     strategy:
-      matrix:
-        sdk-version: ["2.6.2-124-g2c3b91439-r391"]
+      matrix: ${{ fromJson(needs.setup-molecule-test-matrix.outputs.ee-matrix) }}
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
@@ -82,14 +103,17 @@ jobs:
           python-version: '3.x'
 
       - name: Install molecule requirements
-        run: pip3 install --upgrade -r requirements.txt
+        run: |
+          pip3 install --upgrade -r requirements.txt
+          pip3 uninstall -y ansible ansible-base
+          pip3 install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache test packages
         id: cache-packages
         uses: actions/cache@v2
         with:
           path: 'packages'
-          key: sdk-${{ matrix.sdk-version }}-${{ hashFiles('./create-packages.sh') }}
+          key: sdk-${{ matrix.sdk_version }}-${{ hashFiles('./create-packages.sh') }}
 
       - name: Create test packages
         if: steps.cache-packages.outputs.cache-hit != 'true'
@@ -100,7 +124,7 @@ jobs:
           git config --global user.email "test@tarantool.io" \
             && git config --global user.name "Tar Antool"
 
-          ARCHIVE_NAME=tarantool-enterprise-bundle-${{ matrix.sdk-version }}.tar.gz
+          ARCHIVE_NAME=tarantool-enterprise-bundle-${{ matrix.sdk_version }}.tar.gz
           curl -O -L \
             https://tarantool:${{ secrets.SDK_DOWNLOAD_TOKEN }}@download.tarantool.io/enterprise/${ARCHIVE_NAME}
           tar -xzf ${ARCHIVE_NAME}
@@ -112,5 +136,5 @@ jobs:
 
           ./create-packages.sh
 
-      - name: Molecule tests
-        run: molecule test
+      - name: Molecule test
+        run: molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
