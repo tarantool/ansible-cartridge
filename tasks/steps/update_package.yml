@@ -1,6 +1,6 @@
 ---
 
-- when: delivered_package_path
+- when: delivered_package_path is not none
   tags: cartridge-instances
   block:
     - name: 'BLOCK : Install package'
