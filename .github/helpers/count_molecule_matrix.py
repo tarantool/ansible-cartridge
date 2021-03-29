@@ -37,7 +37,6 @@ def main(event_name, repo_owner, review_state, ref):
     if event_name == 'workflow_dispatch' or review_state == 'approved' or ref == 'refs/heads/master':
         ce_matrix.append(get_ce_params(molecule_scenario='update_cartridge'))
         ce_matrix.append(get_ce_params(tarantool_version='1.10'))
-
         ce_matrix.append(get_ce_params(ansible_version='2.9.0'))
         # TODO: Uncomment after fixing the check mode
         # ce_matrix.append(get_ce_version(molecule_command='check'))
