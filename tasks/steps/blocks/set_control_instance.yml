@@ -1,5 +1,8 @@
 ---
 
+- import_tasks: 'set_non_expelled_instance.yml'
+  when: not non_expelled_instance
+
 - name: 'Select control instance to manage topology and configuration'
   cartridge_get_control_instance:
     hostvars: '{{ hostvars }}'
