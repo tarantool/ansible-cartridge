@@ -265,9 +265,7 @@ cartridge_custom_scenarios:
 
 ## Role Facts Descriptions
 
-Role facts are established during preparation, so you can use them at any step.
-
-List of facts:
+Some of useful facts are established during preparation, so you can use them at any step:
 
 - `instance_info` - information for a current instance. It's a dictionary with fields:
   - `app_conf_file` - path to file with application config;
@@ -281,15 +279,9 @@ List of facts:
   - `instance_dist_dir` - path to instance link to distributed package;
 - `single_instances_for_each_machine` - list of instances (Ansible hosts), one for each physical machine. Can be used,
   for example, in `delegate_to`;
-- `not_expelled_instance` - information about one not expelled instance. It's a dictionary with fields:
-  - `name` - instance name (Ansible host);
-  - `console_sock` - path to control socket of instance;
 - `scenario_steps` - description of scenario steps. Each step is a dictionary with fields:
   - `name` - name of step;
   - `path` - path to YAML file of step;
-- `control_instance` - information about control instance (will be set if `cartridge_control_instance` is specified);
-- `delivered_package_path` - remote path to file of delivered package
-  (will be set if `cartridge_delivered_package_path` is specified).
 
 ## Role Steps Description
 
@@ -315,9 +307,10 @@ Install the delivered package on physical machines.
 
 Input facts (set by role):
 
+- `delivered_package_path` - remote path to file of delivered package.
+  Is set on role preparation if `cartridge_delivered_package_path` is specified;
 - `instance_info` - information for a current instance ([more details here](#role-facts-descriptions));
 - `single_instances_for_each_machine` - list of instances (Ansible hosts), one for each physical machine;
-- `delivered_package_path` - remote path to file of delivered package;
 - `needs_restart` - if instance should be restarted to apply code or configuration changes
   (to determine if it's should be checked if instance should be restarted).
 
@@ -468,15 +461,34 @@ Input facts (set by config):
 - `cartridge_app_name` - application name;
 - `config` - instance configuration ([more details here](/doc/instances.md)).
 
+Output facts:
+
+- `not_expelled_instance` - information about one not expelled instance
+  ([more details here](#role-facts-descriptions)).
+
 ### set_control_instance
 
-Find some instance that is already in cluster. If there is no such instance, use one of instances that should be joined.
+Find some instance that can be used for editing topology and configuring cluster.
+This is instance that is:
+
+* described in inventory;
+* have `alive` status in membership;
+* if there are some instances already joined to cluster, then one of them is used,
+  otherwise, any instance that should be joined during current play is chosen;
+* control instance should have minimal Cartridge version across all suitable
+  instances (because Cartridge two-phase commit should be called by instance
+  that has lowest version).
+
+Steps that require control instance (such as [`edit_topology`](#edit_topology))
+call `set_control_instance` implicitly if `control_instance` fact isn't set.
+
+`control_instance` fact can be set by user via `cartridge_control_instance` variable.
+In this case `control_instance` fact is initialized on preparation step.
 
 **This step should be launched only after `connect_to_membership` step. Otherwise, 2 clusters may be created!**
 
 Input facts (set by role):
 
-- `not_expelled_instance` - information about one not expelled instance ([more details here](#role-facts-descriptions)).
 - `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
 
 Input facts (set by config):
@@ -487,8 +499,13 @@ Input facts (set by config):
 
 Output facts:
 
-- `control_instance` - information about control instance. It's a dictionary with fields:
-  - `name` - Ansible name of instance;
+- `control_instance` - information about control instance, that should be used for
+  managing topology and configuring cluster. It's a dictionary with fields:
+  - `name` - instance name (Ansible host);
+  - `console_sock` - path to control socket of instance.
+
+- `not_expelled_instance` - information about one not expelled instance. It's a dictionary with fields:
+  - `name` - instance name (Ansible host);
   - `console_sock` - path to control socket of instance.
 
 ### edit_topology
