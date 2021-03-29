@@ -21,8 +21,8 @@ def is_dist(filename, app_install_dir, app_name):
     if not os.path.isdir(os.path.join(app_install_dir, filename)):
         return False
 
-    DIST_DIR_RGX = r'^%s-\d+\.\d+\.\d+-\d+(-\S+)?$' % app_name
-    return re.match(DIST_DIR_RGX, filename) is not None
+    DIST_DIR_RGX = r'%s-\d+\.\d+\.\d+-\d+(-\S+)?' % app_name
+    return re.fullmatch(DIST_DIR_RGX, filename) is not None
 
 
 def get_dist_dirs_to_remove(params):
