@@ -10,6 +10,10 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+### Fixed
+
+- Removing stateboard instance distribution directory on `rotate_dists` step
+
 ## [1.8.0] - 2021-03-23
 
 ### Fixed

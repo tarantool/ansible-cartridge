@@ -2,6 +2,7 @@
 
 import os
 import pkgutil
+import re
 
 if pkgutil.find_loader('ansible.module_utils.helpers'):
     import ansible.module_utils.helpers as helpers
@@ -20,10 +21,8 @@ def is_dist(filename, app_install_dir, app_name):
     if not os.path.isdir(os.path.join(app_install_dir, filename)):
         return False
 
-    if not filename.startswith('%s-' % app_name):
-        return False
-
-    return True
+    DIST_DIR_RGX = r'%s-\d+\.\d+\.\d+-\d+(-\S+)?' % app_name
+    return re.fullmatch(DIST_DIR_RGX, filename) is not None
 
 
 def get_dist_dirs_to_remove(params):
