@@ -1,11 +1,14 @@
 import os
 import shutil
+import sys
 import tempfile
 import time
 import unittest
 
+import module_utils.helpers as helpers
+
+sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_get_dist_dirs_to_remove import get_dist_dirs_to_remove
-from module_utils.helpers import get_instance_id
 
 
 def call_get_dist_dirs_to_remove(app_name, app_install_dir, keep_num_latest_dists):
@@ -40,11 +43,11 @@ class TestGetNeedsRestart(unittest.TestCase):
         create_dir(os.path.join(self.app_install_dir, '%s-0.0.1-0' % APP_NAME))
 
         # create stateboard dist dir - it shouldn't be removed
-        create_dir(os.path.join(self.app_install_dir, get_instance_id(APP_NAME, stateboard=True)))
+        create_dir(os.path.join(self.app_install_dir, helpers.get_instance_id(APP_NAME, stateboard=True)))
 
         # create instances dist dirs - it shouldn't be removed
         for instance_name in ['i-1', 'i-2', 'i-3']:
-            create_dir(os.path.join(self.app_install_dir, get_instance_id(APP_NAME, instance_name)))
+            create_dir(os.path.join(self.app_install_dir, helpers.get_instance_id(APP_NAME, instance_name)))
 
         # create file with <app-name>-<version> name
         create_file(os.path.join(self.app_install_dir, '%s-0.1.0-0' % APP_NAME))

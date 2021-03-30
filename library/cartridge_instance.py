@@ -1,12 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
-import pkgutil
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
@@ -16,11 +12,11 @@ argument_spec = {
 
 
 def is_dynamic_param(param_name):
-    return param_name in helpers.dynamic_box_cfg_params
+    return param_name in helpers.DYNAMIC_BOX_CFG_PARAMS
 
 
 def is_memory_size_param(param_name):
-    return param_name in helpers.memory_size_box_cfg_params
+    return param_name in helpers.MEMORY_SIZE_BOX_CFG_PARAMS
 
 
 def change_memory_size(current_box_cfg, param_name, cartridge_defaults, config, control_console):
@@ -100,9 +96,9 @@ def manage_instance(params):
         control_console = helpers.get_control_console(console_sock)
     except helpers.CartridgeException as e:
         allowed_errcodes = [
-            helpers.cartridge_errcodes.SOCKET_NOT_FOUND,
-            helpers.cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
-            helpers.cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
+            helpers.CartridgeErrorCodes.SOCKET_NOT_FOUND,
+            helpers.CartridgeErrorCodes.FAILED_TO_CONNECT_TO_SOCKET,
+            helpers.CartridgeErrorCodes.INSTANCE_IS_NOT_STARTED_YET
         ]
         if e.code in allowed_errcodes:
             return helpers.ModuleRes(changed=False)
@@ -117,7 +113,7 @@ def manage_instance(params):
     # Change memory size
     memory_size_changed = False
 
-    for param_name in helpers.memory_size_box_cfg_params:
+    for param_name in helpers.MEMORY_SIZE_BOX_CFG_PARAMS:
         if param_name in config or param_name in cartridge_defaults:
             memory_param_changed, err = change_memory_size(
                 current_box_cfg, param_name, cartridge_defaults, config, control_console

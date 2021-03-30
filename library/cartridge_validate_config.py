@@ -1,13 +1,9 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
-import pkgutil
 import re
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
     'hosts': {'required': True, 'type': 'list'},

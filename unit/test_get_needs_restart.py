@@ -1,10 +1,14 @@
 import itertools
+import sys
 import unittest
 
 from parameterized import parameterized
 
-from library.cartridge_get_needs_restart import set_needs_restart
+import module_utils.helpers as helpers
 from unit.instance import Instance
+
+sys.modules['ansible.module_utils.helpers'] = helpers
+from library.cartridge_get_needs_restart import set_needs_restart
 
 
 def call_needs_restart(

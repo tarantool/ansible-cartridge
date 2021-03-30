@@ -1,5 +1,9 @@
+import sys
 import unittest
 
+import module_utils.helpers as helpers
+
+sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_edit_topology import get_configured_replicasets
 from library.cartridge_edit_topology import get_instances_to_configure
 from library.cartridge_edit_topology import get_replicaset_params

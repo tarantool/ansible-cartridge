@@ -1,9 +1,13 @@
 import os
+import sys
 import unittest
 
+import module_utils.helpers as helpers
+from unit.instance import Instance
+
+sys.modules['ansible.module_utils.helpers'] = helpers
 import library.cartridge_get_control_instance as get_control_instance_lib
 from library.cartridge_get_control_instance import get_control_instance
-from unit.instance import Instance
 
 twophase_commit_versions = {}
 

@@ -1,14 +1,15 @@
+import sys
 import unittest
 
+import module_utils.helpers as helpers
+
+sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_get_instance_info import get_app_conf_file
 from library.cartridge_get_instance_info import get_instance_conf_file
 from library.cartridge_get_instance_info import get_instance_conf_section
 from library.cartridge_get_instance_info import get_instance_info
 from library.cartridge_get_instance_info import get_instance_systemd_service
 from library.cartridge_get_instance_info import get_multiversion_dist_dir
-from module_utils.helpers import get_instance_console_sock
-from module_utils.helpers import get_instance_dir
-from module_utils.helpers import get_instance_pid_file
 
 
 def call_get_instance_info(app_name, instance_name, instance_vars):
@@ -24,17 +25,17 @@ class TestGetInstanceInfo(unittest.TestCase):
         self.maxDiff = None
 
     def test_pid_file(self):
-        pid_file = get_instance_pid_file('some/run/dir', 'myapp', 'instance-1')
+        pid_file = helpers.get_instance_pid_file('some/run/dir', 'myapp', 'instance-1')
         self.assertEqual(pid_file, 'some/run/dir/myapp.instance-1.pid')
 
-        pid_file = get_instance_pid_file('some/run/dir', 'myapp', 'instance-1', stateboard=True)
+        pid_file = helpers.get_instance_pid_file('some/run/dir', 'myapp', 'instance-1', stateboard=True)
         self.assertEqual(pid_file, 'some/run/dir/myapp-stateboard.pid')
 
     def test_console_sock(self):
-        console_sock = get_instance_console_sock('some/run/dir', 'myapp', 'instance-1')
+        console_sock = helpers.get_instance_console_sock('some/run/dir', 'myapp', 'instance-1')
         self.assertEqual(console_sock, 'some/run/dir/myapp.instance-1.control')
 
-        console_sock = get_instance_console_sock('some/run/dir', 'myapp', 'instance-1', stateboard=True)
+        console_sock = helpers.get_instance_console_sock('some/run/dir', 'myapp', 'instance-1', stateboard=True)
         self.assertEqual(console_sock, 'some/run/dir/myapp-stateboard.control')
 
     def test_get_instance_conf_file(self):
@@ -56,10 +57,10 @@ class TestGetInstanceInfo(unittest.TestCase):
         self.assertEqual(instance_conf_section, 'myapp-stateboard')
 
     def test_get_instance_dir(self):
-        instance_work_dir = get_instance_dir('some/data/dir', 'myapp', 'instance-1')
+        instance_work_dir = helpers.get_instance_dir('some/data/dir', 'myapp', 'instance-1')
         self.assertEqual(instance_work_dir, 'some/data/dir/myapp.instance-1')
 
-        instance_work_dir = get_instance_dir('some/data/dir', 'myapp', 'instance-1', stateboard=True)
+        instance_work_dir = helpers.get_instance_dir('some/data/dir', 'myapp', 'instance-1', stateboard=True)
         self.assertEqual(instance_work_dir, 'some/data/dir/myapp-stateboard')
 
     def test_get_instance_systemd_service(self):

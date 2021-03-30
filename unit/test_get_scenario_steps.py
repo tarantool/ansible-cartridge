@@ -1,6 +1,10 @@
 import os
+import sys
 import unittest
 
+import module_utils.helpers as helpers
+
+sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_get_scenario_steps import get_scenario_steps
 
 
