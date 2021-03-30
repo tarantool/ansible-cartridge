@@ -22,7 +22,7 @@
 - name: 'Place systemd units files'
   template:
     src: '{{ systemd_unit.template }}'
-    dest: '{{ (cartridge_systemd_dir, systemd_unit.filename) | path_join }}'
+    dest: '{{ (cartridge_systemd_dir, systemd_unit.filename) | cartridge_path_join }}'
     force: true
   loop_control:
     loop_var: systemd_unit

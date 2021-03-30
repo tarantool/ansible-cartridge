@@ -40,7 +40,7 @@
       cartridge_app_install_dir,
       cartridge_app_instances_dir,
       instance_info.dist_dir,
-    ] | reject('equalto', none) }}"
+    ] | reject('none') | list }}"
   any_errors_fatal: true
 
 - name: 'Configure tmpfiles'

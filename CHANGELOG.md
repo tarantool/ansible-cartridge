@@ -14,7 +14,8 @@ README.md to use the newest tag with new release
 
 - Removing stateboard instance distribution directory on `rotate_dists` step
 - Fixed fail on getting one non-expelled instance when only stateboard instance
-  is configured.
+  is configured
+- Fixed compatibility with Ansible 2.9
 
 ## [1.8.0] - 2021-03-23
 
