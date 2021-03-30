@@ -1,11 +1,7 @@
 #!/usr/bin/python
 
-import pkgutil
-
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
+from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
@@ -31,7 +27,7 @@ def manage_failover_old(control_console, failover_params):
     ''')
 
     if current_failover == failover_enabled:
-        return helpers.ModuleRes(changed=False)
+        return ModuleRes(changed=False)
 
     function_name = 'admin_enable_failover' if failover_enabled else 'admin_disable_failover'
 
@@ -43,9 +39,9 @@ def manage_failover_old(control_console, failover_params):
 
     if err is not None:
         errmsg = 'Failed {}: {}'.format(function_name, err)
-        return helpers.ModuleRes(failed=True, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
-    return helpers.ModuleRes()
+    return ModuleRes()
 
 
 def manage_failover_new(control_console, passed_failover_params):
@@ -81,14 +77,14 @@ def manage_failover_new(control_console, passed_failover_params):
 
     if err is not None:
         errmsg = 'Failed to set failover params: {}'.format(err)
-        return helpers.ModuleRes(failed=True, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     new_failover_params, _ = control_console.eval_res_err('''
         return require('cartridge').failover_get_params()
     ''')
 
     changed = new_failover_params != current_failover_params
-    return helpers.ModuleRes(changed=changed)
+    return ModuleRes(changed=changed)
 
 
 def manage_failover(params):
@@ -99,7 +95,7 @@ def manage_failover(params):
             'mode': 'eventual' if failover_params is True else 'disabled'
         }
 
-    control_console = helpers.get_control_console(params['console_sock'])
+    control_console = get_control_console(params['console_sock'])
     version = get_tarantool_version(control_console)
 
     if version is not None and version >= NEW_FAILOVER_API_CARTRIDGE_VERSION:
@@ -109,9 +105,9 @@ def manage_failover(params):
             errmsg = 'Stateful failover is supported since cartridge {}'.format(
                 NEW_FAILOVER_API_CARTRIDGE_VERSION
             )
-            return helpers.ModuleRes(failed=True, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
         return manage_failover_old(control_console, failover_params)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, manage_failover)
+    execute_module(argument_spec, manage_failover)

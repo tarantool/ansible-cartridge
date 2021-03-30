@@ -1,11 +1,8 @@
 #!/usr/bin/python
 
-import pkgutil
-
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
+from ansible.module_utils.helpers import get_control_console
+from ansible.module_utils.helpers import CartridgeException
 
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
@@ -23,9 +20,9 @@ def check_stateboard_state(control_console):
         return true
     ''')
     if not box_status:
-        return helpers.ModuleRes(failed=True, msg="Stateboard is not running: %s" % err)
+        return ModuleRes(failed=True, msg="Stateboard is not running: %s" % err)
 
-    return helpers.ModuleRes(changed=False)
+    return ModuleRes(changed=False)
 
 
 def check_instance_state(control_console, expected_states, check_buckets_are_discovered):
@@ -33,9 +30,9 @@ def check_instance_state(control_console, expected_states, check_buckets_are_dis
         return require('cartridge.confapplier').get_state()
     ''')
     if not instance_state:
-        return helpers.ModuleRes(failed=True, msg="Impossible to get state: %s" % err)
+        return ModuleRes(failed=True, msg="Impossible to get state: %s" % err)
     if instance_state not in expected_states:
-        return helpers.ModuleRes(
+        return ModuleRes(
             failed=True,
             msg="Instance is not in one of states: %s, it's in '%s' state" % (
                 expected_states,
@@ -82,14 +79,14 @@ def check_instance_state(control_console, expected_states, check_buckets_are_dis
             return true
         ''')
         if not buckets_ok:
-            return helpers.ModuleRes(failed=True, msg=err)
+            return ModuleRes(failed=True, msg=err)
 
-    return helpers.ModuleRes(changed=False)
+    return ModuleRes(changed=False)
 
 
 def check_state(params):
     try:
-        control_console = helpers.get_control_console(params['console_sock'])
+        control_console = get_control_console(params['console_sock'])
 
         if params['stateboard']:
             return check_stateboard_state(control_console)
@@ -100,9 +97,9 @@ def check_state(params):
                 params['check_buckets_are_discovered'],
             )
 
-    except helpers.CartridgeException as e:
-        return helpers.ModuleRes(exception=e)
+    except CartridgeException as e:
+        return ModuleRes(exception=e)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, check_state)
+    execute_module(argument_spec, check_state)

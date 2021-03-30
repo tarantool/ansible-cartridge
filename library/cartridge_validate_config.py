@@ -1,13 +1,10 @@
 #!/usr/bin/python
 
 import os
-import pkgutil
 import re
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
+
 
 argument_spec = {
     'hosts': {'required': True, 'type': 'list'},
@@ -484,51 +481,51 @@ def validate_config(params):
         # Validate types
         errmsg = validate_types(host_vars)
         if errmsg is not None:
-            return helpers.ModuleRes(failed=True, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         if host_vars.get('stateboard') is True:
             errmsg = check_stateboard(host_vars)
             if errmsg is not None:
-                return helpers.ModuleRes(failed=True, msg=errmsg)
+                return ModuleRes(failed=True, msg=errmsg)
             continue
 
         # All required params should be specified
         errmsg = check_required_params(host_vars, host)
         if errmsg is not None:
-            return helpers.ModuleRes(failed=True, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         # Instance config
         errmsg = check_instance_config(host_vars['config'], host)
         if errmsg is not None:
-            return helpers.ModuleRes(failed=True, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         # Params common for all instances
         errmsg = check_params_the_same_for_all_hosts(host_vars, found_common_params)
         if errmsg is not None:
-            return helpers.ModuleRes(failed=True, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         # Cartridge defaults
         if 'cartridge_defaults' in host_vars:
             if 'cluster_cookie' in host_vars['cartridge_defaults']:
                 errmsg = 'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"'
-                return helpers.ModuleRes(failed=True, msg=errmsg)
+                return ModuleRes(failed=True, msg=errmsg)
 
         # Instance state
         if host_vars.get('expelled') is True and host_vars.get('restarted') is True:
             errmsg = 'Flags "expelled" and "restarted" cannot be set at the same time'
-            return helpers.ModuleRes(failed=True, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         # Replicasets
         errmsg = check_replicaset(host_vars, found_replicasets)
         if errmsg is not None:
-            return helpers.ModuleRes(failed=True, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         # Dist retention
         if 'cartridge_keep_num_latest_dists' in host_vars:
             keep_num_latest_dists = host_vars['cartridge_keep_num_latest_dists']
             if keep_num_latest_dists <= 0:
                 errmsg = '"cartridge_keep_num_latest_dists" should be greater than 0'
-                return helpers.ModuleRes(failed=True, msg=errmsg)
+                return ModuleRes(failed=True, msg=errmsg)
             if keep_num_latest_dists == 1:
                 warnings.append(
                     'Using "cartridge_keep_num_latest_dists" equals to 1 can be dangerous. '
@@ -538,22 +535,22 @@ def validate_config(params):
     # Authorization params
     errmsg = check_auth(found_common_params)
     if errmsg is not None:
-        return helpers.ModuleRes(failed=True, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     # Clusterwide config
     errmsg = check_app_config(found_common_params)
     if errmsg is not None:
-        return helpers.ModuleRes(failed=True, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     # Failover
     errmsg = check_failover(found_common_params)
     if errmsg is not None:
-        return helpers.ModuleRes(failed=True, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     # Scenario
     errmsg = check_scenario(found_common_params)
     if errmsg is not None:
-        return helpers.ModuleRes(failed=True, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     if found_common_params.get('cartridge_failover') is not None:
         warnings.append(
@@ -561,8 +558,8 @@ def validate_config(params):
             'Use `cartridge_failover_params` instead.'
         )
 
-    return helpers.ModuleRes(changed=False, warnings=warnings)
+    return ModuleRes(changed=False, warnings=warnings)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, validate_config)
+    execute_module(argument_spec, validate_config)

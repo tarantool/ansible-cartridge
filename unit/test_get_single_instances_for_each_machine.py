@@ -1,3 +1,7 @@
+import sys
+import module_utils.helpers as helpers
+sys.modules['ansible.module_utils.helpers'] = helpers
+
 import unittest
 
 from library.cartridge_get_single_instances_for_each_machine import get_one_not_expelled_instance_for_machine

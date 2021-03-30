@@ -1,13 +1,9 @@
 #!/usr/bin/python
 
 import os
-import pkgutil
 import re
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
 
 
 argument_spec = {
@@ -31,7 +27,7 @@ def get_dist_dirs_to_remove(params):
     app_install_dir = params['app_install_dir']
 
     if keep_num_latest_dists <= 0:
-        return helpers.ModuleRes(failed=True, msg='"keep_num_latest_dists" should be > 0')
+        return ModuleRes(failed=True, msg='"keep_num_latest_dists" should be > 0')
 
     dists = list(filter(
         lambda filename: is_dist(filename, app_install_dir, app_name),
@@ -49,8 +45,8 @@ def get_dist_dirs_to_remove(params):
         for filename in dists[keep_num_latest_dists:]
     ]
 
-    return helpers.ModuleRes(fact=dists_dirs_to_remove)
+    return ModuleRes(fact=dists_dirs_to_remove)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, get_dist_dirs_to_remove)
+    execute_module(argument_spec, get_dist_dirs_to_remove)

@@ -1,12 +1,10 @@
 #!/usr/bin/python
 
-import pkgutil
 import time
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
+from ansible.module_utils.helpers import get_control_console
+from ansible.module_utils.helpers import is_expelled, is_stateboard
 
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
@@ -122,7 +120,7 @@ def get_configured_replicasets(hostvars, play_hosts):
         if instance_name not in play_hosts:
             continue
 
-        if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
+        if is_expelled(instance_vars) or is_stateboard(instance_vars):
             continue
 
         if 'replicaset_alias' in instance_vars:
@@ -149,12 +147,12 @@ def get_instances_to_configure(hostvars, play_hosts):
 
     for instance_name in play_hosts:
         instance_vars = hostvars[instance_name]
-        if helpers.is_stateboard(instance_vars):
+        if is_stateboard(instance_vars):
             continue
 
         instance = {}
 
-        if helpers.is_expelled(instance_vars):
+        if is_expelled(instance_vars):
             instance['expelled'] = True
         else:
             if 'zone' in instance_vars:
@@ -464,9 +462,9 @@ def edit_topology(params):
     instances = get_instances_to_configure(hostvars, play_hosts)
 
     if not replicasets and not instances:
-        return helpers.ModuleRes(changed=False)
+        return ModuleRes(changed=False)
 
-    control_console = helpers.get_control_console(console_sock)
+    control_console = get_control_console(console_sock)
 
     cluster_instances = get_cluster_instances(control_console)
     cluster_replicasets = get_cluster_replicasets(control_console)
@@ -484,7 +482,7 @@ def edit_topology(params):
         replicasets, cluster_replicasets, instances, cluster_instances
     )
     if err is not None:
-        return helpers.ModuleRes(
+        return ModuleRes(
             failed=True,
             msg="Failed to collect edit topology params: %s" % err
         )
@@ -494,7 +492,7 @@ def edit_topology(params):
     if topology_params:
         res, err = control_console.eval_res_err(edit_topology_func_body, topology_params)
         if err is not None:
-            return helpers.ModuleRes(failed=True, msg="Failed to edit topology: %s" % err)
+            return ModuleRes(failed=True, msg="Failed to edit topology: %s" % err)
 
         topology_changed = True
 
@@ -508,7 +506,7 @@ def edit_topology(params):
         # guarantees that next `edit_topology` call wouldn't fail.
         # If cluster isn't healthy then it's good to show error.
         if not wait_for_cluster_is_healthy(control_console, timeout):
-            return helpers.ModuleRes(
+            return ModuleRes(
                 failed=True, msg="Cluster isn't healthy after editing topology"
             )
 
@@ -527,7 +525,7 @@ def edit_topology(params):
         replicasets, cluster_replicasets, instances, cluster_instances
     )
     if err is not None:
-        return helpers.ModuleRes(
+        return ModuleRes(
             failed=True,
             msg="Failed to collect edit topology params for changing failover_priority "
                 "and configuring new instances: %s" % err
@@ -536,7 +534,7 @@ def edit_topology(params):
     if topology_params:
         res, err = control_console.eval_res_err(edit_topology_func_body, topology_params)
         if err is not None:
-            return helpers.ModuleRes(
+            return ModuleRes(
                 failed=True,
                 msg="Failed to edit failover priority and configure instances: %s" % err
             )
@@ -544,12 +542,12 @@ def edit_topology(params):
         topology_changed = True
 
         if not wait_for_cluster_is_healthy(control_console, timeout):
-            return helpers.ModuleRes(
+            return ModuleRes(
                 failed=True, msg="Cluster isn't healthy after editing failover priority and configuring instances"
             )
 
-    return helpers.ModuleRes(changed=topology_changed)
+    return ModuleRes(changed=topology_changed)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, edit_topology)
+    execute_module(argument_spec, edit_topology)

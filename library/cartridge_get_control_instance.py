@@ -1,11 +1,11 @@
 #!/usr/bin/python
 
-import pkgutil
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
+from ansible.module_utils.helpers import get_control_console
+from ansible.module_utils.helpers import is_expelled, is_stateboard
+from ansible.module_utils.helpers import DEFAULT_RUN_DIR
+from ansible.module_utils.helpers import get_instance_console_sock
 
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
@@ -83,7 +83,7 @@ def get_control_instance(params):
     console_sock = params['console_sock']
     app_name = params['app_name']
 
-    control_console = helpers.get_control_console(console_sock)
+    control_console = get_control_console(console_sock)
     control_instance_candidates = []
 
     members, _ = control_console.eval_res_err('''
@@ -92,7 +92,7 @@ def get_control_instance(params):
 
     for uri, member in sorted(members.items()):
         if 'payload' not in member or not member['payload']:
-            return helpers.ModuleRes(failed=True, msg='Instance %s does not contain payload' % uri)
+            return ModuleRes(failed=True, msg='Instance %s does not contain payload' % uri)
 
         if member.get('status') != 'alive':
             continue
@@ -100,7 +100,7 @@ def get_control_instance(params):
         member_payload = member['payload']
         if member_payload.get('uuid') is not None:
             if member_payload.get('alias') is None:
-                return helpers.ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
+                return ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
 
             instance_name = member_payload['alias']
             if instance_name not in hostvars:
@@ -111,7 +111,7 @@ def get_control_instance(params):
     if not control_instance_candidates:
         for instance_name in play_hosts:
             instance_vars = hostvars[instance_name]
-            if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
+            if is_expelled(instance_vars) or is_stateboard(instance_vars):
                 continue
 
             if 'replicaset_alias' in instance_vars:
@@ -119,7 +119,7 @@ def get_control_instance(params):
 
     if not control_instance_candidates:
         errmsg = 'Not found any joined instance or instance to create a replicaset'
-        return helpers.ModuleRes(failed=True, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
     advertise_uris = [
         hostvars[instance_name]['config']['advertise_uri']
@@ -128,7 +128,7 @@ def get_control_instance(params):
 
     twophase_commit_versions, err = get_twophase_commit_versions(control_console, advertise_uris)
     if err is not None:
-        return helpers.ModuleRes(failed=True, msg=err)
+        return ModuleRes(failed=True, msg=err)
 
     idx = twophase_commit_versions.index(min(twophase_commit_versions))
     control_instance_name = control_instance_candidates[idx]
@@ -137,16 +137,16 @@ def get_control_instance(params):
     # instance_vars['instance_info'], but if control instance is not
     # in play_hosts, instance_info isn't computed for it
     instance_vars = hostvars[control_instance_name]
-    run_dir = instance_vars.get('cartridge_run_dir', helpers.DEFAULT_RUN_DIR)
-    control_instance_console_sock = helpers.get_instance_console_sock(
+    run_dir = instance_vars.get('cartridge_run_dir', DEFAULT_RUN_DIR)
+    control_instance_console_sock = get_instance_console_sock(
         run_dir, app_name, control_instance_name,
     )
 
-    return helpers.ModuleRes(changed=False, fact={
+    return ModuleRes(changed=False, fact={
         'name': control_instance_name,
         'console_sock': control_instance_console_sock,
     })
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, get_control_instance)
+    execute_module(argument_spec, get_control_instance)

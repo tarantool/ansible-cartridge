@@ -1,12 +1,12 @@
 #!/usr/bin/python
 
 import os
-import pkgutil
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
+from ansible.module_utils.helpers import get_control_console
+from ansible.module_utils.helpers import dynamic_box_cfg_params
+from ansible.module_utils.helpers import get_box_cfg, box_cfg_was_called
+from ansible.module_utils.helpers import CartridgeException, cartridge_errcodes
 
 argument_spec = {
     'check_package_updated': {'required': False, 'type': 'bool', 'default': False},
@@ -121,7 +121,7 @@ def check_needs_restart_to_update_config(params, control_console):
     if err is not None:
         return None, "Failed to read current instance config: %s" % err
 
-    if check_conf_updated(new_instance_conf, current_instance_conf, helpers.dynamic_box_cfg_params):
+    if check_conf_updated(new_instance_conf, current_instance_conf, dynamic_box_cfg_params):
         return True, None
 
     if not stateboard:
@@ -138,18 +138,18 @@ def check_needs_restart_to_update_config(params, control_console):
             return None, "Failed to read current default config: %s" % err
 
         new_default_conf.update({'cluster_cookie': cluster_cookie})
-        if check_conf_updated(new_default_conf, current_default_conf, helpers.dynamic_box_cfg_params):
+        if check_conf_updated(new_default_conf, current_default_conf, dynamic_box_cfg_params):
             return True, None
 
     # if box.cfg wasn't called,
-    if not helpers.box_cfg_was_called(control_console):
+    if not box_cfg_was_called(control_console):
         return True, None
 
-    current_cfg = helpers.get_box_cfg(control_console)
+    current_cfg = get_box_cfg(control_console)
     if current_cfg is None:
         return True, None
 
-    for param_name in helpers.dynamic_box_cfg_params:
+    for param_name in dynamic_box_cfg_params:
         new_value = None
         if param_name in new_instance_conf:
             new_value = new_instance_conf[param_name]
@@ -172,37 +172,37 @@ def set_needs_restart(params):
 
     # check if instance was not started yet
     if not os.path.exists(console_sock):
-        return helpers.ModuleRes(changed=True, fact=True)
+        return ModuleRes(changed=True, fact=True)
 
     try:
-        control_console = helpers.get_control_console(console_sock)
-    except helpers.CartridgeException as e:
+        control_console = get_control_console(console_sock)
+    except CartridgeException as e:
         allowed_errcodes = [
-            helpers.cartridge_errcodes.SOCKET_NOT_FOUND,
-            helpers.cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
-            helpers.cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
+            cartridge_errcodes.SOCKET_NOT_FOUND,
+            cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
+            cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
         ]
         if e.code in allowed_errcodes:
-            return helpers.ModuleRes(changed=True, fact=True)
+            return ModuleRes(changed=True, fact=True)
 
         raise e
 
     if params['check_package_updated']:
         needs_restart, err = check_needs_restart_to_update_package(params)
         if err is not None:
-            return helpers.ModuleRes(failed=True, msg=err)
+            return ModuleRes(failed=True, msg=err)
         if needs_restart:
-            return helpers.ModuleRes(changed=True, fact=True)
+            return ModuleRes(changed=True, fact=True)
 
     if params['check_config_updated']:
         needs_restart, err = check_needs_restart_to_update_config(params, control_console)
         if err is not None:
-            return helpers.ModuleRes(failed=True, msg=err)
+            return ModuleRes(failed=True, msg=err)
         if needs_restart:
-            return helpers.ModuleRes(changed=True, fact=True)
+            return ModuleRes(changed=True, fact=True)
 
-    return helpers.ModuleRes(changed=False, fact=False)
+    return ModuleRes(changed=False, fact=False)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, set_needs_restart)
+    execute_module(argument_spec, set_needs_restart)

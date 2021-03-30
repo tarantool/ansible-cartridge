@@ -1,3 +1,7 @@
+import sys
+import module_utils.helpers as helpers
+sys.modules['ansible.module_utils.helpers'] = helpers
+
 import os
 import unittest
 

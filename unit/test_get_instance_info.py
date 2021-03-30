@@ -1,3 +1,7 @@
+import sys
+import module_utils.helpers as helpers
+sys.modules['ansible.module_utils.helpers'] = helpers
+
 import unittest
 
 from library.cartridge_get_instance_info import get_app_conf_file

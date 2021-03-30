@@ -1,15 +1,11 @@
 #!/usr/bin/python
 
 import os
-import pkgutil
 import re
 import subprocess
 import tarfile
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
 
 argument_spec = {
     'app_name': {'required': True, 'type': 'str'},
@@ -146,17 +142,17 @@ def get_package_info(params):
     elif package_type == 'tgz':
         package_info = get_tgz_info(package_path, app_name)
     else:
-        return helpers.ModuleRes(failed=True, msg='Unknown package type: %s' % package_type)
+        return ModuleRes(failed=True, msg='Unknown package type: %s' % package_type)
 
     if app_name and package_info['name'] != app_name:
         msg = 'cartridge_app_name value should be equal to package name. ' + \
               'Found cartridge_app_name: "%s", package name: "%s"' % (app_name, package_info['name'])
-        return helpers.ModuleRes(failed=True, msg=msg)
+        return ModuleRes(failed=True, msg=msg)
 
     package_info['type'] = package_type
 
-    return helpers.ModuleRes(changed=False, fact=package_info)
+    return ModuleRes(changed=False, fact=package_info)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, get_package_info)
+    execute_module(argument_spec, get_package_info)

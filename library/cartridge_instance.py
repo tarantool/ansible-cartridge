@@ -1,12 +1,14 @@
 #!/usr/bin/python
 
 import os
-import pkgutil
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
+from ansible.module_utils.helpers import get_control_console
+from ansible.module_utils.helpers import dynamic_box_cfg_params
+from ansible.module_utils.helpers import get_box_cfg, box_cfg_was_called
+from ansible.module_utils.helpers import memory_size_box_cfg_params
+from ansible.module_utils.helpers import CartridgeException, cartridge_errcodes
+
 
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
@@ -16,11 +18,11 @@ argument_spec = {
 
 
 def is_dynamic_param(param_name):
-    return param_name in helpers.dynamic_box_cfg_params
+    return param_name in dynamic_box_cfg_params
 
 
 def is_memory_size_param(param_name):
-    return param_name in helpers.memory_size_box_cfg_params
+    return param_name in memory_size_box_cfg_params
 
 
 def change_memory_size(current_box_cfg, param_name, cartridge_defaults, config, control_console):
@@ -94,37 +96,37 @@ def manage_instance(params):
 
     # Check if instance isn't started yet
     if not os.path.exists(console_sock):
-        return helpers.ModuleRes(changed=False)
+        return ModuleRes(changed=False)
 
     try:
-        control_console = helpers.get_control_console(console_sock)
-    except helpers.CartridgeException as e:
+        control_console = get_control_console(console_sock)
+    except CartridgeException as e:
         allowed_errcodes = [
-            helpers.cartridge_errcodes.SOCKET_NOT_FOUND,
-            helpers.cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
-            helpers.cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
+            cartridge_errcodes.SOCKET_NOT_FOUND,
+            cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
+            cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
         ]
         if e.code in allowed_errcodes:
-            return helpers.ModuleRes(changed=False)
+            return ModuleRes(changed=False)
 
         raise e
 
-    if not helpers.box_cfg_was_called(control_console):
-        return helpers.ModuleRes(changed=False)
+    if not box_cfg_was_called(control_console):
+        return ModuleRes(changed=False)
 
-    current_box_cfg = helpers.get_box_cfg(control_console)
+    current_box_cfg = get_box_cfg(control_console)
 
     # Change memory size
     memory_size_changed = False
 
-    for param_name in helpers.memory_size_box_cfg_params:
+    for param_name in memory_size_box_cfg_params:
         if param_name in config or param_name in cartridge_defaults:
             memory_param_changed, err = change_memory_size(
                 current_box_cfg, param_name, cartridge_defaults, config, control_console
             )
 
             if err is not None:
-                return helpers.ModuleRes(failed=True, msg="Failed to change memory size in runtime: %s" % err)
+                return ModuleRes(failed=True, msg="Failed to change memory size in runtime: %s" % err)
 
             memory_size_changed = memory_size_changed or memory_param_changed
 
@@ -133,8 +135,8 @@ def manage_instance(params):
 
     changed = memory_size_changed or dynamic_params_changed
 
-    return helpers.ModuleRes(changed=changed)
+    return ModuleRes(changed=changed)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, manage_instance)
+    execute_module(argument_spec, manage_instance)

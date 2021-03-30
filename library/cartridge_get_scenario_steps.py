@@ -1,10 +1,6 @@
 import os
-import pkgutil
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
 
 argument_spec = {
     'role_path': {'required': True, 'type': 'str'},
@@ -75,20 +71,20 @@ def get_scenario_steps(params):
         params['role_scenarios'], params['custom_scenarios'], params['scenario_name'],
     )
     if err:
-        return helpers.ModuleRes(failed=True, msg=err)
+        return ModuleRes(failed=True, msg=err)
 
     scenario_steps = []
     for step_name in scenario:
         if step_name not in steps_paths:
-            return helpers.ModuleRes(failed=True, msg=f"Unknown step '{step_name}'")
+            return ModuleRes(failed=True, msg=f"Unknown step '{step_name}'")
 
         scenario_steps.append({
             'name': step_name,
             'path': steps_paths[step_name],
         })
 
-    return helpers.ModuleRes(changed=False, fact=scenario_steps)
+    return ModuleRes(changed=False, fact=scenario_steps)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, get_scenario_steps)
+    execute_module(argument_spec, get_scenario_steps)

@@ -1,12 +1,13 @@
 #!/usr/bin/python
 
 import os
-import pkgutil
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
+from ansible.module_utils.helpers import get_instance_id
+from ansible.module_utils.helpers import get_instance_console_sock
+from ansible.module_utils.helpers import get_instance_pid_file
+from ansible.module_utils.helpers import get_instance_dir
+from ansible.module_utils.helpers import get_multiversion_instance_code_dir
 
 argument_spec = {
     'app_name': {'required': False, 'type': 'str'},
@@ -16,7 +17,7 @@ argument_spec = {
 
 
 def get_instance_conf_file(conf_dir, app_name, instance_name, stateboard=False):
-    instance_id = helpers.get_instance_id(app_name, instance_name, stateboard)
+    instance_id = get_instance_id(app_name, instance_name, stateboard)
     return os.path.join(conf_dir, '%s.yml' % instance_id)
 
 
@@ -25,7 +26,7 @@ def get_app_conf_file(conf_dir, app_name):
 
 
 def get_instance_conf_section(app_name, instance_name, stateboard=False):
-    return helpers.get_instance_id(app_name, instance_name, stateboard)
+    return get_instance_id(app_name, instance_name, stateboard)
 
 
 def get_instance_systemd_service(app_name, instance_name, stateboard=False):
@@ -74,17 +75,17 @@ def get_instance_info(params):
     )
 
     # console socket, PID file paths
-    instance_info['console_sock'] = helpers.get_instance_console_sock(
+    instance_info['console_sock'] = get_instance_console_sock(
         instance_vars['cartridge_run_dir'], app_name, instance_name, instance_vars['stateboard']
     )
     instance_info['paths_to_remove_on_expel'].append(instance_info['console_sock'])
 
-    instance_info['pid_file'] = helpers.get_instance_pid_file(
+    instance_info['pid_file'] = get_instance_pid_file(
         instance_vars['cartridge_run_dir'], app_name, instance_name, instance_vars['stateboard']
     )
 
     # instance work dir
-    instance_info['work_dir'] = helpers.get_instance_dir(
+    instance_info['work_dir'] = get_instance_dir(
         instance_vars['cartridge_data_dir'], app_name, instance_name, instance_vars['stateboard']
     )
     instance_info['paths_to_remove_on_expel'].append(instance_info['work_dir'])
@@ -92,7 +93,7 @@ def get_instance_info(params):
     # instance memtx dir
     instance_info['memtx_dir'] = None
     if instance_vars['cartridge_memtx_dir_parent']:
-        instance_info['memtx_dir'] = helpers.get_instance_dir(
+        instance_info['memtx_dir'] = get_instance_dir(
             instance_vars['cartridge_memtx_dir_parent'], app_name, instance_name, instance_vars['stateboard']
         )
         instance_info['paths_to_remove_on_expel'].append(instance_info['memtx_dir'])
@@ -100,7 +101,7 @@ def get_instance_info(params):
     # instance vinyl dir
     instance_info['vinyl_dir'] = None
     if instance_vars['cartridge_vinyl_dir_parent']:
-        instance_info['vinyl_dir'] = helpers.get_instance_dir(
+        instance_info['vinyl_dir'] = get_instance_dir(
             instance_vars['cartridge_vinyl_dir_parent'], app_name, instance_name, instance_vars['stateboard']
         )
         instance_info['paths_to_remove_on_expel'].append(instance_info['vinyl_dir'])
@@ -108,7 +109,7 @@ def get_instance_info(params):
     # instance wal dir
     instance_info['wal_dir'] = None
     if instance_vars['cartridge_wal_dir_parent']:
-        instance_info['wal_dir'] = helpers.get_instance_dir(
+        instance_info['wal_dir'] = get_instance_dir(
             instance_vars['cartridge_wal_dir_parent'], app_name, instance_name, instance_vars['stateboard']
         )
         instance_info['paths_to_remove_on_expel'].append(instance_info['wal_dir'])
@@ -135,13 +136,13 @@ def get_instance_info(params):
             instance_vars.get('cartridge_package_path')
         )
 
-        instance_info['instance_dist_dir'] = helpers.get_multiversion_instance_code_dir(
+        instance_info['instance_dist_dir'] = get_multiversion_instance_code_dir(
             instance_vars['cartridge_app_instances_dir'],
             app_name, instance_name, instance_vars['stateboard'],
         )
 
-    return helpers.ModuleRes(changed=False, fact=instance_info)
+    return ModuleRes(changed=False, fact=instance_info)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, get_instance_info)
+    execute_module(argument_spec, get_instance_info)

@@ -1,11 +1,7 @@
 #!/usr/bin/python
 
-import pkgutil
-
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
+from ansible.module_utils.helpers import is_expelled
 
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
@@ -30,7 +26,7 @@ def get_one_not_expelled_instance_for_machine(params):
     for instance_name in play_hosts:
         instance_vars = hostvars[instance_name]
 
-        if helpers.is_expelled(instance_vars):
+        if is_expelled(instance_vars):
             continue
 
         machine_hostname = get_machine_hostname(instance_vars, instance_name)
@@ -38,8 +34,8 @@ def get_one_not_expelled_instance_for_machine(params):
             machine_hostnames.add(machine_hostname)
             instance_names.append(instance_name)
 
-    return helpers.ModuleRes(changed=False, fact=instance_names)
+    return ModuleRes(changed=False, fact=instance_names)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, get_one_not_expelled_instance_for_machine)
+    execute_module(argument_spec, get_one_not_expelled_instance_for_machine)

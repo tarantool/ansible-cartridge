@@ -1,11 +1,7 @@
 #!/usr/bin/python
 
-import pkgutil
-
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import execute_module, ModuleRes
+from ansible.module_utils.helpers import get_control_console
 
 argument_spec = {
     'app_config': {'required': True, 'type': 'dict'},
@@ -18,7 +14,7 @@ def section_is_deleted(section):
 
 
 def config_app(params):
-    control_console = helpers.get_control_console(params['console_sock'])
+    control_console = get_control_console(params['console_sock'])
     config = params['app_config']
 
     system_sections = {
@@ -36,7 +32,7 @@ def config_app(params):
     ''')
 
     if config is None:
-        return helpers.ModuleRes(failed=True, msg="Cluster isn't bootstrapped yet")
+        return ModuleRes(failed=True, msg="Cluster isn't bootstrapped yet")
 
     # Patch it
     patch = {}
@@ -45,7 +41,7 @@ def config_app(params):
     for section_name, section in config.items():
         if section_name in system_sections:
             errmsg = 'Unable to patch config system section: "{}"'.format(section_name)
-            return helpers.ModuleRes(failed=True, msg=errmsg)
+            return ModuleRes(failed=True, msg=errmsg)
 
         if section_is_deleted(section):
             if section_name in current_config:
@@ -57,7 +53,7 @@ def config_app(params):
                 changed = True
 
     if not changed:
-        return helpers.ModuleRes(changed=False)
+        return ModuleRes(changed=False)
 
     func_body = '''
         local patch = ...
@@ -67,10 +63,10 @@ def config_app(params):
 
     if not ok:
         errmsg = 'Config patch failed: {}'.format(err)
-        return helpers.ModuleRes(failed=True, msg=errmsg)
+        return ModuleRes(failed=True, msg=errmsg)
 
-    return helpers.ModuleRes()
+    return ModuleRes()
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, config_app)
+    execute_module(argument_spec, config_app)
