@@ -30,6 +30,12 @@ class TestValidateConfig(unittest.TestCase):
 
         params_by_types = {
             str: {
+                'cartridge_scenario_name',
+                'cartridge_app_user',
+                'cartridge_app_group',
+                'cartridge_app_install_dir',
+                'cartridge_app_instances_dir',
+                'cartridge_delivered_package_path',
                 'cartridge_package_path',
                 'cartridge_app_name',
                 'cartridge_cluster_cookie',
@@ -82,6 +88,8 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover_params',
                 'cartridge_failover_params.stateboard_params',
                 'cartridge_failover_params.etcd2_params',
+                'cartridge_custom_scenarios',
+                'cartridge_control_instance',
             },
             int: {
                 'instance_start_timeout',
