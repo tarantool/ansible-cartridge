@@ -1,8 +1,10 @@
 ---
 - name: Converge
   hosts: cluster
+  vars:
+    cartridge_app_name: 'myapp'
   roles:
-    - role: ansible-cartridge
+    - ansible-cartridge
   become: true
   become_user: root
   gather_facts: false

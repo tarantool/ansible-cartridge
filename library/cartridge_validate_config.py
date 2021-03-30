@@ -86,6 +86,8 @@ def is_valid_advertise_uri(uri):
 
 
 def check_schema(schema, conf, path=''):
+    if conf is None:
+        return None
     if isinstance(schema, dict):
         if not isinstance(conf, dict):
             return '{} must be {}'.format(path, dict)
@@ -130,6 +132,8 @@ def validate_types(vars):
         'cartridge_scenario': list,
         'cartridge_custom_steps_dir': str,
         'cartridge_custom_steps': list,
+        'cartridge_scenario_name': str,
+        'cartridge_custom_scenarios': dict,
         'restarted': bool,
         'expelled': bool,
         'stateboard': bool,
@@ -144,11 +148,15 @@ def validate_types(vars):
         'weight': int,
         'vshard_group': str,
         'cartridge_enable_tarantool_repo': bool,
-        'cartridge_install_dir': str,
-        'cartridge_instances_dir': str,
         'cartridge_conf_dir': str,
         'cartridge_run_dir': str,
         'cartridge_data_dir': str,
+        'cartridge_app_user': str,
+        'cartridge_app_group': str,
+        'cartridge_app_install_dir': str,
+        'cartridge_app_instances_dir': str,
+        'cartridge_delivered_package_path': str,
+        'cartridge_control_instance': dict,
         'cartridge_memtx_dir_parent': str,
         'cartridge_vinyl_dir_parent': str,
         'cartridge_wal_dir_parent': str,
@@ -213,13 +221,13 @@ def check_cluster_cookie_symbols(cluster_cookie):
     return None
 
 
-def check_required_params(host_vars, host):
+def check_required_params(role_vars, host):
     for p in INSTANCE_REQUIRED_PARAMS:
-        if host_vars.get(p) is None:
+        if role_vars.get(p) is None:
             errmsg = '"{}" must be specified (missed for "{}")'.format(p, host)
             return errmsg
 
-    errmsg = check_cluster_cookie_symbols(host_vars['cartridge_cluster_cookie'])
+    errmsg = check_cluster_cookie_symbols(role_vars['cartridge_cluster_cookie'])
     if errmsg is not None:
         return errmsg
 
@@ -247,29 +255,29 @@ def check_instance_config(config, host):
     return None
 
 
-def check_params_the_same_for_all_hosts(host_vars, found_common_params):
+def check_params_the_same_for_all_hosts(role_vars, found_common_params):
     for p in PARAMS_THE_SAME_FOR_ALL_HOSTS:
         if found_common_params.get(p) is not None:
-            if host_vars.get(p) != found_common_params.get(p):
+            if role_vars.get(p) != found_common_params.get(p):
                 errmsg = '"{}" must be the same for all hosts'.format(p)
                 return errmsg
-        elif host_vars.get(p) is not None:
-            found_common_params[p] = host_vars.get(p)
+        elif role_vars.get(p) is not None:
+            found_common_params[p] = role_vars.get(p)
 
     return None
 
 
-def check_replicaset(host_vars, found_replicasets):
-    if 'replicaset_alias' not in host_vars:
+def check_replicaset(role_vars, found_replicasets):
+    if 'replicaset_alias' not in role_vars:
         return None
 
-    replicaset_alias = host_vars['replicaset_alias']
+    replicaset_alias = role_vars['replicaset_alias']
 
-    replicaset = {p: host_vars.get(p) for p in REPLICASET_PARAMS}
+    replicaset = {p: role_vars.get(p) for p in REPLICASET_PARAMS}
 
     if replicaset_alias not in found_replicasets:
         for p in REPLICASET_REQUIRED_PARAMS:
-            if p not in host_vars:
+            if p not in role_vars:
                 errmsg = 'Parameter "{}" is required for all replicasets (missed for "{}")'.format(
                     p, replicaset_alias
                 )
@@ -479,53 +487,53 @@ def validate_config(params):
     warnings = []
 
     for host in params['hosts']:
-        host_vars = params['hostvars'][host]
+        role_vars = params['hostvars'][host]['role_vars']
 
         # Validate types
-        errmsg = validate_types(host_vars)
+        errmsg = validate_types(role_vars)
         if errmsg is not None:
             return helpers.ModuleRes(failed=True, msg=errmsg)
 
-        if host_vars.get('stateboard') is True:
-            errmsg = check_stateboard(host_vars)
+        if role_vars.get('stateboard') is True:
+            errmsg = check_stateboard(role_vars)
             if errmsg is not None:
                 return helpers.ModuleRes(failed=True, msg=errmsg)
             continue
 
         # All required params should be specified
-        errmsg = check_required_params(host_vars, host)
+        errmsg = check_required_params(role_vars, host)
         if errmsg is not None:
             return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Instance config
-        errmsg = check_instance_config(host_vars['config'], host)
+        errmsg = check_instance_config(role_vars['config'], host)
         if errmsg is not None:
             return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Params common for all instances
-        errmsg = check_params_the_same_for_all_hosts(host_vars, found_common_params)
+        errmsg = check_params_the_same_for_all_hosts(role_vars, found_common_params)
         if errmsg is not None:
             return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Cartridge defaults
-        if 'cartridge_defaults' in host_vars:
-            if 'cluster_cookie' in host_vars['cartridge_defaults']:
+        if 'cartridge_defaults' in role_vars:
+            if 'cluster_cookie' in role_vars['cartridge_defaults']:
                 errmsg = 'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"'
                 return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Instance state
-        if host_vars.get('expelled') is True and host_vars.get('restarted') is True:
+        if role_vars.get('expelled') is True and role_vars.get('restarted') is True:
             errmsg = 'Flags "expelled" and "restarted" cannot be set at the same time'
             return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Replicasets
-        errmsg = check_replicaset(host_vars, found_replicasets)
+        errmsg = check_replicaset(role_vars, found_replicasets)
         if errmsg is not None:
             return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Dist retention
-        if 'cartridge_keep_num_latest_dists' in host_vars:
-            keep_num_latest_dists = host_vars['cartridge_keep_num_latest_dists']
+        if 'cartridge_keep_num_latest_dists' in role_vars:
+            keep_num_latest_dists = role_vars['cartridge_keep_num_latest_dists']
             if keep_num_latest_dists <= 0:
                 errmsg = '"cartridge_keep_num_latest_dists" should be greater than 0'
                 return helpers.ModuleRes(failed=True, msg=errmsg)

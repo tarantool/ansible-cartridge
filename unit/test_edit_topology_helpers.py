@@ -6,9 +6,15 @@ from library.cartridge_edit_topology import get_replicaset_params
 from library.cartridge_edit_topology import get_server_params
 
 
-def call_get_configured_replicasets(hostvars, play_hosts=None):
+def call_get_configured_replicasets(role_vars, play_hosts=None):
     if play_hosts is None:
-        play_hosts = hostvars.keys()
+        play_hosts = role_vars.keys()
+
+    hostvars = {}
+    for instance_name, instance_role_vars in role_vars.items():
+        hostvars[instance_name] = {
+            'role_vars': instance_role_vars
+        }
 
     return get_configured_replicasets(hostvars, play_hosts)
 
@@ -107,7 +113,7 @@ class TestGetConfiguredReplicasets(unittest.TestCase):
 
 class TestGetInstancesToConfigure(unittest.TestCase):
     def test_get_instances_to_configure(self):
-        hostvars = {
+        role_vars = {
             'instance-expelled': {  # expelled
                 'replicaset_alias': 'replicaset-1',
                 'expelled': True,
@@ -140,7 +146,13 @@ class TestGetInstancesToConfigure(unittest.TestCase):
         }
 
         # found instances to configure
-        play_hosts = hostvars.keys()
+        play_hosts = role_vars.keys()
+
+        hostvars = {}
+        for instance_name, instance_role_vars in role_vars.items():
+            hostvars[instance_name] = {
+                'role_vars': instance_role_vars
+            }
 
         instances = get_instances_to_configure(hostvars, play_hosts)
         self.assertEqual(instances, {

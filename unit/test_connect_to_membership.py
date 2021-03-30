@@ -4,9 +4,15 @@ from unit.instance import Instance
 from library.cartridge_connect_to_membership import connect_to_membership
 
 
-def call_probe_instance(console_sock, hostvars, play_hosts=None):
+def call_probe_instance(console_sock, role_vars, play_hosts=None):
     if play_hosts is None:
-        play_hosts = hostvars.keys()
+        play_hosts = role_vars.keys()
+
+    hostvars = {}
+    for instance_name, instance_role_vars in role_vars.items():
+        hostvars[instance_name] = {
+            'role_vars': instance_role_vars
+        }
 
     return connect_to_membership({
         'console_sock': console_sock,
@@ -40,7 +46,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            hostvars={
+            role_vars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
                 }
@@ -56,7 +62,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            hostvars={
+            role_vars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
                 },
@@ -79,7 +85,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            hostvars={
+            role_vars={
                 'instance-2': {
                     'config': {'advertise_uri': URI2},
                 }
@@ -95,7 +101,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            hostvars={
+            role_vars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
                 },
@@ -122,7 +128,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            hostvars={
+            role_vars={
                 'instance-2': {
                     'expelled': True,
                     'config': {'advertise_uri': URI2},
@@ -138,7 +144,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            hostvars={
+            role_vars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
                 },
@@ -161,7 +167,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            hostvars={
+            role_vars={
                 'instance-2': {
                     'restarted': True,
                     'config': {'advertise_uri': URI2},
@@ -183,7 +189,7 @@ class TestProbeInstance(unittest.TestCase):
 
         res = call_probe_instance(
             console_sock=self.console_sock,
-            hostvars={
+            role_vars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
                 },

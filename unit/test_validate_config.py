@@ -4,9 +4,15 @@ import unittest
 from library.cartridge_validate_config import validate_config
 
 
-def call_validate_config(hostvars, play_hosts=None):
+def call_validate_config(role_vars, play_hosts=None):
     if play_hosts is None:
-        play_hosts = hostvars.keys()
+        play_hosts = role_vars.keys()
+
+    hostvars = {}
+    for instance_name, instance_role_vars in role_vars.items():
+        hostvars[instance_name] = {
+            'role_vars': instance_role_vars
+        }
 
     return validate_config({
         'hosts': play_hosts,
@@ -24,6 +30,12 @@ class TestValidateConfig(unittest.TestCase):
 
         params_by_types = {
             str: {
+                'cartridge_scenario_name',
+                'cartridge_app_user',
+                'cartridge_app_group',
+                'cartridge_app_install_dir',
+                'cartridge_app_instances_dir',
+                'cartridge_delivered_package_path',
                 'cartridge_package_path',
                 'cartridge_app_name',
                 'cartridge_cluster_cookie',
@@ -44,8 +56,6 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover_params.etcd2_params.username',
                 'cartridge_failover_params.etcd2_params.password',
                 'cartridge_custom_steps_dir',
-                'cartridge_install_dir',
-                'cartridge_instances_dir',
                 'cartridge_conf_dir',
                 'cartridge_run_dir',
                 'cartridge_data_dir',
@@ -78,6 +88,8 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover_params',
                 'cartridge_failover_params.stateboard_params',
                 'cartridge_failover_params.etcd2_params',
+                'cartridge_custom_scenarios',
+                'cartridge_control_instance',
             },
             int: {
                 'instance_start_timeout',
