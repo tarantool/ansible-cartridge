@@ -22,7 +22,7 @@ platforms:
 lint: |
   set -xe
   yamllint .
-  flake8 library molecule/update_cartridge/tests
+  flake8
 
 provisioner:
   name: ansible

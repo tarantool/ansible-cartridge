@@ -13,8 +13,10 @@ ansible_runner = testinfra.utils.ansible_runner.AnsibleRunner(
 )
 testinfra_hosts = ansible_runner.get_hosts('all')
 
+scenario_name = os.environ['MOLECULE_SCENARIO_NAME']
+
 APP_NAME = 'myapp'
-HOSTS_PATH = os.path.join('molecule', 'default', 'hosts.yml')
+HOSTS_PATH = os.path.join('molecule', scenario_name, 'hosts.yml')
 
 inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
 variable_manager = VariableManager(loader=DataLoader(), inventory=inventory)
