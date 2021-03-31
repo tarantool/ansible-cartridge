@@ -1,12 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
-import pkgutil
 import time
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
@@ -398,7 +394,8 @@ def get_topology_params(replicasets, cluster_replicasets, instances, cluster_ins
 
 
 def get_replicasets_failover_priority_and_instances_params(
-        replicasets, cluster_replicasets, instances, cluster_instances):
+    replicasets, cluster_replicasets, instances, cluster_instances
+):
     topology_params = {}
 
     replicasets_params, err = get_replicasets_params_for_changing_failover_priority(
@@ -440,7 +437,8 @@ def wait_for_cluster_is_healthy(control_console, timeout):
 
 
 def update_cluster_instances_and_replicasets(
-        edit_topology_res, instances, cluster_instances, cluster_replicasets):
+    edit_topology_res, instances, cluster_instances, cluster_replicasets
+):
     # instances
     for alias, res_instance in edit_topology_res['servers'].items():
         cluster_instances[alias] = res_instance

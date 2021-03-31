@@ -1,8 +1,12 @@
+import sys
 import unittest
 
 from parameterized import parameterized
 
+import module_utils.helpers as helpers
 from unit.instance import Instance
+
+sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_instance import manage_instance
 
 

@@ -3,4 +3,5 @@ parameterized~=0.8.1
 ansible~=2.10.6
 pytest-testinfra~=6.1.0
 flake8~=3.8.4
+yamllint~=1.26.0
 molecule[docker,ansible]~=3.2.3

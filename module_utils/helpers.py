@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import json
 import os
@@ -9,48 +9,47 @@ import textwrap
 from ansible.module_utils.basic import AnsibleModule
 
 DEFAULT_RUN_DIR = '/var/run/tarantool'
+
+# parameters of instance configuration that can be changed dynamically
+DYNAMIC_BOX_CFG_PARAMS = {
+    'memtx_memory',
+    'vinyl_memory',
+    'custom_proc_title',
+    'listen',
+    'read_only',
+    'sql_cache_size',
+    'vinyl_timeout',
+    'worker_pool_threads',
+    'vinyl_cache',
+    'checkpoint_interval',
+    'checkpoint_count',
+    'checkpoint_wal_threshold',
+    'snap_io_rate_limit',
+    'replication_connect_timeout',
+    'replication_connect_quorum',
+    'replication_skip_conflict',
+    'replication_sync_lag',
+    'replication_sync_timeout',
+    'replication_timeout',
+    'replication_synchro_quorum',
+    'replication_synchro_timeout',
+    'io_collect_interval',
+    'net_msg_max',
+    'readahead',
+    'log_level',
+    'too_long_threshold',
+    'log_format',
+    'feedback_enabled',
+    'feedback_host',
+    'feedback_interval',
+}
+
+MEMORY_SIZE_BOX_CFG_PARAMS = {
+    'memtx_memory',
+    'vinyl_memory',
+}
+
 DEBUG_MESSAGES = []
-
-
-# To print any string or object using warnings, you just need to call this function:
-# helpers.debug('my_str')
-# helpers.debug({'my_dict': ['str', 2]})
-# In this case, you get the following output:
-# [WARNING]: [001]: my_str
-# [WARNING]: [002]: {
-# [WARNING]: [003]:   "my_dict": [
-# [WARNING]: [004]:     "str",
-# [WARNING]: [005]:     2
-# [WARNING]: [007]:   ]
-# [WARNING]: [008]: }
-
-# Also you can specify a string key to print it before each output line:
-# helpers.debug('my_str', key='test_1')
-# helpers.debug({'my_dict': ['str', 2]}, 'test_2')
-# In this case, you get the following output:
-# [WARNING]: [001]: [test_1]: my_str
-# [WARNING]: [002]: [test_2]: {
-# [WARNING]: [003]: [test_2]:   "my_dict": [
-# [WARNING]: [004]: [test_2]:     "str",
-# [WARNING]: [005]: [test_2]:     2
-# [WARNING]: [006]: [test_2]:   ]
-# [WARNING]: [007]: [test_2]: }
-
-def debug(value, key=None):
-    global DEBUG_MESSAGES
-
-    if type(value) != str:
-        value = json.dumps(value, indent=2)
-    value = value.split('\n')
-    if key:
-        value = map(lambda v: '[%s]: %s' % (key, v), value)
-
-    # We should add line numbers because Ansible removes the same warnings.
-    # So, for example, some `}` characters from a JSON object will not be printed.
-    last_line = len(DEBUG_MESSAGES) + 1
-    value = map(lambda v: '[%03d]: %s' % (last_line + v[0], v[1]), enumerate(value))
-
-    DEBUG_MESSAGES += value
 
 
 class ModuleRes:
@@ -98,66 +97,14 @@ class ModuleRes:
             module.fail_json(**self.get_exit_json())
 
 
-def execute_module(argument_spec, function):
-    module = AnsibleModule(argument_spec=argument_spec)
-    try:
-        res = function(module.params)
-    except Exception as e:
-        res = ModuleRes(exception=e)
-    res.exit(module)
-
-
 class CartridgeErrorCodes:
-    def __init__(self):
-        self.SOCKET_NOT_FOUND = 'SOCKET_NOT_FOUND'
-        self.FAILED_TO_CONNECT_TO_SOCKET = 'FAILED_TO_CONNECT_TO_SOCKET'
-        self.INSTANCE_IS_NOT_STARTED_YET = 'INSTANCE_IS_NOT_STARTED_YET'
-        self.BROKEN_PIPE = 'BROKEN_PIPE'
-        self.FUNCTION_ERROR = 'FUNCTION_ERROR'
-        self.MISSED_SECTION = 'MISSED_SECTION'
-        self.BAD_VALUE_TYPE = 'BAD_VALUE_TYPE'
-
-
-cartridge_errcodes = CartridgeErrorCodes()
-
-# parameters of instance configuration that can be changed dynamically
-dynamic_box_cfg_params = {
-    'memtx_memory',
-    'vinyl_memory',
-    'custom_proc_title',
-    'listen',
-    'read_only',
-    'sql_cache_size',
-    'vinyl_timeout',
-    'worker_pool_threads',
-    'vinyl_cache',
-    'checkpoint_interval',
-    'checkpoint_count',
-    'checkpoint_wal_threshold',
-    'snap_io_rate_limit',
-    'replication_connect_timeout',
-    'replication_connect_quorum',
-    'replication_skip_conflict',
-    'replication_sync_lag',
-    'replication_sync_timeout',
-    'replication_timeout',
-    'replication_synchro_quorum',
-    'replication_synchro_timeout',
-    'io_collect_interval',
-    'net_msg_max',
-    'readahead',
-    'log_level',
-    'too_long_threshold',
-    'log_format',
-    'feedback_enabled',
-    'feedback_host',
-    'feedback_interval',
-}
-
-memory_size_box_cfg_params = {
-    'memtx_memory',
-    'vinyl_memory',
-}
+    SOCKET_NOT_FOUND = 'SOCKET_NOT_FOUND'
+    FAILED_TO_CONNECT_TO_SOCKET = 'FAILED_TO_CONNECT_TO_SOCKET'
+    INSTANCE_IS_NOT_STARTED_YET = 'INSTANCE_IS_NOT_STARTED_YET'
+    BROKEN_PIPE = 'BROKEN_PIPE'
+    FUNCTION_ERROR = 'FUNCTION_ERROR'
+    MISSED_SECTION = 'MISSED_SECTION'
+    BAD_VALUE_TYPE = 'BAD_VALUE_TYPE'
 
 
 class CartridgeException(Exception):
@@ -173,7 +120,7 @@ class Console:
         if not os.path.exists(socket_path):
             errmsg = 'Instance socket not found: "{}". '.format(socket_path) + \
                      'Make sure the instance was started correctly'
-            raise CartridgeException(cartridge_errcodes.SOCKET_NOT_FOUND, errmsg)
+            raise CartridgeException(CartridgeErrorCodes.SOCKET_NOT_FOUND, errmsg)
 
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
@@ -182,9 +129,9 @@ class Console:
         except socket.error as socket_err:
             if socket_err.errno == 111:
                 errmsg = 'Failed to connect to socket "{}": Instance is not started yet'.format(socket_path)
-                raise CartridgeException(cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET, errmsg)
+                raise CartridgeException(CartridgeErrorCodes.INSTANCE_IS_NOT_STARTED_YET, errmsg)
             errmsg = 'Failed to connect to socket "{}": {}'.format(socket_path, socket_err)
-            raise CartridgeException(cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET, errmsg)
+            raise CartridgeException(CartridgeErrorCodes.FAILED_TO_CONNECT_TO_SOCKET, errmsg)
 
         self.sock.recv(1024)
 
@@ -204,7 +151,7 @@ class Console:
                 if chunk == '':
                     errmsg = 'Error: broken pipe. ' + \
                              'Probably, the instance was not bootstrapped yet to perform this operation'
-                    raise CartridgeException(cartridge_errcodes.BROKEN_PIPE, errmsg)
+                    raise CartridgeException(CartridgeErrorCodes.BROKEN_PIPE, errmsg)
                 data = data + chunk
                 if data.endswith('\n...\n'):
                     break
@@ -243,7 +190,7 @@ class Console:
 
         if hex_output.startswith("error:"):
             err = re.sub(r"error:\s+", '', hex_output)
-            raise CartridgeException(cartridge_errcodes.FUNCTION_ERROR, err)
+            raise CartridgeException(CartridgeErrorCodes.FUNCTION_ERROR, err)
 
         output = bytearray.fromhex(hex_output).decode('utf-8')
 
@@ -273,6 +220,56 @@ class Console:
 
     def __del__(self):
         self.close()
+
+
+def debug(value, key=None):
+    # To print any string or object using warnings, you just need to call this function:
+    # debug('my_str')
+    # debug({'my_dict': ['str', 2]})
+    # In this case, you get the following output:
+    # [WARNING]: [001]: my_str
+    # [WARNING]: [002]: {
+    # [WARNING]: [003]:   "my_dict": [
+    # [WARNING]: [004]:     "str",
+    # [WARNING]: [005]:     2
+    # [WARNING]: [007]:   ]
+    # [WARNING]: [008]: }
+
+    # Also you can specify a string key to print it before each output line:
+    # debug('my_str', key='test_1')
+    # debug({'my_dict': ['str', 2]}, 'test_2')
+    # In this case, you get the following output:
+    # [WARNING]: [001]: [test_1]: my_str
+    # [WARNING]: [002]: [test_2]: {
+    # [WARNING]: [003]: [test_2]:   "my_dict": [
+    # [WARNING]: [004]: [test_2]:     "str",
+    # [WARNING]: [005]: [test_2]:     2
+    # [WARNING]: [006]: [test_2]:   ]
+    # [WARNING]: [007]: [test_2]: }
+
+    global DEBUG_MESSAGES
+
+    if type(value) != str:
+        value = json.dumps(value, indent=2)
+    value = value.split('\n')
+    if key:
+        value = map(lambda v: '[%s]: %s' % (key, v), value)
+
+    # We should add line numbers because Ansible removes the same warnings.
+    # So, for example, some `}` characters from a JSON object will not be printed.
+    last_line = len(DEBUG_MESSAGES) + 1
+    value = map(lambda v: '[%03d]: %s' % (last_line + v[0], v[1]), enumerate(value))
+
+    DEBUG_MESSAGES += value
+
+
+def execute_module(argument_spec, function):
+    module = AnsibleModule(argument_spec=argument_spec)
+    try:
+        res = function(module.params)
+    except Exception as e:
+        res = ModuleRes(exception=e)
+    res.exit(module)
 
 
 def get_control_console(socket_path):
@@ -335,3 +332,28 @@ def filter_none_values(d):
     return {
         k: v for k, v in d.items() if v is not None
     }
+
+
+class Helpers:
+    DEFAULT_RUN_DIR = DEFAULT_RUN_DIR
+    DYNAMIC_BOX_CFG_PARAMS = DYNAMIC_BOX_CFG_PARAMS
+    MEMORY_SIZE_BOX_CFG_PARAMS = MEMORY_SIZE_BOX_CFG_PARAMS
+
+    ModuleRes = ModuleRes
+    CartridgeErrorCodes = CartridgeErrorCodes
+    CartridgeException = CartridgeException
+    Console = Console
+
+    debug = staticmethod(debug)
+    execute_module = staticmethod(execute_module)
+    get_control_console = staticmethod(get_control_console)
+    is_expelled = staticmethod(is_expelled)
+    is_stateboard = staticmethod(is_stateboard)
+    get_instance_id = staticmethod(get_instance_id)
+    get_instance_console_sock = staticmethod(get_instance_console_sock)
+    get_instance_pid_file = staticmethod(get_instance_pid_file)
+    get_instance_dir = staticmethod(get_instance_dir)
+    get_multiversion_instance_code_dir = staticmethod(get_multiversion_instance_code_dir)
+    box_cfg_was_called = staticmethod(box_cfg_was_called)
+    get_box_cfg = staticmethod(get_box_cfg)
+    filter_none_values = staticmethod(filter_none_values)

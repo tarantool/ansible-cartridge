@@ -1,12 +1,8 @@
-#!/usr/bin/python
+#!/usr/bin/env python
 
 import os
-import pkgutil
 
-if pkgutil.find_loader('ansible.module_utils.helpers'):
-    import ansible.module_utils.helpers as helpers
-else:
-    import module_utils.helpers as helpers
+from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
     'check_package_updated': {'required': False, 'type': 'bool', 'default': False},
@@ -121,7 +117,7 @@ def check_needs_restart_to_update_config(params, control_console):
     if err is not None:
         return None, "Failed to read current instance config: %s" % err
 
-    if check_conf_updated(new_instance_conf, current_instance_conf, helpers.dynamic_box_cfg_params):
+    if check_conf_updated(new_instance_conf, current_instance_conf, helpers.DYNAMIC_BOX_CFG_PARAMS):
         return True, None
 
     if not stateboard:
@@ -138,7 +134,7 @@ def check_needs_restart_to_update_config(params, control_console):
             return None, "Failed to read current default config: %s" % err
 
         new_default_conf.update({'cluster_cookie': cluster_cookie})
-        if check_conf_updated(new_default_conf, current_default_conf, helpers.dynamic_box_cfg_params):
+        if check_conf_updated(new_default_conf, current_default_conf, helpers.DYNAMIC_BOX_CFG_PARAMS):
             return True, None
 
     # if box.cfg wasn't called,
@@ -149,7 +145,7 @@ def check_needs_restart_to_update_config(params, control_console):
     if current_cfg is None:
         return True, None
 
-    for param_name in helpers.dynamic_box_cfg_params:
+    for param_name in helpers.DYNAMIC_BOX_CFG_PARAMS:
         new_value = None
         if param_name in new_instance_conf:
             new_value = new_instance_conf[param_name]
@@ -178,9 +174,9 @@ def set_needs_restart(params):
         control_console = helpers.get_control_console(console_sock)
     except helpers.CartridgeException as e:
         allowed_errcodes = [
-            helpers.cartridge_errcodes.SOCKET_NOT_FOUND,
-            helpers.cartridge_errcodes.FAILED_TO_CONNECT_TO_SOCKET,
-            helpers.cartridge_errcodes.INSTANCE_IS_NOT_STARTED_YET
+            helpers.CartridgeErrorCodes.SOCKET_NOT_FOUND,
+            helpers.CartridgeErrorCodes.FAILED_TO_CONNECT_TO_SOCKET,
+            helpers.CartridgeErrorCodes.INSTANCE_IS_NOT_STARTED_YET
         ]
         if e.code in allowed_errcodes:
             return helpers.ModuleRes(changed=True, fact=True)

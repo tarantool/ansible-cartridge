@@ -1,6 +1,10 @@
+import sys
 import unittest
 
+import module_utils.helpers as helpers
 from unit.instance import Instance
+
+sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_connect_to_membership import connect_to_membership
 
 
