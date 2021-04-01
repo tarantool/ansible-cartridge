@@ -248,3 +248,9 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+# Packages
+
+*.rpm
+*.deb
+*.tgz

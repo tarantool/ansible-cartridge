@@ -161,6 +161,7 @@ For more details about using scenario and available steps, see
 
 ## Documentation
 
+* [Configuration basics](/doc/configuration-basics.md)
 * [Role variables](/doc/variables.md)
 * [Role scenario](/doc/scenario.md)
 * [Application package](/doc/package.md)
