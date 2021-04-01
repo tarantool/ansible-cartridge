@@ -29,7 +29,7 @@ Note that running the role may require
 First, you need to install this role using `ansible-galaxy`:
 
 ```bash
-$ ansible-galaxy install tarantool.cartridge,1.8.1
+$ ansible-galaxy install tarantool.cartridge,1.8.2
 ```
 
 ## Quick start
