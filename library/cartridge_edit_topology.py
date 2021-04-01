@@ -116,7 +116,7 @@ def get_configured_replicasets(hostvars, play_hosts):
     replicasets = {}
 
     for instance_name in play_hosts:
-        instance_vars = hostvars[instance_name]['role_vars']
+        instance_vars = hostvars[instance_name]
 
         if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
             continue
@@ -144,7 +144,7 @@ def get_instances_to_configure(hostvars, play_hosts):
     instances = {}
 
     for instance_name in play_hosts:
-        instance_vars = hostvars[instance_name]['role_vars']
+        instance_vars = hostvars[instance_name]
 
         if helpers.is_stateboard(instance_vars):
             continue

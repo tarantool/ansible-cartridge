@@ -281,8 +281,7 @@ Some of useful facts are established during preparation, so you can use them at 
   for example, in `delegate_to`;
 - `scenario_steps` - description of scenario steps. Each step is a dictionary with fields:
   - `name` - name of step;
-  - `path` - path to YAML file of step;
-- `role_vars` - dictionary with all role variables.
+  - `path` - path to YAML file of step.
 
 ## Role Steps Description
 

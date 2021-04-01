@@ -25,7 +25,7 @@ def get_one_not_expelled_instance_for_machine(params):
     for instance_name in play_hosts:
         instance_vars = hostvars[instance_name]
 
-        if helpers.is_expelled(instance_vars['role_vars']):
+        if helpers.is_expelled(instance_vars):
             continue
 
         machine_hostname = get_machine_hostname(instance_vars, instance_name)

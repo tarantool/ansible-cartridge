@@ -8,15 +8,9 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_validate_config import validate_config
 
 
-def call_validate_config(role_vars, play_hosts=None):
+def call_validate_config(hostvars, play_hosts=None):
     if play_hosts is None:
-        play_hosts = role_vars.keys()
-
-    hostvars = {}
-    for instance_name, instance_role_vars in role_vars.items():
-        hostvars[instance_name] = {
-            'role_vars': instance_role_vars
-        }
+        play_hosts = hostvars.keys()
 
     return validate_config({
         'hosts': play_hosts,

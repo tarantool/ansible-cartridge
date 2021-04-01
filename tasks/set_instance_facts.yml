@@ -1,0 +1,96 @@
+---
+
+- name: 'Set instance facts'
+  set_fact:
+
+    # Common variables
+
+    cartridge_app_name: '{{ cartridge_app_name }}'
+    cartridge_cluster_cookie: '{{ cartridge_cluster_cookie }}'
+    cartridge_remove_temporary_files: '{{ cartridge_remove_temporary_files }}'
+
+    # Role scenario configuration
+
+    cartridge_scenario: '{{ cartridge_scenario }}'
+    cartridge_custom_steps_dir: '{{ cartridge_custom_steps_dir }}'
+    cartridge_custom_steps: '{{ cartridge_custom_steps }}'
+
+    cartridge_scenario_name: '{{ cartridge_scenario_name }}'
+    cartridge_custom_scenarios: '{{ cartridge_custom_scenarios }}'
+    cartridge_role_scenarios: '{{ cartridge_role_scenarios }}'
+
+    # Application package configuration
+
+    cartridge_package_path: '{{ cartridge_package_path }}'
+    cartridge_enable_tarantool_repo: '{{ cartridge_enable_tarantool_repo }}'
+
+    # TGZ specific configuration
+
+    cartridge_multiversion: '{{ cartridge_multiversion }}'
+
+    cartridge_install_tarantool_for_tgz: '{{ cartridge_install_tarantool_for_tgz }}'
+
+    cartridge_app_user: '{{ cartridge_app_user }}'
+    cartridge_app_group: '{{ cartridge_app_group }}'
+
+    cartridge_data_dir: '{{ cartridge_data_dir }}'
+    cartridge_memtx_dir_parent: '{{ cartridge_memtx_dir_parent }}'
+    cartridge_vinyl_dir_parent: '{{ cartridge_vinyl_dir_parent }}'
+    cartridge_wal_dir_parent: '{{ cartridge_wal_dir_parent }}'
+    cartridge_run_dir: '{{ cartridge_run_dir }}'
+    cartridge_conf_dir: '{{ cartridge_conf_dir }}'
+    cartridge_app_install_dir: '{{ cartridge_app_install_dir }}'
+    cartridge_app_instances_dir: '{{ cartridge_app_instances_dir }}'
+
+    cartridge_configure_systemd_unit_files: '{{ cartridge_configure_systemd_unit_files }}'
+    cartridge_systemd_dir: '{{ cartridge_systemd_dir }}'
+
+    cartridge_configure_tmpfiles: '{{ cartridge_configure_tmpfiles }}'
+    cartridge_tmpfiles_dir: '{{ cartridge_tmpfiles_dir }}'
+
+    cartridge_keep_num_latest_dists: '{{ cartridge_keep_num_latest_dists }}'
+
+    # Instances configuration
+
+    cartridge_defaults: '{{ cartridge_defaults }}'
+    config: '{{ config }}'
+    zone: '{{ zone }}'
+
+    restarted: '{{ restarted }}'
+    expelled: '{{ expelled }}'
+    stateboard: '{{ stateboard }}'
+
+    cartridge_wait_buckets_discovery: '{{ cartridge_wait_buckets_discovery }}'
+    instance_start_timeout: '{{ instance_start_timeout }}'
+    instance_discover_buckets_timeout: '{{ instance_discover_buckets_timeout }}'
+
+    # Replicasets configuration
+
+    replicaset_alias: '{{ replicaset_alias }}'
+    failover_priority: '{{ failover_priority }}'
+    roles: '{{ roles }}'
+    all_rw: '{{ all_rw }}'
+    vshard_group: '{{ vshard_group }}'
+    weight: '{{ weight }}'
+    edit_topology_timeout: '{{ edit_topology_timeout }}'
+
+    ## Cluster configuration
+
+    cartridge_bootstrap_vshard: '{{ cartridge_bootstrap_vshard }}'
+    cartridge_app_config: '{{ cartridge_app_config }}'
+    cartridge_auth: '{{ cartridge_auth }}'
+    cartridge_failover: '{{ cartridge_failover }}'
+    cartridge_failover_params: '{{ cartridge_failover_params }}'
+
+    # Internal role facts that can be set by the user
+
+    cartridge_delivered_package_path: '{{ cartridge_delivered_package_path }}'
+    cartridge_control_instance: '{{ cartridge_control_instance }}'
+
+    # Cross-step facts (for correct 'tasks_from' option usage)
+
+    delivered_package_path: '{{ delivered_package_path }}'
+    control_instance: '{{ control_instance }}'
+    temporary_files: '{{ temporary_files }}'
+    needs_restart: '{{ needs_restart }}'
+    non_expelled_instance: '{{ non_expelled_instance }}'
