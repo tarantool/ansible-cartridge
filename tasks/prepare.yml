@@ -1,5 +1,13 @@
 ---
 
+- name: 'Set facts that can be set by the user'
+  set_fact:
+    delivered_package_path: '{{ cartridge_delivered_package_path | default(omit, true) }}'
+    control_instance: '{{ cartridge_control_instance | default(omit, true) }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+
 - name: 'Get default vars'
   include_vars:
     file: 'defaults/main.yml'
@@ -9,17 +17,15 @@
   become: false
   when: default_vars is not defined
 
-- name: 'Get final values of role vars for each instance'
-  set_fact:
-    role_vars: "{{ vars | dict2items | selectattr('key', 'in', default_vars) | list | items2dict }}"
+- name: 'Get cached facts for each instance'
+  cartridge_get_cached_facts:
+    vars: '{{ vars }}'
+    default_vars: '{{ default_vars }}'
+  register: cached_facts_res
 
-- name: 'Set facts that can be set by the user'
+- name: 'Set cached facts for each instance'
   set_fact:
-    delivered_package_path: '{{ cartridge_delivered_package_path | default(omit, true) }}'
-    control_instance: '{{ cartridge_control_instance | default(omit, true) }}'
-  run_once: true
-  delegate_to: localhost
-  become: false
+    role_vars: '{{ cached_facts_res.facts.role_vars }}'
 
 - name: 'Validate config'
   cartridge_validate_config:
