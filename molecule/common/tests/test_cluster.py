@@ -147,6 +147,9 @@ def test_services_status_and_config(host):
         instance_vars = variable_manager.get_vars(host=instance)
 
         instance_conf = instance_vars['config']
+        if instance_conf.get('memtx_memory') == '{{ common_memtx_memory }}':
+            instance_conf['memtx_memory'] = 268436000
+
         instance_name = instance_vars['inventory_hostname']
 
         conf_dir = instance_vars.get('cartridge_conf_dir', '/etc/tarantool/conf.d')

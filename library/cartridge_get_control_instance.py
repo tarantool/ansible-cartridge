@@ -105,7 +105,7 @@ def get_control_instance(params):
 
     if not control_instance_candidates:
         for instance_name in play_hosts:
-            instance_vars = hostvars[instance_name]['role_vars']
+            instance_vars = hostvars[instance_name]
 
             if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
                 continue
@@ -118,8 +118,6 @@ def get_control_instance(params):
         return helpers.ModuleRes(failed=True, msg=errmsg)
 
     advertise_uris = [
-        hostvars[instance_name]['role_vars']['config']['advertise_uri']
-        if 'role_vars' in hostvars[instance_name] else
         hostvars[instance_name]['config']['advertise_uri']
         for instance_name in control_instance_candidates
     ]
@@ -135,8 +133,6 @@ def get_control_instance(params):
     # instance_vars['instance_info'], but if control instance is not
     # in play_hosts, instance_info isn't computed for it
     instance_vars = hostvars[control_instance_name]
-    if 'role_vars' in instance_vars:
-        instance_vars = instance_vars['role_vars']
     run_dir = instance_vars.get('cartridge_run_dir', helpers.DEFAULT_RUN_DIR)
     control_instance_console_sock = helpers.get_instance_console_sock(
         run_dir, app_name, control_instance_name,

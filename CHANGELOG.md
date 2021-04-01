@@ -10,6 +10,10 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+### Fixed
+
+- Fix facts setting in `hostvars` fact
+
 ## [1.8.1] - 2021-03-31
 
 ### Fixed

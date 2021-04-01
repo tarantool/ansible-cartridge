@@ -21,25 +21,22 @@ class TestGetOneNotExpelledInstance(unittest.TestCase):
     def setUp(self):
         self.hostvars = {
             'expelled-1': {
-                'role_vars': {'expelled': True},
+                'expelled': True,
             },
             'my-stateboard': {
-                'role_vars': {'stateboard': True},
+                'stateboard': True,
             },
             'expelled-2': {
-                'role_vars': {'expelled': True},
+                'expelled': True,
             },
             'instance-1': {
                 'instance_info': {'console_sock': 'sock-1'},
-                'role_vars': {},
             },
             'instance-2': {
                 'instance_info': {'console_sock': 'sock-2'},
-                'role_vars': {},
             },
             'instance-3': {
                 'instance_info': {'console_sock': 'sock-3'},
-                'role_vars': {},
             },
         }
 

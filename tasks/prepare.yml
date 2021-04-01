@@ -1,17 +1,6 @@
 ---
 
-- name: 'Get default vars'
-  include_vars:
-    file: 'defaults/main.yml'
-    name: default_vars
-  run_once: true
-  delegate_to: localhost
-  become: false
-  when: default_vars is not defined
-
-- name: 'Get final values of role vars for each instance'
-  set_fact:
-    role_vars: "{{ vars | dict2items | selectattr('key', 'in', default_vars) | list | items2dict }}"
+- import_tasks: 'set_instance_facts.yml'
 
 - name: 'Set facts that can be set by the user'
   set_fact:
