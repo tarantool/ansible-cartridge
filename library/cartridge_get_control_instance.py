@@ -3,7 +3,7 @@
 from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
-    'hostvars': {'required': True, 'type': 'dict'},
+    'facts': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
     'console_sock': {'required': True, 'type': 'str'},
     'app_name': {'required': True, 'type': 'str'},
@@ -73,7 +73,7 @@ def get_twophase_commit_versions(control_console, advertise_uris):
 
 
 def get_control_instance(params):
-    hostvars = params['hostvars']
+    facts = params['facts']
     play_hosts = params['play_hosts']
     console_sock = params['console_sock']
     app_name = params['app_name']
@@ -98,14 +98,14 @@ def get_control_instance(params):
                 return helpers.ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
 
             instance_name = member_payload['alias']
-            if instance_name not in hostvars:
+            if instance_name not in facts:
                 continue
 
             control_instance_candidates.append(instance_name)
 
     if not control_instance_candidates:
         for instance_name in play_hosts:
-            instance_vars = hostvars[instance_name]
+            instance_vars = facts[instance_name]
 
             if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
                 continue
@@ -118,7 +118,7 @@ def get_control_instance(params):
         return helpers.ModuleRes(failed=True, msg=errmsg)
 
     advertise_uris = [
-        hostvars[instance_name]['config']['advertise_uri']
+        facts[instance_name]['config']['advertise_uri']
         for instance_name in control_instance_candidates
     ]
 
@@ -132,7 +132,7 @@ def get_control_instance(params):
     # in the ideal imagined world we could just use
     # instance_vars['instance_info'], but if control instance is not
     # in play_hosts, instance_info isn't computed for it
-    instance_vars = hostvars[control_instance_name]
+    instance_vars = facts[control_instance_name]
     run_dir = instance_vars.get('cartridge_run_dir', helpers.DEFAULT_RUN_DIR)
     control_instance_console_sock = helpers.get_instance_console_sock(
         run_dir, app_name, control_instance_name,

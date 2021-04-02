@@ -6,7 +6,7 @@
 - name: 'Connect instance to membership'
   cartridge_connect_to_membership:
     console_sock: '{{ not_expelled_instance.console_sock }}'
-    hostvars: '{{ connect_to_membership_facts }}'
+    facts: '{{ cached_facts.connect_to_membership }}'
     play_hosts: '{{ play_hosts }}'
   register: probe
   until: not probe.failed

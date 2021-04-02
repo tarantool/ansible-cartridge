@@ -6,27 +6,32 @@ argument_spec = {
     'hostvars': {'required': True, 'type': 'dict'},
 }
 
-sets_list = {
+FACTS_BY_TARGETS = {
     'validate_config': [
         'all_rw',
         'cartridge_app_config',
+        'cartridge_app_install_dir',
+        'cartridge_app_instances_dir',
+        'cartridge_app_group',
         'cartridge_app_name',
+        'cartridge_app_user',
         'cartridge_auth',
         'cartridge_bootstrap_vshard',
         'cartridge_cluster_cookie',
         'cartridge_conf_dir',
         'cartridge_configure_systemd_unit_files',
         'cartridge_configure_tmpfiles',
+        'cartridge_control_instance',
+        'cartridge_custom_scenarios',
         'cartridge_custom_steps',
         'cartridge_custom_steps_dir',
         'cartridge_data_dir',
         'cartridge_defaults',
+        'cartridge_delivered_package_path',
         'cartridge_enable_tarantool_repo',
         'cartridge_failover',
         'cartridge_failover_params',
-        'cartridge_install_dir',
         'cartridge_install_tarantool_for_tgz',
-        'cartridge_instances_dir',
         'cartridge_keep_num_latest_dists',
         'cartridge_memtx_dir_parent',
         'cartridge_multiversion',
@@ -34,6 +39,7 @@ sets_list = {
         'cartridge_remove_temporary_files',
         'cartridge_run_dir',
         'cartridge_scenario',
+        'cartridge_scenario_name',
         'cartridge_systemd_dir',
         'cartridge_tmpfiles_dir',
         'cartridge_vinyl_dir_parent',
@@ -89,23 +95,21 @@ sets_list = {
 }
 
 
-def get_scenario_steps(params):
+def get_cached_facts(params):
     hostvars = params['hostvars']
 
     facts = {}
-    for host_name in hostvars:
-        instance_vars = hostvars[host_name]
-
-        for set_name, fact_names in sets_list.items():
-            facts[set_name] = facts.get(set_name, {})
-            facts[set_name][host_name] = facts[set_name].get(host_name, {})
+    for instance_name, instance_vars in hostvars.items():
+        for target, fact_names in FACTS_BY_TARGETS.items():
+            facts[target] = facts.get(target, {})
+            facts[target][instance_name] = facts[target].get(instance_name, {})
 
             for fact_name in fact_names:
                 if fact_name in instance_vars:
-                    facts[set_name][host_name][fact_name] = instance_vars[fact_name]
+                    facts[target][instance_name][fact_name] = instance_vars[fact_name]
 
     return helpers.ModuleRes(changed=False, facts=facts)
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, get_scenario_steps)
+    helpers.execute_module(argument_spec, get_cached_facts)

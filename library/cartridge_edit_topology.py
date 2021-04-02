@@ -5,7 +5,7 @@ import time
 from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
-    'hostvars': {'required': True, 'type': 'dict'},
+    'facts': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
     'console_sock': {'required': True, 'type': 'str'},
     'timeout': {'required': True, 'type': 'int'},
@@ -112,11 +112,11 @@ def get_cluster_instances(control_console):
     return instances
 
 
-def get_configured_replicasets(hostvars, play_hosts):
+def get_configured_replicasets(facts, play_hosts):
     replicasets = {}
 
     for instance_name in play_hosts:
-        instance_vars = hostvars[instance_name]
+        instance_vars = facts[instance_name]
 
         if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
             continue
@@ -140,11 +140,11 @@ def get_configured_replicasets(hostvars, play_hosts):
     return replicasets
 
 
-def get_instances_to_configure(hostvars, play_hosts):
+def get_instances_to_configure(facts, play_hosts):
     instances = {}
 
     for instance_name in play_hosts:
-        instance_vars = hostvars[instance_name]
+        instance_vars = facts[instance_name]
 
         if helpers.is_stateboard(instance_vars):
             continue
@@ -455,12 +455,12 @@ def update_cluster_instances_and_replicasets(
 
 def edit_topology(params):
     console_sock = params['console_sock']
-    hostvars = params['hostvars']
+    facts = params['facts']
     play_hosts = params['play_hosts']
     timeout = params['timeout']
 
-    replicasets = get_configured_replicasets(hostvars, play_hosts)
-    instances = get_instances_to_configure(hostvars, play_hosts)
+    replicasets = get_configured_replicasets(facts, play_hosts)
+    instances = get_instances_to_configure(facts, play_hosts)
 
     if not replicasets and not instances:
         return helpers.ModuleRes(changed=False)

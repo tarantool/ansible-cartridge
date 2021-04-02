@@ -48,21 +48,16 @@
     instance_info: '{{ instance_info_res.fact }}'
 
 - name: 'Get shortened vars sets'
-  cartridge_get_shortened_fact_sets:
+  cartridge_get_cached_facts:
     hostvars: '{{ hostvars }}'
   run_once: true
   delegate_to: localhost
   become: false
-  register: shortened_fact_sets_res
+  register: cached_facts_res
 
-- name: 'Set fact sets facts'
+- name: 'Cache facts for different targets'
   set_fact:
-    validate_config_facts: '{{ shortened_fact_sets_res.facts.validate_config }}'
-    single_instances_for_each_machine_facts: '{{ shortened_fact_sets_res.facts.single_instances_for_each_machine }}'
-    not_expelled_instance_facts: '{{ shortened_fact_sets_res.facts.not_expelled_instance }}'
-    connect_to_membership_facts: '{{ shortened_fact_sets_res.facts.connect_to_membership }}'
-    control_instance_facts: '{{ shortened_fact_sets_res.facts.control_instance }}'
-    edit_topology_facts: '{{ shortened_fact_sets_res.facts.edit_topology }}'
+    cached_facts: '{{ cached_facts_res.facts }}'
   run_once: true
   delegate_to: localhost
   become: false
@@ -70,14 +65,14 @@
 - name: 'Validate config'
   cartridge_validate_config:
     play_hosts: '{{ play_hosts }}'
-    hostvars: '{{ validate_config_facts }}'
+    facts: '{{ cached_facts.validate_config }}'
   run_once: true
   delegate_to: localhost
   become: false
 
 - name: 'Select one instance for each physical machine'
   cartridge_get_single_instances_for_each_machine:
-    hostvars: '{{ single_instances_for_each_machine_facts }}'
+    facts: '{{ cached_facts.single_instances_for_each_machine }}'
     play_hosts: '{{ play_hosts }}'
   run_once: true
   delegate_to: localhost
