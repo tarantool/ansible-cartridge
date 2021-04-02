@@ -100,12 +100,16 @@ def get_cached_facts(params):
 
     facts = {}
     for instance_name, instance_vars in hostvars.items():
+        role_vars = hostvars[instance_name].get('role_facts', {})
+
         for target, fact_names in FACTS_BY_TARGETS.items():
             facts[target] = facts.get(target, {})
             facts[target][instance_name] = facts[target].get(instance_name, {})
 
             for fact_name in fact_names:
-                if fact_name in instance_vars:
+                if fact_name in role_vars:
+                    facts[target][instance_name][fact_name] = role_vars[fact_name]
+                elif fact_name in instance_vars:
                     facts[target][instance_name][fact_name] = instance_vars[fact_name]
 
     return helpers.ModuleRes(changed=False, facts=facts)

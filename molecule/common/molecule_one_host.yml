@@ -49,7 +49,7 @@ scenario:
     - syntax
     - create
     - converge
-    # - idempotence
+    - idempotence
     - verify
     - destroy
   check_sequence:
