@@ -94,4 +94,4 @@
       control_instance: '{{ control_instance }}'
       temporary_files: '{{ temporary_files }}'
       needs_restart: '{{ needs_restart }}'
-      non_expelled_instance: '{{ non_expelled_instance }}'
+      not_expelled_instance: '{{ not_expelled_instance }}'
