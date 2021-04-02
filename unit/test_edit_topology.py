@@ -8,13 +8,13 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_edit_topology import edit_topology
 
 
-def call_edit_topology(console_sock, hostvars, play_hosts=None, timeout=60):
+def call_edit_topology(console_sock, facts, play_hosts=None, timeout=60):
     if play_hosts is None:
-        play_hosts = hostvars.keys()
+        play_hosts = facts.keys()
 
     return edit_topology({
         'console_sock': console_sock,
-        'hostvars': hostvars,
+        'facts': facts,
         'play_hosts': play_hosts,
         'timeout': timeout,
     })

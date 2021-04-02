@@ -22,15 +22,15 @@ def get_twophase_commit_versions_mock(_, advertise_uris):
 get_control_instance_lib.get_twophase_commit_versions = get_twophase_commit_versions_mock
 
 
-def call_get_control_instance(app_name, console_sock, hostvars=None, play_hosts=None):
-    if hostvars is None:
-        hostvars = {}
+def call_get_control_instance(app_name, console_sock, facts=None, play_hosts=None):
+    if facts is None:
+        facts = {}
 
     if play_hosts is None:
-        play_hosts = hostvars.keys()
+        play_hosts = facts.keys()
 
     return get_control_instance({
-        'hostvars': hostvars,
+        'facts': facts,
         'play_hosts': play_hosts,
         'console_sock': console_sock,
         'app_name': app_name,

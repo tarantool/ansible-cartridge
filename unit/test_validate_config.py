@@ -8,13 +8,13 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_validate_config import validate_config
 
 
-def call_validate_config(hostvars, play_hosts=None):
+def call_validate_config(facts, play_hosts=None):
     if play_hosts is None:
-        play_hosts = hostvars.keys()
+        play_hosts = facts.keys()
 
     return validate_config({
         'play_hosts': play_hosts,
-        'hostvars': hostvars,
+        'facts': facts,
     })
 
 

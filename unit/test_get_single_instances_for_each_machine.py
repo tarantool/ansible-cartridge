@@ -7,12 +7,12 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_get_single_instances_for_each_machine import get_one_not_expelled_instance_for_machine
 
 
-def call_get_one_not_expelled_instance_for_machine(hostvars, play_hosts=None):
+def call_get_one_not_expelled_instance_for_machine(facts, play_hosts=None):
     if play_hosts is None:
-        play_hosts = hostvars.keys()
+        play_hosts = facts.keys()
 
     return get_one_not_expelled_instance_for_machine({
-        'hostvars': hostvars,
+        'facts': facts,
         'play_hosts': play_hosts,
     })
 
