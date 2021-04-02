@@ -13,7 +13,7 @@ def call_validate_config(hostvars, play_hosts=None):
         play_hosts = hostvars.keys()
 
     return validate_config({
-        'hosts': play_hosts,
+        'play_hosts': play_hosts,
         'hostvars': hostvars,
     })
 

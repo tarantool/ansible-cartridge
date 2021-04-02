@@ -6,7 +6,7 @@ import re
 from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
-    'hosts': {'required': True, 'type': 'list'},
+    'play_hosts': {'required': True, 'type': 'list'},
     'hostvars': {'required': True, 'type': 'dict'}
 }
 
@@ -478,7 +478,7 @@ def validate_config(params):
 
     warnings = []
 
-    for host in params['hosts']:
+    for host in params['play_hosts']:
         instance_vars = params['hostvars'][host]
 
         # Validate types

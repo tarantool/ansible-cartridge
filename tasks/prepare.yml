@@ -1,23 +1,5 @@
 ---
 
-- import_tasks: 'set_instance_facts.yml'
-
-- name: 'Set facts that can be set by the user'
-  set_fact:
-    delivered_package_path: '{{ cartridge_delivered_package_path | default(omit, true) }}'
-    control_instance: '{{ cartridge_control_instance | default(omit, true) }}'
-  run_once: true
-  delegate_to: localhost
-  become: false
-
-- name: 'Validate config'
-  cartridge_validate_config:
-    hosts: '{{ play_hosts }}'
-    hostvars: '{{ hostvars }}'
-  run_once: true
-  delegate_to: localhost
-  become: false
-
 - name: 'Validate OS Family'
   fail:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
@@ -31,6 +13,16 @@
   when:
     - remote_user is not defined
     - ansible_user is defined
+
+- import_tasks: 'set_instance_facts.yml'
+
+- name: 'Set facts that can be set by the user'
+  set_fact:
+    delivered_package_path: '{{ cartridge_delivered_package_path | default(omit, true) }}'
+    control_instance: '{{ cartridge_control_instance | default(omit, true) }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
 
 - name: 'Collect instance info'
   cartridge_get_instance_info:
@@ -55,9 +47,37 @@
   set_fact:
     instance_info: '{{ instance_info_res.fact }}'
 
+- name: 'Get shortened vars sets'
+  cartridge_get_shortened_fact_sets:
+    hostvars: '{{ hostvars }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+  register: shortened_fact_sets_res
+
+- name: 'Set fact sets facts'
+  set_fact:
+    validate_config_facts: '{{ shortened_fact_sets_res.facts.validate_config }}'
+    single_instances_for_each_machine_facts: '{{ shortened_fact_sets_res.facts.single_instances_for_each_machine }}'
+    not_expelled_instance_facts: '{{ shortened_fact_sets_res.facts.not_expelled_instance }}'
+    connect_to_membership_facts: '{{ shortened_fact_sets_res.facts.connect_to_membership }}'
+    control_instance_facts: '{{ shortened_fact_sets_res.facts.control_instance }}'
+    edit_topology_facts: '{{ shortened_fact_sets_res.facts.edit_topology }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+
+- name: 'Validate config'
+  cartridge_validate_config:
+    play_hosts: '{{ play_hosts }}'
+    hostvars: '{{ validate_config_facts }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+
 - name: 'Select one instance for each physical machine'
   cartridge_get_single_instances_for_each_machine:
-    hostvars: '{{ hostvars }}'
+    hostvars: '{{ single_instances_for_each_machine_facts }}'
     play_hosts: '{{ play_hosts }}'
   run_once: true
   delegate_to: localhost
