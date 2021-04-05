@@ -4,7 +4,7 @@ from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
-    'facts': {'required': True, 'type': 'dict'},
+    'module_hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
 }
 
@@ -21,12 +21,12 @@ def probe_server(control_console, uri):
 
 def connect_to_membership(params):
     control_console = helpers.get_control_console(params['console_sock'])
-    facts = params['facts']
+    module_hostvars = params['module_hostvars']
     play_hosts = params['play_hosts']
 
     changed = False
 
-    for instance_name, instance_vars in facts.items():
+    for instance_name, instance_vars in module_hostvars.items():
         if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
             continue
 

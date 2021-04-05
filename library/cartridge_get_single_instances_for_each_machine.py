@@ -3,7 +3,7 @@
 from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
-    'facts': {'required': True, 'type': 'dict'},
+    'module_hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
 }
 
@@ -16,14 +16,14 @@ def get_machine_hostname(instance_vars, instance_name):
 
 
 def get_one_not_expelled_instance_for_machine(params):
-    facts = params['facts']
+    module_hostvars = params['module_hostvars']
     play_hosts = params['play_hosts']
 
     machine_hostnames = set()
     instance_names = []
 
     for instance_name in play_hosts:
-        instance_vars = facts[instance_name]
+        instance_vars = module_hostvars[instance_name]
 
         if helpers.is_expelled(instance_vars):
             continue

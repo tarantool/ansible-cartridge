@@ -7,7 +7,7 @@ from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
     'play_hosts': {'required': True, 'type': 'list'},
-    'facts': {'required': True, 'type': 'dict'}
+    'module_hostvars': {'required': True, 'type': 'dict'}
 }
 
 INSTANCE_REQUIRED_PARAMS = ['cartridge_app_name', 'cartridge_cluster_cookie', 'config']
@@ -479,7 +479,7 @@ def validate_config(params):
     warnings = []
 
     for host in params['play_hosts']:
-        instance_vars = params['facts'][host]
+        instance_vars = params['module_hostvars'][host]
 
         # Validate types
         errmsg = validate_types(instance_vars)

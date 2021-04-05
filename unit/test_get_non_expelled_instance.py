@@ -7,12 +7,12 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_get_not_expelled_instance import get_one_not_expelled_instance
 
 
-def call_get_one_not_expelled_instance(facts, play_hosts=None):
+def call_get_one_not_expelled_instance(module_hostvars, play_hosts=None):
     if play_hosts is None:
-        play_hosts = facts.keys()
+        play_hosts = module_hostvars.keys()
 
     return get_one_not_expelled_instance({
-        'facts': facts,
+        'module_hostvars': module_hostvars,
         'play_hosts': play_hosts,
     })
 

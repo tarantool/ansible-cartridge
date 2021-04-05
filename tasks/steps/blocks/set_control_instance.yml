@@ -5,7 +5,7 @@
 
 - name: 'Select control instance to manage topology and configuration'
   cartridge_get_control_instance:
-    facts: '{{ cached_facts.control_instance }}'
+    module_hostvars: '{{ cached_facts.control_instance }}'
     play_hosts: '{{ play_hosts }}'
     console_sock: '{{ not_expelled_instance.console_sock }}'
     app_name: '{{ cartridge_app_name }}'

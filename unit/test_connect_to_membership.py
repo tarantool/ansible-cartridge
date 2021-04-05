@@ -8,13 +8,13 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_connect_to_membership import connect_to_membership
 
 
-def call_probe_instance(console_sock, facts, play_hosts=None):
+def call_probe_instance(console_sock, module_hostvars, play_hosts=None):
     if play_hosts is None:
-        play_hosts = facts.keys()
+        play_hosts = module_hostvars.keys()
 
     return connect_to_membership({
         'console_sock': console_sock,
-        'facts': facts,
+        'module_hostvars': module_hostvars,
         'play_hosts': play_hosts,
     })
 
@@ -44,7 +44,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            facts={
+            module_hostvars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
                 }
@@ -60,7 +60,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            facts={
+            module_hostvars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
                 },
@@ -83,7 +83,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            facts={
+            module_hostvars={
                 'instance-2': {
                     'config': {'advertise_uri': URI2},
                 }
@@ -99,7 +99,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            facts={
+            module_hostvars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
                 },
@@ -126,7 +126,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            facts={
+            module_hostvars={
                 'instance-2': {
                     'expelled': True,
                     'config': {'advertise_uri': URI2},
@@ -142,7 +142,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            facts={
+            module_hostvars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
                 },
@@ -165,7 +165,7 @@ class TestProbeInstance(unittest.TestCase):
         self.instance.clear_calls('admin_probe_server')
         res = call_probe_instance(
             console_sock=self.console_sock,
-            facts={
+            module_hostvars={
                 'instance-2': {
                     'restarted': True,
                     'config': {'advertise_uri': URI2},
@@ -187,7 +187,7 @@ class TestProbeInstance(unittest.TestCase):
 
         res = call_probe_instance(
             console_sock=self.console_sock,
-            facts={
+            module_hostvars={
                 'instance-1': {
                     'config': {'advertise_uri': URI1},
                 },

@@ -65,14 +65,14 @@
 - name: 'Validate config'
   cartridge_validate_config:
     play_hosts: '{{ play_hosts }}'
-    facts: '{{ cached_facts.validate_config }}'
+    module_hostvars: '{{ cached_facts.validate_config }}'
   run_once: true
   delegate_to: localhost
   become: false
 
 - name: 'Select one instance for each physical machine'
   cartridge_get_single_instances_for_each_machine:
-    facts: '{{ cached_facts.single_instances_for_each_machine }}'
+    module_hostvars: '{{ cached_facts.single_instances_for_each_machine }}'
     play_hosts: '{{ play_hosts }}'
   run_once: true
   delegate_to: localhost
