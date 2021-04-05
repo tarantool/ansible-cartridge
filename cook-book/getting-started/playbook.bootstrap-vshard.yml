@@ -1,6 +1,6 @@
 ---
 
-- name: Configure instances
+- name: Bootstrap vshard
   gather_facts: false
   any_errors_fatal: true
   become: true

@@ -1,3 +1,3 @@
 # Cook Book
 
-* [Getting started](./getting-started)
+* [Getting started](/cook-book/getting-started)

@@ -10,18 +10,27 @@ step-by-step.
 
 ## Requirements
 
-* `Cartridge CLI`
-* `tarantool.cartridge` role >= `1.8.2`
+* [Vagrant](https://www.vagrantup.com/) with [VirtualBox provider](https://www.vagrantup.com/docs/providers/virtualbox)
+  (generally, you can use other Vagrant provider)
 
-Check out the [configuration basics guide](/doc/configuration-basics.md)
-to be sure that you understand the way to write cluster configuration.
+* [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) >= 2.8.0
+* [`Cartridge CLI`](https://github.com/tarantool/cartridge-cli#installation) >= 2.0.0
 
 ## Prepare
+
+To go through this tutorial you should be in this directory:
+
+```bash
+cd cook-book/getting-started
+```
+
+**Check out the [configuration basics guide](/doc/configuration-basics.md)
+to be sure that you understand the way to write cluster configuration.**
 
 Install role from Ansible Galaxy (use newer version if it's available):
 
 ```bash
-$ ansible-galaxy install tarantool.cartridge,1.8.2
+$ ansible-galaxy install tarantool.cartridge
 ```
 
 Start two virtual machines described in [Vagrantfile](./Vagrantfile):
@@ -36,7 +45,6 @@ Place [application package](/cook-book/create-packages.md) into current director
 
 First, deploy first version of application on virtual machines,
 start two instances and join them to replicaset.
-This configuration is now
 
 Run playbook:
 
@@ -44,7 +52,7 @@ Run playbook:
 ansible-playbook -i hosts.yml playbook.prepare.yml
 ```
 
-Now go to http://localhost:8182/admin/cluster/dashboard:
+Now go to http://localhost:8181/admin/cluster/dashboard:
 
 ![image](./images/initial.png)
 
@@ -65,7 +73,7 @@ use it in scenario.
 
 Using scenarios allows to perform different actions with cluster separately.
 
-The role has several common [scenarios](/doc/scenario.md#scenarios) rhat
+The role has several common [scenarios](/doc/scenario.md#scenarios) that
 can be re-used.
 It's also possible to write custom scenario and then use it in different plays.
 
@@ -77,7 +85,8 @@ Now we have such topology:
   * `storage-1-leader`
   * `storage-1-replica`
 
-Let's add `core-1` replicaset and add one more replica to `storage-1` replicaset:
+Let's add `core-1` replicaset and add one more replica to `storage-1` replicaset.
+We should get the following topology:
 
 * `core-1` replicaset (`vshard-router`, `failover-coordinator`):
   * `core-1`
@@ -87,26 +96,31 @@ Let's add `core-1` replicaset and add one more replica to `storage-1` replicaset
   * `storage-1-replica`
   * `storage-1-replica-2`
 
+**Now stop reading.
 Be sure that you've read
 [configuration basics guide](/doc/configuration-basics.md)
-to understand why do we change inventory this way.
+to understand what is inventory and how do we change it.**
 
-Change [inventory](./hosts.yml):
+Change [inventory](./hosts.yml).
+You can save this diff to file and apply it using `git apply`.
 
 ```diff
+diff --git a/cook-book/getting-started/hosts.yml b/cook-book/getting-started/hosts.yml
+--- a/cook-book/getting-started/hosts.yml
++++ b/cook-book/getting-started/hosts.yml
 @@ -23,6 +23,16 @@ all:
-         advertise_uri: '172.19.0.2:3302'
-         http_port: 8182
+         advertise_uri: '172.19.0.3:3301'
+         http_port: 8191
 
 +    storage-1-replica-2:
 +      config:
-+        advertise_uri: '172.19.0.3:3304'
-+        http_port: 8184
++        advertise_uri: '172.19.0.2:3302'
++        http_port: 8182
 +
 +    core-1:
 +      config:
-+        advertise_uri: '172.19.0.2:3301'
-+        http_port: 8181
++        advertise_uri: '172.19.0.3:3302'
++        http_port: 8192
 +
    children:
      # group instances by machines
@@ -114,16 +128,16 @@ Change [inventory](./hosts.yml):
 @@ -32,6 +42,7 @@ all:
 
        hosts:
-         storage-1-replica:
-+        core-1:
+         storage-1:
++        storage-1-replica-2:
 
      machine_2:
        vars:
 @@ -40,12 +51,14 @@ all:
 
        hosts:
-         storage-1:
-+        storage-1-replica-2:
+         storage-1-replica:
++        core-1:
 
      # group instances by replicasets
      replicaset_storage_1:
@@ -154,10 +168,10 @@ Change [inventory](./hosts.yml):
 To start and configure instance we can use
 [`configure_instances`](/doc/scenario.md#scenarios) pre-defined scenario.
 But it also contain steps we don't need (like `deliver_package` and `update_package`).
-`update_instance` step is used only with [multiversion approach](/doc/multiversion.md)
-, so it can be removed too.
+`update_instance` step is used only with [multiversion approach](/doc/multiversion.md),
+so it can be removed too.
 
-Use this `cartridge_scenario` in [playbook.configure-instances.yml](./playbook.configure-instances.yml):
+This `cartridge_scenario` is used in [playbook.configure-instances.yml](./playbook.configure-instances.yml):
 
 ```yaml
 cartridge_scenario:
@@ -166,10 +180,11 @@ cartridge_scenario:
   - wait_instance_started
 ```
 
-Run new playbook:
+Run new playbook and specify limit (instances that should be cofigured):
 
 ```bash
-ansible-playbook -i hosts.yml playbook.configure-instances.yml
+ansible-playbook -i hosts.yml playbook.configure-instances.yml \
+    --limit storage-1-replica-2,core-1
 ```
 
 Go to http://localhost:8182/admin/cluster/dashboard:
@@ -233,7 +248,9 @@ ansible-playbook -i hosts.yml playbook.configure-topology.yml \
     --limit replicaset_storage_1
 ```
 
-You can check new topology on http://localhost:8182/admin/cluster/dashboard.
+You can check new topology on http://localhost:8182/admin/cluster/dashboard:
+
+![image](./images/replica-joined.png)
 
 Create `core-1` replicaset:
 
@@ -244,7 +261,7 @@ ansible-playbook -i hosts.yml playbook.configure-topology.yml \
 
 New topology on http://localhost:8182/admin/cluster/dashboard:
 
-![image](./images/topology-configured.png)
+![image](./images/core-joined.png)
 
 ### Bootstrap vshard
 
@@ -252,7 +269,7 @@ Now we have both `vshard-storage` and `vshard-router` replicasets.
 It's time to bootstrap vshard.
 
 We need the only one [`bootstrap_vshard` step](/doc/scenario.md#bootstrap_vshard).
-It requires `cartridge_bootstrap_vshard` variable set to `true` to donn't skip
+It requires `cartridge_bootstrap_vshard` variable set to `true` to run
 vshard bootstrapping.
 
 Specify it in [playbook.bootstrap-vshard.yml](./playbook.bootstrap-vshard.yml):
@@ -269,9 +286,10 @@ Run:
 ansible-playbook -i hosts.yml playbook.bootstrap-vshard.yml
 ```
 
-Thats all.
-You can go to http://localhost:8182/admin/cluster/dashboard, reload the page
-and see that `Bootstrap vshard` button was disappeared.
+You can go to http://localhost:8182/admin/cluster/dashboard,
+reload the page and check that `Bootstrap vshard` button was disappeared and instances have discovered buckets:
+
+![image](./images/vshard-bootstrapped.png)
 
 ## What's next?
 

@@ -32,8 +32,8 @@ Group is a dictionary with these keys allowed:
 
 We use groups to pass common variables for several instances.
 For example, each instance should know application name.
-Is't mush easier to write that `all` instances have that application name
-then to write that **each** instance has such application name.
+Is't much easier to write that `all` instances have some application name
+then to write that **every** instance has some application name.
 
 ## Variables priority
 
@@ -43,40 +43,40 @@ Let's look at this simplest inventory file:
 ---
 all:
   vars:
-    color: common-color
+    colour: common-colour
   hosts:
-    instance_with_own_color:
-      color: my-own-color
     instance_common:
     instance_blue_1:
     instance_blue_2:
     instance_fake_blue:
     instance_red_1:
+    instance_with_own_colour:
+      colour: my-own-colour
   children:
     blue:
       hosts:
         instance_blue_1:
         instance_blue_2:
         instance_fake_blue:
-          color: yellow-color
+          colour: yellow-colour
       vars:
-        color: blue-color
+        colour: blue-colour
 
     red:
       hosts:
         instance_red_1:
       vars:
-        color: red-color
+        colour: red-colour
 ```
 
-* `instance_with_own_color` has it's own color value set - `my-own-color`;
-* `instance_common` uses color value for group `all` - `common-color`;
-* `instance_blue_1` and `instance_blue_2` use color value specific for
-  group `blue` - `blue-color`;
+* `instance_common` uses colour value for group `all` - `common-colour`;
+* `instance_blue_1` and `instance_blue_2` uses colour value specific for
+  group `blue` - `blue-colour`;
 * `instance_fake_blue` also belongs to `blue` grop, but it also have it's own
-  color value set - ` yellow-color`;
-* `instance_red_1` use color value specific for
-  group `red` - `red-color`;
+  colour value set - ` yellow-colour`;
+* `instance_red_1` uses colour value specific for
+  group `red` - `red-colour`;
+* `instance_with_own_colour` has it's own colour value set - `my-own-colour`;
 
 ## Configuring instances and replica sets
 
@@ -85,7 +85,7 @@ The common cases to use groups with `tarantool.cartridge` role are:
 * set connection options for instances deployed on one machine;
 * set replicaset options for instances from one replicaset.
 
-What should you understand to connfigure instances:
+What should you understand to configure instances:
 
 * each instance is an Ansible host;
 * the hostname is instance alias that is used by role to identify instance.
@@ -98,11 +98,11 @@ Imagine that you want to deploy three instances:
 * `storage-1-leader`
 * `storage-1-replica`
 
-For each instance we should specify these [variables](/doc/variables.md):
+For each instance we should specify following [variables](/doc/variables.md):
 * `cartridge_app_name`
 * `cartridge_cluster_cookie`
 * `cartridge_package_path`
-* `config` with one required parameter - instance advertise URI.
+* `config`
 
 `config` variable is specific for each instance, other variables are common
 and can be placed in `all` group.
@@ -138,7 +138,7 @@ But how should Ansible understand where each instance should be started?
 
 ### Connection options
 
-As you understand looking at advertise URIs instances are placed on two machines:
+As you can understand by looking at advertise URIs, instances are placed on two machines:
 
 * `machine_1` (`172.19.0.2`):
   * `core-1`
