@@ -7,7 +7,7 @@
 
     - name: 'Edit topology'
       cartridge_edit_topology:
-        hostvars: '{{ hostvars }}'
+        module_hostvars: '{{ cached_facts.edit_topology }}'
         play_hosts: '{{ play_hosts }}'
         console_sock: '{{ control_instance.console_sock }}'
         timeout: '{{ edit_topology_timeout }}'

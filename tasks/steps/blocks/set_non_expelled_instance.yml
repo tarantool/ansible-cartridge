@@ -2,7 +2,7 @@
 
 - name: 'Select one not expelled instance'
   cartridge_get_not_expelled_instance:
-    hostvars: '{{ hostvars }}'
+    module_hostvars: '{{ cached_facts.not_expelled_instance }}'
     play_hosts: '{{ play_hosts }}'
   run_once: true
   delegate_to: localhost

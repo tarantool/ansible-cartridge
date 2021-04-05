@@ -1,23 +1,5 @@
 ---
 
-- import_tasks: 'set_instance_facts.yml'
-
-- name: 'Set facts that can be set by the user'
-  set_fact:
-    delivered_package_path: '{{ cartridge_delivered_package_path | default(omit, true) }}'
-    control_instance: '{{ cartridge_control_instance | default(omit, true) }}'
-  run_once: true
-  delegate_to: localhost
-  become: false
-
-- name: 'Validate config'
-  cartridge_validate_config:
-    hosts: '{{ play_hosts }}'
-    hostvars: '{{ hostvars }}'
-  run_once: true
-  delegate_to: localhost
-  become: false
-
 - name: 'Validate OS Family'
   fail:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
@@ -31,6 +13,16 @@
   when:
     - remote_user is not defined
     - ansible_user is defined
+
+- import_tasks: 'set_instance_facts.yml'
+
+- name: 'Set facts that can be set by the user'
+  set_fact:
+    delivered_package_path: '{{ cartridge_delivered_package_path | default(omit, true) }}'
+    control_instance: '{{ cartridge_control_instance | default(omit, true) }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
 
 - name: 'Collect instance info'
   cartridge_get_instance_info:
@@ -55,9 +47,32 @@
   set_fact:
     instance_info: '{{ instance_info_res.fact }}'
 
+- name: 'Get shortened vars sets'
+  cartridge_get_cached_facts:
+    hostvars: '{{ hostvars }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+  register: cached_facts_res
+
+- name: 'Cache facts for different targets'
+  set_fact:
+    cached_facts: '{{ cached_facts_res.facts }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+
+- name: 'Validate config'
+  cartridge_validate_config:
+    play_hosts: '{{ play_hosts }}'
+    module_hostvars: '{{ cached_facts.validate_config }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+
 - name: 'Select one instance for each physical machine'
   cartridge_get_single_instances_for_each_machine:
-    hostvars: '{{ hostvars }}'
+    module_hostvars: '{{ cached_facts.single_instances_for_each_machine }}'
     play_hosts: '{{ play_hosts }}'
   run_once: true
   delegate_to: localhost

@@ -6,8 +6,8 @@ import re
 from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
-    'hosts': {'required': True, 'type': 'list'},
-    'hostvars': {'required': True, 'type': 'dict'}
+    'play_hosts': {'required': True, 'type': 'list'},
+    'module_hostvars': {'required': True, 'type': 'dict'}
 }
 
 INSTANCE_REQUIRED_PARAMS = ['cartridge_app_name', 'cartridge_cluster_cookie', 'config']
@@ -75,6 +75,90 @@ STATEBOARD_CONFIG_REQUIRED_PARAMS = [
     'password',
 ]
 
+SCHEMA = {
+    'cartridge_package_path': str,
+    'cartridge_app_name': str,
+    'cartridge_cluster_cookie': str,
+    'cartridge_defaults': dict,
+    'cartridge_bootstrap_vshard': bool,
+    'cartridge_wait_buckets_discovery': bool,
+    'cartridge_failover': bool,
+    'cartridge_app_config': dict,
+    'cartridge_scenario': list,
+    'cartridge_custom_steps_dir': str,
+    'cartridge_custom_steps': list,
+    'cartridge_scenario_name': str,
+    'cartridge_custom_scenarios': dict,
+    'restarted': bool,
+    'expelled': bool,
+    'stateboard': bool,
+    'cartridge_multiversion': bool,
+    'instance_start_timeout': int,
+    'instance_discover_buckets_timeout': int,
+    'edit_topology_timeout': int,
+    'replicaset_alias': str,
+    'failover_priority': [str],
+    'roles': [str],
+    'all_rw': bool,
+    'weight': int,
+    'vshard_group': str,
+    'cartridge_enable_tarantool_repo': bool,
+    'cartridge_conf_dir': str,
+    'cartridge_run_dir': str,
+    'cartridge_data_dir': str,
+    'cartridge_app_user': str,
+    'cartridge_app_group': str,
+    'cartridge_app_install_dir': str,
+    'cartridge_app_instances_dir': str,
+    'cartridge_delivered_package_path': str,
+    'cartridge_control_instance': dict,
+    'cartridge_memtx_dir_parent': str,
+    'cartridge_vinyl_dir_parent': str,
+    'cartridge_wal_dir_parent': str,
+    'cartridge_configure_systemd_unit_files': bool,
+    'cartridge_systemd_dir': str,
+    'cartridge_configure_tmpfiles': bool,
+    'cartridge_tmpfiles_dir': str,
+    'cartridge_install_tarantool_for_tgz': bool,
+    'cartridge_keep_num_latest_dists': int,
+    'cartridge_remove_temporary_files': bool,
+    'zone': str,
+    'config': {
+        'advertise_uri': str,
+        'memtx_memory': int,
+    },
+    'cartridge_auth': {
+        'enabled': bool,
+        'cookie_max_age': int,
+        'cookie_renew_age': int,
+        'users': [
+            {
+                'username': str,
+                'password': str,
+                'fullname': str,
+                'email': str,
+                'deleted': bool,
+            }
+        ]
+    },
+    'cartridge_failover_params': {
+        'enabled': bool,
+        'mode': str,
+        'state_provider': str,
+        'stateboard_params': {
+            'uri': str,
+            'password': str
+        },
+        'etcd2_params': {
+            'prefix': str,
+            'lock_delay': int,
+            'endpoints': [str],
+            'username': str,
+            'password': str,
+        },
+    }
+}
+
 
 def is_valid_advertise_uri(uri):
     rgx = re.compile(r'^\S+:\d+$')
@@ -111,92 +195,8 @@ def check_schema(schema, conf, path=''):
         return 'Wrong type'
 
 
-def validate_types(vars):
-    schema = {
-        'cartridge_package_path': str,
-        'cartridge_app_name': str,
-        'cartridge_cluster_cookie': str,
-        'cartridge_defaults': dict,
-        'cartridge_bootstrap_vshard': bool,
-        'cartridge_wait_buckets_discovery': bool,
-        'cartridge_failover': bool,
-        'cartridge_app_config': dict,
-        'cartridge_scenario': list,
-        'cartridge_custom_steps_dir': str,
-        'cartridge_custom_steps': list,
-        'cartridge_scenario_name': str,
-        'cartridge_custom_scenarios': dict,
-        'restarted': bool,
-        'expelled': bool,
-        'stateboard': bool,
-        'cartridge_multiversion': bool,
-        'instance_start_timeout': int,
-        'instance_discover_buckets_timeout': int,
-        'edit_topology_timeout': int,
-        'replicaset_alias': str,
-        'failover_priority': [str],
-        'roles': [str],
-        'all_rw': bool,
-        'weight': int,
-        'vshard_group': str,
-        'cartridge_enable_tarantool_repo': bool,
-        'cartridge_conf_dir': str,
-        'cartridge_run_dir': str,
-        'cartridge_data_dir': str,
-        'cartridge_app_user': str,
-        'cartridge_app_group': str,
-        'cartridge_app_install_dir': str,
-        'cartridge_app_instances_dir': str,
-        'cartridge_delivered_package_path': str,
-        'cartridge_control_instance': dict,
-        'cartridge_memtx_dir_parent': str,
-        'cartridge_vinyl_dir_parent': str,
-        'cartridge_wal_dir_parent': str,
-        'cartridge_configure_systemd_unit_files': bool,
-        'cartridge_systemd_dir': str,
-        'cartridge_configure_tmpfiles': bool,
-        'cartridge_tmpfiles_dir': str,
-        'cartridge_install_tarantool_for_tgz': bool,
-        'cartridge_keep_num_latest_dists': int,
-        'cartridge_remove_temporary_files': bool,
-        'zone': str,
-        'config': {
-            'advertise_uri': str,
-            'memtx_memory': int,
-        },
-        'cartridge_auth': {
-            'enabled': bool,
-            'cookie_max_age': int,
-            'cookie_renew_age': int,
-            'users': [
-                {
-                    'username': str,
-                    'password': str,
-                    'fullname': str,
-                    'email': str,
-                    'deleted': bool,
-                }
-            ]
-        },
-        'cartridge_failover_params': {
-            'enabled': bool,
-            'mode': str,
-            'state_provider': str,
-            'stateboard_params': {
-                'uri': str,
-                'password': str
-            },
-            'etcd2_params': {
-                'prefix': str,
-                'lock_delay': int,
-                'endpoints': [str],
-                'username': str,
-                'password': str,
-            },
-        }
-    }
-
-    return check_schema(schema, vars)
+def validate_types(all_vars):
+    return check_schema(SCHEMA, all_vars)
 
 
 def check_cluster_cookie_symbols(cluster_cookie):
@@ -478,8 +478,8 @@ def validate_config(params):
 
     warnings = []
 
-    for host in params['hosts']:
-        instance_vars = params['hostvars'][host]
+    for host in params['play_hosts']:
+        instance_vars = params['module_hostvars'][host]
 
         # Validate types
         errmsg = validate_types(instance_vars)
