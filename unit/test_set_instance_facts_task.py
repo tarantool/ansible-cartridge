@@ -27,6 +27,6 @@ class TestSetInstanceFacts(unittest.TestCase):
     # (if someone added a variable to defaults, but forgot to set it in 'set_instance_facts' step)
     def test_set_instance_facts(self):
         default_names = list(self.defaults.keys())
-        set_instance_facts_name = list(self.set_instance_facts[0]['set_fact'].keys())
+        set_instance_facts_name = list(self.set_instance_facts[0]['set_fact']['role_facts'].keys())
 
         self.assertEqual(default_names, set_instance_facts_name)

@@ -15,6 +15,10 @@ README.md to use the newest tag with new release
 - Now only the necessary information will be transferred in tasks,
   which used `hostvars`. Due to this duration of these tasks was reduced.
 
+### Fixed
+
+- Role variables are saved to the dictionary, so they do not affect the next play
+
 ## [1.8.2] - 2021-04-01
 
 ### Fixed

@@ -1,0 +1,32 @@
+---
+
+- name: Run some scenario
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - deliver_package
+    cartridge_package_path: ./packages/myapp-1.0.0-0.rpm
+
+- name: Run scenario by name and check facts resetting
+  hosts: cluster
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario_name: 'custom_scenario'
+
+    - fail:
+        msg: "Variable 'cartridge_scenario' wasn't reset by last role import"
+      when: custom_task_was_ran is not defined
+      run_once: true
+
+    - fail:
+        msg: "Variable 'delivered_package_path' wasn't reset"
+      when: not delivered_package_path_is_none
+      run_once: true

@@ -1,0 +1,6 @@
+---
+
+- set_fact:
+    custom_task_was_ran: true
+    delivered_package_path_is_none: '{{ delivered_package_path is none }}'
+  run_once: true
