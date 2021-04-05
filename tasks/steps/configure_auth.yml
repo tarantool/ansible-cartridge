@@ -3,7 +3,9 @@
 - when: cartridge_auth is not none
   tags: cartridge-config
   block:
-    - import_tasks: 'blocks/set_control_instance.yml'
+    - name: 'BLOCK: Select control instance'
+      include_tasks: 'blocks/set_control_instance.yml'
+      run_once: true
       when: not control_instance
 
     - name: 'Configure cartridge auth'
