@@ -45,6 +45,7 @@ There are additional steps that are not included in the default scenario, but ca
 - [set_control_instance](#set_control_instance)
 - [rotate_dists](#rotate_dists)
 - [failover_promote](#failover_promote)
+- [eval](#eval)
 
 To replace the steps of the role with your own or add new steps, you should use `cartridge_custom_steps_dir`
 or `cartridge_custom_steps` options (see [examples](#examples)).
@@ -672,3 +673,18 @@ Input facts (set by config):
 
 - `cartridge_failover_promote_params` - promote leaders params. More details in
   [rolling update doc](#/doc/rolling_update.md).
+
+### eval
+
+[Eval code](#/doc/eval.md) on instance.
+
+Input facts (set by role):
+
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+
+Input facts (set by config):
+
+- `cartridge_eval_file` - path to file with Lua code to eval (isn't used if
+  `cartridge_eval_body` is specified);
+- `cartridge_eval_body` - code to eval;
+- `cartridge_eval_args` - function arguments.

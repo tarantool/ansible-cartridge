@@ -5,7 +5,6 @@ import os
 import random
 import re
 import socket
-import textwrap
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -242,26 +241,19 @@ class Console:
             args = []
         args_encoded = json.dumps(args)
 
-        cmd_fmt = textwrap.dedent('''
-            local function func(...)
-                {func_body}
-            end
+        func_body = func_body.replace("\n", "\\n").replace("'", "\\'")
+
+        cmd_fmt = """
+            local json = require('json')
+            local net_box = require('net.box')
             local args = require('json').decode('{args_encoded}')
-            local ret = {{
-                load(
-                    'local func, args = ... return func(unpack(args))',
-                    '@eval'
-                )(func, args)
-            }}
-            return string.hex(require('json').encode(ret))
-        ''')
+            local result = {{ net_box.self:eval('{func_body}', args) }}
+            return string.hex(json.encode(result))
+        """.replace('\n', ' ').strip()
 
         cmd = cmd_fmt.format(func_body=func_body, args_encoded=args_encoded)
 
-        lines = [line.strip() for line in cmd.split('\n') if line.strip()]
-        cmd = ' '.join(lines) + '\n'
-
-        sendall(cmd)
+        sendall(cmd + '\n')
 
         raw_output = recvall()
 

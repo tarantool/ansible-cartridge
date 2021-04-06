@@ -63,6 +63,9 @@ FACTS_BY_TARGETS = {
         'vshard_group',
         'weight',
         'zone',
+        'cartridge_eval_body',
+        'cartridge_eval_args',
+        'cartridge_eval_file',
     ],
     'single_instances_for_each_machine': [
         'expelled',

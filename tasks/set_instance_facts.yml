@@ -102,3 +102,9 @@
       temporary_files: '{{ temporary_files }}'
       needs_restart: '{{ needs_restart }}'
       not_expelled_instance: '{{ not_expelled_instance }}'
+
+      # Eval params
+
+      cartridge_eval_file: '{{ cartridge_eval_file }}'
+      cartridge_eval_body: '{{ cartridge_eval_body }}'
+      cartridge_eval_args: '{{ cartridge_eval_args }}'

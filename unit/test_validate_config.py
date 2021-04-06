@@ -63,6 +63,8 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_systemd_dir',
                 'cartridge_tmpfiles_dir',
                 'zone',
+                'cartridge_eval_body',
+                'cartridge_eval_file',
             },
             bool: {
                 'cartridge_bootstrap_vshard',
@@ -111,6 +113,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover_params.etcd2_params.endpoints',
                 'cartridge_scenario',
                 'cartridge_custom_steps',
+                'cartridge_eval_args',
             }
         }
 
