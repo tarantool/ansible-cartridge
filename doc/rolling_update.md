@@ -24,7 +24,7 @@ consistent switchover.
 ## Rolling update: Plan
 
 Imagine that you have a cluster with `myapp-1.0.0` deployed.
-And now you want to update your application to `myapp-2.0.0`.
+Now you want to update your application to `myapp-2.0.0`.
 
 The plan is quite simple:
 
@@ -39,7 +39,7 @@ The plan is quite simple:
 
 ## Rolling update: Playbook for TGZ + Multiversion
 
-[Multiversion approach](/doc/multiversion.md) allows updatig application
+[Multiversion approach](/doc/multiversion.md) allows updating application
 version that each instance uses with
 [`update_instance` step](/doc/scenario.md#update_instance).
 
@@ -174,7 +174,7 @@ The example rolling update playbook:
 
 ## Rolling update: Playbook for RPM or DEB
 
-In case of RPM and DEB (or TGZ without [multiversion approach](/doc/multiversion.md)
+In case of RPM and DEB (or TGZ without [multiversion approach](/doc/multiversion.md))
 all instances use a common version of the application.
 Updating the instance version of the application is performed when the instance is restarted.
 
