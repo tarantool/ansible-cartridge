@@ -10,6 +10,8 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+## [1.8.3] - 2021-04-06
+
 ### Changed
 
 - Now only the necessary information will be transferred in tasks,
