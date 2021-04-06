@@ -37,7 +37,7 @@ The plan is quite simple:
 * update routers replica sets
 * rotate distributions (if TGZ + Multiversion is used)
 
-## Rolling update: Playbook for TGZ + Multiversion
+## Rolling update: Playbook for TGZ package + Multiversion
 
 [Multiversion approach](/doc/multiversion.md) allows updating application
 version that each instance uses with
@@ -172,7 +172,7 @@ The example rolling update playbook:
     cartridge_keep_num_latest_dists: 1
 ```
 
-## Rolling update: Playbook for RPM or DEB
+## Rolling update: Playbook for RPM or DEB packages
 
 In case of RPM and DEB (or TGZ without [multiversion approach](/doc/multiversion.md))
 all instances use a common version of the application.
