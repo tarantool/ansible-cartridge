@@ -11,72 +11,6 @@ argument_spec = {
     'timeout': {'required': True, 'type': 'int'},
 }
 
-format_replicaset_func = '''
-local function format_replicaset(r)
-    local instances = {}
-    for _, s in ipairs(r.servers) do
-        if s.alias ~= nil then
-            table.insert(instances, s.alias)
-        end
-    end
-
-    return {
-        uuid = r.uuid,
-        alias = r.alias,
-        roles = r.roles,
-        all_rw = r.all_rw,
-        weight = r.weight,
-        vshard_group = r.vshard_group,
-        instances = instances,
-    }
-end'''
-
-format_server_func = '''
-local function format_server(s)
-    local replicaset_uuid
-    if s.replicaset ~= nil then
-        replicaset_uuid = s.replicaset.uuid
-    end
-
-    return {
-        uuid = s.uuid,
-        uri = s.uri,
-        alias = s.alias,
-        zone = s.zone,
-        replicaset_uuid = replicaset_uuid,
-    }
-end'''
-
-get_replicasets_func_body = '''
-%s
-
-local replicasets = require('cartridge').admin_get_replicasets()
-local ret = {}
-
-for _, r in ipairs(replicasets) do
-    if r.alias ~= nil then
-        ret[r.alias] = format_replicaset(r)
-    end
-end
-
-return ret
-''' % format_replicaset_func
-
-get_instances_func_body = '''
-%s
-
-local servers = require('cartridge').admin_get_servers()
-local ret = {}
-
-for _, s in ipairs(servers) do
-    if s.alias ~= nil then
-        ret[s.alias] = format_server(s)
-    end
-end
-
-return ret
-''' % format_server_func
-
 edit_topology_func_body = '''
 %s
 %s
@@ -103,13 +37,7 @@ for _, s in ipairs(res.servers or {}) do
     end
 end
 return ret
-''' % (format_replicaset_func, format_server_func)
-
-
-def get_cluster_instances(control_console):
-    instances, _ = control_console.eval_res_err(get_instances_func_body)
-
-    return instances
+''' % (helpers.FORMAT_REPLICASET_FUNC, helpers.FORMAT_SERVER_FUNC)
 
 
 def get_configured_replicasets(module_hostvars, play_hosts):
@@ -164,15 +92,6 @@ def get_instances_to_configure(module_hostvars, play_hosts):
             instances[instance_name] = instance
 
     return instances
-
-
-def get_cluster_replicasets(control_console):
-    cluster_replicasets, _ = control_console.eval_res_err(get_replicasets_func_body)
-
-    if not cluster_replicasets:
-        cluster_replicasets = dict()
-
-    return cluster_replicasets
 
 
 def add_replicaset_param_if_required(replicaset_params, replicaset, cluster_replicaset, param_name):
@@ -467,8 +386,8 @@ def edit_topology(params):
 
     control_console = helpers.get_control_console(console_sock)
 
-    cluster_instances = get_cluster_instances(control_console)
-    cluster_replicasets = get_cluster_replicasets(control_console)
+    cluster_instances = helpers.get_cluster_instances(control_console)
+    cluster_replicasets = helpers.get_cluster_replicasets(control_console)
 
     # Configure replicasets and instances:
     # * Create new replicasets.

@@ -156,7 +156,8 @@ ansible-playbook -i hosts.yml playbook.yml --limit replicaset_1_group,replicaset
 ```
 
 Moreover, scenario allows you to describe custom steps for configuring cluster.
-For more details about using scenario, see [scenario documentation](doc/scenario.md).
+For more details about using scenario and available steps, see
+[scenario documentation](doc/scenario.md).
 
 ## Documentation
 
@@ -172,3 +173,4 @@ For more details about using scenario, see [scenario documentation](doc/scenario
 * [Configuring failover](/doc/failover.md)
 * [Configuring stateboard](/doc/stateboard.md)
 * [Application config](/doc/app_config.md)
+* [Rolling update](/doc/rolling_update.md)

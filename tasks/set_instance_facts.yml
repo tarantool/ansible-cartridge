@@ -82,6 +82,7 @@
       cartridge_auth: '{{ cartridge_auth }}'
       cartridge_failover: '{{ cartridge_failover }}'
       cartridge_failover_params: '{{ cartridge_failover_params }}'
+      cartridge_failover_promote_params: '{{ cartridge_failover_promote_params }}'
 
       # Internal role facts that can be set by the user
 

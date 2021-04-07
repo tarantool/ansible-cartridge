@@ -16,6 +16,10 @@ package.loaded['cartridge.webui.api-auth'] = cartridge_webui_auth
 local cartridge_admin = {}
 package.loaded['cartridge.admin'] = cartridge_admin
 
+-- local cartridge_failover_lib = require('cartridge.failover')
+local cartridge_failover= {}
+package.loaded['cartridge.failover'] = cartridge_failover
+
 local membership = {}
 package.loaded['membership'] = membership
 
@@ -349,6 +353,10 @@ cartridge.config_patch_clusterwide = wrap_func(
 
 -- * -------------------------- Failover --------------------------
 
+cartridge_failover.get_active_leaders = function()
+    return vars.active_leaders or {}
+end
+
 local lua_api_failover = require('cartridge.lua-api.failover')
 
 cartridge.failover_get_params = lua_api_failover.get_params
@@ -366,6 +374,15 @@ end
 
 cartridge.failover_set_params = wrap_func(
     'failover_set_params', lua_api_failover.set_params
+)
+
+cartridge.failover_promote = wrap_func(
+    'failover_promote', function(replicaset_leaders)
+        vars.active_leaders = vars.active_leaders or {}
+        for rpl_uuid, instannce_uuid in pairs(replicaset_leaders) do
+            vars.active_leaders[rpl_uuid] = instannce_uuid
+        end
+    end
 )
 
 -- * ---------------- Module cartridge.vshard-utils ---------------

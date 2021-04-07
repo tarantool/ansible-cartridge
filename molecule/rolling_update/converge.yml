@@ -1,0 +1,102 @@
+---
+- name: Deploy cluster with myapp 4.0.0
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_enable_tarantool_repo: true
+    cartridge_configure_systemd_unit_files: true
+    cartridge_configure_tmpfiles: true
+    cartridge_install_tarantool_for_tgz: true
+    cartridge_package_path: ./packages/myapp-4.0.0-0-with-c-2.4.0.tar.gz
+
+- name: Deliver and install myapp 5.0.0
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - deliver_package
+      - update_package
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+
+- name: Update stateboard application version
+  hosts: my-stateboard
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: update_and_restart_instance
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+
+- name: Update storages replicas application version
+  hosts: "*storage*replica*"
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: update_and_restart_instance
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+
+- name: Promote a leaders
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - failover_promote
+    cartridge_failover_promote_params:
+      replicaset_leaders:
+        storage-1: storage-1-replica
+        storage-2: storage-2-replica
+
+# Note that leaders aren't promoted back.
+# It's done only to have a possibility to check that
+# leaders were promoted on `verify` stage.
+
+- name: Update storages leaders application version
+  hosts: "*storage*leader*"
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: update_and_restart_instance
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+
+- name: Update routers application version
+  hosts: "*core*"
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: update_and_restart_instance
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+
+- name: Remove old package
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - rotate_dists
+    cartridge_keep_num_latest_dists: 1

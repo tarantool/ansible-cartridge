@@ -276,7 +276,11 @@ class TestValidateConfig(unittest.TestCase):
             'cartridge_custom_steps': [
                 [{'name': 'task_1', 'file': 'task_1.yml'}],
                 [{'name': 'task_2', 'file': 'task_2.yml'}],
-            ]
+            ],
+            'cartridge_failover_promote_params': [
+                {'replicaset_leaders': {'rpl-1': 'instance-2'}},
+                {'replicaset_leaders': {'rpl-1': 'instance-3'}},
+            ],
         }
 
         required_params = {
@@ -1013,6 +1017,71 @@ class TestValidateConfig(unittest.TestCase):
         self.assertTrue(res.failed)
         self.assertIn(
             "File 'qwerty' from custom task '{'name': 'task', 'file': 'qwerty'}' doesn't exists",
+            res.msg
+        )
+
+    def test_failover_promote_params(self):
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_promote_params': {
+                    'replicaset_leaders': {'rpl-1': 'instance-2'},
+                    'force_inconsistency': False,
+                },
+            },
+        })
+        self.assertFalse(res.failed)
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_promote_params': {
+                    'replicaset_leaders': {'rpl-1': 'instance-2'},
+                },
+            },
+        })
+        self.assertFalse(res.failed)
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_promote_params': {
+                    'replicaset_leaders': {'rpl-1': 'instance-2'},
+                    'force_inconsistency': False,
+                    'bad-field': 'I am very very bad',
+                },
+            },
+        })
+        self.assertTrue(res.failed)
+        self.assertIn(
+            "Passed unknown failover promote parameter: 'bad-field'",
+            res.msg
+        )
+
+        res = call_validate_config({
+            'instance-1': {
+                'cartridge_app_name': 'app-name',
+                'cartridge_cluster_cookie': 'cookie',
+                'config': {'advertise_uri': 'localhost:3301'},
+
+                'cartridge_failover_promote_params': {
+                    'replicaset_leaders': {'rpl-1': 43},
+                    'force_inconsistency': False,
+                },
+            },
+        })
+        self.assertTrue(res.failed)
+        self.assertIn(
+            "Variable 'replicaset_leaders' should be of type map(string -> string)",
             res.msg
         )
 

@@ -1,0 +1,1 @@
+../../common/tests/test_cluster_is_healthy.py

@@ -49,6 +49,72 @@ MEMORY_SIZE_BOX_CFG_PARAMS = {
     'vinyl_memory',
 }
 
+FORMAT_REPLICASET_FUNC = '''
+local function format_replicaset(r)
+    local instances = {}
+    for _, s in ipairs(r.servers) do
+        if s.alias ~= nil then
+            table.insert(instances, s.alias)
+        end
+    end
+
+    return {
+        uuid = r.uuid,
+        alias = r.alias,
+        roles = r.roles,
+        all_rw = r.all_rw,
+        weight = r.weight,
+        vshard_group = r.vshard_group,
+        instances = instances,
+    }
+end'''
+
+FORMAT_SERVER_FUNC = '''
+local function format_server(s)
+    local replicaset_uuid
+    if s.replicaset ~= nil then
+        replicaset_uuid = s.replicaset.uuid
+    end
+
+    return {
+        uuid = s.uuid,
+        uri = s.uri,
+        alias = s.alias,
+        zone = s.zone,
+        replicaset_uuid = replicaset_uuid,
+    }
+end'''
+
+GET_REPLICASETS_FUNC_BODY = '''
+%s
+
+local replicasets = require('cartridge').admin_get_replicasets()
+local ret = {}
+
+for _, r in ipairs(replicasets) do
+    if r.alias ~= nil then
+        ret[r.alias] = format_replicaset(r)
+    end
+end
+
+return ret
+''' % FORMAT_REPLICASET_FUNC
+
+GET_INSTANCES_FUNC_BODY = '''
+%s
+
+local servers = require('cartridge').admin_get_servers()
+local ret = {}
+
+for _, s in ipairs(servers) do
+    if s.alias ~= nil then
+        ret[s.alias] = format_server(s)
+    end
+end
+
+return ret
+''' % FORMAT_SERVER_FUNC
+
 DEBUG_MESSAGES = []
 
 
@@ -334,10 +400,27 @@ def filter_none_values(d):
     }
 
 
+def get_cluster_instances(control_console):
+    instances, _ = control_console.eval_res_err(GET_INSTANCES_FUNC_BODY)
+
+    return instances
+
+
+def get_cluster_replicasets(control_console):
+    cluster_replicasets, _ = control_console.eval_res_err(GET_REPLICASETS_FUNC_BODY)
+
+    if not cluster_replicasets:
+        cluster_replicasets = dict()
+
+    return cluster_replicasets
+
+
 class Helpers:
     DEFAULT_RUN_DIR = DEFAULT_RUN_DIR
     DYNAMIC_BOX_CFG_PARAMS = DYNAMIC_BOX_CFG_PARAMS
     MEMORY_SIZE_BOX_CFG_PARAMS = MEMORY_SIZE_BOX_CFG_PARAMS
+    FORMAT_SERVER_FUNC = FORMAT_SERVER_FUNC
+    FORMAT_REPLICASET_FUNC = FORMAT_REPLICASET_FUNC
 
     ModuleRes = ModuleRes
     CartridgeErrorCodes = CartridgeErrorCodes
@@ -357,3 +440,5 @@ class Helpers:
     box_cfg_was_called = staticmethod(box_cfg_was_called)
     get_box_cfg = staticmethod(get_box_cfg)
     filter_none_values = staticmethod(filter_none_values)
+    get_cluster_instances = staticmethod(get_cluster_instances)
+    get_cluster_replicasets = staticmethod(get_cluster_replicasets)

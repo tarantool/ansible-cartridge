@@ -44,6 +44,7 @@ There are additional steps that are not included in the default scenario, but ca
 
 - [set_control_instance](#set_control_instance)
 - [rotate_dists](#rotate_dists)
+- [failover_promote](#failover_promote)
 
 To replace the steps of the role with your own or add new steps, you should use `cartridge_custom_steps_dir`
 or `cartridge_custom_steps` options (see [examples](#examples)).
@@ -635,7 +636,7 @@ Rotate application distributions.
 
 When [multiversion approach](/doc/multiversion.md) is used, each new application
 version is added to `cartridge_app_install_dir`.
-This step removes redundant distribution.
+This step removes redundant distributions.
 
 Input facts (set by config):
 
@@ -648,3 +649,16 @@ Output facts:
 
 - `dists_dirs_to_remove` - list of distribution directories paths that
   were removed.
+
+### failover_promote
+
+*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+
+Input facts (set by role):
+
+- `control_instance` - information about control instance ([more details here](#set_control_instance));
+
+Input facts (set by config):
+
+- `cartridge_failover_promote_params` - promote leaders params. More details in
+  [rolling update doc](#/doc/rolling_update.md).

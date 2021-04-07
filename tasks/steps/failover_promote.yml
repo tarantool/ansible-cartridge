@@ -1,0 +1,14 @@
+---
+
+- tags:
+    - cartridge-config
+  block:
+    - import_tasks: 'blocks/set_control_instance.yml'
+      when: not control_instance
+
+    - name: 'Failover promote'
+      cartridge_failover_promote:
+        failover_promote_params: '{{ cartridge_failover_promote_params }}'
+        console_sock: '{{ control_instance.console_sock }}'
+      run_once: true
+      delegate_to: '{{ control_instance.name }}'
