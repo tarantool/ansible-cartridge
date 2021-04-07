@@ -21,7 +21,7 @@ cd myapp
 ## Pack application
 
 The role supports three types of packages - RPM, DEB and TGZ.
-Use the one you need.
+Choose the one that suits you best
 
 **Note** that version is specified.
 It avoids including commit hash in package name to make configuration
@@ -31,7 +31,6 @@ files determined.
 cartridge pack rpm|deb|tgz --version 1.0.0
 
 # for OS X:
-
 cartridge pack rpm|deb|tgz --version 1.0.0 --use-docker
 ```
 
