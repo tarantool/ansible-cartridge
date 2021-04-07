@@ -1,0 +1,15 @@
+---
+
+- name: Configure instances
+  gather_facts: false
+  any_errors_fatal: true
+  become: true
+  become_user: root
+  hosts: all
+  roles:
+    - tarantool.cartridge
+  vars:
+    cartridge_scenario:
+      - configure_instance
+      - restart_instance
+      - wait_instance_started

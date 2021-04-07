@@ -1,0 +1,14 @@
+---
+
+- name: Bootstrap VShard
+  gather_facts: false
+  any_errors_fatal: true
+  become: true
+  become_user: root
+  hosts: all
+  roles:
+    - tarantool.cartridge
+  vars:
+    cartridge_bootstrap_vshard: true
+    cartridge_scenario:
+      - bootstrap_vshard

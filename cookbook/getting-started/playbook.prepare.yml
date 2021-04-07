@@ -1,0 +1,10 @@
+---
+
+- name: Prepare
+  gather_facts: false
+  any_errors_fatal: true
+  become: true
+  become_user: root
+  hosts: all
+  roles:
+    - tarantool.cartridge

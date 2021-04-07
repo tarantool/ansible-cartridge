@@ -6,7 +6,17 @@ To mark an instance as a stateboard, use the `stateboard` flag.
 
 A stateboard instance is started as a systemd service named `<app_name>-stateboard`.
 
-## Configuring stateboard
+## Scenarios
+
+Stateboard instance is started and configured by the same steps as other
+instances.
+Pre-defined [configure_instances scenario](/doc/scenario.md#scenarios)
+can be used for this.
+
+To specify stateboard parameters in application failover params
+[configure_failover step](/doc/scenario.md#configure_failover) should be used.
+
+## Configuring stateboard instance
 
 Stateboard can be configured using the
 [`config`](/doc/variables.md#instances-configuration)
@@ -47,15 +57,15 @@ all:
       state_provider: stateboard
       stateboard_params:
         uri: 172.19.0.2:3310 # <- STATEBOARD URI
-        password: secret-stateboard # <- STATEBOARD PASSWORD
+        password: stateboard-secret # <- STATEBOARD PASSWORD
 
   hosts:
     # STATEBOARD INSTANCE
     my-stateboard-instance:  # instance name doesn't matter
       stateboard: true  # this matters - instance is a stateboard
       config:
-        listen: '172.19.0.2:3310' # <- STATEBOARD URI
-        password: 'stateboard-secret' # <- STATEBOARD PASSWORD
+        listen: 172.19.0.2:3310 # <- STATEBOARD URI
+        password: stateboard-secret # <- STATEBOARD PASSWORD
 
     # APPLICATION INSTANCES
     core-1:

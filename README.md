@@ -15,6 +15,7 @@ Only `RedHat` and `Debian` OS families are supported.
 * [Quick start](#quick-start)
 * [Using scenario](#using-scenario)
 * [Documentation](#documentation)
+* [Cookbook](#cookbook)
 
 ## Requirements
 
@@ -34,6 +35,9 @@ $ ansible-galaxy install tarantool.cartridge,1.8.3
 
 ## Quick start
 
+Check out the [Getting Started guide](/cookbook/getting-started)
+to learn how to use this role.
+
 You can start two virtual machines using example
 [Vagrantfile](/doc/files/Vagrantfile).
 
@@ -41,7 +45,7 @@ Let's deploy an application with simple topology.
 
 First, pack your application to RPM using `cartridge pack rpm` command.
 
-Then, describe simple topology in `hosts.yml` file:
+Then, describe the topology in `hosts.yml` file:
 
 `hosts.yml`:
 
@@ -161,6 +165,7 @@ For more details about using scenario and available steps, see
 
 ## Documentation
 
+* [Configuration basics](/doc/configuration-basics.md)
 * [Role variables](/doc/variables.md)
 * [Role scenario](/doc/scenario.md)
 * [Application package](/doc/package.md)
@@ -174,3 +179,8 @@ For more details about using scenario and available steps, see
 * [Configuring stateboard](/doc/stateboard.md)
 * [Application config](/doc/app_config.md)
 * [Rolling update](/doc/rolling_update.md)
+
+## Cookbook
+
+Learn [the cookbook](/cookbok/README.md) to know now to use the
+`tarantool.cartridge` role for different purposes.
