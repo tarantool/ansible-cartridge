@@ -22,6 +22,7 @@ PARAMS_THE_SAME_FOR_ALL_HOSTS = [
     'cartridge_scenario',
     'cartridge_custom_steps_dir',
     'cartridge_custom_steps',
+    'cartridge_failover_promote_params',
 ]
 
 CONFIG_REQUIRED_PARAMS = ['advertise_uri']
@@ -73,6 +74,11 @@ ETCD2_PROVIDER_REQUIRED_PARAMS = [
 STATEBOARD_CONFIG_REQUIRED_PARAMS = [
     'listen',
     'password',
+]
+
+ALLOWED_FAILOVER_PROMOTE_PARAMS = [
+    'replicaset_leaders',
+    'force_inconsistency',
 ]
 
 SCHEMA = {
@@ -156,7 +162,11 @@ SCHEMA = {
             'username': str,
             'password': str,
         },
-    }
+    },
+    'cartridge_failover_promote_params': {
+        'replicaset_leaders': dict,
+        'force_inconsistency': bool,
+    },
 }
 
 
@@ -472,6 +482,21 @@ def check_scenario(found_common_params):
                 return f"File '{task['file']}' from custom task '{task}' doesn't exists"
 
 
+def check_failover_promote_params(found_common_params):
+    failover_promote_params = found_common_params.get('cartridge_failover_promote_params')
+    if failover_promote_params is None:
+        return None
+
+    for p in failover_promote_params:
+        if p not in ALLOWED_FAILOVER_PROMOTE_PARAMS:
+            return f"Passed unknown failover promote parameter: '{p}'"
+
+    replicaset_leaders = failover_promote_params.get('replicaset_leaders')
+    if replicaset_leaders is not None:
+        if not all([isinstance(k, str) and isinstance(v, str) for k, v in replicaset_leaders.items()]):
+            return "'replicaset_leaders' should be a string -> string map"
+
+
 def validate_config(params):
     found_replicasets = {}
     found_common_params = {}
@@ -552,6 +577,11 @@ def validate_config(params):
 
     # Scenario
     errmsg = check_scenario(found_common_params)
+    if errmsg is not None:
+        return helpers.ModuleRes(failed=True, msg=errmsg)
+
+    # Failover promote params
+    errmsg = check_failover_promote_params(found_common_params)
     if errmsg is not None:
         return helpers.ModuleRes(failed=True, msg=errmsg)
 

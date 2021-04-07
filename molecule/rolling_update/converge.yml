@@ -59,7 +59,7 @@
     cartridge_scenario:
       - failover_promote
     cartridge_failover_promote_params:
-      replicasets_leaders:
+      replicaset_leaders:
         storage-1: storage-1-replica
         storage-2: storage-2-replica
 

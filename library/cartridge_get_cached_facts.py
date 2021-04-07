@@ -31,6 +31,7 @@ FACTS_BY_TARGETS = {
         'cartridge_enable_tarantool_repo',
         'cartridge_failover',
         'cartridge_failover_params',
+        'cartridge_failover_promote_params',
         'cartridge_install_tarantool_for_tgz',
         'cartridge_keep_num_latest_dists',
         'cartridge_memtx_dir_parent',
