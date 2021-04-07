@@ -1081,7 +1081,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            "'replicaset_leaders' should be a string -> string map",
+            "Variable 'replicaset_leaders' should be of type map(string -> string)",
             res.msg
         )
 

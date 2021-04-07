@@ -494,7 +494,7 @@ def check_failover_promote_params(found_common_params):
     replicaset_leaders = failover_promote_params.get('replicaset_leaders')
     if replicaset_leaders is not None:
         if not all([isinstance(k, str) and isinstance(v, str) for k, v in replicaset_leaders.items()]):
-            return "'replicaset_leaders' should be a string -> string map"
+            return "Variable 'replicaset_leaders' should be of type map(string -> string)"
 
 
 def validate_config(params):
