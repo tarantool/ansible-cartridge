@@ -12,7 +12,6 @@ step-by-step.
 
 * [Vagrant](https://www.vagrantup.com/) with [VirtualBox provider](https://www.vagrantup.com/docs/providers/virtualbox)
   (generally, you can use other Vagrant provider)
-
 * [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html) >= 2.8.0
 * [`Cartridge CLI`](https://github.com/tarantool/cartridge-cli#installation) >= 2.0.0
 
@@ -21,13 +20,13 @@ step-by-step.
 To go through this tutorial you should be in this directory:
 
 ```bash
-cd cook-book/getting-started
+cd cookbook/getting-started
 ```
 
 **Check out the [configuration basics guide](/doc/configuration-basics.md)
 to be sure that you understand the way to write cluster configuration.**
 
-Install role from Ansible Galaxy (use newer version if it's available):
+Install role from Ansible Galaxy:
 
 ```bash
 $ ansible-galaxy install tarantool.cartridge
@@ -39,7 +38,7 @@ Start two virtual machines described in [Vagrantfile](./Vagrantfile):
 vagrant up
 ```
 
-Place [application package](/cook-book/create-packages.md) into current directory or specify right path in `hosts.yml`.
+Place [application package](/cookbook/create-packages.md) into current directory or specify right path in `hosts.yml`.
 
 ## Deploy application and set up topology
 
@@ -105,9 +104,9 @@ Change [inventory](./hosts.yml).
 You can save this diff to file and apply it using `git apply`.
 
 ```diff
-diff --git a/cook-book/getting-started/hosts.yml b/cook-book/getting-started/hosts.yml
---- a/cook-book/getting-started/hosts.yml
-+++ b/cook-book/getting-started/hosts.yml
+diff --git a/cookbook/getting-started/hosts.yml b/cookbook/getting-started/hosts.yml
+--- a/cookbook/getting-started/hosts.yml
++++ b/cookbook/getting-started/hosts.yml
 @@ -23,6 +23,16 @@ all:
          advertise_uri: '172.19.0.3:3301'
          http_port: 8191
@@ -169,7 +168,7 @@ To start and configure instance we can use
 [`configure_instances`](/doc/scenario.md#scenarios) pre-defined scenario.
 But it also contain steps we don't need (like `deliver_package` and `update_package`).
 `update_instance` step is used only with [multiversion approach](/doc/multiversion.md),
-so it can be removed too.
+we don't need it too.
 
 This `cartridge_scenario` is used in [playbook.configure-instances.yml](./playbook.configure-instances.yml):
 

@@ -150,7 +150,9 @@ As you can understand by looking at advertise URIs, instances are placed on two 
 For each instance we should describe connection options:
 
 * `ansible_host` - IP or name of the machine where instance should be placed;
-* `ansible_user` - the user Ansible "logs in" as.
+* `ansible_user` - user name with which to login to the remote server
+  (it's `root` by default, but all examples use Vagrant and `vagrant`
+  user should be specified).
 
 We will use `groups` to specify options common for several instances:
 
