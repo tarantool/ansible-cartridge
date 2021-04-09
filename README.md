@@ -182,5 +182,5 @@ For more details about using scenario and available steps, see
 
 ## Cookbook
 
-Learn [the cookbook](/cookbok/README.md) to know now to use the
+Learn [the cookbook](/cookbook/README.md) to know now to use the
 `tarantool.cartridge` role for different purposes.
