@@ -32,40 +32,13 @@ def check_needs_restart_to_update_package(params):
     return False, None
 
 
-def read_yaml_file_section(control_console, filepath, section):
-    func_body = '''
-        local filepath = ...
-        local file = require('fio').open(filepath)
-        if file == nil then
-            return nil, 'Failed to open instance config file'
-        end
-
-        local buf = {}
-        while true do
-            local val = file:read(1024)
-            if val == nil then
-                error('Failed to read from instance config file')
-            elseif val == '' then
-                break
-            end
-            table.insert(buf, val)
-        end
-        file:close()
-
-        local data = table.concat(buf, '')
-        local ok, ret = pcall(require('yaml').decode, data)
-        if not ok then
-            return nil, 'Failed to decode instance config from YAML'
-        end
-        return ret
-    '''
-
-    sections, err = control_console.eval_res_err(func_body, filepath)
+def read_yaml_file_section(control_console, file_path, section):
+    sections, err = helpers.read_yaml_file(control_console, file_path)
     if err is not None:
         return None, err
 
     if section not in sections:
-        return None, 'File {} does not contain section: {}'.format(filepath, section)
+        return None, 'File {} does not contain section: {}'.format(file_path, section)
 
     return sections[section], None
 

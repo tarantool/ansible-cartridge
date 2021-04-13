@@ -117,6 +117,12 @@ edit_topology_allow_missed_instances: false
 
 cartridge_bootstrap_vshard: false
 cartridge_app_config: null
+cartridge_app_config_file: null
+cartridge_app_config_dir: null
+cartridge_app_config_upload_endpoint: 'cartridge'
+cartridge_app_config_dir_upload_mode: null
+cartridge_app_config_upload_http_port: null
+cartridge_tdg_token: null
 cartridge_auth: null
 cartridge_failover: null  # DEPRECATED
 cartridge_failover_params: null
