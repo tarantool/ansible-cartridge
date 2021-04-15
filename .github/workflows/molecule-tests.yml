@@ -18,7 +18,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '2.7'
       - name: Setup matrix for Molecule tests
         id: setup-matrix
         run: |
@@ -46,7 +46,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '2.7'
 
       - name: Install molecule requirements
         run: |
@@ -100,7 +100,7 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '2.7'
 
       - name: Install molecule requirements
         run: |

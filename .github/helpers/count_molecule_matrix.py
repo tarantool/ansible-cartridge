@@ -6,7 +6,7 @@ import json
 
 def get_matrix_base(ansible_version=None, molecule_command=None, molecule_scenario=None):
     return {
-        'ansible_version': ansible_version or '2.10.0',
+        'ansible_version': ansible_version or '2.8.0',
         'molecule_command': molecule_command or 'test',
         'molecule_scenario': molecule_scenario or 'default',
     }
@@ -38,9 +38,11 @@ def main(event_name, repo_owner, review_state, ref):
         ce_matrix.append(get_ce_params(molecule_scenario='update_cartridge'))
         ce_matrix.append(get_ce_params(molecule_scenario='check_facts'))
         ce_matrix.append(get_ce_params(molecule_scenario='rolling_update'))
+
         ce_matrix.append(get_ce_params(tarantool_version='1.10'))
-        ce_matrix.append(get_ce_params(ansible_version='2.8.0'))
+
         ce_matrix.append(get_ce_params(ansible_version='2.9.0'))
+        ce_matrix.append(get_ce_params(ansible_version='2.10.0'))
         # TODO: Uncomment after fixing the check mode
         # ce_matrix.append(get_ce_version(molecule_command='check'))
 

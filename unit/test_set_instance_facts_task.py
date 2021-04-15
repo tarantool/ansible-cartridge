@@ -14,14 +14,14 @@ class TestSetInstanceFacts(unittest.TestCase):
             try:
                 self.defaults = yaml.safe_load(f)
             except yaml.YAMLError as e:
-                self.fail(f"Impossible to parse 'set_instance_facts.yml': {e}")
+                self.fail("Impossible to parse 'set_instance_facts.yml': %s" % e)
 
         self.set_instance_facts_file = os.path.join(role_dir, 'tasks', 'set_instance_facts.yml')
         with open(self.set_instance_facts_file, 'r') as f:
             try:
                 self.set_instance_facts = yaml.safe_load(f)
             except yaml.YAMLError as e:
-                self.fail(f"Impossible to parse 'set_instance_facts.yml': {e}")
+                self.fail("Impossible to parse 'set_instance_facts.yml': %s" % e)
 
     # This test protects against inattentive people, who do not completely change the variables list
     # (if someone added a variable to defaults, but forgot to set it in 'set_instance_facts' step)

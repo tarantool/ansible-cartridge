@@ -211,7 +211,7 @@ def validate_types(all_vars):
 
 def check_cluster_cookie_symbols(cluster_cookie):
     if len(cluster_cookie) > CLUSTER_COOKIE_MAX_LEN:
-        errmsg = 'Cluster cookie сannot be longer than {}'.format(CLUSTER_COOKIE_MAX_LEN)
+        errmsg = 'Cluster cookie cannot be longer than {}'.format(CLUSTER_COOKIE_MAX_LEN)
         return errmsg
 
     m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, cluster_cookie)
@@ -458,28 +458,30 @@ def check_scenario(found_common_params):
     if scenario is not None:
         for task in scenario:
             if type(task) != str:
-                return f"Incorrect type of task name '{task}'. String expected, got: {type(task)}"
+                return "Incorrect type of task name '%s'. String expected, got: %s" % (task, type(task))
 
     dir_path = found_common_params.get('cartridge_custom_steps_dir')
     if dir_path is not None:
         if not os.path.exists(dir_path):
-            return f"Directory '{dir_path}' from 'cartridge_custom_steps_dir' doesn't exists"
+            return "Directory '%s' from 'cartridge_custom_steps_dir' doesn't exists" % dir_path
 
     custom_steps = found_common_params.get('cartridge_custom_steps')
     if custom_steps is not None:
         for task in custom_steps:
             if type(task) != dict:
-                return f"Incorrect type of custom task '{task}'. Dictionary expected, got: {type(task)}"
+                return "Incorrect type of custom task '%s'. Dictionary expected, got: %s" % (task, type(task))
 
             if task.get('name') is not None and type(task.get('name')) != str:
-                return f"Incorrect type of name from task '{task}'. String expected, got: {type(task['name'])}"
+                return "Incorrect type of name from task '%s'. String expected, got: %s" % (task, type(task['name']))
 
             if not task.get('file'):
-                return f"No path to task file in custom task '{task}'"
+                return "No path to task file in custom task '%s'" % task
             if type(task['file']) != str:
-                return f"Incorrect type of file path from task '{task}'. String expected, got: {type(task['file'])}"
+                return "Incorrect type of file path from task '%s'. String expected, got: %s" % (
+                    task, type(task['file'])
+                )
             if not os.path.exists(task['file']):
-                return f"File '{task['file']}' from custom task '{task}' doesn't exists"
+                return "File '%s' from custom task '%s' doesn't exists" % (task['file'], task)
 
 
 def check_failover_promote_params(found_common_params):
@@ -489,7 +491,7 @@ def check_failover_promote_params(found_common_params):
 
     for p in failover_promote_params:
         if p not in ALLOWED_FAILOVER_PROMOTE_PARAMS:
-            return f"Passed unknown failover promote parameter: '{p}'"
+            return "Passed unknown failover promote parameter: '%s'" % p
 
     replicaset_leaders = failover_promote_params.get('replicaset_leaders')
     if replicaset_leaders is not None:
