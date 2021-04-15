@@ -1,7 +1,9 @@
 ---
 
-- import_tasks: 'set_not_expelled_instance.yml'
+- name: 'BLOCK: Select one not expelled instance'
+  include_tasks: 'set_not_expelled_instance.yml'
   when: not not_expelled_instance
+  run_once: true
 
 - name: 'Select control instance to manage topology and configuration'
   cartridge_get_control_instance:
@@ -18,3 +20,9 @@
     control_instance: '{{ control_instance_res.fact }}'
   run_once: true
   delegate_to: '{{ not_expelled_instance.name }}'
+
+- debug:
+    msg: 'Selected control instance {{ control_instance.name }}'
+  run_once: true
+  delegate_to: localhost
+  become: false

@@ -20,6 +20,7 @@ README.md to use the newest tag with new release
 
 - `failover_promote` step to promote replicasets leaders
 - Allowed to skip user and group creation for tgz
+- Debug control instance and one not expelled instance
 
 ## [1.8.3] - 2021-04-06
 

@@ -1,7 +1,9 @@
 ---
 
-- import_tasks: 'blocks/set_not_expelled_instance.yml'
+- name: 'BLOCK: Select one not expelled instance'
+  include_tasks: 'blocks/set_not_expelled_instance.yml'
   when: not not_expelled_instance
+  run_once: true
 
 - name: 'Connect instance to membership'
   cartridge_connect_to_membership:
