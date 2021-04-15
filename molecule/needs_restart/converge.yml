@@ -71,7 +71,6 @@
         success_msg: 'needs_restart is set'
         that: needs_restart == true
 
-
 - name: 'TGZ: Check needs_restart is not set'
   hosts: instance-tgz-expelled,instance-tgz-restarted-is-set
   become: true
