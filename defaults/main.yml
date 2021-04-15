@@ -60,6 +60,7 @@ cartridge_enable_tarantool_repo: true
 cartridge_multiversion: false
 
 cartridge_install_tarantool_for_tgz: true
+cartridge_create_user_group_for_tgz: true
 
 cartridge_app_user: tarantool
 cartridge_app_group: tarantool
