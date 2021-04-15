@@ -41,7 +41,6 @@
         group: '{{ cartridge_app_group }}'
         mode: '644'
       when:
-        - not stateboard
         - inventory_hostname in single_instances_for_each_machine
 
     - name: 'Place instance config'
