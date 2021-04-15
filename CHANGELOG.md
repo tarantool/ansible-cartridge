@@ -13,6 +13,7 @@ README.md to use the newest tag with new release
 ### Fixed
 
 - Running the role with python 2.7
+- Skipping instances restart when package was updated, but configuration wasn't
 
 ### Added
 
