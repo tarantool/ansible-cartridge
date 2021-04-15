@@ -48,11 +48,12 @@ def get_steps_paths(role_path, custom_steps_dir, custom_steps):
     custom_steps_paths_from_dir = get_steps_paths_from_dir(custom_steps_dir)
     custom_steps_paths = get_steps_paths_from_list(custom_steps)
 
-    return {
-        **role_steps_paths,
-        **custom_steps_paths_from_dir,
-        **custom_steps_paths,
-    }
+    role_steps = {}
+    role_steps.update(role_steps_paths)
+    role_steps.update(custom_steps_paths_from_dir)
+    role_steps.update(custom_steps_paths)
+
+    return role_steps
 
 
 def get_scenario(scenario, role_scenarios, custom_scenarios, scenario_name):
@@ -78,7 +79,7 @@ def get_scenario_steps(params):
     scenario_steps = []
     for step_name in scenario:
         if step_name not in steps_paths:
-            return helpers.ModuleRes(failed=True, msg=f"Unknown step '{step_name}'")
+            return helpers.ModuleRes(failed=True, msg="Unknown step '%s'" % step_name)
 
         scenario_steps.append({
             'name': step_name,

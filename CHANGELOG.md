@@ -10,6 +10,10 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+### Fixed
+
+- Running the role with python 2.7
+
 ### Added
 
 - `failover_promote` step to promote replicasets leaders
