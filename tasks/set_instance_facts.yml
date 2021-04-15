@@ -30,6 +30,7 @@
       cartridge_multiversion: '{{ cartridge_multiversion }}'
 
       cartridge_install_tarantool_for_tgz: '{{ cartridge_install_tarantool_for_tgz }}'
+      cartridge_create_user_group_for_tgz: '{{ cartridge_create_user_group_for_tgz }}'
 
       cartridge_app_user: '{{ cartridge_app_user }}'
       cartridge_app_group: '{{ cartridge_app_group }}'

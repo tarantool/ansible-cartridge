@@ -42,6 +42,9 @@ For more details see [scenario documentation](/doc/scenario.md).
   binary; Tarantool version is got from `VERSION` file that is placed in distribution
   by Cartridge CLI;
 
+* `cartridge_create_user_group_for_tgz` (`boolean`, default: `false`): flag indicates
+  that specified user and group should be created.
+
 * `cartridge_app_user` (`string`, default: `tarantool`): application user;
 * `cartridge_app_group` (`string`, default: `tarantool`): application group;
 

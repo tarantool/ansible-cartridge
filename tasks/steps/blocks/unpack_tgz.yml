@@ -20,6 +20,7 @@
     groups: '{{ cartridge_app_group }}'
     append: true
   any_errors_fatal: true
+  when: cartridge_create_user_group_for_tgz
 
 - name: 'Create directories'
   file:

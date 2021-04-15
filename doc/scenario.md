@@ -324,6 +324,8 @@ Input facts (set by config):
 - `cartridge_app_name` - application name;
 - `cartridge_enable_tarantool_repo` - indicates if Tarantool repository should be enabled;
 - `cartridge_install_tarantool_for_tgz` - indicates if Tarantool should be enabled when use TGZ package;
+- `cartridge_create_user_group_for_tgz` - flag indicates
+  that specified user and group should be created;
 - `cartridge_multiversion` - indicates that multiple package versions is enabled;
 - `cartridge_configure_tmpfiles` - indicates that tmpfiles config should be configured;
 - `cartridge_configure_systemd_unit_files` - indicates that systemd Unit files should be configured;
