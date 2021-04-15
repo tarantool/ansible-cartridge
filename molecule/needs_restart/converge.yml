@@ -59,7 +59,7 @@
     cartridge_scenario:
       - update_instance
 
-- name: 'RPM: Check needs_restart is set'
+- name: 'TGZ: Check needs_restart is set'
   hosts: instance-tgz-1,instance-tgz-2,my-stateboard-tgz
   become: true
   become_user: root
@@ -73,7 +73,7 @@
 
 
 - name: 'TGZ: Check needs_restart is not set'
-  hosts: instance-rpm-expelled,instance-rpm-restarted-is-set
+  hosts: instance-tgz-expelled,instance-tgz-restarted-is-set
   become: true
   become_user: root
   gather_facts: false

@@ -34,8 +34,6 @@ def main(event_name, repo_owner, review_state, ref):
         ce_matrix.append(get_ce_params())
         ce_matrix.append(get_ce_params(molecule_scenario='tasks_from'))
 
-        ce_matrix.append(get_ce_params(molecule_scenario='needs_restart'))
-
     if event_name == 'workflow_dispatch' or review_state == 'approved' or ref == 'refs/heads/master':
         ce_matrix.append(get_ce_params(molecule_scenario='update_cartridge'))
         ce_matrix.append(get_ce_params(molecule_scenario='check_facts'))
