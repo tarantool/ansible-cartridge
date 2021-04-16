@@ -104,7 +104,11 @@ roles: null
 all_rw: null
 vshard_group: null
 weight: null
-edit_topology_timeout: 60
+
+edit_topology_netbox_call_timeout: null
+edit_topology_upload_config_timeout: null
+edit_topology_apply_config_timeout: null
+edit_topology_healthy_timeout: 60
 
 ## Cluster configuration
 

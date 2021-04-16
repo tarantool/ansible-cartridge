@@ -530,7 +530,11 @@ Input facts (set by config):
 - `failover_priority` - failover priority order;
 - `all_rw` - indicates that that all servers in the replicaset should be read-write;
 - `weight` - vshard replicaset weight;
-- `vshard_group` - vshard group.
+- `vshard_group` - vshard group;
+- `edit_topology_netbox_call_timeout` - time in seconds to wait netbox call while editing topology;
+- `edit_topology_upload_config_timeout` - time in seconds to wait config upload while editing topology;
+- `edit_topology_apply_config_timeout` - time in seconds to wait config apply while editing topology;
+- `edit_topology_healthy_timeout` - time in seconds to wait until a cluster become healthy after editing topology.
 
 ### cleanup_expelled
 

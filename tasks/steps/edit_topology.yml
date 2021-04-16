@@ -12,6 +12,9 @@
         module_hostvars: '{{ cached_facts.edit_topology }}'
         play_hosts: '{{ play_hosts }}'
         console_sock: '{{ control_instance.console_sock }}'
-        timeout: '{{ edit_topology_timeout }}'
+        netbox_call_timeout: '{{ edit_topology_netbox_call_timeout }}'
+        upload_config_timeout: '{{ edit_topology_upload_config_timeout }}'
+        apply_config_timeout: '{{ edit_topology_apply_config_timeout }}'
+        healthy_timeout: '{{ edit_topology_healthy_timeout }}'
       run_once: true
       delegate_to: '{{ control_instance.name }}'

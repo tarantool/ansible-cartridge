@@ -21,6 +21,15 @@ README.md to use the newest tag with new release
 - `failover_promote` step to promote replicasets leaders
 - Allowed to skip user and group creation for tgz
 - Debug control instance and one not expelled instance
+- Timeouts for edit topology step:
+  * `edit_topology_netbox_call_timeout`
+  * `edit_topology_upload_config_timeout`
+  * `edit_topology_apply_config_timeout`
+
+### Changed
+
+- Timeout to wait for cluster health after topology editing
+  renamed from `edit_topology_timeout` to `edit_topology_healthy_timeout`
 
 ## [1.8.3] - 2021-04-06
 

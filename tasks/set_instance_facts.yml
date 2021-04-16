@@ -74,7 +74,10 @@
       all_rw: '{{ all_rw }}'
       vshard_group: '{{ vshard_group }}'
       weight: '{{ weight }}'
-      edit_topology_timeout: '{{ edit_topology_timeout }}'
+      edit_topology_netbox_call_timeout: '{{ edit_topology_netbox_call_timeout }}'
+      edit_topology_upload_config_timeout: '{{ edit_topology_upload_config_timeout }}'
+      edit_topology_apply_config_timeout: '{{ edit_topology_apply_config_timeout }}'
+      edit_topology_healthy_timeout: '{{ edit_topology_healthy_timeout }}'
 
       ## Cluster configuration
 
