@@ -96,19 +96,25 @@ def get_deb_info(package_path):
     }
 
 
-def get_tgz_info(package_path, app_name):
+def get_tgz_info(package_path):
     tnt_version = None
 
     with tarfile.open(package_path) as tar:
         names = tar.getnames()
-        if app_name not in names:
-            raise Exception("Package should contain '%s' directory" % app_name)
+        names = list(filter(lambda path: path not in ['.', '..'], names))
 
-        tarantool_binary_path = os.path.join(app_name, 'tarantool')
+        package_name = os.path.commonprefix(names)
+        if package_name == '':
+            raise Exception(
+                "Package should contain one directory with application files. "
+                "Did you create this package using Cartridge CLI?"
+            )
+
+        tarantool_binary_path = os.path.join(package_name, 'tarantool')
         tnt_is_enterprise = tarantool_binary_path in names
 
         if not tnt_is_enterprise:
-            version_file_path = os.path.join(app_name, 'VERSION')
+            version_file_path = os.path.join(package_name, 'VERSION')
             try:
                 member = tar.getmember(version_file_path)
             except KeyError:
@@ -124,7 +130,7 @@ def get_tgz_info(package_path, app_name):
                     break
 
     return {
-        'name': app_name,
+        'name': package_name,
         'tnt_version': tnt_version,
     }
 
@@ -140,11 +146,11 @@ def get_package_info(params):
     elif package_type == 'deb':
         package_info = get_deb_info(package_path)
     elif package_type == 'tgz':
-        package_info = get_tgz_info(package_path, app_name)
+        package_info = get_tgz_info(package_path)
     else:
         return helpers.ModuleRes(failed=True, msg='Unknown package type: %s' % package_type)
 
-    if app_name and package_info['name'] != app_name:
+    if package_type != 'tgz' and app_name and package_info['name'] != app_name:
         msg = 'cartridge_app_name value should be equal to package name. ' + \
               'Found cartridge_app_name: "%s", package name: "%s"' % (app_name, package_info['name'])
         return helpers.ModuleRes(failed=True, msg=msg)
