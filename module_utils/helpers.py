@@ -10,6 +10,7 @@ import textwrap
 from ansible.module_utils.basic import AnsibleModule
 
 DEFAULT_RUN_DIR = '/var/run/tarantool'
+TWOPHASE_OPTION_NAMES = ['netbox_call_timeout', 'upload_config_timeout', 'apply_config_timeout']
 
 # parameters of instance configuration that can be changed dynamically
 DYNAMIC_BOX_CFG_PARAMS = {
@@ -435,12 +436,9 @@ def set_twophase_options(control_console, options):
 
 def set_twophase_options_from_params(control_console, params):
     twophase_options = {}
-    if params.get('netbox_call_timeout') is not None:
-        twophase_options['netbox_call_timeout'] = params['netbox_call_timeout']
-    if params.get('upload_config_timeout') is not None:
-        twophase_options['upload_config_timeout'] = params['upload_config_timeout']
-    if params.get('apply_config_timeout') is not None:
-        twophase_options['apply_config_timeout'] = params['apply_config_timeout']
+    for name in TWOPHASE_OPTION_NAMES:
+        if params.get(name) is not None:
+            twophase_options[name] = params[name]
 
     set_twophase_options(control_console, twophase_options)
 
