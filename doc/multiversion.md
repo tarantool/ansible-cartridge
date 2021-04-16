@@ -21,6 +21,8 @@ Multiversion approach:
 
 ## Configuration
 
+**To enable multiversion approach `cartridge_multiversion: false` should be set.**
+
 All versions of application are placed in
 `{{ cartridge_app_install_dir }}/{{ cartridge_app_name }}-{{ version }}`
 directory.
