@@ -531,10 +531,14 @@ Input facts (set by config):
 - `all_rw` - indicates that that all servers in the replicaset should be read-write;
 - `weight` - vshard replicaset weight;
 - `vshard_group` - vshard group;
-- `edit_topology_netbox_call_timeout` - time in seconds to wait netbox call while editing topology;
-- `edit_topology_upload_config_timeout` - time in seconds to wait config upload while editing topology;
-- `edit_topology_apply_config_timeout` - time in seconds to wait config apply while editing topology;
-- `edit_topology_healthy_timeout` - time in seconds to wait until a cluster become healthy after editing topology.
+- `twophase_netbox_call_timeout` - time in seconds to wait netbox call
+  while editing topology (Cartridge 2.5+ is required);
+- `twophase_upload_config_timeout` - time in seconds to wait config upload
+  while editing topology (Cartridge 2.5+ is required);
+- `twophase_apply_config_timeout` - time in seconds to wait config apply
+  while editing topology (Cartridge 2.5+ is required);
+- `edit_topology_healthy_timeout` - time in seconds to wait until a cluster become healthy after editing topology;
+- [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.
 
 ### cleanup_expelled
 

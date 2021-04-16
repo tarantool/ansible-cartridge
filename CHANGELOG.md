@@ -22,9 +22,9 @@ README.md to use the newest tag with new release
 - Allowed to skip user and group creation for tgz
 - Debug control instance and one not expelled instance
 - Timeouts for edit topology step:
-  * `edit_topology_netbox_call_timeout`
-  * `edit_topology_upload_config_timeout`
-  * `edit_topology_apply_config_timeout`
+  * `twophase_netbox_call_timeout`
+  * `twophase_upload_config_timeout`
+  * `twophase_apply_config_timeout`
 
 ### Changed
 
