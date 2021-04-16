@@ -1,0 +1,84 @@
+---
+
+- name: 'RPM: Deliver and update package'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - deliver_package
+      - update_package
+
+- name: 'RPM: Check needs_restart is set'
+  hosts: instance-rpm-1,instance-rpm-2,my-stateboard-rpm
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Check that needs_restart was set'
+      assert:
+        msg: 'needs_restart should be set'
+        success_msg: 'needs_restart is set'
+        that: needs_restart == true
+
+- name: 'RPM: Check needs_restart is not set'
+  hosts: instance-rpm-expelled,instance-rpm-restarted-is-set
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Check that needs_restart was not set'
+      assert:
+        msg: 'needs_restart should not be set'
+        success_msg: 'needs_restart is none'
+        that: needs_restart is none
+
+- name: 'TGZ: Check needs_restart is not set'
+  hosts: machine_2
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Check that needs_restart was not set'
+      assert:
+        msg: 'needs_restart should not be set'
+        success_msg: 'needs_restart is none'
+        that: needs_restart is none
+
+- name: 'TGZ: Update instances'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - update_instance
+
+- name: 'TGZ: Check needs_restart is set'
+  hosts: instance-tgz-1,instance-tgz-2,my-stateboard-tgz
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Check that needs_restart was set'
+      assert:
+        msg: 'needs_restart should be set'
+        success_msg: 'needs_restart is set'
+        that: needs_restart == true
+
+- name: 'TGZ: Check needs_restart is not set'
+  hosts: instance-tgz-expelled,instance-tgz-restarted-is-set
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Check that needs_restart was not set'
+      assert:
+        msg: 'needs_restart should not be set'
+        success_msg: 'needs_restart is none'
+        that: needs_restart is none
