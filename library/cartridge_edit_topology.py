@@ -8,32 +8,17 @@ argument_spec = {
     'module_hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
     'console_sock': {'required': True, 'type': 'str'},
+    'healthy_timeout': {'required': True, 'type': 'int'},
     'netbox_call_timeout': {'required': False, 'type': 'int'},
     'upload_config_timeout': {'required': False, 'type': 'int'},
     'apply_config_timeout': {'required': False, 'type': 'int'},
-    'healthy_timeout': {'required': True, 'type': 'int'},
 }
 
 edit_topology_func_body = '''
 %s
 %s
 
-local topology_params, opts = ...
-
-local vars = require('cartridge.vars').new('cartridge.twophase')
-if vars.options ~= nil then
-    if opts.netbox_call_timeout ~= nil then
-        vars.options.netbox_call_timeout = opts.netbox_call_timeout
-    end
-    if opts.upload_config_timeout ~= nil then
-        vars.options.upload_config_timeout = opts.upload_config_timeout
-    end
-    if opts.apply_config_timeout ~= nil then
-        vars.options.apply_config_timeout = opts.apply_config_timeout
-    end
-end
-
-local res, err = require('cartridge').admin_edit_topology(topology_params)
+local res, err = require('cartridge').admin_edit_topology(...)
 
 if err ~= nil then
     return nil, err
@@ -396,12 +381,6 @@ def edit_topology(params):
     play_hosts = params['play_hosts']
     healthy_timeout = params['healthy_timeout']
 
-    edit_topology_opts = {
-        'netbox_call_timeout': params.get('netbox_call_timeout'),
-        'upload_config_timeout': params.get('upload_config_timeout'),
-        'apply_config_timeout': params.get('apply_config_timeout'),
-    }
-
     replicasets = get_configured_replicasets(module_hostvars, play_hosts)
     instances = get_instances_to_configure(module_hostvars, play_hosts)
 
@@ -409,6 +388,8 @@ def edit_topology(params):
         return helpers.ModuleRes(changed=False)
 
     control_console = helpers.get_control_console(console_sock)
+
+    helpers.set_twophase_options_from_params(control_console, params)
 
     cluster_instances = helpers.get_cluster_instances(control_console)
     cluster_replicasets = helpers.get_cluster_replicasets(control_console)
@@ -434,7 +415,7 @@ def edit_topology(params):
     topology_changed = False
 
     if topology_params:
-        res, err = control_console.eval_res_err(edit_topology_func_body, topology_params, edit_topology_opts)
+        res, err = control_console.eval_res_err(edit_topology_func_body, topology_params)
         if err is not None:
             return helpers.ModuleRes(failed=True, msg="Failed to edit topology: %s" % err)
 
@@ -476,7 +457,7 @@ def edit_topology(params):
         )
 
     if topology_params:
-        res, err = control_console.eval_res_err(edit_topology_func_body, topology_params, edit_topology_opts)
+        res, err = control_console.eval_res_err(edit_topology_func_body, topology_params)
         if err is not None:
             return helpers.ModuleRes(
                 failed=True,

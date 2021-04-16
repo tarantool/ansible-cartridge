@@ -5,6 +5,9 @@ from ansible.module_utils.helpers import Helpers as helpers
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
     'failover_promote_params': {'required': False, 'type': 'dict'},
+    'netbox_call_timeout': {'required': False, 'type': 'int'},
+    'upload_config_timeout': {'required': False, 'type': 'int'},
+    'apply_config_timeout': {'required': False, 'type': 'int'},
 }
 
 
@@ -22,6 +25,8 @@ def failover_promote(params):
         return helpers.ModuleRes(changed=False)
 
     control_console = helpers.get_control_console(console_sock)
+
+    helpers.set_twophase_options_from_params(control_console, params)
 
     cluster_instances = helpers.get_cluster_instances(control_console)
     cluster_replicasets = helpers.get_cluster_replicasets(control_console)

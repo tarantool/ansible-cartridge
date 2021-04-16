@@ -5,6 +5,9 @@ from ansible.module_utils.helpers import Helpers as helpers
 argument_spec = {
     'app_config': {'required': True, 'type': 'dict'},
     'console_sock': {'required': True, 'type': 'str'},
+    'netbox_call_timeout': {'required': False, 'type': 'int'},
+    'upload_config_timeout': {'required': False, 'type': 'int'},
+    'apply_config_timeout': {'required': False, 'type': 'int'},
 }
 
 
@@ -15,6 +18,8 @@ def section_is_deleted(section):
 def config_app(params):
     control_console = helpers.get_control_console(params['console_sock'])
     config = params['app_config']
+
+    helpers.set_twophase_options_from_params(control_console, params)
 
     system_sections = {
         'topology': True,

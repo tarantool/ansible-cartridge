@@ -13,6 +13,9 @@
     - name: 'Bootstrap VShard'
       cartridge_bootstrap_vshard:
         console_sock: '{{ control_instance.console_sock }}'
+        netbox_call_timeout: '{{ twophase_netbox_call_timeout }}'
+        upload_config_timeout: '{{ twophase_upload_config_timeout }}'
+        apply_config_timeout: '{{ twophase_apply_config_timeout }}'
       register: bootstrap_vshard
       until: not bootstrap_vshard.failed
       retries: 3
