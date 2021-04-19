@@ -5,6 +5,9 @@ from ansible.module_utils.helpers import Helpers as helpers
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
     'failover_params': {'required': False, 'type': 'raw'},
+    'netbox_call_timeout': {'required': False, 'type': 'int'},
+    'upload_config_timeout': {'required': False, 'type': 'int'},
+    'apply_config_timeout': {'required': False, 'type': 'int'},
 }
 
 NEW_FAILOVER_API_CARTRIDGE_VERSION = '2.1.0'
@@ -95,8 +98,10 @@ def manage_failover(params):
         }
 
     control_console = helpers.get_control_console(params['console_sock'])
-    version = get_tarantool_version(control_console)
 
+    helpers.set_twophase_options_from_params(control_console, params)
+
+    version = get_tarantool_version(control_console)
     if version is not None and version >= NEW_FAILOVER_API_CARTRIDGE_VERSION:
         return manage_failover_new(control_console, failover_params)
     else:

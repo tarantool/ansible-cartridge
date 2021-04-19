@@ -98,6 +98,11 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_auth.cookie_renew_age',
                 'cartridge_failover_params.etcd2_params.lock_delay',
                 'cartridge_keep_num_latest_dists',
+                'twophase_netbox_call_timeout',
+                'twophase_upload_config_timeout',
+                'twophase_apply_config_timeout',
+                'edit_topology_timeout',
+                'edit_topology_healthy_timeout',
             },
             list: {
                 'roles',

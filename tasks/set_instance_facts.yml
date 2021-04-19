@@ -74,7 +74,12 @@
       all_rw: '{{ all_rw }}'
       vshard_group: '{{ vshard_group }}'
       weight: '{{ weight }}'
+      twophase_netbox_call_timeout: '{{ twophase_netbox_call_timeout }}'
+      twophase_upload_config_timeout: '{{ twophase_upload_config_timeout }}'
+      twophase_apply_config_timeout: '{{ twophase_apply_config_timeout }}'
+
       edit_topology_timeout: '{{ edit_topology_timeout }}'
+      edit_topology_healthy_timeout: '{{ edit_topology_healthy_timeout }}'
 
       ## Cluster configuration
 

@@ -2,6 +2,7 @@
 
 import json
 import os
+import random
 import re
 import socket
 import textwrap
@@ -9,6 +10,7 @@ import textwrap
 from ansible.module_utils.basic import AnsibleModule
 
 DEFAULT_RUN_DIR = '/var/run/tarantool'
+TWOPHASE_OPTION_NAMES = ['netbox_call_timeout', 'upload_config_timeout', 'apply_config_timeout']
 
 # parameters of instance configuration that can be changed dynamically
 DYNAMIC_BOX_CFG_PARAMS = {
@@ -67,7 +69,8 @@ local function format_replicaset(r)
         vshard_group = r.vshard_group,
         instances = instances,
     }
-end'''
+end
+'''
 
 FORMAT_SERVER_FUNC = '''
 local function format_server(s)
@@ -83,7 +86,8 @@ local function format_server(s)
         zone = s.zone,
         replicaset_uuid = replicaset_uuid,
     }
-end'''
+end
+'''
 
 GET_REPLICASETS_FUNC_BODY = '''
 %s
@@ -115,6 +119,17 @@ end
 return ret
 ''' % FORMAT_SERVER_FUNC
 
+SET_TWOPHASE_OPTIONS_FUNC_BODY = '''
+local vars = require('cartridge.vars').new('cartridge.twophase')
+if vars.options ~= nil then
+    local options = ...
+    for name, value in pairs(options) do
+        vars.options[name] = value
+    end
+end
+'''
+
+RANDOM_PREFIX = random.randint(1, 1000)
 DEBUG_MESSAGES = []
 
 
@@ -324,7 +339,7 @@ def debug(value, key=None):
     # We should add line numbers because Ansible removes the same warnings.
     # So, for example, some `}` characters from a JSON object will not be printed.
     last_line = len(DEBUG_MESSAGES) + 1
-    value = map(lambda v: '[%03d]: %s' % (last_line + v[0], v[1]), enumerate(value))
+    value = map(lambda v: '[%03d%03d]: %s' % (RANDOM_PREFIX, last_line + v[0], v[1]), enumerate(value))
 
     DEBUG_MESSAGES += value
 
@@ -415,6 +430,19 @@ def get_cluster_replicasets(control_console):
     return cluster_replicasets
 
 
+def set_twophase_options(control_console, options):
+    control_console.eval_res_err(SET_TWOPHASE_OPTIONS_FUNC_BODY, options)
+
+
+def set_twophase_options_from_params(control_console, params):
+    twophase_options = {}
+    for name in TWOPHASE_OPTION_NAMES:
+        if params.get(name) is not None:
+            twophase_options[name] = params[name]
+
+    set_twophase_options(control_console, twophase_options)
+
+
 class Helpers:
     DEFAULT_RUN_DIR = DEFAULT_RUN_DIR
     DYNAMIC_BOX_CFG_PARAMS = DYNAMIC_BOX_CFG_PARAMS
@@ -442,3 +470,5 @@ class Helpers:
     filter_none_values = staticmethod(filter_none_values)
     get_cluster_instances = staticmethod(get_cluster_instances)
     get_cluster_replicasets = staticmethod(get_cluster_replicasets)
+    set_twophase_options = staticmethod(set_twophase_options)
+    set_twophase_options_from_params = staticmethod(set_twophase_options_from_params)

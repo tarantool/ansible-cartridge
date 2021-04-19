@@ -16,7 +16,7 @@ def call_edit_topology(console_sock, module_hostvars, play_hosts=None, timeout=6
         'console_sock': console_sock,
         'module_hostvars': module_hostvars,
         'play_hosts': play_hosts,
-        'timeout': timeout,
+        'healthy_timeout': timeout,
     })
 
 

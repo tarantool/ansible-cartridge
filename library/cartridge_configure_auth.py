@@ -5,6 +5,9 @@ from ansible.module_utils.helpers import Helpers as helpers
 argument_spec = {
     'auth': {'required': True, 'type': 'dict'},
     'console_sock': {'required': True, 'type': 'str'},
+    'netbox_call_timeout': {'required': False, 'type': 'int'},
+    'upload_config_timeout': {'required': False, 'type': 'int'},
+    'apply_config_timeout': {'required': False, 'type': 'int'},
 }
 
 
@@ -150,6 +153,8 @@ def users_are_equal(user1, user2):
 def manage_auth(params):
     auth_params = params['auth']
     control_console = helpers.get_control_console(params['console_sock'])
+
+    helpers.set_twophase_options_from_params(control_console, params)
 
     if not auth_params:
         return helpers.ModuleRes(changed=False)

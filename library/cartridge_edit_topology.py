@@ -8,7 +8,10 @@ argument_spec = {
     'module_hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
     'console_sock': {'required': True, 'type': 'str'},
-    'timeout': {'required': True, 'type': 'int'},
+    'healthy_timeout': {'required': True, 'type': 'int'},
+    'netbox_call_timeout': {'required': False, 'type': 'int'},
+    'upload_config_timeout': {'required': False, 'type': 'int'},
+    'apply_config_timeout': {'required': False, 'type': 'int'},
 }
 
 edit_topology_func_body = '''
@@ -376,7 +379,7 @@ def edit_topology(params):
     console_sock = params['console_sock']
     module_hostvars = params['module_hostvars']
     play_hosts = params['play_hosts']
-    timeout = params['timeout']
+    healthy_timeout = params['healthy_timeout']
 
     replicasets = get_configured_replicasets(module_hostvars, play_hosts)
     instances = get_instances_to_configure(module_hostvars, play_hosts)
@@ -385,6 +388,8 @@ def edit_topology(params):
         return helpers.ModuleRes(changed=False)
 
     control_console = helpers.get_control_console(console_sock)
+
+    helpers.set_twophase_options_from_params(control_console, params)
 
     cluster_instances = helpers.get_cluster_instances(control_console)
     cluster_replicasets = helpers.get_cluster_replicasets(control_console)
@@ -425,7 +430,7 @@ def edit_topology(params):
         # If everything is Ok - this call doesn't take a long time, but
         # guarantees that next `edit_topology` call wouldn't fail.
         # If cluster isn't healthy then it's good to show error.
-        if not wait_for_cluster_is_healthy(control_console, timeout):
+        if not wait_for_cluster_is_healthy(control_console, healthy_timeout):
             return helpers.ModuleRes(
                 failed=True, msg="Cluster isn't healthy after editing topology"
             )
@@ -461,7 +466,7 @@ def edit_topology(params):
 
         topology_changed = True
 
-        if not wait_for_cluster_is_healthy(control_console, timeout):
+        if not wait_for_cluster_is_healthy(control_console, healthy_timeout):
             return helpers.ModuleRes(
                 failed=True, msg="Cluster isn't healthy after editing failover priority and configuring instances"
             )

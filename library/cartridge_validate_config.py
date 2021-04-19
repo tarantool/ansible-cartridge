@@ -101,7 +101,11 @@ SCHEMA = {
     'cartridge_multiversion': bool,
     'instance_start_timeout': int,
     'instance_discover_buckets_timeout': int,
+    'twophase_netbox_call_timeout': int,
+    'twophase_upload_config_timeout': int,
+    'twophase_apply_config_timeout': int,
     'edit_topology_timeout': int,
+    'edit_topology_healthy_timeout': int,
     'replicaset_alias': str,
     'failover_priority': [str],
     'roles': [str],
@@ -508,6 +512,12 @@ def validate_config(params):
     for host in params['play_hosts']:
         instance_vars = params['module_hostvars'][host]
 
+        if instance_vars.get('edit_topology_timeout') is not None:
+            warnings.append(
+                "Variable 'edit_topology_timeout' is deprecated since 1.9.0 and will be removed in 2.0.0. "
+                "Use 'edit_topology_healthy_timeout' instead."
+            )
+
         # Validate types
         errmsg = validate_types(instance_vars)
         if errmsg is not None:
@@ -558,8 +568,8 @@ def validate_config(params):
                 return helpers.ModuleRes(failed=True, msg=errmsg)
             if keep_num_latest_dists == 1:
                 warnings.append(
-                    'Using "cartridge_keep_num_latest_dists" equals to 1 can be dangerous. '
-                    'Make sure that there are no instances that use old versions'
+                    "Using 'cartridge_keep_num_latest_dists' equals to 1 can be dangerous. "
+                    "Make sure that there are no instances that use old versions"
                 )
 
     # Authorization params
@@ -589,8 +599,8 @@ def validate_config(params):
 
     if found_common_params.get('cartridge_failover') is not None:
         warnings.append(
-            'Variable `cartridge_failover` is deprecated since 1.3.0 and will be removed in 2.0.0. '
-            'Use `cartridge_failover_params` instead.'
+            "Variable 'cartridge_failover' is deprecated since 1.3.0 and will be removed in 2.0.0. "
+            "Use 'cartridge_failover_params' instead."
         )
 
     return helpers.ModuleRes(changed=False, warnings=warnings)

@@ -530,7 +530,15 @@ Input facts (set by config):
 - `failover_priority` - failover priority order;
 - `all_rw` - indicates that that all servers in the replicaset should be read-write;
 - `weight` - vshard replicaset weight;
-- `vshard_group` - vshard group.
+- `vshard_group` - vshard group;
+- `twophase_netbox_call_timeout` - time in seconds to wait netbox call
+  while two-phase commit (Cartridge 2.5+ is required);
+- `twophase_upload_config_timeout` - time in seconds to wait config upload
+  while two-phase commit (Cartridge 2.5+ is required);
+- `twophase_apply_config_timeout` - time in seconds to wait config apply
+  while two-phase commit (Cartridge 2.5+ is required);
+- `edit_topology_healthy_timeout` - time in seconds to wait until a cluster become healthy after editing topology;
+- [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.
 
 ### cleanup_expelled
 

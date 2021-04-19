@@ -12,5 +12,8 @@
       cartridge_configure_auth:
         auth: '{{ cartridge_auth }}'
         console_sock: '{{ control_instance.console_sock }}'
+        netbox_call_timeout: '{{ twophase_netbox_call_timeout }}'
+        upload_config_timeout: '{{ twophase_upload_config_timeout }}'
+        apply_config_timeout: '{{ twophase_apply_config_timeout }}'
       run_once: true
       delegate_to: '{{ control_instance.name }}'
