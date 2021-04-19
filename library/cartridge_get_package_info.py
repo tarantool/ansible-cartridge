@@ -107,7 +107,7 @@ def get_tgz_info(package_path):
         if package_name == '':
             raise Exception(
                 "Package should contain one directory with application files. "
-                "Did you create this package using Cartridge CLI?"
+                "Please, use package created by Cartridge CLI"
             )
 
         tarantool_binary_path = os.path.join(package_name, 'tarantool')
@@ -150,9 +150,9 @@ def get_package_info(params):
     else:
         return helpers.ModuleRes(failed=True, msg='Unknown package type: %s' % package_type)
 
-    if package_type != 'tgz' and app_name and package_info['name'] != app_name:
-        msg = 'cartridge_app_name value should be equal to package name. ' + \
-              'Found cartridge_app_name: "%s", package name: "%s"' % (app_name, package_info['name'])
+    if package_type != 'tgz' and package_info['name'] != app_name:
+        msg = "Value 'cartridge_app_name' should be equal to package name. " + \
+              "Found 'cartridge_app_name': '%s', package name: '%s'" % (app_name, package_info['name'])
         return helpers.ModuleRes(failed=True, msg=msg)
 
     package_info['type'] = package_type

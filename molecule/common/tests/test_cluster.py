@@ -15,11 +15,14 @@ testinfra_hosts = ansible_runner.get_hosts('all')
 
 scenario_name = os.environ['MOLECULE_SCENARIO_NAME']
 
-APP_NAME = 'myapp'
 HOSTS_PATH = os.path.join('molecule', scenario_name, 'hosts.yml')
 
 inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
 variable_manager = VariableManager(loader=DataLoader(), inventory=inventory)
+
+app_name = 'myapp'
+if scenario_name == 'package_name':
+    app_name = inventory.groups['cluster'].get_vars()['cartridge_app_name']
 
 cluster_cookie = inventory.groups['cluster'].get_vars()['cartridge_cluster_cookie']
 
@@ -162,7 +165,7 @@ def test_services_status_and_config(host):
         multiversion = instance_vars.get('cartridge_multiversion', False)
 
         if not multiversion:
-            dist_dir_path = os.path.join(install_dir, APP_NAME)
+            dist_dir_path = os.path.join(install_dir, app_name)
         else:
             package_path = instance_vars.get('cartridge_package_path')
             package_basename = os.path.basename(package_path)
@@ -176,10 +179,10 @@ def test_services_status_and_config(host):
         assert dist_dir.exists
 
         if not instance_is_stateboard(instance_vars):
-            service_name = '%s@%s' % (APP_NAME, instance_name)
-            instance_id = '%s.%s' % (APP_NAME, instance_name)
+            service_name = '%s@%s' % (app_name, instance_name)
+            instance_id = '%s.%s' % (app_name, instance_name)
         else:
-            instance_id = service_name = '%s-stateboard' % APP_NAME
+            instance_id = service_name = '%s-stateboard' % app_name
 
         if multiversion:
             instance_dist_dir = host.file(os.path.join(instances_dir, instance_id))
@@ -190,8 +193,8 @@ def test_services_status_and_config(host):
         conf_file = host.file(os.path.join(conf_dir, '%s.yml' % instance_id))
         instance_id = instance_id
 
-        default_conf_file = host.file(os.path.join(conf_dir, '%s.yml' % APP_NAME))
-        default_conf_section = APP_NAME
+        default_conf_file = host.file(os.path.join(conf_dir, '%s.yml' % app_name))
+        default_conf_section = app_name
 
         pid_file = host.file(os.path.join(run_dir, '%s.pid' % instance_id))
         console_sock_file = host.file(os.path.join(run_dir, '%s.control' % instance_id))
