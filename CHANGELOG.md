@@ -15,6 +15,7 @@ README.md to use the newest tag with new release
 - Running the role with python 2.7
 - Skipping instances restart when package was updated, but configuration wasn't
 - Missing default config for machine with stateboard
+- Specifying `cartridge_app_name` other than the TGZ package name
 
 ### Added
 
