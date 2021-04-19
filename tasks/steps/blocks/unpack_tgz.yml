@@ -13,6 +13,7 @@
     name: '{{ cartridge_app_group }}'
     state: present
   any_errors_fatal: true
+  when: cartridge_create_user_group_for_tgz
 
 - name: 'Create user {{ cartridge_app_user }} and add to group {{ cartridge_app_group }}'
   user:
