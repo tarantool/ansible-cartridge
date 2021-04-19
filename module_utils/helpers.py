@@ -564,6 +564,7 @@ def patch_clusterwide_config(control_console, new_sections):
         if current_config.get(section_name) != section:
             patch[section_name] = section
 
+    debug(patch, 'patch')
     if not patch:
         return False, None
 

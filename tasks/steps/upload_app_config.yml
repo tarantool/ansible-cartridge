@@ -2,26 +2,28 @@
 
 - run_once: true
   delegate_to: '{{ control_instance.name }}'
-  when: cartridge_app_config_file is not none or cartridge_app_config_dir is not none
+  when: cartridge_app_config_path is not none
   tags: cartridge-config
   block:
     - name: 'Copy application config on remote host'
       any_errors_fatal: true
       copy:
-        src: '{{ cartridge_app_config_file or cartridge_app_config_dir }}'
+        src: '{{ cartridge_app_config_path }}'
         dest: '/tmp/'
-      register: copied_config
-
-    - name: 'Add uploaded config to "temporary_files" fact'
-      set_fact:
-        temporary_files: "{{ temporary_files + [copied_config.dest] }}"
 
     - name: 'Apply application config'
       cartridge_apply_app_config:
-        config_path: '{{ copied_config.dest }}'
+        local_config_path: '{{ cartridge_app_config_path }}'
+        remote_dir: '/tmp/'
         upload_endpoint: '{{ cartridge_app_config_upload_endpoint }}'
-        dir_upload_mode: '{{ cartridge_app_config_dir_upload_mode }}'
         console_sock: '{{ control_instance.console_sock }}'
-        http_port: '{{ cartridge_app_config_upload_http_port }}'
+        http_port: '{{ app_config_upload_http_port }}'
         cluster_cookie: '{{ cartridge_cluster_cookie }}'
         tdg_token: '{{ cartridge_tdg_token }}'
+      register: apply_app_config_res
+
+    - name: 'Add uploaded config to "temporary_files" fact'
+      set_fact:
+        temporary_files: "{{ temporary_files + [apply_app_config_res.fact.dest_path] }}"
+
+    - debug: var=temporary_files
