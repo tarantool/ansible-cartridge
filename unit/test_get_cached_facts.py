@@ -101,6 +101,11 @@ class TestGetCachedFacts(unittest.TestCase):
                 },
                 'instance_3': {},
             },
+            'failover_promote': {
+                'instance_1': {'expelled': True},
+                'instance_2': {'stateboard': False},
+                'instance_3': {},
+            },
         })
 
     def test_validate_config_cached_facts(self):

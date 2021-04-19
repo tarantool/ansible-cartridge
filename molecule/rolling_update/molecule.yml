@@ -18,6 +18,18 @@ platforms:
       - 8100-8199:8100-8199/tcp
     networks:
       - name: cartridge-network
+  - name: vm2
+    image: centos:7
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    published_ports:
+      - 8200-8299:8200-8299/tcp
+    networks:
+      - name: cartridge-network
 
 lint: |
   set -xe
@@ -38,8 +50,10 @@ verifier:
 scenario:
   create_sequence:
     - create
+    - prepare
   converge_sequence:
     - create
+    - prepare
     - converge
   destroy_sequence:
     - destroy
@@ -48,12 +62,14 @@ scenario:
     - destroy
     - syntax
     - create
+    - prepare
     - converge
     - verify
     - destroy
   check_sequence:
     - destroy
     - create
+    - prepare
     - converge
     - check
     - destroy

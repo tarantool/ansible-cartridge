@@ -277,6 +277,11 @@ class Instance:
             require('cartridge').internal.add_membership_members(...)
         ''', members)
 
+    def set_member_status(self, uri, status):
+        self.eval_res_err('''
+            require('cartridge').internal.set_member_status(...)
+        ''', uri, status)
+
     def add_replicaset(self, **kwargs):
         self.eval_res_err('''
             require('cartridge').internal.add_replicaset(...)

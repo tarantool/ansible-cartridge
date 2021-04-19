@@ -1,19 +1,8 @@
 ---
-- name: Deploy cluster with myapp 4.0.0
-  hosts: cluster
-  roles:
-    - ansible-cartridge
-  become: true
-  become_user: root
-  gather_facts: false
-  vars:
-    cartridge_enable_tarantool_repo: true
-    cartridge_configure_systemd_unit_files: true
-    cartridge_configure_tmpfiles: true
-    cartridge_install_tarantool_for_tgz: true
-    cartridge_package_path: ./packages/myapp-4.0.0-0-with-c-2.4.0.tar.gz
 
-- name: Deliver and install myapp 5.0.0
+# DELIVER AND INSTALL NEW PACKAGE
+
+- name: 'Deliver and install myapp 5.0.0'
   hosts: cluster
   roles:
     - ansible-cartridge
@@ -26,7 +15,9 @@
       - update_package
     cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
 
-- name: Update stateboard application version
+# UPDATE STATEBOARD
+
+- name: 'Update stateboard application version'
   hosts: my-stateboard
   roles:
     - ansible-cartridge
@@ -37,8 +28,40 @@
     cartridge_scenario_name: update_and_restart_instance
     cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
 
-- name: Update storages replicas application version
-  hosts: "*storage*replica*"
+- name: 'Check Cartridge version'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    updated_hosts: ['my-stateboard']
+  tasks:
+    - name: 'Get Cartridge version'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: return require('cartridge').VERSION
+
+    - name: 'Check updated instances'
+      assert:
+        msg: 'Should use Cartridge 2.5.0'
+        success_msg: 'Uses Cartridge 2.5.0'
+        that: eval_res[0] == '2.5.0'
+      when: inventory_hostname in updated_hosts
+
+    - name: 'Check not updated instances'
+      assert:
+        msg: 'Should use Cartridge 2.4.0'
+        success_msg: 'Uses Cartridge 2.4.0'
+        that: eval_res[0] == '2.4.0'
+      when: inventory_hostname not in updated_hosts
+
+# UPDATE REPLICAS
+
+- name: 'Update storages replicas application version'
+  hosts: "storage-*-replica*"
   roles:
     - ansible-cartridge
   become: true
@@ -48,8 +71,44 @@
     cartridge_scenario_name: update_and_restart_instance
     cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
 
-- name: Promote a leaders
+- name: 'Check Cartridge version'
   hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    updated_hosts:
+      - my-stateboard
+      - storage-1-replica
+      - storage-1-replica-2
+      - storage-2-replica
+  tasks:
+    - name: 'Get Cartridge version'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: return require('cartridge').VERSION
+
+    - name: 'Check updated instances'
+      assert:
+        msg: 'Should use Cartridge 2.5.0'
+        success_msg: 'Uses Cartridge 2.5.0'
+        that: eval_res[0] == '2.5.0'
+      when: inventory_hostname in updated_hosts
+
+    - name: 'Check not updated instances'
+      assert:
+        msg: 'Should use Cartridge 2.4.0'
+        success_msg: 'Uses Cartridge 2.4.0'
+        that: eval_res[0] == '2.4.0'
+      when: inventory_hostname not in updated_hosts
+
+# PROMOTE LEADERS TO REPLICAS
+
+- name: 'Promote a leaders to machine_2 using force_leaders step'
+  hosts: machine_2
   roles:
     - ansible-cartridge
   become: true
@@ -57,18 +116,40 @@
   gather_facts: false
   vars:
     cartridge_scenario:
-      - failover_promote
-    cartridge_failover_promote_params:
-      replicaset_leaders:
-        storage-1: storage-1-replica
-        storage-2: storage-2-replica
+      - force_leaders
 
-# Note that leaders aren't promoted back.
-# It's done only to have a possibility to check that
-# leaders were promoted on `verify` stage.
+- name: 'Check new replicasets leaders'
+  hosts: core-1
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Get new replicasets leaders'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_file: get_leaders.lua
+
+    - name: 'Debug new leaders'
+      debug: var=eval_res
+
+    - name: 'Check new leaders'
+      assert:
+        msg: 'Promoted bad leaders'
+        success_msg: 'Promoted leaders are OK'
+        that: >-
+          eval_res[0] == {
+            "core-1": "core-1",
+            "storage-1": "storage-1-replica-2",
+            "storage-2": "storage-2-replica"
+          }
+
+# UPDATE LEADERS
 
 - name: Update storages leaders application version
-  hosts: "*storage*leader*"
+  hosts: "storage-*-leader*"
   roles:
     - ansible-cartridge
   become: true
@@ -77,6 +158,44 @@
   vars:
     cartridge_scenario_name: update_and_restart_instance
     cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+
+- name: 'Check Cartridge version'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    updated_hosts:
+      - my-stateboard
+      - storage-1-leader
+      - storage-1-replica
+      - storage-1-replica-2
+      - storage-2-leader
+      - storage-2-replica
+  tasks:
+    - name: 'Get Cartridge version'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: return require('cartridge').VERSION
+
+    - name: 'Check updated instances'
+      assert:
+        msg: 'Should use Cartridge 2.5.0'
+        success_msg: 'Uses Cartridge 2.5.0'
+        that: eval_res[0] == '2.5.0'
+      when: inventory_hostname in updated_hosts
+
+    - name: 'Check not updated instances'
+      assert:
+        msg: 'Should use Cartridge 2.4.0'
+        success_msg: 'Uses Cartridge 2.4.0'
+        that: eval_res[0] == '2.4.0'
+      when: inventory_hostname not in updated_hosts
+
+# UPDATE ROUTERS
 
 - name: Update routers application version
   hosts: "*core*"
@@ -88,6 +207,74 @@
   vars:
     cartridge_scenario_name: update_and_restart_instance
     cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+
+- name: 'Check Cartridge version'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Get Cartridge version'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: return require('cartridge').VERSION
+
+    - name: 'Check that all instances were updated'
+      assert:
+        msg: 'Should use Cartridge 2.5.0'
+        success_msg: 'Uses Cartridge 2.5.0'
+        that: eval_res[0] == '2.5.0'
+
+# PROMOTE LEADERS BACK
+
+- name: 'Promote leaders back using failover_promote step'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - failover_promote
+    cartridge_failover_promote_params:
+      replicaset_leaders:
+        core-1: core-1
+        storage-1: storage-1-leader
+        storage-2: storage-2-leader
+
+- name: 'Check new replicasets leaders'
+  hosts: core-1
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Get new replicasets leaders'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_file: get_leaders.lua
+
+    - name: 'Debug new leaders'
+      debug: var=eval_res
+
+    - name: 'Check new leaders'
+      assert:
+        msg: 'Promoted bad leaders'
+        success_msg: 'Promoted leaders are OK'
+        that: >-
+          eval_res[0] == {
+            "core-1": "core-1",
+            "storage-1": "storage-1-leader",
+            "storage-2": "storage-2-leader"
+          }
+
+# ROTATE DISTS
 
 - name: Remove old package
   hosts: cluster

@@ -509,6 +509,12 @@ function cartridge.internal.add_membership_members(specified_members)
     end
 end
 
+function cartridge.internal.set_member_status(uri, status)
+    local member = vars.membership_members[uri]
+    assert(member ~= nil)
+    member.status = status
+end
+
 function cartridge.internal.add_replicaset(rpl)
     checks({
         alias = 'string',
