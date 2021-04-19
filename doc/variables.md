@@ -103,11 +103,11 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `vshard_group` (`string`): name of vshard group the replicaset belongs to;
 * `weight` (`number`): vshard replicaset weight (matters only if `vshard-storage` role is enabled);
 * `twophase_netbox_call_timeout` (`number`): time in seconds to wait netbox call
-  while editing topology (Cartridge 2.5+ is required);
+  while two-phase commit (Cartridge 2.5+ is required);
 * `twophase_upload_config_timeout` (`number`): time in seconds to wait config upload
-  while editing topology (Cartridge 2.5+ is required);
+  while two-phase commit (Cartridge 2.5+ is required);
 * `twophase_apply_config_timeout` (`number`): time in seconds to wait config apply
-  while editing topology (Cartridge 2.5+ is required);
+  while two-phase commit (Cartridge 2.5+ is required);
 * `edit_topology_healthy_timeout` (`number`, default: `60`): time in seconds to wait until a cluster become
   healthy after editing topology;
 - [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.

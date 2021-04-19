@@ -21,7 +21,7 @@ README.md to use the newest tag with new release
 - `failover_promote` step to promote replicasets leaders
 - Allowed to skip user and group creation for tgz
 - Debug control instance and one not expelled instance
-- Timeouts for edit topology step:
+- Timeouts for two-phase commits:
   * `twophase_netbox_call_timeout`
   * `twophase_upload_config_timeout`
   * `twophase_apply_config_timeout`
