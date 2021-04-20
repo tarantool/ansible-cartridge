@@ -26,6 +26,7 @@ README.md to use the newest tag with new release
   * `twophase_netbox_call_timeout`
   * `twophase_upload_config_timeout`
   * `twophase_apply_config_timeout`
+- `eval` step to eval code on instances
 
 ### Changed
 

@@ -133,3 +133,9 @@ control_instance: null
 temporary_files: []
 needs_restart: null
 not_expelled_instance: null
+
+# Eval params
+
+cartridge_eval_file: null
+cartridge_eval_body: null
+cartridge_eval_args: []

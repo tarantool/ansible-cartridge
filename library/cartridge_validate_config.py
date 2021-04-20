@@ -133,6 +133,9 @@ SCHEMA = {
     'cartridge_keep_num_latest_dists': int,
     'cartridge_remove_temporary_files': bool,
     'zone': str,
+    'cartridge_eval_body': str,
+    'cartridge_eval_file': str,
+    'cartridge_eval_args': list,
     'config': {
         'advertise_uri': str,
         'memtx_memory': int,

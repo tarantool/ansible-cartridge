@@ -1,0 +1,12 @@
+---
+
+- name: Start instances
+  hosts: cluster
+  vars:
+    cartridge_app_name: 'myapp'
+    cartridge_scenario_name: configure_instances
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false

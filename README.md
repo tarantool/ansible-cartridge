@@ -179,6 +179,7 @@ For more details about using scenario and available steps, see
 * [Configuring stateboard](/doc/stateboard.md)
 * [Application config](/doc/app_config.md)
 * [Rolling update](/doc/rolling_update.md)
+* [Eval Lua code on instances](/doc/eval.md)
 
 ## Cookbook
 

@@ -29,6 +29,8 @@ provisioner:
   inventory:
     links:
       hosts: hosts.yml
+  playbooks:
+    prepare: prepare.yml
 
 verifier:
   name: testinfra
@@ -38,8 +40,10 @@ verifier:
 scenario:
   create_sequence:
     - create
+    - prepare
   converge_sequence:
     - create
+    - prepare
     - converge
   destroy_sequence:
     - destroy
@@ -48,6 +52,7 @@ scenario:
     - destroy
     - syntax
     - create
+    - prepare
     - converge
     - idempotence
     - verify
@@ -55,6 +60,7 @@ scenario:
   check_sequence:
     - destroy
     - create
+    - prepare
     - converge
     - check
     - destroy
