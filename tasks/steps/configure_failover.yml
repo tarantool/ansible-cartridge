@@ -8,7 +8,7 @@
       run_once: true
       when: not control_instance
 
-    - name: 'Configure failover'
+    - name: 'Configure failover via {{ control_instance.name }}'
       cartridge_configure_failover:
         failover_params: '{{ cartridge_failover_params | default(cartridge_failover) }}'
         console_sock: '{{ control_instance.console_sock }}'
