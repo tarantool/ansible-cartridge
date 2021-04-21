@@ -15,9 +15,3 @@
   run_once: true
   delegate_to: localhost
   become: false
-
-- debug:
-    msg: 'Selected one not expelled instance {{ not_expelled_instance.name }}'
-  run_once: true
-  delegate_to: localhost
-  become: false

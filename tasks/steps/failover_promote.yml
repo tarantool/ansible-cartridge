@@ -8,7 +8,7 @@
       run_once: true
       when: not control_instance
 
-    - name: 'Failover promote'
+    - name: 'Failover promote via {{ control_instance.name }}'
       cartridge_failover_promote:
         failover_promote_params: '{{ cartridge_failover_promote_params }}'
         console_sock: '{{ control_instance.console_sock }}'

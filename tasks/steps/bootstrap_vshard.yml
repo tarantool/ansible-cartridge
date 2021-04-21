@@ -10,7 +10,7 @@
       run_once: true
       when: not control_instance
 
-    - name: 'Bootstrap VShard'
+    - name: 'Bootstrap VShard via {{ control_instance.name }}'
       cartridge_bootstrap_vshard:
         console_sock: '{{ control_instance.console_sock }}'
         netbox_call_timeout: '{{ twophase_netbox_call_timeout }}'

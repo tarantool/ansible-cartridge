@@ -8,7 +8,7 @@
       run_once: true
       when: not control_instance
 
-    - name: 'Configure application config'
+    - name: 'Configure application config via {{ control_instance.name }}'
       cartridge_configure_app_config:
         app_config: '{{ cartridge_app_config }}'
         console_sock: '{{ control_instance.console_sock }}'

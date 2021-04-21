@@ -1,11 +1,9 @@
 ---
 
-- name: 'BLOCK: Select one not expelled instance'
-  include_tasks: 'blocks/set_not_expelled_instance.yml'
+- import_tasks: 'blocks/set_not_expelled_instance.yml'
   when: not not_expelled_instance
-  run_once: true
 
-- name: 'Connect instance to membership'
+- name: 'Connect instance to membership via {{ not_expelled_instance.name }}'
   cartridge_connect_to_membership:
     console_sock: '{{ not_expelled_instance.console_sock }}'
     module_hostvars: '{{ cached_facts.connect_to_membership }}'

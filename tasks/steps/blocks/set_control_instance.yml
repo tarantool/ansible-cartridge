@@ -1,11 +1,9 @@
 ---
 
-- name: 'BLOCK: Select one not expelled instance'
-  include_tasks: 'set_not_expelled_instance.yml'
+- import_tasks: 'set_not_expelled_instance.yml'
   when: not not_expelled_instance
-  run_once: true
 
-- name: 'Select control instance to manage topology and configuration'
+- name: 'Select control instance to manage topology and configuration via {{ not_expelled_instance.name }}'
   cartridge_get_control_instance:
     module_hostvars: '{{ cached_facts.control_instance }}'
     play_hosts: '{{ play_hosts }}'
@@ -20,9 +18,3 @@
     control_instance: '{{ control_instance_res.fact }}'
   run_once: true
   delegate_to: '{{ not_expelled_instance.name }}'
-
-- debug:
-    msg: 'Selected control instance {{ control_instance.name }}'
-  run_once: true
-  delegate_to: localhost
-  become: false
