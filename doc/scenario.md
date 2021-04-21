@@ -45,6 +45,7 @@ There are additional steps that are not included in the default scenario, but ca
 - [set_control_instance](#set_control_instance)
 - [rotate_dists](#rotate_dists)
 - [failover_promote](#failover_promote)
+- [force_leaders](#force_leaders)
 - [eval](#eval)
 - [stop_instance](#stop_instance)
 - [start_instance](#start_instance)
@@ -666,6 +667,9 @@ Output facts:
 
 ### failover_promote
 
+Promotes leaders according to specified
+[`cartridge_failover_promote_params`](/doc/rolling_update.md#leaders-promotion).
+
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
 Input facts (set by role):
@@ -675,7 +679,25 @@ Input facts (set by role):
 Input facts (set by config):
 
 - `cartridge_failover_promote_params` - promote leaders params. More details in
-  [rolling update doc](/doc/rolling_update.md).
+  [rolling update doc](/doc/rolling_update.md#leaders-promotion).
+
+### force_leaders
+
+Promotes leaders to current play hosts (instances specified in limit).
+More details in [rolling update doc](/doc/rolling_update.md).
+
+*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+
+Input facts (set by role):
+
+- `control_instance` - information about control instance ([more details here](#set_control_instance));
+
+Input facts (set by config):
+
+- `cartridge_failover_promote_params` - promote leaders params.
+  In fact, only `force_inconsistency` paramter is used (leaders are get from specified
+  play hosts).
+  More details in [rolling update doc](/doc/rolling_update.md).
 
 ### eval
 

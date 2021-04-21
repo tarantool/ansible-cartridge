@@ -10,16 +10,88 @@ usual RPM/DEB packages.
 
 ## Leaders promotion
 
-[`failover_promote`](/doc/scenario.md#failover_promote) step can be used
-for leaders promotion only if stateful failover is enabled.
+[`failover_promote`](/doc/scenario.md#failover_promote) and
+[`force_leaders`](/doc/scenario.md#force_leaders)
+steps can be used for leaders promotion only if stateful failover is enabled.
 
-To specify leaders that should be promoted `failover_promote_params` variable
+The main difference of these steps is:
+
+* `failover_promote` - promotes leaders according to specified parameters;
+* `force_leaders` - promotes leaders to current play hosts (instances specified
+  in limit); can be useful to switch leaders to specified data center.
+
+### Using `failover_promote` step
+
+To specify leaders that should be promoted `cartridge_failover_promote_params` variable
 should be used. It's a dictionary with fields:
 
-- `replicaset_leaders` (`dict`): describes the mapping between replica sets
+* `replicaset_leaders` (`dict`): describes the mapping between replica sets
 and leaders aliases;
-- `force_inconsistency` (`bool`): make promotion forcefully, don't wait for the
+* `force_inconsistency` (`bool`): make promotion forcefully, don't wait for the
 consistent switchover.
+
+This playbook says: **Promote leaders directly to these instances**:
+
+```yml
+- name: Promote storages leaders to replicas
+  hosts: all
+  roles:
+    - tarantool.cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - failover_promote
+    cartridge_failover_promote_params:
+      force_inconsistency: true
+      replicasets_leaders:
+        storage-1: storage-1-replica
+        storage-2: storage-2-replica
+```
+
+### Using `force_leaders` step
+
+To specify leaders that should be promoted Ansible limit is used.
+`cartridge_failover_promote_params` variable can be used to specify other
+parameters:
+
+* `force_inconsistency` (`bool`): make promotion forcefully, don't wait for the
+consistent switchover.
+
+For example, you want to switch all leaders to data center 1.
+You have group `DC1` in your inventory that describes which instances belong to
+this data center.
+
+Just specify this group in `hosts` parameters of the play or use `--limit` option
+on playbook running.
+
+Leaders are chosen by these rules:
+
+* each play host that doesn't belong to replicaset is ignored;
+* all instances that has status other than `alive` are ignored;
+* if play hosts contain two instances from one replicaset, then one with higher
+  failover priority is chosen;
+* if all instances on one replicaset present in play hosts aren't alive, promotion
+  is performed for the rest instances, but task fails with critical warnings;
+
+This playbook says: **Promote leaders to instances from "DC1" group**:
+
+```yml
+- name: Promote storages leaders instances from DC1
+  hosts: DC1
+  roles:
+    - tarantool.cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - failover_promote
+    # can be additionally specified:
+    cartridge_failover_promote_params:
+      force_inconsistency: true
+```
 
 ## Rolling update: Plan
 
