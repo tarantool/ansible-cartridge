@@ -52,21 +52,23 @@ def get_configured_replicasets(module_hostvars, play_hosts):
         if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
             continue
 
-        if 'replicaset_alias' in instance_vars:
-            replicaset_alias = instance_vars['replicaset_alias']
-            if replicaset_alias not in replicasets:
-                replicasets.update({
-                    replicaset_alias: {
-                        'instances': [],
-                        'roles': instance_vars.get('roles', None),
-                        'failover_priority': instance_vars.get('failover_priority', None),
-                        'all_rw': instance_vars.get('all_rw', None),
-                        'weight': instance_vars.get('weight', None),
-                        'vshard_group': instance_vars.get('vshard_group', None),
-                        'alias': replicaset_alias,
-                    }
-                })
-            replicasets[replicaset_alias]['instances'].append(instance_name)
+        if instance_vars.get('replicaset_alias') is None:
+            continue
+
+        replicaset_alias = instance_vars['replicaset_alias']
+        if replicaset_alias not in replicasets:
+            replicasets.update({
+                replicaset_alias: {
+                    'instances': [],
+                    'roles': instance_vars.get('roles', None),
+                    'failover_priority': instance_vars.get('failover_priority', None),
+                    'all_rw': instance_vars.get('all_rw', None),
+                    'weight': instance_vars.get('weight', None),
+                    'vshard_group': instance_vars.get('vshard_group', None),
+                    'alias': replicaset_alias,
+                }
+            })
+        replicasets[replicaset_alias]['instances'].append(instance_name)
 
     return replicasets
 
