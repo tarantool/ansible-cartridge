@@ -1,6 +1,10 @@
 ---
 
 - tags: cartridge-instances
+  when:
+    - not expelled
+    - restarted is none
+    - needs_restart is none
   block:
     - name: 'Check if instance restart is required'
       cartridge_get_needs_restart:
@@ -18,12 +22,7 @@
       set_fact:
         needs_restart: '{{ needs_restart_res.fact }}'
 
-  when:
-    - not expelled
-    - restarted is none
-    - needs_restart is none
-
-- name: 'Restart instance systemd service if needed'
+- name: 'Restart and enable instance systemd service if needed'
   systemd:
     name: '{{ instance_info.systemd_service }}'
     state: restarted

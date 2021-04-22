@@ -427,7 +427,7 @@ Output facts:
 
 ### restart_instance
 
-Restart instance if it should be restarted.
+Restart and enable instance systemd service if it should be restarted.
 
 Input facts (set by role):
 
@@ -710,7 +710,7 @@ Input facts (set by role):
 
 ### restart_instance_force
 
-Restart instance systemd service without any conditions.
+Restart and enable instance systemd service without any conditions.
 
 Input facts (set by role):
 
