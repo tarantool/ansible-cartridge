@@ -17,6 +17,12 @@ README.md to use the newest tag with new release
 - Missing default config for machine with stateboard
 - Specifying `cartridge_app_name` other than the TGZ package name
 - Creating unnamed replicasets with instances without `replicaset_alias` set
+- Getting control instance:
+  - Now one not expelled instance should also be alive; it's checked
+    by creating connection using instances advertise URIs
+  - Control instance should be alive
+  - I there are some joined instances, but no one of them isn't alive,
+    getting control instance fails.
 
 ### Added
 

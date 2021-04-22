@@ -24,11 +24,9 @@ def get_twophase_commit_versions(control_console, advertise_uris):
         local connections = {}
         for i, uri in ipairs(uris) do
             local conn, err = pool.connect(uri)
-            if err ~= nil then
-                return nil, tostring(err)
+            if err == nil then
+                table.insert(connections, conn)
             end
-
-            table.insert(connections, conn)
         end
 
         local futures = {}
@@ -85,32 +83,51 @@ def get_control_instance(params):
         return require('membership').members()
     ''')
 
+    alive_members = set()
+    found_joined_instances = False
+
     for uri, member in sorted(members.items()):
         if 'payload' not in member or not member['payload']:
             return helpers.ModuleRes(failed=True, msg='Instance %s does not contain payload' % uri)
 
+        member_payload = member['payload']
+        if member_payload.get('alias') is None:
+            return helpers.ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
+
+        instance_name = member_payload['alias']
+        if member.get('status') == 'alive':
+            alive_members.add(instance_name)
+
+        if member_payload.get('uuid') is None:
+            continue
+
+        if instance_name not in module_hostvars:
+            continue
+
+        found_joined_instances = True
+
         if member.get('status') != 'alive':
             continue
 
-        member_payload = member['payload']
-        if member_payload.get('uuid') is not None:
-            if member_payload.get('alias') is None:
-                return helpers.ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
-
-            instance_name = member_payload['alias']
-            if instance_name not in module_hostvars:
-                continue
-
-            control_instance_candidates.append(instance_name)
+        control_instance_candidates.append(instance_name)
 
     if not control_instance_candidates:
+        if found_joined_instances:
+            return helpers.ModuleRes(
+                failed=True,
+                msg="All instances joined to cluster aren't alive"
+            )
+
         for instance_name in play_hosts:
+            if instance_name not in alive_members:
+                continue
+
             instance_vars = module_hostvars[instance_name]
 
             if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
                 continue
 
-            if 'replicaset_alias' in instance_vars:
+            if instance_vars.get('replicaset_alias'):
                 control_instance_candidates.append(instance_name)
 
     if not control_instance_candidates:

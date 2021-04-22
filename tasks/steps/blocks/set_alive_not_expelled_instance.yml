@@ -1,0 +1,14 @@
+---
+
+- name: 'Select one not expelled instance'
+  cartridge_get_alive_not_expelled_instance:
+    module_hostvars: '{{ cached_facts.alive_not_expelled_instance }}'
+    play_hosts: '{{ play_hosts }}'
+    app_name: '{{ cartridge_app_name }}'
+  run_once: true
+  register: alive_not_expelled_instance_res
+
+- name: 'Set "alive_not_expelled_instance" fact'
+  set_fact:
+    alive_not_expelled_instance: '{{ alive_not_expelled_instance_res.fact }}'
+  run_once: true

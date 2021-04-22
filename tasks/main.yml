@@ -6,7 +6,7 @@
     control_instance: null
     temporary_files: []
     needs_restart: null
-    not_expelled_instance: null
+    alive_not_expelled_instance: null
   run_once: true
   delegate_to: localhost
   become: false

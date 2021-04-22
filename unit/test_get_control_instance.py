@@ -60,6 +60,26 @@ SOCK2 = os.path.join(RUN_DIR2, '%s.%s.control' % (APP_NAME, ALIAS2))
 SOCK3 = os.path.join(RUN_DIR3, '%s.%s.control' % (APP_NAME, ALIAS3))
 
 
+def get_instance_hostvars(alias, replicaset_alias=None):
+    return {
+        alias: {
+            'config': {'advertise_uri': '%s-uri' % alias},
+            'replicaset_alias': replicaset_alias,
+        }
+    }
+
+
+def get_member(alias, with_uuid=False, status=None):
+    member = {'uri': '%s-uri' % alias, 'alias': alias}
+    if with_uuid:
+        member.update({'uuid': '%s-uuid' % alias})
+
+    if status is not None:
+        member.update({'status': status})
+
+    return member
+
+
 def set_membership_members(instance, specified_members, with_payload=True):
     members = {}
 
@@ -263,21 +283,6 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertTrue(res.failed, res.fact)
         self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
 
-    def test_instance_is_not_alive(self):
-        hostvars = {
-            ALIAS1: {},
-            ALIAS2: {},
-        }
-
-        set_membership_members(self.instance, [
-            {'uri': URI1, 'alias': ALIAS1},
-            {'uri': URI2, 'alias': ALIAS2, 'uuid': UUID3, 'status': 'dead'},  # has UUID but dead
-        ])
-
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
-        self.assertTrue(res.failed, res.fact)
-        self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
-
     def test_twophase_commit_versions(self):
         hostvars = {
             ALIAS1: {
@@ -346,6 +351,83 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': ALIAS2,
             'console_sock': SOCK2,
+        })
+
+    def test_dead_instances(self):
+        # first joined instance is dead
+        hostvars = {}
+        hostvars.update(get_instance_hostvars('joined-1', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('joined-2', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('not-joined-2', 'some-rpl'))
+
+        set_membership_members(self.instance, [
+            get_member('joined-1', with_uuid=True, status='dead'),
+            get_member('joined-2', with_uuid=True),
+            get_member('not-joined-1'),
+            get_member('not-joined-2'),
+        ])
+
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.fact, {
+            'name': 'joined-2',
+            'console_sock': '/var/run/tarantool/myapp.joined-2.control',
+        })
+
+        # all joined instances are dead
+        hostvars = {}
+        hostvars.update(get_instance_hostvars('joined-1', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('joined-2', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('not-joined-2', 'some-rpl'))
+
+        set_membership_members(self.instance, [
+            get_member('joined-1', with_uuid=True, status='dead'),
+            get_member('joined-2', with_uuid=True, status='suspect'),
+            get_member('not-joined-1'),
+            get_member('not-joined-2'),
+        ])
+
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        self.assertTrue(res.failed)
+        self.assertEqual(res.msg, "All instances joined to cluster aren't alive")
+
+        # no joined, first unjoined instance is dead
+        hostvars = {}
+        hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('not-joined-2', 'some-rpl'))
+
+        set_membership_members(self.instance, [
+            get_member('not-joined-1', status='dead'),
+            get_member('not-joined-2'),
+        ])
+
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.fact, {
+            'name': 'not-joined-2',
+            'console_sock': '/var/run/tarantool/myapp.not-joined-2.control',
+        })
+
+        # no joined, first unjoined instance is dead,
+        # second doesn't have replicaset alias
+        hostvars = {}
+        hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('not-joined-2'))
+        hostvars.update(get_instance_hostvars('not-joined-3', 'some-rpl'))
+
+        set_membership_members(self.instance, [
+            get_member('not-joined-1', status='dead'),
+            get_member('not-joined-2'),
+            get_member('not-joined-3'),
+        ])
+
+        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.fact, {
+            'name': 'not-joined-3',
+            'console_sock': '/var/run/tarantool/myapp.not-joined-3.control',
         })
 
     def tearDown(self):

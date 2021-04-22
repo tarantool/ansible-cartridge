@@ -1,20 +1,20 @@
 ---
 
-- import_tasks: 'set_not_expelled_instance.yml'
-  when: not not_expelled_instance
+- import_tasks: 'set_alive_not_expelled_instance.yml'
+  when: not alive_not_expelled_instance
 
-- name: 'Select control instance to manage topology and configuration via {{ not_expelled_instance.name }}'
+- name: 'Select control instance to manage topology and configuration via {{ alive_not_expelled_instance.name }}'
   cartridge_get_control_instance:
     module_hostvars: '{{ cached_facts.control_instance }}'
     play_hosts: '{{ play_hosts }}'
-    console_sock: '{{ not_expelled_instance.console_sock }}'
+    console_sock: '{{ alive_not_expelled_instance.console_sock }}'
     app_name: '{{ cartridge_app_name }}'
   run_once: true
-  delegate_to: '{{ not_expelled_instance.name }}'
+  delegate_to: '{{ alive_not_expelled_instance.name }}'
   register: control_instance_res
 
 - name: 'Set "control_instance" fact'
   set_fact:
     control_instance: '{{ control_instance_res.fact }}'
   run_once: true
-  delegate_to: '{{ not_expelled_instance.name }}'
+  delegate_to: '{{ alive_not_expelled_instance.name }}'

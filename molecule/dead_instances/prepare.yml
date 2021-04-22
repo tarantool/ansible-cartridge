@@ -1,0 +1,21 @@
+---
+
+- name: Start instances
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: configure_instances
+
+- name: Join all instances except instance-5-not-joined
+  hosts: cluster:!instance-5-not-joined
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: configure_topology

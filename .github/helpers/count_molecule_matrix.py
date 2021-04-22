@@ -42,6 +42,7 @@ def main(event_name, repo_owner, review_state, ref):
         ce_matrix.append(get_ce_params(molecule_scenario='package_name'))
         ce_matrix.append(get_ce_params(molecule_scenario='eval'))
         ce_matrix.append(get_ce_params(molecule_scenario='start_stop'))
+        ce_matrix.append(get_ce_params(molecule_scenario='dead_instances'))
 
         ce_matrix.append(get_ce_params(tarantool_version='1.10'))
 
