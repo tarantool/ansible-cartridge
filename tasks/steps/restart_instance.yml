@@ -1,6 +1,28 @@
 ---
 
-- name: 'Restart instance systemd service'
+- tags: cartridge-instances
+  when:
+    - not expelled
+    - restarted is none
+    - needs_restart is none
+  block:
+    - name: 'Check if instance restart is required'
+      cartridge_get_needs_restart:
+        app_name: '{{ cartridge_app_name }}'
+        config: '{{ config }}'
+        cartridge_defaults: '{{ cartridge_defaults }}'
+        cluster_cookie: '{{ cartridge_cluster_cookie }}'
+        stateboard: '{{ stateboard }}'
+        instance_info: '{{ instance_info }}'
+        check_package_updated: true
+        check_config_updated: true
+      register: needs_restart_res
+
+    - name: 'Set "needs_restart" fact'
+      set_fact:
+        needs_restart: '{{ needs_restart_res.fact }}'
+
+- name: 'Restart and enable instance systemd service if needed'
   systemd:
     name: '{{ instance_info.systemd_service }}'
     state: restarted

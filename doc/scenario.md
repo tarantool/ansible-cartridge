@@ -46,6 +46,9 @@ There are additional steps that are not included in the default scenario, but ca
 - [rotate_dists](#rotate_dists)
 - [failover_promote](#failover_promote)
 - [eval](#eval)
+- [stop_instance](#stop_instance)
+- [start_instance](#start_instance)
+- [restart_instance_force](#restart_instance_force)
 
 To replace the steps of the role with your own or add new steps, you should use `cartridge_custom_steps_dir`
 or `cartridge_custom_steps` options (see [examples](#examples)).
@@ -424,7 +427,7 @@ Output facts:
 
 ### restart_instance
 
-Restart instance if it should be restarted.
+Restart and enable instance systemd service if it should be restarted.
 
 Input facts (set by role):
 
@@ -672,11 +675,11 @@ Input facts (set by role):
 Input facts (set by config):
 
 - `cartridge_failover_promote_params` - promote leaders params. More details in
-  [rolling update doc](#/doc/rolling_update.md).
+  [rolling update doc](/doc/rolling_update.md).
 
 ### eval
 
-[Eval code](#/doc/eval.md) on instance.
+[Eval code](/doc/eval.md) on instance.
 
 Input facts (set by role):
 
@@ -688,3 +691,27 @@ Input facts (set by config):
   `cartridge_eval_body` is specified);
 - `cartridge_eval_body` - code to eval;
 - `cartridge_eval_args` - function arguments.
+
+### stop_instance
+
+Stop and disable instance systemd service.
+
+Input facts (set by role):
+
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+
+### start_instance
+
+Start and enable instance systemd service.
+
+Input facts (set by role):
+
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+
+### restart_instance_force
+
+Restart and enable instance systemd service without any conditions.
+
+Input facts (set by role):
+
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).

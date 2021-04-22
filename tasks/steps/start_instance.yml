@@ -1,0 +1,8 @@
+---
+
+- name: 'Start and enable instance systemd service'
+  systemd:
+    name: '{{ instance_info.systemd_service }}'
+    state: started
+    enabled: true
+  tags: cartridge-instances

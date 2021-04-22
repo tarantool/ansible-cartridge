@@ -1,0 +1,117 @@
+---
+
+- name: 'Restart all instances except one'
+  hosts: cluster:!instance-started
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - restart_instance
+      - wait_instance_started
+
+- name: 'Start instance-started instance'
+  hosts: instance-started
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - start_instance
+      - wait_instance_started
+
+- name: 'Set up topology'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - edit_topology
+
+- name: 'Stop instance'
+  hosts: instance-stopped
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - stop_instance
+
+- name: 'Set runtime variable for instances'
+  hosts: instance-restarted,instance-restarted-force
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - eval
+    cartridge_eval_body: |
+      rawset(_G, 'some_runtime_variable', true)
+
+- name: 'Restart instance forcely'
+  hosts: instance-restarted-force
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - restart_instance_force
+
+- name: 'Restart instance if needed'
+  hosts: instance-restarted
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - restart_instance
+
+- name: 'Get runtime variable for instances'
+  hosts: instance-restarted,instance-restarted-force
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - eval
+    cartridge_eval_body: |
+      return rawget(_G, 'some_runtime_variable') or box.NULL
+
+- name: 'Check runtime variable for instances'
+  hosts: instance-restarted,instance-restarted-force
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Check that runtime variable for forcely restarted instance was discarded'
+      assert:
+        msg: "Instance wasn't restarted"
+        success_msg: 'Runtime variable for forcely restarted instance was discarded'
+        that: >-
+          eval_res[0] == none
+      when: inventory_hostname == 'instance-restarted-force'
+
+    - name: "Check that runtime variable for restarted instance wasn't discarded"
+      assert:
+        msg: "Instance was restarted"
+        success_msg: "Runtime variable for restarted instance wasn't discarded"
+        that: >-
+          eval_res[0] != none
+      when: inventory_hostname == 'instance-restarted'
