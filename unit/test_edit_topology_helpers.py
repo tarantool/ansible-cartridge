@@ -37,6 +37,9 @@ class TestGetConfiguredReplicasets(unittest.TestCase):
             'instance-2': {
                 'replicaset_alias': 'replicaset-1',
             },
+            'instance-none-alias': {  # alias is none
+                'replicaset_alias': None,
+            },
             'not-play-host': {  # not in play hosts
                 'replicaset_alias': 'replicaset-1',
             },
@@ -48,7 +51,9 @@ class TestGetConfiguredReplicasets(unittest.TestCase):
                 'stateboard': True,
             },
         }
-        play_hosts = ['instance-expelled', 'instance-2', 'instance-4', 'instance-stateboard']
+        play_hosts = [
+            'instance-expelled', 'instance-2', 'instance-4', 'instance-stateboard', 'instance-none-alias'
+        ]
 
         replicasets = call_get_configured_replicasets(hostvars, play_hosts)
         self.assertEqual(len(replicasets), 1)
