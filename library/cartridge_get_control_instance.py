@@ -24,9 +24,11 @@ def get_twophase_commit_versions(control_console, advertise_uris):
         local connections = {}
         for i, uri in ipairs(uris) do
             local conn, err = pool.connect(uri)
-            if err == nil then
-                table.insert(connections, conn)
+            if err ~= nil then
+                return nil, tostring(err)
             end
+
+            table.insert(connections, conn)
         end
 
         local futures = {}
@@ -87,15 +89,16 @@ def get_control_instance(params):
     found_joined_instances = False
 
     for uri, member in sorted(members.items()):
-        if 'payload' not in member or not member['payload']:
+        member_payload = member.get('payload')
+        if member_payload is None:
             return helpers.ModuleRes(failed=True, msg='Instance %s does not contain payload' % uri)
 
-        member_payload = member['payload']
-        if member_payload.get('alias') is None:
+        instance_name = member_payload.get('alias')
+        if instance_name is None:
             return helpers.ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
 
-        instance_name = member_payload['alias']
-        if member.get('status') == 'alive':
+        member_status = member.get('status')
+        if member_status == 'alive':
             alive_members.add(instance_name)
 
         if member_payload.get('uuid') is None:
@@ -106,7 +109,7 @@ def get_control_instance(params):
 
         found_joined_instances = True
 
-        if member.get('status') != 'alive':
+        if member_status != 'alive':
             continue
 
         control_instance_candidates.append(instance_name)

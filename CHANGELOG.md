@@ -21,7 +21,7 @@ README.md to use the newest tag with new release
   - Now one not expelled instance should also be alive; it's checked
     by creating connection using instances advertise URIs
   - Control instance should be alive
-  - I there are some joined instances, but no one of them isn't alive,
+  - If there are some joined instances, but no one of them isn't alive,
     getting control instance fails.
 
 ### Added

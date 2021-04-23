@@ -12,6 +12,9 @@ argument_spec = {
 }
 
 
+CONNECTION_TIMEOUT = 10
+
+
 def get_alive_not_expelled_instance(params):
     module_hostvars = params['module_hostvars']
     play_hosts = params['play_hosts']
@@ -24,15 +27,20 @@ def get_alive_not_expelled_instance(params):
         if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
             continue
 
-        advertise_uri = instance_vars['config']['advertise_uri']
+        instance_config = instance_vars.get('config')
+        if instance_config is None:
+            continue
+
+        advertise_uri = instance_config['advertise_uri']
         canditates_by_uris[advertise_uri] = instance_name
 
     alive_not_expelled_instance_name = None
     for uri, instance_name in sorted(canditates_by_uris.items()):
-        host, port = uri.split(':', 1)
+        host, port = uri.rsplit(':', 1)
 
         try:
-            conn = socket.create_connection((host, port))
+            conn = socket.create_connection((host, port), timeout=CONNECTION_TIMEOUT)
+            conn.settimeout(CONNECTION_TIMEOUT)
             conn.recv(1024)
         except socket.error:
             continue
