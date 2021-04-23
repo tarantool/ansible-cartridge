@@ -53,7 +53,7 @@ def get_alive_not_expelled_instance(params):
         return helpers.ModuleRes(failed=True, msg=errmsg)
 
     instance_vars = module_hostvars[alive_not_expelled_instance_name]
-    run_dir = instance_vars.get('cartridge_run_dir', helpers.DEFAULT_RUN_DIR)
+    run_dir = instance_vars.get('cartridge_run_dir')
     console_sock = helpers.get_instance_console_sock(
         run_dir, app_name, alive_not_expelled_instance_name,
     )

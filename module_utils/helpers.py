@@ -403,11 +403,13 @@ def get_instance_id(app_name, instance_name=None, stateboard=False):
 
 
 def get_instance_console_sock(run_dir, app_name, instance_name=None, stateboard=False):
+    run_dir = run_dir if run_dir is not None else DEFAULT_RUN_DIR
     instance_fullname = get_instance_id(app_name, instance_name, stateboard)
     return os.path.join(run_dir, '%s.control' % instance_fullname)
 
 
 def get_instance_pid_file(run_dir, app_name, instance_name=None, stateboard=False):
+    run_dir = run_dir if run_dir is not None else DEFAULT_RUN_DIR
     instance_id = get_instance_id(app_name, instance_name, stateboard)
     return os.path.join(run_dir, '%s.pid' % instance_id)
 
@@ -477,7 +479,6 @@ def set_twophase_options_from_params(control_console, params):
 
 
 class Helpers:
-    DEFAULT_RUN_DIR = DEFAULT_RUN_DIR
     DYNAMIC_BOX_CFG_PARAMS = DYNAMIC_BOX_CFG_PARAMS
     MEMORY_SIZE_BOX_CFG_PARAMS = MEMORY_SIZE_BOX_CFG_PARAMS
     FORMAT_SERVER_FUNC = FORMAT_SERVER_FUNC
