@@ -42,18 +42,16 @@ def get_active_leaders(control_console):
 
 
 def call_failover_promote(control_console, replicaset_leaders, force_inconsistency):
-    res, err = control_console.eval_res_err('''
+    return control_console.eval_res_err('''
         return require('cartridge').failover_promote(...)
     ''', replicaset_leaders, force_inconsistency)
-
-    return res, err
 
 
 def get_replicaset_leaders_by_play_hosts(play_hosts, module_hostvars, control_console):
     cluster_instances = helpers.get_cluster_instances_with_replicasets_info(control_console)
 
     dead_replicasets = set()
-    chosen_leaders_priority = dict()  # replicaset uuid: leader priority
+    chosen_leaders_priority = {}  # replicaset uuid: leader priority
 
     replicaset_leaders = {}
     for instance_name in play_hosts:
@@ -87,10 +85,9 @@ def get_replicaset_leaders_by_play_hosts(play_hosts, module_hostvars, control_co
                 # leader with less priority was already chosen
                 continue
 
-        dead_replicasets.discard(replicaset_alias)
-        chosen_leaders_priority[replicaset_uuid] = cluster_instance['priority']
-
         replicaset_leaders[replicaset_uuid] = instance_uuid
+        chosen_leaders_priority[replicaset_uuid] = cluster_instance['priority']
+        dead_replicasets.discard(replicaset_alias)
 
     return replicaset_leaders, dead_replicasets
 
@@ -141,8 +138,7 @@ def failover_promote(params):
     critical_warnings = []
 
     # get replicaset leaders
-    promote_play_hosts = params['promote_play_hosts']
-    if promote_play_hosts:
+    if params['promote_play_hosts']:
         module_hostvars = params['module_hostvars']
         play_hosts = params['play_hosts']
 

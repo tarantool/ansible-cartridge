@@ -6,4 +6,4 @@
     - cartridge-replicasets
     - cartridge-config
 
-- import_tasks: 'steps/promote_leaders.yml'
+- import_tasks: 'steps/force_leaders.yml'

@@ -64,16 +64,16 @@ You have group `DC1` in your inventory that describes which instances belong to
 this data center.
 
 Just specify this group in `hosts` parameters of the play or use `--limit` option
-on playbook running.
+when running the playbook.
 
 Leaders are chosen by these rules:
 
 * each play host that doesn't belong to replicaset is ignored;
 * all instances that has status other than `alive` are ignored;
-* if play hosts contain two instances from one replicaset, then one with higher
+* if play hosts contain two or more instances from one replicaset, then one with higher
   failover priority is chosen;
-* if all instances on one replicaset present in play hosts aren't alive, promotion
-  is performed for the rest instances, but task fails with critical warnings;
+* if all play hosts that belongs to the same replicaset are not alive, promotion
+  is performed for the remaining instances, but task fails with critical error.
 
 This playbook says: **Promote leaders to instances from "DC1" group**:
 
