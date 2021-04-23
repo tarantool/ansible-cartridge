@@ -1,0 +1,200 @@
+---
+
+# All instances are alive
+# alive_not_expelled_instance: instance-1
+# control_instance: instance-2-joined
+
+- name: 'All instances are alive'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set control instance'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - set_control_instance
+
+    - name: 'Debug alive not expelled instance'
+      debug:
+        msg: '{{ alive_not_expelled_instance.name }}'
+      run_once: true
+
+    - name: 'Check alive not expelled instance'
+      assert:
+        msg: 'Selected bad alive not expelled instance'
+        success_msg: 'Selected right alive not expelled instance'
+        that: alive_not_expelled_instance.name == "instance-1"
+      run_once: true
+
+    - name: 'Debug control instance'
+      debug:
+        msg: '{{ control_instance.name }}'
+      run_once: true
+
+    - name: 'Check control instance'
+      assert:
+        msg: 'Selected bad control instance'
+        success_msg: 'Selected right control instance'
+        that: control_instance.name == "instance-2-joined"
+      run_once: true
+
+# stopped: instance-1
+# alive_not_expelled_instance: instance-2-joined
+# control_instance: instance-2-joined
+
+- name: 'Stop instance-1'
+  hosts: 'instance-1'
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Stop instance'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - stop_instance
+
+- name: 'Next alive instance is chosen'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set control instance'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - set_control_instance
+
+    - name: 'Debug alive not expelled instance'
+      debug:
+        msg: '{{ alive_not_expelled_instance.name }}'
+      run_once: true
+
+    - name: 'Check alive not expelled instance'
+      assert:
+        msg: 'Selected bad alive not expelled instance'
+        success_msg: 'Selected right alive not expelled instance'
+        that: alive_not_expelled_instance.name == "instance-2-joined"
+      run_once: true
+
+    - name: 'Debug control instance'
+      debug:
+        msg: '{{ control_instance.name }}'
+      run_once: true
+
+    - name: 'Check control instance'
+      assert:
+        msg: 'Selected bad control instance'
+        success_msg: 'Selected right control instance'
+        that: control_instance.name == "instance-2-joined"
+      run_once: true
+
+# stopped: instance-1, instance-2-joined, instance-3-joined
+# alive_not_expelled_instance: instance-4
+# control_instance: instance-6-joined
+
+- name: 'Stop instance-2-joined, instance-3-joined'
+  hosts: 'instance-2-joined,instance-3-joined'
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Stop instance'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - stop_instance
+
+- name: 'Only one joined instance is alive'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set control instance'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - set_control_instance
+
+    - name: 'Debug alive not expelled instance'
+      debug:
+        msg: '{{ alive_not_expelled_instance.name }}'
+      run_once: true
+
+    - name: 'Check alive not expelled instance'
+      assert:
+        msg: 'Selected bad alive not expelled instance'
+        success_msg: 'Selected right alive not expelled instance'
+        that: alive_not_expelled_instance.name == "instance-4"
+      run_once: true
+
+    - name: 'Debug control instance'
+      debug:
+        msg: '{{ control_instance.name }}'
+      run_once: true
+
+    - name: 'Check control instance'
+      assert:
+        msg: 'Selected bad control instance'
+        success_msg: 'Selected right control instance'
+        that: control_instance.name == "instance-6-joined"
+      run_once: true
+
+# stopped: all except instance-5-not-joined
+# alive_not_expelled_instance: instance-5-not-joined
+# control_instance: fails
+
+- name: 'Stop instance-4, instance-6-joined'
+  hosts: 'instance-4,instance-6-joined'
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Stop instance'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - stop_instance
+
+- name: 'All joined instances are dead'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set control instance'
+      import_role:
+        name: ansible-cartridge
+      ignore_errors: true
+      vars:
+        cartridge_scenario:
+          - set_control_instance
+
+    - name: 'Check setting control instance failed'
+      assert:
+        msg: 'Setting control instance should fail'
+        success_msg: 'Setting control instance failed'
+        that: control_instance_res.failed
+      run_once: true
+
+    - name: 'Debug alive not expelled instance'
+      debug:
+        msg: '{{ alive_not_expelled_instance.name }}'
+      run_once: true
+
+    - name: 'Check alive not expelled instance'
+      assert:
+        msg: 'Selected bad alive not expelled instance'
+        success_msg: 'Selected right alive not expelled instance'
+        that: alive_not_expelled_instance.name == "instance-5-not-joined"
+      run_once: true

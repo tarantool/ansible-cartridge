@@ -24,6 +24,8 @@ class TestGetCachedFacts(unittest.TestCase):
                 'expelled': True,
                 'config': {'advertise_uri': '10.0.0.1:3001'},
                 'ansible_host': 'some_host',
+                'cartridge_cluster_cookie': 'some-cookie',
+                'cartridge_run_dir': 'some-run-dir',
             },
             'instance_2': {
                 'stateboard': False,
@@ -40,6 +42,8 @@ class TestGetCachedFacts(unittest.TestCase):
                 'instance_1': {
                     'expelled': True,
                     'config': {'advertise_uri': '10.0.0.1:3001'},
+                    'cartridge_cluster_cookie': 'some-cookie',
+                    'cartridge_run_dir': 'some-run-dir',
                 },
                 'instance_2': {
                     'stateboard': False,
@@ -64,9 +68,12 @@ class TestGetCachedFacts(unittest.TestCase):
                 },
                 'instance_3': {},
             },
-            'not_expelled_instance': {
+            'alive_not_expelled_instance': {
                 'instance_1': {
                     'expelled': True,
+                    'config': {'advertise_uri': '10.0.0.1:3001'},
+                    'cartridge_cluster_cookie': 'some-cookie',
+                    'cartridge_run_dir': 'some-run-dir',
                 },
                 'instance_2': {
                     'stateboard': False,
@@ -77,6 +84,7 @@ class TestGetCachedFacts(unittest.TestCase):
                 'instance_1': {
                     'expelled': True,
                     'config': {'advertise_uri': '10.0.0.1:3001'},
+                    'cartridge_run_dir': 'some-run-dir',
                 },
                 'instance_2': {
                     'stateboard': False,

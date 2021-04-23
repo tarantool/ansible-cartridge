@@ -132,7 +132,7 @@ delivered_package_path: null
 control_instance: null
 temporary_files: []
 needs_restart: null
-not_expelled_instance: null
+alive_not_expelled_instance: null
 
 # Eval params
 

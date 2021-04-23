@@ -76,10 +76,12 @@ FACTS_BY_TARGETS = {
         'stateboard',
         'config',
     ],
-    'not_expelled_instance': [
+    'alive_not_expelled_instance': [
+        'cartridge_cluster_cookie',
         'expelled',
         'stateboard',
-        'instance_info',
+        'config',
+        'cartridge_run_dir',
     ],
     'control_instance': [
         'expelled',

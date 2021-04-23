@@ -1,0 +1,65 @@
+---
+dependency:
+  name: galaxy
+
+driver:
+  name: docker
+
+platforms:
+  - name: vm1
+    image: centos:7
+    command: /sbin/init
+    tmpfs:
+      - /run
+      - /tmp
+    volumes:
+      - /sys/fs/cgroup:/sys/fs/cgroup:ro
+    published_ports:
+      - 8100-8199:8100-8199/tcp
+    networks:
+      - name: cartridge-network
+
+lint: |
+  set -xe
+  yamllint .
+  flake8
+
+provisioner:
+  name: ansible
+  inventory:
+    links:
+      hosts: hosts.yml
+  playbooks:
+    prepare: prepare.yml
+
+verifier:
+  name: testinfra
+  options:
+    v: true
+
+scenario:
+  create_sequence:
+    - create
+    - prepare
+  converge_sequence:
+    - create
+    - prepare
+    - converge
+  destroy_sequence:
+    - destroy
+  test_sequence:
+    - lint
+    - destroy
+    - syntax
+    - create
+    - prepare
+    - converge
+    - verify
+    - destroy
+  check_sequence:
+    - destroy
+    - create
+    - prepare
+    - converge
+    - check
+    - destroy

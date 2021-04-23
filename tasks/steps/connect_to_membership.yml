@@ -1,11 +1,11 @@
 ---
 
-- import_tasks: 'blocks/set_not_expelled_instance.yml'
-  when: not not_expelled_instance
+- import_tasks: 'blocks/set_alive_not_expelled_instance.yml'
+  when: not alive_not_expelled_instance
 
-- name: 'Connect instance to membership via {{ not_expelled_instance.name }}'
+- name: 'Connect instance to membership via {{ alive_not_expelled_instance.name }}'
   cartridge_connect_to_membership:
-    console_sock: '{{ not_expelled_instance.console_sock }}'
+    console_sock: '{{ alive_not_expelled_instance.console_sock }}'
     module_hostvars: '{{ cached_facts.connect_to_membership }}'
     play_hosts: '{{ play_hosts }}'
   register: probe
@@ -13,7 +13,7 @@
   retries: 3
   delay: 5
   run_once: true
-  delegate_to: '{{ not_expelled_instance.name }}'
+  delegate_to: '{{ alive_not_expelled_instance.name }}'
   tags:
     - cartridge-instances
     - cartridge-replicasets

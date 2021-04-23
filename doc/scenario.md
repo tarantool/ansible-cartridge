@@ -470,7 +470,7 @@ Input facts (set by config):
 
 Output facts:
 
-- `not_expelled_instance` - information about one not expelled instance
+- `alive_not_expelled_instance` - information about one not expelled instance
   ([more details here](#role-facts-descriptions)).
 
 ### set_control_instance
@@ -511,7 +511,7 @@ Output facts:
   - `name` - instance name (Ansible host);
   - `console_sock` - path to control socket of instance.
 
-- `not_expelled_instance` - information about one not expelled instance. It's a dictionary with fields:
+- `alive_not_expelled_instance` - information about one not expelled instance. It's a dictionary with fields:
   - `name` - instance name (Ansible host);
   - `console_sock` - path to control socket of instance.
 
