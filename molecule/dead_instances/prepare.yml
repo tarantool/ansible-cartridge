@@ -19,3 +19,14 @@
   gather_facts: false
   vars:
     cartridge_scenario_name: configure_topology
+
+- name: Configure failover
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name:
+      - configure_failover

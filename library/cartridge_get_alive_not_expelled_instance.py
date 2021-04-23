@@ -12,7 +12,7 @@ argument_spec = {
 }
 
 
-CONNECTION_TIMEOUT = 10
+CONNECTION_TIMEOUT = 3
 
 
 def get_alive_not_expelled_instance(params):
