@@ -64,7 +64,7 @@
         success_msg: 'Eval result is empty'
         that: eval_res is not defined
 
-## EVAL FROM FILE
+# EVAL FROM FILE
 
 - name: 'Eval function from file'
   hosts: cluster
@@ -105,7 +105,7 @@
               "--- {'cute': 'table'}\n...\n",
           ]
 
-## EVAL FROM FILE (control)
+# EVAL FROM FILE (control)
 
 - name: 'Eval function from file on control instance'
   hosts: cluster
@@ -288,40 +288,78 @@
               "--- {'other': 'cute-table'}\n...\n",
           ]
 
-# # EMPTY EVAL
+# EMPTY EVAL
 
-# - name: 'Call eval step without body or file specified'
-#   hosts: cluster
-#   roles:
-#     - ansible-cartridge
-#   become: true
-#   become_user: root
-#   gather_facts: false
-#   vars:
-#     cartridge_app_name: 'myapp'
-#     cartridge_scenario:
-#       - eval
+- name: 'Call eval step without body or file specified'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_app_name: 'myapp'
+    cartridge_scenario:
+      - eval
 
-# - name: 'Check that eval was skipped'
-#   hosts: cluster
-#   become: true
-#   become_user: root
-#   gather_facts: false
-#   tasks:
-#     - name: Check that eval was skipped
-#       assert:
-#         msg: 'Eval should be skipped'
-#         success_msg: 'Eval was skipped'
-#         that: eval_res_register.skipped | default(none)
+- name: 'Check that eval was skipped'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: Check that eval was skipped
+      assert:
+        msg: 'Eval should be skipped'
+        success_msg: 'Eval was skipped'
+        that: eval_res_register.skipped | default(none)
 
-#     - name: Check that previous eval result wasn't overwritten
-#       assert:
-#         msg: "Previous eval result shouldn't be overwritten"
-#         success_msg: "Previous eval result wasn't overwritten"
-#         that: >-
-#           eval_res == [
-#               "This snippet was evaled from string",
-#               "Hello, my name is " + instance_info.instance_id + "!",
-#               "I am 43 seconds old",
-#               "--- {'other': 'cute-table'}\n...\n",
-#           ]
+    - name: Check that previous eval result wasn't overwritten
+      assert:
+        msg: "Previous eval result shouldn't be overwritten"
+        success_msg: "Previous eval result wasn't overwritten"
+        that: >-
+          eval_res == [
+              "This snippet was evaled from string",
+              "Hello, my name is myapp.instance-2-joined!",
+              "I am 43 seconds old",
+              "--- {'other': 'cute-table'}\n...\n",
+          ]
+
+# EMPTY EVAL (control)
+
+- name: 'Call eval_on_control_instance step without body or file specified'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_app_name: 'myapp'
+    cartridge_scenario:
+      - eval_on_control_instance
+
+- name: 'Check that eval was skipped'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Check that eval was skipped'
+      assert:
+        msg: 'Eval should be skipped'
+        success_msg: 'Eval was skipped'
+        that: eval_res_register.skipped | default(none)
+
+    - name: Check that previous eval result wasn't overwritten
+      assert:
+        msg: "Previous eval result shouldn't be overwritten"
+        success_msg: "Previous eval result wasn't overwritten"
+        that: >-
+          eval_res == [
+              "This snippet was evaled from string",
+              "Hello, my name is myapp.instance-2-joined!",
+              "I am 43 seconds old",
+              "--- {'other': 'cute-table'}\n...\n",
+          ]
