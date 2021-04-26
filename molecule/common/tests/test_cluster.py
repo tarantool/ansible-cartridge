@@ -354,6 +354,10 @@ def test_failover():
                     uri
                     password
                 }
+                failover_timeout
+                fencing_enabled
+                fencing_timeout
+                fencing_pause
             }
           }
         }
@@ -362,6 +366,17 @@ def test_failover():
     response = session.post(admin_api_url, json={'query': query})
 
     failover_params = response.json()['data']['cluster']['failover_params']
+
+    FAILOVER_PARAMS = [
+        'failover_timeout',
+        'fencing_enabled',
+        'fencing_timeout',
+        'fencing_pause',
+    ]
+
+    for param_name in FAILOVER_PARAMS:
+        if param_name in configured_failover_params:
+            assert failover_params[param_name] == configured_failover_params[param_name]
 
     assert failover_params['mode'] == configured_failover_params['mode']
     if configured_failover_params.get('state_provider') is not None:

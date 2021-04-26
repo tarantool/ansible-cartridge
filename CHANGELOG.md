@@ -38,6 +38,11 @@ README.md to use the newest tag with new release
 - Step `stop_instance` to stop and disable instance systemd service
 - Step `start_instance` to start and enable instance systemd service
 - Step `restart_instance_force` to restart systemd service without any conditions
+- New `cartridge_failover_params` fields:
+  - `failover_timeout`
+  - `fencing_enabled`
+  - `fencing_timeout`
+  - `fencing_pause`
 
 ### Changed
 

@@ -169,6 +169,10 @@ SCHEMA = {
             'username': str,
             'password': str,
         },
+        'failover_timeout': int,
+        'fencing_enabled': bool,
+        'fencing_timeout': int,
+        'fencing_pause': int,
     },
     'cartridge_failover_promote_params': {
         'replicaset_leaders': dict,

@@ -13,12 +13,26 @@ argument_spec = {
 NEW_FAILOVER_API_CARTRIDGE_VERSION = '2.1.0'
 DEFAULT_STATE_PROVIDER = 'tarantool'
 
+FAILOVER_PARAMS = [
+    'failover_timeout',
+    'fencing_enabled',
+    'fencing_timeout',
+    'fencing_pause',
+]
+
 
 def get_tarantool_version(control_console):
     version, _ = control_console.eval_res_err('''
         return require('cartridge').VERSION
     ''')
     return version
+
+
+def get_failover_params(control_console):
+    failover_params, _ = control_console.eval_res_err('''
+        return require('cartridge').failover_get_params()
+    ''')
+    return failover_params
 
 
 def manage_failover_old(control_console, failover_params):
@@ -47,15 +61,19 @@ def manage_failover_old(control_console, failover_params):
 
 
 def manage_failover_new(control_console, passed_failover_params):
-    current_failover_params, _ = control_console.eval_res_err('''
-        return require('cartridge').failover_get_params()
-    ''')
+    current_failover_params = get_failover_params(control_console)
 
     mode = passed_failover_params['mode']
 
     failover_params = {
         'mode': mode,
     }
+
+    for param_name in FAILOVER_PARAMS:
+        if param_name in passed_failover_params:
+            failover_params.update({
+                param_name: passed_failover_params[param_name]
+            })
 
     if mode == 'stateful':
         state_provider = passed_failover_params.get('state_provider')
@@ -81,9 +99,7 @@ def manage_failover_new(control_console, passed_failover_params):
         errmsg = 'Failed to set failover params: {}'.format(err)
         return helpers.ModuleRes(failed=True, msg=errmsg)
 
-    new_failover_params, _ = control_console.eval_res_err('''
-        return require('cartridge').failover_get_params()
-    ''')
+    new_failover_params = get_failover_params(control_console)
 
     changed = new_failover_params != current_failover_params
     return helpers.ModuleRes(changed=changed)
