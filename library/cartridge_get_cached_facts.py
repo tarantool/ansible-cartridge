@@ -102,6 +102,10 @@ FACTS_BY_TARGETS = {
         'zone',
         'config',
     ],
+    'failover_promote': [
+        'expelled',
+        'stateboard',
+    ],
 }
 
 

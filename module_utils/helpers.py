@@ -88,6 +88,26 @@ local function format_server(s)
 end
 '''
 
+FORMAT_SERVER_WITH_REPLICASET_INFO_FUNC = '''
+local function format_server_with_replicaset_info(s)
+    local replicaset_uuid
+    local replicaset_alias
+    if s.replicaset ~= nil then
+        replicaset_uuid = s.replicaset.uuid
+        replicaset_alias = s.replicaset.alias
+    end
+
+    return {
+        uuid = s.uuid,
+        alias = s.alias,
+        priority = s.priority,
+        status = s.status,
+        replicaset_uuid = replicaset_uuid,
+        replicaset_alias = replicaset_alias,
+    }
+end
+'''
+
 GET_REPLICASETS_FUNC_BODY = '''
 %s
 
@@ -117,6 +137,21 @@ end
 
 return ret
 ''' % FORMAT_SERVER_FUNC
+
+GET_INSTANCES_WITH_REPLICASETS_INFO_FUNC_BODY = '''
+%s
+
+local servers = require('cartridge').admin_get_servers()
+local ret = {}
+
+for _, s in ipairs(servers) do
+    if s.alias ~= nil then
+        ret[s.alias] = format_server_with_replicaset_info(s)
+    end
+end
+
+return ret
+''' % FORMAT_SERVER_WITH_REPLICASET_INFO_FUNC
 
 SET_TWOPHASE_OPTIONS_FUNC_BODY = '''
 local vars = require('cartridge.vars').new('cartridge.twophase')
@@ -413,6 +448,12 @@ def get_cluster_instances(control_console):
     return instances
 
 
+def get_cluster_instances_with_replicasets_info(control_console):
+    instances, _ = control_console.eval_res_err(GET_INSTANCES_WITH_REPLICASETS_INFO_FUNC_BODY)
+
+    return instances
+
+
 def get_cluster_replicasets(control_console):
     cluster_replicasets, _ = control_console.eval_res_err(GET_REPLICASETS_FUNC_BODY)
 
@@ -461,6 +502,7 @@ class Helpers:
     get_box_cfg = staticmethod(get_box_cfg)
     filter_none_values = staticmethod(filter_none_values)
     get_cluster_instances = staticmethod(get_cluster_instances)
+    get_cluster_instances_with_replicasets_info = staticmethod(get_cluster_instances_with_replicasets_info)
     get_cluster_replicasets = staticmethod(get_cluster_replicasets)
     set_twophase_options = staticmethod(set_twophase_options)
     set_twophase_options_from_params = staticmethod(set_twophase_options_from_params)
