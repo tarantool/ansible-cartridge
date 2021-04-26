@@ -1,4 +1,3 @@
-import os
 import sys
 import unittest
 
@@ -37,40 +36,23 @@ def call_get_control_instance(app_name, console_sock, module_hostvars=None, play
     })
 
 
-URI1 = '127.0.0.1:3301'
-URI2 = '127.0.0.1:3302'
-URI3 = '127.0.0.1:3303'
-
-UUID1 = 'uuid-1'
-UUID2 = 'uuid-2'
-UUID3 = 'uuid-3'
-
-APP_NAME = 'myapp'
-
-ALIAS1 = 'alias-1'
-ALIAS2 = 'alias-2'
-ALIAS3 = 'alias-3'
-
-RUN_DIR1 = '%s-run-dir' % ALIAS1
-RUN_DIR2 = '%s-run-dir' % ALIAS2
-RUN_DIR3 = '%s-run-dir' % ALIAS3
-
-SOCK1 = os.path.join(RUN_DIR1, '%s.%s.control' % (APP_NAME, ALIAS1))
-SOCK2 = os.path.join(RUN_DIR2, '%s.%s.control' % (APP_NAME, ALIAS2))
-SOCK3 = os.path.join(RUN_DIR3, '%s.%s.control' % (APP_NAME, ALIAS3))
-
-
-def get_instance_hostvars(alias, replicaset_alias=None):
+def get_instance_hostvars(alias, replicaset_alias=None, run_dir=None, expelled=False):
     return {
         alias: {
             'config': {'advertise_uri': '%s-uri' % alias},
             'replicaset_alias': replicaset_alias,
+            'cartridge_run_dir': run_dir,
+            'expelled': expelled,
         }
     }
 
 
-def get_member(alias, with_uuid=False, status=None):
-    member = {'uri': '%s-uri' % alias, 'alias': alias}
+def get_member(alias, with_alias=True, with_uuid=False, status=None):
+    member = {'uri': '%s-uri' % alias}
+
+    if with_alias:
+        member.update({'alias': alias})
+
     if with_uuid:
         member.update({'uuid': '%s-uuid' % alias})
 
@@ -112,245 +94,207 @@ class TestGetControlInstance(unittest.TestCase):
 
         self.instance.start()
 
-    def test_instance_without_payload(self):
-        # with UUID (already bootstrapped) and without alias
-        set_membership_members(self.instance, [
-            {'uri': URI1, 'uuid': UUID1},
-        ], with_payload=False)
-        res = call_get_control_instance(APP_NAME, self.console_sock)
-        self.assertTrue(res.failed)
-        self.assertIn('Instance %s does not contain payload' % URI1, res.msg)
-
     def test_instance_without_alias(self):
+        hostvars = get_instance_hostvars('instance-1')
+
         # with UUID (already bootstrapped) and without alias
         set_membership_members(self.instance, [
-            {'uri': URI1, 'uuid': UUID1},
+            get_member('instance-1', with_uuid=True, with_alias=False),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
-        self.assertIn('Instance %s payload does not contain alias' % URI1, res.msg)
+        self.assertIn("Instance with URI instance-1-uri payload doesn't contain alias", res.msg)
 
     def test_one_instance_without_run_dir(self):
-        hostvars = {
-            ALIAS1: {'config': {'advertise_uri': URI1}},
-        }
+        hostvars = get_instance_hostvars('instance-1', 'some-rpl')
 
         # with UUID and alias
         set_membership_members(self.instance, [
-            {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
+            get_member('instance-1', with_uuid=True),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
-            'name': ALIAS1,
-            'console_sock': os.path.join('/var/run/tarantool', '%s.%s.control' % (APP_NAME, ALIAS1)),
+            'name': 'instance-1',
+            'console_sock': '/var/run/tarantool/myapp.instance-1.control',
         })
 
     def test_one_instance(self):
-        hostvars = {
-            ALIAS1: {'cartridge_run_dir': RUN_DIR1, 'config': {'advertise_uri': URI1}},
-        }
+        hostvars = get_instance_hostvars('instance-1', run_dir='run-dir')
 
         # with UUID and alias
         set_membership_members(self.instance, [
-            {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
+            get_member('instance-1', with_uuid=True),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
-            'name': ALIAS1,
-            'console_sock': SOCK1,
+            'name': 'instance-1',
+            'console_sock': 'run-dir/myapp.instance-1.control',
         })
 
         # without UUID
         set_membership_members(self.instance, [
-            {'uri': URI1, 'alias': ALIAS1},
+            get_member('instance-1', with_uuid=False),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
-        self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
+        self.assertIn("There is no alive instances", res.msg)
 
     def test_two_instances(self):
-        hostvars = {
-            ALIAS1: {'cartridge_run_dir': RUN_DIR1, 'config': {'advertise_uri': URI1}},
-            ALIAS2: {'cartridge_run_dir': RUN_DIR2, 'config': {'advertise_uri': URI2}},
-        }
+        hostvars = {}
+        hostvars.update(get_instance_hostvars('instance-1', run_dir='run-dir-1'))
+        hostvars.update(get_instance_hostvars('instance-2', run_dir='run-dir-2'))
 
         # both with UUID and alias
-        # URI1 is selected since it's first lexicographically
+        # instance-1 is selected since it's URI is
+        # first lexicographically
         set_membership_members(self.instance, [
-            {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
-            {'uri': URI2, 'uuid': UUID2, 'alias': ALIAS2},
+            get_member('instance-1', with_uuid=True),
+            get_member('instance-2', with_uuid=True),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
-            'name': ALIAS1,
-            'console_sock': SOCK1,
+            'name': 'instance-1',
+            'console_sock': 'run-dir-1/myapp.instance-1.control',
         })
 
         # one with UUID (it is selected)
         set_membership_members(self.instance, [
-            {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
-            {'uri': URI2, 'alias': ALIAS2},
+            get_member('instance-1', with_uuid=False),
+            get_member('instance-2', with_uuid=True),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
-            'name': ALIAS1,
-            'console_sock': SOCK1,
+            'name': 'instance-2',
+            'console_sock': 'run-dir-2/myapp.instance-2.control',
         })
 
         # one with UUID (but without alias)
         set_membership_members(self.instance, [
-            {'uri': URI1, 'uuid': UUID1},
-            {'uri': URI2, 'alias': ALIAS2},
+            get_member('instance-1', with_uuid=False),
+            get_member('instance-2', with_uuid=True, with_alias=False),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
-        self.assertIn('Instance %s payload does not contain alias' % URI1, res.msg)
+        self.assertIn("Instance with URI instance-2-uri payload doesn't contain alias", res.msg)
 
         # both without UUID (no one selected)
         set_membership_members(self.instance, [
-            {'uri': URI1, 'alias': ALIAS1},
-            {'uri': URI2, 'alias': ALIAS2},
+            get_member('instance-1', with_uuid=False),
+            get_member('instance-2', with_uuid=False),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
-        self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
+        self.assertIn("There is no alive instances", res.msg)
 
     def test_no_joined_instances(self):
-        hostvars = {
-            ALIAS1: {
-                'config': {'advertise_uri': URI1},
-                'cartridge_run_dir': RUN_DIR1,
-                'replicaset_alias': 'some-rpl',
-            },
-            ALIAS2: {
-                'config': {'advertise_uri': URI2},
-                'cartridge_run_dir': RUN_DIR2,
-                'replicaset_alias': 'some-rpl',
-            },
-            'instance-not-in-replicaset': {
-                'config': {'advertise_uri': 'uri-not-in-replicaset'},
-            },
-            'expelled-instance': {
-                'config': {'advertise_uri': 'uri-expelled'},
-                'replicaset_alias': 'some-rpl',
-                'cartridge_run_dir': RUN_DIR1,
-                'expelled': True,
-            },
-            'my-stateboard': {
-                'stateboard': True,
-            },
-        }
+        hostvars = {}
+        hostvars.update(get_instance_hostvars('instance-4', 'some-rpl', run_dir='run-dir-4'))
+        hostvars.update(get_instance_hostvars('instance-3', 'some-rpl', run_dir='run-dir-3'))
+        hostvars.update(get_instance_hostvars('instance-2-no-rpl', run_dir='run-dir-2'))
+        hostvars.update(get_instance_hostvars('instance-1-expelled', run_dir='run-dir-1'))
+        hostvars.update({'my-stateboard': {'stateboard': True}})
 
         set_membership_members(self.instance, [
-            {'uri': URI1, 'alias': ALIAS1},
-            {'uri': URI2, 'alias': ALIAS2},
+            get_member('instance-4', with_uuid=False),
+            get_member('instance-3', with_uuid=False),
+            get_member('instance-2-no-rpl', with_uuid=False),
+            get_member('instance-1-expelled', with_uuid=False),
         ])
 
         # all instances are in play_hosts
-        # URI1 is selected by lexicographic order
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        # instance-3 is selected by lexicographic order
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
-            'name': ALIAS1,
-            'console_sock': SOCK1,
+            'name': 'instance-3',
+            'console_sock': 'run-dir-3/myapp.instance-3.control',
         })
 
         # only instances w/o replicaset_alias, expelled and stateboard
         # are in play_hosts
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars, play_hosts=[
+        res = call_get_control_instance('myapp', self.console_sock, hostvars, play_hosts=[
             'instance-not-in-replicaset', 'expelled-instance', 'my-stateboard',
         ])
         self.assertTrue(res.failed, res.fact)
-        self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
+        self.assertIn("There is no alive instances", res.msg)
 
     def test_instance_not_in_hostvars(self):
-        hostvars = {
-            ALIAS1: {},
-            ALIAS2: {},
-        }
+        hostvars = {}
+        hostvars.update(get_instance_hostvars('instance-1', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('instance-2', 'some-rpl'))
 
         set_membership_members(self.instance, [
-            {'uri': URI1, 'alias': ALIAS1},
-            {'uri': URI2, 'alias': ALIAS2},
-            {'uri': URI3, 'alias': ALIAS3, 'uuid': UUID3},  # has UUID but not in hostvars
+            get_member('instance-1', with_uuid=False),
+            get_member('instance-2', with_uuid=False),
+            get_member('instance-3', with_uuid=True),  # has UUID but not in hostvars
         ])
 
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed, res.fact)
-        self.assertIn("Not found any joined instance or instance to create a replicaset", res.msg)
+        self.assertIn("Membership contains instance instance-3 that isn't described in inventor", res.msg)
 
     def test_twophase_commit_versions(self):
-        hostvars = {
-            ALIAS1: {
-                'cartridge_run_dir': RUN_DIR1,
-                'config': {'advertise_uri': URI1},
-                'replicaset_alias': 'rpl-1',
-            },
-            ALIAS2: {
-                'cartridge_run_dir': RUN_DIR2,
-                'config': {'advertise_uri': URI2},
-                'replicaset_alias': 'rpl-1',
-            },
-            ALIAS3: {
-                'cartridge_run_dir': RUN_DIR3,
-                'config': {'advertise_uri': URI3},
-                'replicaset_alias': 'rpl-1',
-            },
-        }
+        hostvars = {}
+        hostvars.update(get_instance_hostvars('instance-1', 'some-rpl', run_dir='run-dir-1'))
+        hostvars.update(get_instance_hostvars('instance-2', 'some-rpl', run_dir='run-dir-2'))
+        hostvars.update(get_instance_hostvars('instance-3', 'some-rpl', run_dir='run-dir-3'))
 
-        # URI3 has lower version of twophase commit
+        # instance-3 has lower version of twophase commit
         global twophase_commit_versions
         twophase_commit_versions = {
-            URI1: 3,
-            URI2: 2,
-            URI3: 1,
+            'instance-1-uri': 3,
+            'instance-2-uri': 2,
+            'instance-3-uri': 1,
         }
 
-        # all with UUID and alias - URI3 is selected
-        # (instead of URI1 by lexicographic order)
+        # all with UUID and alias - instance-3 is selected
+        # (instead of instance-1 by lexicographic order)
         set_membership_members(self.instance, [
-            {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
-            {'uri': URI2, 'uuid': UUID2, 'alias': ALIAS2},
-            {'uri': URI3, 'uuid': UUID3, 'alias': ALIAS3},
+            get_member('instance-1', with_uuid=True),
+            get_member('instance-2', with_uuid=True),
+            get_member('instance-3', with_uuid=True),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
-            'name': ALIAS3,
-            'console_sock': SOCK3,
+            'name': 'instance-3',
+            'console_sock': 'run-dir-3/myapp.instance-3.control',
         })
 
-        # both without UUID and alias - URI3 is selected
-        # (instead of URI1 by lexicographic order)
+        # all without UUID - instance-3 is selected
+        # (instead of instance-1 by lexicographic order)
         set_membership_members(self.instance, [
-            {'uri': URI1, 'alias': ALIAS1},
-            {'uri': URI2, 'alias': ALIAS2},
-            {'uri': URI3, 'alias': ALIAS3},
+            get_member('instance-1', with_uuid=False),
+            get_member('instance-2', with_uuid=False),
+            get_member('instance-3', with_uuid=False),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
-            'name': ALIAS3,
-            'console_sock': SOCK3,
+            'name': 'instance-3',
+            'console_sock': 'run-dir-3/myapp.instance-3.control',
         })
 
-        # URI1 and URI2 has UUIDs
-        # URI2 is chosen instead of URI3 with minimal twophase commit version
-        # because URI2 has minimal twophase commit version between instances with UUIDS
+        # instance-1 and instance-2 has UUIDs
+        # instance-2 is chosen instead of instance-3 with minimal twophase commit version
+        # because instance-2 has minimal twophase commit version between instances with UUIDS
         set_membership_members(self.instance, [
-            {'uri': URI1, 'uuid': UUID1, 'alias': ALIAS1},
-            {'uri': URI2, 'uuid': UUID2, 'alias': ALIAS2},
-            {'uri': URI3, 'alias': ALIAS3},
+            get_member('instance-1', with_uuid=True),
+            get_member('instance-2', with_uuid=True),
+            get_member('instance-3', with_uuid=False),
         ])
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
-            'name': ALIAS2,
-            'console_sock': SOCK2,
+            'name': 'instance-2',
+            'console_sock': 'run-dir-2/myapp.instance-2.control',
         })
 
     def test_dead_instances(self):
@@ -368,7 +312,7 @@ class TestGetControlInstance(unittest.TestCase):
             get_member('not-joined-2'),
         ])
 
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
             'name': 'joined-2',
@@ -389,9 +333,9 @@ class TestGetControlInstance(unittest.TestCase):
             get_member('not-joined-2'),
         ])
 
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
-        self.assertEqual(res.msg, "All instances joined to cluster aren't alive")
+        self.assertEqual(res.msg, "There is no alive instances in the cluster")
 
         # no joined, first unjoined instance is dead
         hostvars = {}
@@ -403,7 +347,7 @@ class TestGetControlInstance(unittest.TestCase):
             get_member('not-joined-2'),
         ])
 
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
             'name': 'not-joined-2',
@@ -423,7 +367,7 @@ class TestGetControlInstance(unittest.TestCase):
             get_member('not-joined-3'),
         ])
 
-        res = call_get_control_instance(APP_NAME, self.console_sock, hostvars)
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
         self.assertEqual(res.fact, {
             'name': 'not-joined-3',

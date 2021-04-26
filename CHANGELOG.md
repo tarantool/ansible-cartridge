@@ -23,6 +23,7 @@ README.md to use the newest tag with new release
   - Control instance should be alive
   - If there are some joined instances, but no one of them isn't alive,
     getting control instance fails.
+- `set_control_instance` is improved to consider non-joined instance status
 
 ### Added
 

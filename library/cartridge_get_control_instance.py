@@ -12,6 +12,14 @@ argument_spec = {
 GET_TWOPHASE_COMMIT_VERSION_TIMEOUT = 60
 
 
+def get_membership_members(control_console):
+    members, _ = control_console.eval_res_err('''
+        return require('membership').members()
+    ''')
+
+    return members
+
+
 def get_twophase_commit_versions(control_console, advertise_uris):
     versions, err = control_console.eval_res_err('''
         local fiber_clock = require('fiber').clock
@@ -72,6 +80,88 @@ def get_twophase_commit_versions(control_console, advertise_uris):
     return versions, err
 
 
+def candidate_is_ok(uri, names_by_uris, module_hostvars):
+    instance_name = names_by_uris[uri]
+    instance_vars = module_hostvars[instance_name]
+
+    if helpers.is_expelled(instance_vars):
+        return False
+
+    return True
+
+
+def get_control_instance_name(module_hostvars, play_hosts, control_console):
+    members = get_membership_members(control_console)
+
+    # try to find joined alive instance that isn't set to be expelled
+    alive_instances_uris = set()
+    joined_instances_uris = set()
+    not_joined_instances_uris = set()
+
+    names_by_uris = {}
+
+    for uri, member in sorted(members.items()):
+        member_payload = member.get('payload')
+        if member_payload is None:
+            return None, "Instance with URI %s doesn't contain payload" % uri
+
+        instance_name = member_payload.get('alias')
+        if instance_name is None:
+            return None, "Instance with URI %s payload doesn't contain alias" % uri
+
+        instance_vars = module_hostvars.get(instance_name)
+        if instance_vars is None:
+            return None, "Membership contains instance %s that isn't described in inventory" % instance_name
+
+        names_by_uris[uri] = instance_name
+
+        member_status = member.get('status')
+        member_uuid = member_payload.get('uuid')
+
+        if member_status == 'alive':
+            alive_instances_uris.add(uri)
+
+        if member_uuid is not None:
+            joined_instances_uris.add(uri)
+        else:
+            if instance_name in play_hosts and instance_vars.get('replicaset_alias') is not None:
+                not_joined_instances_uris.add(uri)
+
+    if joined_instances_uris:
+        # if there is at least one joined instance
+        # we can use only one of them as control instance
+        candidates_uris = joined_instances_uris.intersection(alive_instances_uris)
+    else:
+        # there is no one joined instance - let's find some alive of them
+        candidates_uris = not_joined_instances_uris.intersection(alive_instances_uris)
+
+    if not candidates_uris:
+        return None, "There is no alive instances in the cluster"
+
+    # filter out instances that are marked to be expelled
+    candidates_uris = list(filter(
+        lambda uri: candidate_is_ok(uri, names_by_uris, module_hostvars),
+        candidates_uris
+    ))
+
+    if not candidates_uris:
+        return None, "Not found any instance that can be used to manage cluster"
+
+    candidates_uris = list(sorted(candidates_uris))
+
+    # Find instance that uses the lowest version of two-phase commit API
+    twophase_commit_versions, err = get_twophase_commit_versions(control_console, candidates_uris)
+    if err is not None:
+        return None, "Failed to check instances two-phase commit version: %s" % err
+
+    idx = twophase_commit_versions.index(min(twophase_commit_versions))
+    control_instance_uri = candidates_uris[idx]
+
+    control_instance_name = names_by_uris[control_instance_uri]
+
+    return control_instance_name, None
+
+
 def get_control_instance(params):
     module_hostvars = params['module_hostvars']
     play_hosts = params['play_hosts']
@@ -79,81 +169,18 @@ def get_control_instance(params):
     app_name = params['app_name']
 
     control_console = helpers.get_control_console(console_sock)
-    control_instance_candidates = []
 
-    members, _ = control_console.eval_res_err('''
-        return require('membership').members()
-    ''')
-
-    alive_members = set()
-    found_joined_instances = False
-
-    for uri, member in sorted(members.items()):
-        member_payload = member.get('payload')
-        if member_payload is None:
-            return helpers.ModuleRes(failed=True, msg='Instance %s does not contain payload' % uri)
-
-        instance_name = member_payload.get('alias')
-        if instance_name is None:
-            return helpers.ModuleRes(failed=True, msg='Instance %s payload does not contain alias' % uri)
-
-        member_status = member.get('status')
-        if member_status == 'alive':
-            alive_members.add(instance_name)
-
-        if member_payload.get('uuid') is None:
-            continue
-
-        if instance_name not in module_hostvars:
-            continue
-
-        found_joined_instances = True
-
-        if member_status != 'alive':
-            continue
-
-        control_instance_candidates.append(instance_name)
-
-    if not control_instance_candidates:
-        if found_joined_instances:
-            return helpers.ModuleRes(
-                failed=True,
-                msg="All instances joined to cluster aren't alive"
-            )
-
-        for instance_name in play_hosts:
-            if instance_name not in alive_members:
-                continue
-
-            instance_vars = module_hostvars[instance_name]
-
-            if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
-                continue
-
-            if instance_vars.get('replicaset_alias'):
-                control_instance_candidates.append(instance_name)
-
-    if not control_instance_candidates:
-        errmsg = 'Not found any joined instance or instance to create a replicaset'
-        return helpers.ModuleRes(failed=True, msg=errmsg)
-
-    advertise_uris = [
-        module_hostvars[instance_name]['config']['advertise_uri']
-        for instance_name in control_instance_candidates
-    ]
-
-    twophase_commit_versions, err = get_twophase_commit_versions(control_console, advertise_uris)
+    control_instance_name, err = get_control_instance_name(
+        module_hostvars, play_hosts, control_console
+    )
     if err is not None:
         return helpers.ModuleRes(failed=True, msg=err)
-
-    idx = twophase_commit_versions.index(min(twophase_commit_versions))
-    control_instance_name = control_instance_candidates[idx]
 
     # in the ideal imagined world we could just use
     # instance_vars['instance_info'], but if control instance is not
     # in play_hosts, instance_info isn't computed for it
     instance_vars = module_hostvars[control_instance_name]
-    run_dir = instance_vars.get('cartridge_run_dir', helpers.DEFAULT_RUN_DIR)
+    run_dir = instance_vars.get('cartridge_run_dir')
     control_instance_console_sock = helpers.get_instance_console_sock(
         run_dir, app_name, control_instance_name,
     )
