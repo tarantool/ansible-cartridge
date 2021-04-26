@@ -34,7 +34,7 @@ README.md to use the newest tag with new release
   * `twophase_netbox_call_timeout`
   * `twophase_upload_config_timeout`
   * `twophase_apply_config_timeout`
-- `eval` step to eval code on instances
+- `eval` and `eval_on_control_instance` steps to eval code on instances
 - Step `stop_instance` to stop and disable instance systemd service
 - Step `start_instance` to start and enable instance systemd service
 - Step `restart_instance_force` to restart systemd service without any conditions

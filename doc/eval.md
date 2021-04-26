@@ -1,8 +1,12 @@
 # Eval Lua code on instances
 
-It could be useful to eval code on instances by limit.
-[`eval` step](/doc/scenario.md#eval) allows to run Lua code
-with specified arguments.
+It could be useful to run code on instances by limit.
+
+There are two steps that allow running code snippets:
+
+* [`eval`](/doc/scenario.md#eval) runs specified snipped on each instance from play hosts.
+* [`eval_on_control_instance`](/doc/scenario.md#eval_on_control_instance) runs
+  specified snipped only on the control instance.
 
 ## How to pass a code snippet?
 
