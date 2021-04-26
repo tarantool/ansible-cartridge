@@ -1,25 +1,6 @@
 ---
-- tags:
-    - cartridge-config
+
+- import_tasks: 'blocks/eval.yml'
   when: cartridge_eval_body is not none or cartridge_eval_file is not none
-
-  block:
-    - name: 'Set eval body'
-      set_fact:
-        eval_body: >-
-          {{
-            cartridge_eval_body
-            if cartridge_eval_body is not none
-            else lookup("file", cartridge_eval_file)
-          }}
-
-    - name: 'Eval code on instance'
-      cartridge_eval:
-        console_sock: '{{ instance_info.console_sock }}'
-        body: '{{ eval_body }}'
-        args: '{{ cartridge_eval_args }}'
-      register: eval_res_register
-
-    - name: 'Set "eval_res" fact'
-      set_fact:
-        eval_res: '{{ eval_res_register.fact | default(omit) }}'
+  vars:
+    eval_console_sock: '{{ instance_info.console_sock }}'
