@@ -8,7 +8,7 @@ on:
   workflow_dispatch:
 
 env:
-  CARTRIDGE_CLI_VERSION: '2.7.2'
+  CARTRIDGE_CLI_VERSION: '2.9.0'
 
 jobs:
   setup-molecule-test-matrix:
