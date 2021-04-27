@@ -10,14 +10,21 @@ from library.cartridge_configure_failover import manage_failover
 
 def call_manage_failover(console_sock, mode,
                          state_provider=None, stateboard_params=None, etcd2_params=None):
+
+    failover_params = {
+        'mode': mode,
+    }
+
+    if state_provider is not None:
+        failover_params.update({'state_provider': state_provider})
+    if stateboard_params is not None:
+        failover_params.update({'stateboard_params': stateboard_params})
+    if etcd2_params is not None:
+        failover_params.update({'etcd2_params': etcd2_params})
+
     return manage_failover({
         'console_sock': console_sock,
-        'failover_params': {
-            'mode': mode,
-            'state_provider': state_provider,
-            'stateboard_params': stateboard_params,
-            'etcd2_params': etcd2_params,
-        },
+        'failover_params': failover_params,
     })
 
 

@@ -5,6 +5,12 @@ is used to specify failover parameters:
 
 - `mode`(`string`, required) - failover mode. Possible values are `disabled`,
   `eventual` and `stateful`.
+- `failover_timeout` - timeout (in seconds), used by membership to
+  mark `suspect` members as `dead`;
+- `fencing_enabled` - abandon leadership when both the state provider
+  quorum and at least one replica are lost (suitable in stateful mode only);
+- `fencing_timeout` - time (in seconds) to actuate fencing after the check fails;
+- `fencing_pause`- the period (in seconds) of performing the check;
 
 Other parameters are mode-specific.
 

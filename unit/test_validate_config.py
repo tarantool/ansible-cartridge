@@ -81,6 +81,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_configure_tmpfiles',
                 'cartridge_install_tarantool_for_tgz',
                 'cartridge_remove_temporary_files',
+                'cartridge_failover_params.fencing_enabled',
             },
             dict: {
                 'cartridge_defaults',
@@ -99,6 +100,9 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_auth.cookie_max_age',
                 'cartridge_auth.cookie_renew_age',
                 'cartridge_failover_params.etcd2_params.lock_delay',
+                'cartridge_failover_params.failover_timeout',
+                'cartridge_failover_params.fencing_timeout',
+                'cartridge_failover_params.fencing_pause',
                 'cartridge_keep_num_latest_dists',
                 'twophase_netbox_call_timeout',
                 'twophase_upload_config_timeout',
