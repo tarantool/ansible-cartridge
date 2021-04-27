@@ -202,8 +202,8 @@ class ModuleRes:
         self.warnings += DEBUG_MESSAGES
         res['warnings'] = self.warnings
 
-        WARNINGS.clear()
-        DEBUG_MESSAGES.clear()
+        del WARNINGS[:]
+        del DEBUG_MESSAGES[:]
 
         for key, value in self.kwargs.items():
             res[key] = value
