@@ -11,14 +11,6 @@ argument_spec = {
 }
 
 NEW_FAILOVER_API_CARTRIDGE_VERSION = '2.1.0'
-DEFAULT_STATE_PROVIDER = 'tarantool'
-
-FAILOVER_PARAMS = [
-    'failover_timeout',
-    'fencing_enabled',
-    'fencing_timeout',
-    'fencing_pause',
-]
 
 
 def get_tarantool_version(control_console):
@@ -60,35 +52,8 @@ def manage_failover_old(control_console, failover_params):
     return helpers.ModuleRes()
 
 
-def manage_failover_new(control_console, passed_failover_params):
+def manage_failover_new(control_console, failover_params):
     current_failover_params = get_failover_params(control_console)
-
-    mode = passed_failover_params['mode']
-
-    failover_params = {
-        'mode': mode,
-    }
-
-    for param_name in FAILOVER_PARAMS:
-        if param_name in passed_failover_params:
-            failover_params.update({
-                param_name: passed_failover_params[param_name]
-            })
-
-    if mode == 'stateful':
-        state_provider = passed_failover_params.get('state_provider')
-        if state_provider == 'stateboard':
-            failover_params['state_provider'] = 'tarantool'
-        else:
-            failover_params['state_provider'] = state_provider
-
-    stateboard_params = passed_failover_params.get('stateboard_params')
-    if stateboard_params:
-        failover_params['tarantool_params'] = stateboard_params
-
-    etcd2_params = passed_failover_params.get('etcd2_params')
-    if etcd2_params:
-        failover_params['etcd2_params'] = etcd2_params
 
     func_body = '''
         return require('cartridge').failover_set_params(...)
@@ -105,6 +70,14 @@ def manage_failover_new(control_console, passed_failover_params):
     return helpers.ModuleRes(changed=changed)
 
 
+def rename_dict_key_if_exists(d, old_name, new_name):
+    if old_name not in d:
+        return
+
+    d[new_name] = d[old_name]
+    del d[old_name]
+
+
 def manage_failover(params):
     failover_params = params.get('failover_params')
 
@@ -112,6 +85,10 @@ def manage_failover(params):
         failover_params = {
             'mode': 'eventual' if failover_params is True else 'disabled'
         }
+
+    rename_dict_key_if_exists(failover_params, 'stateboard_params', 'tarantool_params')
+    if failover_params.get('state_provider') == 'stateboard':
+        failover_params['state_provider'] = 'tarantool'
 
     control_console = helpers.get_control_console(params['console_sock'])
 
