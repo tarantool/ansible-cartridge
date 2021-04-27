@@ -1,14 +1,11 @@
 ---
-- when: cartridge_eval_body is not none or cartridge_eval_file is not none
-  block:
-    - name: 'BLOCK: Select control instance'
-      include_tasks: 'blocks/set_control_instance.yml'
-      run_once: true
-      when: not control_instance
+- name: 'BLOCK: Select control instance'
+  include_tasks: 'blocks/set_control_instance.yml'
+  run_once: true
+  when: not control_instance
 
-    - import_tasks: 'blocks/eval.yml'
-      when: cartridge_eval_body is not none or cartridge_eval_file is not none
-      delegate_to: '{{ control_instance.name }}'
-      run_once: true
-      vars:
-        eval_console_sock: '{{ control_instance.console_sock }}'
+- import_tasks: 'blocks/eval.yml'
+  vars:
+    eval_console_sock: '{{ control_instance.console_sock }}'
+  delegate_to: '{{ control_instance.name }}'
+  run_once: true

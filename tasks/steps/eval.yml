@@ -1,6 +1,5 @@
 ---
 
 - import_tasks: 'blocks/eval.yml'
-  when: cartridge_eval_body is not none or cartridge_eval_file is not none
   vars:
     eval_console_sock: '{{ instance_info.console_sock }}'
