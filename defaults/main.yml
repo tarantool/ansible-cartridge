@@ -111,6 +111,7 @@ twophase_apply_config_timeout: null
 
 edit_topology_timeout: null  # DEPRECATED
 edit_topology_healthy_timeout: 60
+edit_topology_allow_missed_instances: false
 
 ## Cluster configuration
 

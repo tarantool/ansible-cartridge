@@ -1,5 +1,6 @@
 import sys
 import unittest
+from parameterized import parameterized
 
 import module_utils.helpers as helpers
 
@@ -15,6 +16,20 @@ def call_get_configured_replicasets(hostvars, play_hosts=None):
         play_hosts = hostvars.keys()
 
     return get_configured_replicasets(hostvars, play_hosts)
+
+
+def assert_err_soft_mode(t, allow_missed_instances, ret, err, expected_ret, expected_err):
+    res = helpers.ModuleRes(failed=err is not None, msg=err)
+    res_json = res.get_exit_json()
+
+    if allow_missed_instances:
+        t.assertEqual(res.failed, False)
+        t.assertEqual(res_json['warnings'], [expected_err])
+        t.assertEqual(ret, expected_ret)
+    else:
+        t.assertEqual(res.failed, True)
+        t.assertEqual(res_json['msg'], expected_err)
+        t.assertIsNone(ret)
 
 
 class TestGetConfiguredReplicasets(unittest.TestCase):
@@ -169,7 +184,11 @@ class TestGetInstancesToConfigure(unittest.TestCase):
 
 
 class TestGetReplicasetParams(unittest.TestCase):
-    def test_create_replicaset(self):
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_create_replicaset(self, allow_missed_instances):
         cluster_instances = {
             alias: {'uri': '%s-uri' % alias, 'alias': alias}
             for alias in ['i1', 'i2', 'i3', 'i4']
@@ -184,7 +203,7 @@ class TestGetReplicasetParams(unittest.TestCase):
             'failover_priority': ['i1', 'i2', 'i3'],
         }
 
-        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances, allow_missed_instances)
         self.assertIsNone(err)
         self.assertEqual(params, {
             'alias': 'r1',
@@ -210,7 +229,9 @@ class TestGetReplicasetParams(unittest.TestCase):
                 param_name: param_value,
             }
 
-            params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+            params, err = get_replicaset_params(
+                replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
+            )
             self.assertIsNone(err)
             self.assertEqual(params, {
                 'alias': 'r1',
@@ -228,12 +249,19 @@ class TestGetReplicasetParams(unittest.TestCase):
             'failover_priority': ['i1', 'i2', 'i3'],
         }
 
-        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
-        self.assertIsNone(params)
-        self.assertIn("Some of replicaset instances aren't found in cluster: ", err)
-        self.assertTrue(
-            "in cluster: unknown-2, unknown-1" in err or "in cluster: unknown-1, unknown-2" in err
+        params, err = get_replicaset_params(
+            replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
         )
+
+        expected_err = "Some of replicaset instances aren't found in cluster: unknown-1, unknown-2"
+        expected_params = {
+            'alias': 'r1',
+            'join_servers': [
+                {'uri': uri}
+                for uri in ['i1-uri', 'i2-uri', 'i3-uri', 'i4-uri']
+            ]
+        }
+        assert_err_soft_mode(self, allow_missed_instances, params, err, expected_params, expected_err)
 
         # failover_priority contains instances that not found in cluster
         replicaset = {
@@ -242,14 +270,25 @@ class TestGetReplicasetParams(unittest.TestCase):
             'failover_priority': ['i1', 'unknown-2', 'i2', 'i3', 'unknown-1'],
         }
 
-        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
-        self.assertIsNone(params)
-        self.assertIn("Some of instances specified in failover_priority aren't found in cluster: ", err)
-        self.assertTrue(
-            "in cluster: unknown-2, unknown-1" in err or "in cluster: unknown-1, unknown-2" in err
+        params, err = get_replicaset_params(
+            replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
         )
 
-    def test_change_replicaset_params(self):
+        expected_err = "Some of instances specified in failover_priority aren't found in cluster: unknown-1, unknown-2"
+        expected_params = {
+            'alias': 'r1',
+            'join_servers': [
+                {'uri': uri}
+                for uri in ['i1-uri', 'i2-uri', 'i3-uri', 'i4-uri']
+            ]
+        }
+        assert_err_soft_mode(self, allow_missed_instances, params, err, expected_params, expected_err)
+
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_change_replicaset_params(self, allow_missed_instances):
         cluster_instances = {
             alias: {'uri': '%s-uri' % alias, 'alias': alias}
             for alias in ['i1', 'i2', 'i3', 'i4']
@@ -276,7 +315,9 @@ class TestGetReplicasetParams(unittest.TestCase):
             'vshard_group': 'cold',
         }
 
-        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+        params, err = get_replicaset_params(
+            replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
+        )
         self.assertIsNone(err)
         self.assertIsNone(params)
 
@@ -313,7 +354,9 @@ class TestGetReplicasetParams(unittest.TestCase):
                 param_name: new_param_value,
             }
 
-            params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+            params, err = get_replicaset_params(
+                replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
+            )
             self.assertIsNone(err)
             self.assertEqual(params, {
                 'uuid': 'r1-uuid',
@@ -334,7 +377,9 @@ class TestGetReplicasetParams(unittest.TestCase):
                 param_name: new_param_value,
             }
 
-            params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+            params, err = get_replicaset_params(
+                replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
+            )
             self.assertIsNone(err)
             self.assertEqual(params, {
                 'uuid': 'r1-uuid',
@@ -355,11 +400,17 @@ class TestGetReplicasetParams(unittest.TestCase):
                 'failover_priority': ['i1', 'i2', 'i3'],
             }
 
-            params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+            params, err = get_replicaset_params(
+                replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
+            )
             self.assertIsNone(err)
             self.assertIsNone(params)
 
-    def test_join_new_instances(self):
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_join_new_instances(self, allow_missed_instances):
         cluster_instances = {
             alias: {'uri': '%s-uri' % alias, 'alias': alias}
             for alias in ['i1', 'i2', 'i3', 'i4']
@@ -378,7 +429,7 @@ class TestGetReplicasetParams(unittest.TestCase):
             'failover_priority': ['i1', 'i2', 'i3'],
         }
 
-        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances, allow_missed_instances)
         self.assertIsNone(err)
 
         self.assertEqual(len(params), 2)
@@ -388,7 +439,11 @@ class TestGetReplicasetParams(unittest.TestCase):
             {'uri': uri} in params['join_servers'] for uri in ['i2-uri', 'i3-uri']
         ]))
 
-    def test_less_instances_specified(self):
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_less_instances_specified(self, allow_missed_instances):
         cluster_instances = {
             alias: {'uri': '%s-uri' % alias, 'alias': alias}
             for alias in ['i1', 'i2', 'i3', 'i4']
@@ -406,13 +461,17 @@ class TestGetReplicasetParams(unittest.TestCase):
             'instances': ['i3'],
         }
 
-        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances)
+        params, err = get_replicaset_params(replicaset, cluster_replicaset, cluster_instances, allow_missed_instances)
         self.assertIsNone(err)
         self.assertIsNone(params)
 
 
 class TestGetServerParams(unittest.TestCase):
-    def test_server_params(self):
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_get_server_params(self, allow_missed_instances):
         cluster_instances = {
             alias: {'uri': '%s-uri' % alias, 'alias': alias}
             for alias in ['joined', 'not-joined']
@@ -425,7 +484,7 @@ class TestGetServerParams(unittest.TestCase):
             'expelled': True,
             'zone': 'some-zone',
         }
-        params, err = get_server_params('unknown', instance_params, cluster_instances)
+        params, err = get_server_params('unknown', instance_params, cluster_instances, allow_missed_instances)
         self.assertIsNone(err)
         self.assertIsNone(params)
 
@@ -433,16 +492,18 @@ class TestGetServerParams(unittest.TestCase):
         instance_params = {
             'zone': 'some-zone',
         }
-        params, err = get_server_params('unknown', instance_params, cluster_instances)
-        self.assertEqual(err, "Instance unknown isn't found in cluster")
-        self.assertIsNone(params)
+        params, err = get_server_params('unknown', instance_params, cluster_instances, allow_missed_instances)
+
+        expected_err = "Instance unknown isn't found in cluster"
+        expected_params = None
+        assert_err_soft_mode(self, allow_missed_instances, params, err, expected_params, expected_err)
 
         # server isn't joined
         instance_params = {
             'expelled': True,
             'zone': 'some-zone',
         }
-        params, err = get_server_params('not-joined', instance_params, cluster_instances)
+        params, err = get_server_params('not-joined', instance_params, cluster_instances, allow_missed_instances)
         self.assertIsNone(err)
         self.assertIsNone(params)
 
@@ -451,7 +512,7 @@ class TestGetServerParams(unittest.TestCase):
             'expelled': True,
             'zone': 'some-zone',
         }
-        params, err = get_server_params('joined', instance_params, cluster_instances)
+        params, err = get_server_params('joined', instance_params, cluster_instances, allow_missed_instances)
         self.assertIsNone(err)
         self.assertEqual(params, {
             'uuid': 'joined-uuid',
@@ -462,7 +523,7 @@ class TestGetServerParams(unittest.TestCase):
         instance_params = {
             'zone': 'some-zone',
         }
-        params, err = get_server_params('joined', instance_params, cluster_instances)
+        params, err = get_server_params('joined', instance_params, cluster_instances, allow_missed_instances)
         self.assertIsNone(err)
         self.assertEqual(params, {
             'uuid': 'joined-uuid',
@@ -474,7 +535,7 @@ class TestGetServerParams(unittest.TestCase):
         instance_params = {
             'zone': 'some-zone',
         }
-        params, err = get_server_params('joined', instance_params, cluster_instances)
+        params, err = get_server_params('joined', instance_params, cluster_instances, allow_missed_instances)
         self.assertIsNone(err)
         self.assertIsNone(params)
 
@@ -483,7 +544,7 @@ class TestGetServerParams(unittest.TestCase):
         instance_params = {
             'zone': 'other-zone',
         }
-        params, err = get_server_params('joined', instance_params, cluster_instances)
+        params, err = get_server_params('joined', instance_params, cluster_instances, allow_missed_instances)
         self.assertIsNone(err)
         self.assertEqual(params, {
             'uuid': 'joined-uuid',

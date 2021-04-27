@@ -52,6 +52,7 @@ FACTS_BY_TARGETS = {
         'twophase_apply_config_timeout',
         'edit_topology_timeout',
         'edit_topology_healthy_timeout',
+        'edit_topology_allow_missed_instances',
         'expelled',
         'failover_priority',
         'instance_discover_buckets_timeout',

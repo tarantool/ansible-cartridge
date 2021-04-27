@@ -1,5 +1,6 @@
 import sys
 import unittest
+from parameterized import parameterized
 
 import module_utils.helpers as helpers
 from unit.instance import Instance
@@ -8,7 +9,7 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_edit_topology import edit_topology
 
 
-def call_edit_topology(console_sock, module_hostvars, play_hosts=None, timeout=60):
+def call_edit_topology(console_sock, module_hostvars, play_hosts=None, timeout=60, allow_missed_instances=False):
     if play_hosts is None:
         play_hosts = module_hostvars.keys()
 
@@ -17,7 +18,28 @@ def call_edit_topology(console_sock, module_hostvars, play_hosts=None, timeout=6
         'module_hostvars': module_hostvars,
         'play_hosts': play_hosts,
         'healthy_timeout': timeout,
+        'allow_missed_instances': allow_missed_instances,
     })
+
+
+def assert_err_soft_mode(t, allow_missed_instances, res, exp_replicasets_opts, expected_err):
+    res_json = res.get_exit_json()
+
+    if allow_missed_instances:
+        t.assertEqual(res.failed, False)
+        t.assertEqual(res_json['warnings'], [expected_err])
+
+        calls = t.instance.get_calls('edit_topology')
+        call = calls[0]
+        t.assertNotIn('servers', call)
+        t.assertIn('replicasets', call)
+
+        replicasets_opts = call['replicasets']
+        t.assertEqual(replicasets_opts, exp_replicasets_opts)
+    else:
+        t.assertEqual(res.failed, True)
+        t.assertIn(expected_err, res_json['msg'])
+        t.assertEqual(len(t.instance.get_calls('edit_topology')), 0)
 
 
 class TestEditTopology(unittest.TestCase):
@@ -30,7 +52,11 @@ class TestEditTopology(unittest.TestCase):
 
         self.instance.start()
 
-    def test_edit_topology_fails(self):
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_edit_topology_fails(self, allow_missed_instances):
         self.instance.add_replicaset(
             alias='r1',
             instances=['r1-leader', 'r1-replica'],
@@ -54,7 +80,8 @@ class TestEditTopology(unittest.TestCase):
 
         res = call_edit_topology(
             self.console_sock,
-            hostvars
+            hostvars,
+            allow_missed_instances=allow_missed_instances,
         )
         self.assertTrue(res.failed, msg=res.msg)
         self.assertEqual(res.msg, "Failed to edit topology: cartridge err")
@@ -83,7 +110,8 @@ class TestEditTopology(unittest.TestCase):
 
         res = call_edit_topology(
             self.console_sock,
-            hostvars
+            hostvars,
+            allow_missed_instances=allow_missed_instances,
         )
         self.assertTrue(res.failed, msg=res.msg)
         self.assertEqual(res.msg, "Failed to edit failover priority and configure instances: cartridge err")
@@ -97,7 +125,11 @@ class TestEditTopology(unittest.TestCase):
             }],
         })
 
-    def test_create_replicasets(self):
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_create_replicasets(self, allow_missed_instances):
         rpl1_vars = {
             'replicaset_alias': 'r1',
             'roles': ['role-1', 'role-2'],
@@ -128,42 +160,6 @@ class TestEditTopology(unittest.TestCase):
             {'alias': 'r2-leader', 'uri': 'r2-leader-uri'},
         ])
 
-        # now we don't don't add r2-replica
-
-        # create replicasets with instances not known by cluster (r2-replica)
-        self.instance.clear_calls('edit_topology')
-        res = call_edit_topology(
-            self.console_sock,
-            hostvars
-        )
-        self.assertTrue(res.failed, msg=res.msg)
-        self.assertIn("Some of replicaset instances aren't found in cluster: r2-replica", res.msg)
-        self.assertEqual(len(self.instance.get_calls('edit_topology')), 0)
-
-        # add r2-replica
-        self.instance.add_membership_members([
-            {'alias': 'r2-replica', 'uri': 'r2-replica-uri'},
-        ])
-
-        # create replicasets
-        self.instance.clear_calls('edit_topology')
-        res = call_edit_topology(
-            self.console_sock,
-            hostvars
-        )
-        self.assertFalse(res.failed, msg=res.msg)
-        self.assertTrue(res.changed)
-
-        calls = self.instance.get_calls('edit_topology')
-        self.assertEqual(len(calls), 1)
-
-        call = calls[0]
-        self.assertNotIn('servers', call)
-        self.assertIn('replicasets', call)
-
-        replicasets_opts = call['replicasets']
-        self.assertEqual(len(replicasets_opts), 2)
-
         exp_replicasets_opts = [
             {
                 'alias': 'r1',
@@ -183,14 +179,60 @@ class TestEditTopology(unittest.TestCase):
                 # no failover priority opt, just join_servers in right order
                 'join_servers': [
                     {'uri': uri}
-                    for uri in ['r2-leader-uri', 'r2-replica-uri']
+                    for uri in ['r2-leader-uri']
                 ]
             }
         ]
 
-        self.assertEqual(replicasets_opts, exp_replicasets_opts)
+        # now we don't don't add r2-replica
 
-    def test_change_replicasets(self):
+        # create replicasets with instances not known by cluster (r2-replica)
+        self.instance.clear_calls('edit_topology')
+        res = call_edit_topology(
+            self.console_sock,
+            hostvars,
+            allow_missed_instances=allow_missed_instances,
+        )
+
+        expected_err = "Some of replicaset instances aren't found in cluster: r2-replica"
+        assert_err_soft_mode(self, allow_missed_instances, res, exp_replicasets_opts, expected_err)
+
+        if not allow_missed_instances:
+            # add r2-replica
+            self.instance.add_membership_members([
+                {'alias': 'r2-replica', 'uri': 'r2-replica-uri'},
+            ])
+
+            exp_replicasets_opts[1]['join_servers'].append({
+                'uri': 'r2-replica-uri',
+            })
+
+            # create replicasets
+            self.instance.clear_calls('edit_topology')
+            res = call_edit_topology(
+                self.console_sock,
+                hostvars
+            )
+            self.assertFalse(res.failed, msg=res.msg)
+            self.assertTrue(res.changed)
+
+            calls = self.instance.get_calls('edit_topology')
+            self.assertEqual(len(calls), 1)
+
+            call = calls[0]
+            self.assertNotIn('servers', call)
+            self.assertIn('replicasets', call)
+
+            replicasets_opts = call['replicasets']
+            self.assertEqual(len(replicasets_opts), 2)
+
+            self.assertEqual(replicasets_opts, exp_replicasets_opts)
+
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_change_replicasets(self, allow_missed_instances):
         rpl1_vars = {
             'replicaset_alias': 'r1',
             'roles': ['vshard-storage', 'role-2'],
@@ -350,7 +392,11 @@ class TestEditTopology(unittest.TestCase):
 
         self.assertEqual(replicasets_opts, exp_replicasets_opts)
 
-    def test_change_failover_priority(self):
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_change_failover_priority(self, allow_missed_instances):
         self.instance.add_replicaset(
             alias='r1',
             instances=['r1-leader', 'r1-replica'],
@@ -512,7 +558,11 @@ class TestEditTopology(unittest.TestCase):
 
         self.assertEqual(replicasets_opts, exp_replicasets_opts)
 
-    def test_expel_non_joined_instances(self):
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_expel_non_joined_instances(self, allow_missed_instances):
         rpl1_vars = {
             'replicaset_alias': 'r1',
             'roles': ['role-1', 'role-2'],
@@ -587,7 +637,11 @@ class TestEditTopology(unittest.TestCase):
 
         self.assertEqual(replicasets_opts, exp_replicasets_opts)
 
-    def test_expel_joined_instances(self):
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_expel_joined_instances(self, allow_missed_instances):
         self.instance.add_replicaset(
             alias='r1',
             instances=['r1-leader', 'r1-replica', 'r1-replica-2'],
@@ -664,7 +718,11 @@ class TestEditTopology(unittest.TestCase):
 
         self.assertEqual(servers_opts, exp_servers_opts)
 
-    def test_configure_instances(self):
+    @parameterized.expand([
+        [True],  # allow_missed_instances
+        [False],
+    ])
+    def test_configure_instances(self, allow_missed_instances):
         self.instance.add_replicaset(
             alias='r1',
             instances=['r1-leader', 'r1-replica'],

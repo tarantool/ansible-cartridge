@@ -43,6 +43,8 @@ README.md to use the newest tag with new release
   - `fencing_enabled`
   - `fencing_timeout`
   - `fencing_pause`
+- `edit_topology_allow_missed_instances` variable to allow replicasets containing
+  the instances that are not started yet
 
 ### Changed
 
