@@ -1,0 +1,11 @@
+---
+- name: 'BLOCK: Select control instance'
+  include_tasks: 'blocks/set_control_instance.yml'
+  run_once: true
+  when: not control_instance
+
+- import_tasks: 'blocks/eval.yml'
+  vars:
+    eval_console_sock: '{{ control_instance.console_sock }}'
+  run_once: true
+  delegate_to: '{{ control_instance.name }}'

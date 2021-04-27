@@ -32,7 +32,39 @@
         success_msg: 'Eval result is empty'
         that: eval_res is not defined
 
-## EVAL FROM FILE
+# EMPTY EVAL (control)
+
+- name: 'Call eval_on_control_instance step without body or file specified'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_app_name: 'myapp'
+    cartridge_scenario:
+      - eval_on_control_instance
+
+- name: 'Check that eval was skipped'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Check that eval was skipped'
+      assert:
+        msg: 'Eval should be skipped'
+        success_msg: 'Eval was skipped'
+        that: eval_res_register.skipped | default(none)
+
+    - name: 'Check that eval result is empty'
+      assert:
+        msg: 'Eval result should be empty'
+        success_msg: 'Eval result is empty'
+        that: eval_res is not defined
+
+# EVAL FROM FILE
 
 - name: 'Eval function from file'
   hosts: cluster
@@ -69,6 +101,47 @@
           eval_res == [
               "This snippet was evaled from file",
               "Hello, my name is " + instance_info.instance_id + "!",
+              "I am 143 seconds old",
+              "--- {'cute': 'table'}\n...\n",
+          ]
+
+# EVAL FROM FILE (control)
+
+- name: 'Eval function from file on control instance'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_app_name: 'myapp'
+    cartridge_scenario:
+      - eval_on_control_instance
+    cartridge_eval_file: 'some_script.lua'
+    cartridge_eval_args:
+      - 'Hello, my name is %s!'
+      - 143
+      - {cute: 'table'}
+
+- name: 'Print and check result of script from file'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Debug result'
+      debug:
+        msg: '{{ eval_res }}'
+
+    - name: 'Check result'
+      assert:
+        msg: 'Received bad result'
+        success_msg: 'Received result is OK'
+        that: >-
+          eval_res == [
+              "This snippet was evaled from file",
+              "Hello, my name is myapp.instance-2-joined!",
               "I am 143 seconds old",
               "--- {'cute': 'table'}\n...\n",
           ]
@@ -144,6 +217,77 @@
               "--- {'other': 'cute-table'}\n...\n",
           ]
 
+# EVAL FROM STRING (control)
+
+- name: 'Eval function from string on control instance'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_app_name: 'myapp'
+    cartridge_scenario:
+      - eval_on_control_instance
+    cartridge_eval_body: |
+        local fmt, age, t = ...
+
+        -- comment
+
+        --[[ one more comment ]]
+
+        ---[[ this is one-line comment
+        local argparse = require('cartridge.argparse')
+        local opts, err = argparse.get_opts({
+            app_name = 'string',
+            instance_name = 'string',
+        })
+        ---]]
+
+        --[[ ]] assert(err == nil, tostring(err))
+
+        local instance_id --[=[ ]=]
+        if opts.instance_name == nil then
+            instance_id = opts.app_name
+        else
+            instance_id = string.format('%s.%s', opts.app_name, opts.instance_name)
+        end
+
+        return unpack({
+            [[This snippet was evaled from string]],
+            string.format(fmt, instance_id),
+            string.format([=[I am %s seconds old]=], age),
+            require('yaml').encode(t),
+        })
+
+    cartridge_eval_args:
+      - 'Hello, my name is %s!'
+      - 43
+      - {other: 'cute-table'}
+
+- name: 'Print and check result of script from string'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Debug result'
+      debug:
+        msg: '{{ eval_res }}'
+
+    - name: 'Check result'
+      assert:
+        msg: 'Received bad result'
+        success_msg: 'Received result is OK'
+        that: >-
+          eval_res == [
+              "This snippet was evaled from string",
+              "Hello, my name is myapp.instance-2-joined!",
+              "I am 43 seconds old",
+              "--- {'other': 'cute-table'}\n...\n",
+          ]
+
 # EMPTY EVAL
 
 - name: 'Call eval step without body or file specified'
@@ -177,7 +321,45 @@
         that: >-
           eval_res == [
               "This snippet was evaled from string",
-              "Hello, my name is " + instance_info.instance_id + "!",
+              "Hello, my name is myapp.instance-2-joined!",
+              "I am 43 seconds old",
+              "--- {'other': 'cute-table'}\n...\n",
+          ]
+
+# EMPTY EVAL (control)
+
+- name: 'Call eval_on_control_instance step without body or file specified'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_app_name: 'myapp'
+    cartridge_scenario:
+      - eval_on_control_instance
+
+- name: 'Check that eval was skipped'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Check that eval was skipped'
+      assert:
+        msg: 'Eval should be skipped'
+        success_msg: 'Eval was skipped'
+        that: eval_res_register.skipped | default(none)
+
+    - name: Check that previous eval result wasn't overwritten
+      assert:
+        msg: "Previous eval result shouldn't be overwritten"
+        success_msg: "Previous eval result wasn't overwritten"
+        that: >-
+          eval_res == [
+              "This snippet was evaled from string",
+              "Hello, my name is myapp.instance-2-joined!",
               "I am 43 seconds old",
               "--- {'other': 'cute-table'}\n...\n",
           ]

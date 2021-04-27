@@ -47,6 +47,7 @@ There are additional steps that are not included in the default scenario, but ca
 - [failover_promote](#failover_promote)
 - [force_leaders](#force_leaders)
 - [eval](#eval)
+- [eval_on_control_instance](#eval_on_control_instance)
 - [stop_instance](#stop_instance)
 - [start_instance](#start_instance)
 - [restart_instance_force](#restart_instance_force)
@@ -705,6 +706,22 @@ Input facts (set by config):
 
 Input facts (set by role):
 
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+
+Input facts (set by config):
+
+- `cartridge_eval_file` - path to file with Lua code to eval (isn't used if
+  `cartridge_eval_body` is specified);
+- `cartridge_eval_body` - code to eval;
+- `cartridge_eval_args` - function arguments.
+
+### eval_on_control_instance
+
+[Eval code](/doc/eval.md) on control instance.
+
+Input facts (set by role):
+
+- `control_instance` - information about control instance ([more details here](#set_control_instance));
 - `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
 
 Input facts (set by config):
