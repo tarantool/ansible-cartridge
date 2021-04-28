@@ -376,7 +376,7 @@ def debug(value, key=None):
     DEBUG_MESSAGES += value
 
 
-def add_warning(msg):
+def warn(msg):
     global WARNINGS
     WARNINGS.append(msg)
 
@@ -500,7 +500,7 @@ class Helpers:
     Console = Console
 
     debug = staticmethod(debug)
-    add_warning = staticmethod(add_warning)
+    warn = staticmethod(warn)
     execute_module = staticmethod(execute_module)
     get_control_console = staticmethod(get_control_console)
     is_expelled = staticmethod(is_expelled)
