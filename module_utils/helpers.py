@@ -51,6 +51,7 @@ MEMORY_SIZE_BOX_CFG_PARAMS = {
 }
 
 FORMAT_REPLICASET_FUNC = '''
+local cartridge_roles = require('cartridge.roles')
 local function format_replicaset(r)
     local instances = {}
     for _, s in ipairs(r.servers) do
@@ -62,7 +63,7 @@ local function format_replicaset(r)
     return {
         uuid = r.uuid,
         alias = r.alias,
-        roles = r.roles,
+        enabled_roles = cartridge_roles.get_enabled_roles(r.roles),
         all_rw = r.all_rw,
         weight = r.weight,
         vshard_group = r.vshard_group,

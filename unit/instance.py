@@ -287,6 +287,11 @@ class Instance:
             require('cartridge').internal.add_replicaset(...)
         ''', kwargs)
 
+    def cfg_roles(self, *roles):
+        self.eval_res_err('''
+            require('cartridge').internal.cfg_roles(...)
+        ''', roles)
+
     def bootstrap_cluster(self):
         self.eval_res_err('''
             require('cartridge').internal.bootstrap_cluster()

@@ -60,14 +60,14 @@ class TestEditTopology(unittest.TestCase):
         self.instance.add_replicaset(
             alias='r1',
             instances=['r1-leader', 'r1-replica'],
-            roles=['role-1'],
+            all_rw=False,
         )
 
         # first call fails
-        # change roles
+        # set all_rw to true
         rpl_vars = {
             'replicaset_alias': 'r1',
-            'roles': ['role-1', 'role-2'],  # add one more role
+            'all_rw': True
         }
 
         hostvars = {
@@ -89,14 +89,13 @@ class TestEditTopology(unittest.TestCase):
         calls = self.instance.get_calls('edit_topology')
         self.assertEqual(len(calls), 1)
         self.assertEqual(calls[0], {
-            'replicasets': [{'uuid': 'r1-uuid', 'roles': ['role-1', 'role-2']}]
+            'replicasets': [{'uuid': 'r1-uuid', 'all_rw': True}]
         })
 
         # second call fails
         # change only failover priority
         rpl_vars = {
             'replicaset_alias': 'r1',
-            'roles': ['role-1'],
             'failover_priority': ['r1-replica', 'r1-leader'],
         }
 
@@ -130,6 +129,8 @@ class TestEditTopology(unittest.TestCase):
         [False],
     ])
     def test_create_replicasets(self, allow_missed_instances):
+        self.instance.cfg_roles({'name': 'role-1'}, {'name': 'role-2'})
+
         rpl1_vars = {
             'replicaset_alias': 'r1',
             'roles': ['role-1', 'role-2'],
@@ -233,6 +234,15 @@ class TestEditTopology(unittest.TestCase):
         [False],
     ])
     def test_change_replicasets(self, allow_missed_instances):
+        self.instance.cfg_roles(
+            {'name': 'role-1', 'dependencies': ['role-1-dep', 'role-1-dep-hidden']},
+            {'name': 'role-1-dep'},
+            {'name': 'role-1-dep-hidden', 'hidden': True},
+            {'name': 'role-2'},
+            {'name': 'role-3-permanent', 'permanent': True},
+            {'name': 'vshard-storage', 'known': True},
+        )
+
         rpl1_vars = {
             'replicaset_alias': 'r1',
             'roles': ['vshard-storage', 'role-2'],
@@ -400,7 +410,6 @@ class TestEditTopology(unittest.TestCase):
         self.instance.add_replicaset(
             alias='r1',
             instances=['r1-leader', 'r1-replica'],
-            roles=['role-1', 'role-2'],
         )
 
         # add unjoined replicas
@@ -412,7 +421,6 @@ class TestEditTopology(unittest.TestCase):
         # change failover priority, don't join any instances
         rpl1_vars = {
             'replicaset_alias': 'r1',
-            'roles': ['role-1', 'role-2'],
             'failover_priority': ['r1-replica', 'r1-leader'],
         }
 
@@ -453,7 +461,6 @@ class TestEditTopology(unittest.TestCase):
         # expected one call with join_servers
         rpl1_vars = {
             'replicaset_alias': 'r1',
-            'roles': ['role-1', 'role-2'],
             'failover_priority': ['r1-replica', 'r1-leader', 'r1-replica-2'],
         }
 
@@ -498,7 +505,6 @@ class TestEditTopology(unittest.TestCase):
         # expected two calls: join_servers and failover_priority
         rpl1_vars = {
             'replicaset_alias': 'r1',
-            'roles': ['role-1', 'role-2'],
             'failover_priority': ['r1-replica', 'r1-replica-3', 'r1-replica-2', 'r1-leader'],
         }
 
@@ -565,13 +571,12 @@ class TestEditTopology(unittest.TestCase):
     def test_expel_non_joined_instances(self, allow_missed_instances):
         rpl1_vars = {
             'replicaset_alias': 'r1',
-            'roles': ['role-1', 'role-2'],
-            'failover_priority': ['r1-leader', 'r1-replica-2']
+            'failover_priority': ['r1-leader', 'r1-replica-2'],
+            'all_rw': True,
         }
 
         rpl2_vars = {
             'replicaset_alias': 'r2',
-            'roles': ['role-2'],
         }
 
         hostvars = {
@@ -617,7 +622,7 @@ class TestEditTopology(unittest.TestCase):
         exp_replicasets_opts = [
             {
                 'alias': 'r1',
-                'roles': ['role-1', 'role-2'],
+                'all_rw': True,
                 # no failover priority opt, just join_servers in right order
                 'join_servers': [
                     {'uri': uri}
@@ -626,7 +631,6 @@ class TestEditTopology(unittest.TestCase):
             },
             {
                 'alias': 'r2',
-                'roles': ['role-2'],
                 # no failover priority opt, just join_servers in right order
                 'join_servers': [
                     {'uri': uri}
@@ -645,23 +649,23 @@ class TestEditTopology(unittest.TestCase):
         self.instance.add_replicaset(
             alias='r1',
             instances=['r1-leader', 'r1-replica', 'r1-replica-2'],
-            roles=['role-1', 'role-2'],
+            all_rw=False,
         )
 
         self.instance.add_replicaset(
             alias='r2',
             instances=['r2-leader', 'r2-replica'],
-            roles=['role-2'],
+            all_rw=False,
         )
 
         rpl1_vars = {
             'replicaset_alias': 'r1',
-            'roles': ['role-1', 'role-2', 'role-3'],  # add one more role
+            'all_rw': True
         }
 
         rpl2_vars = {
             'replicaset_alias': 'r2',
-            'roles': ['role-2'],
+            'all_rw': False,
         }
 
         hostvars = {
@@ -697,7 +701,7 @@ class TestEditTopology(unittest.TestCase):
         exp_replicasets_opts = [
             {
                 'uuid': 'r1-uuid',
-                'roles': ['role-1', 'role-2', 'role-3'],
+                'all_rw': True,
             },
         ]
 
@@ -726,7 +730,7 @@ class TestEditTopology(unittest.TestCase):
         self.instance.add_replicaset(
             alias='r1',
             instances=['r1-leader', 'r1-replica'],
-            roles=['role-1', 'role-2'],
+            all_rw=False,
         )
 
         self.instance.add_membership_members([
@@ -737,7 +741,7 @@ class TestEditTopology(unittest.TestCase):
         # set zones for 'r1-replica' and 'r1-replica-2'
         rpl1_vars = {
             'replicaset_alias': 'r1',
-            'roles': ['role-1', 'role-2'],
+            'all_rw': False,
             'failover_priority': ['r1-replica-2'],
         }
 
