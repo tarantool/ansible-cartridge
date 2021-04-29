@@ -545,7 +545,7 @@ def get_clusterwide_config(control_console, filter_system=True):
         return None, "Cluster isn't bootstrapped yet"
 
     filtered = {}
-    for key, value in current_config.items():
+    for key, value in (current_config or {}).items():
         if not key.endswith('.yml') and not (filter_system and key in SYSTEM_CONFIG_SECTIONS):
             filtered[key] = value
     return filtered, None

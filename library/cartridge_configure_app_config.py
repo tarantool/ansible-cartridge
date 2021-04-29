@@ -24,7 +24,7 @@ def config_app(params):
         if section_is_deleted(section):
             new_sections[section_name] = None
         else:
-            new_sections[section_name] = section['body']
+            new_sections[section_name] = section.get('body')
 
     helpers.set_twophase_options_from_params(control_console, params)
 

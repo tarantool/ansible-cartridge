@@ -117,12 +117,13 @@ edit_topology_allow_missed_instances: false
 
 ## Cluster configuration
 
-cartridge_bootstrap_vshard: false
 cartridge_app_config: null
 cartridge_app_config_path: null
 cartridge_app_config_upload_endpoint: null
 cartridge_tdg_token: null
+
 cartridge_auth: null
+cartridge_bootstrap_vshard: false
 cartridge_failover: null  # DEPRECATED
 cartridge_failover_params: null
 cartridge_failover_promote_params: null

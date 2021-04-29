@@ -84,9 +84,13 @@
 
       ## Cluster configuration
 
-      cartridge_bootstrap_vshard: '{{ cartridge_bootstrap_vshard }}'
       cartridge_app_config: '{{ cartridge_app_config }}'
+      cartridge_app_config_path: '{{ cartridge_app_config_path }}'
+      cartridge_app_config_upload_endpoint: '{{ cartridge_app_config_upload_endpoint }}'
+      cartridge_tdg_token: '{{ cartridge_tdg_token }}'
+
       cartridge_auth: '{{ cartridge_auth }}'
+      cartridge_bootstrap_vshard: '{{ cartridge_bootstrap_vshard }}'
       cartridge_failover: '{{ cartridge_failover }}'
       cartridge_failover_params: '{{ cartridge_failover_params }}'
       cartridge_failover_promote_params: '{{ cartridge_failover_promote_params }}'
