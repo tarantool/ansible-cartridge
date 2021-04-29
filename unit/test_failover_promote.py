@@ -32,7 +32,7 @@ class TestEditTopology(unittest.TestCase):
         self.instance.start()
 
     @parameterized.expand([
-        ['disabled'],  # force_inconsistency
+        ['disabled'],
         ['eventual'],
     ])
     def test_failover_bad_mode(self, mode):

@@ -80,6 +80,7 @@
 
       edit_topology_timeout: '{{ edit_topology_timeout }}'
       edit_topology_healthy_timeout: '{{ edit_topology_healthy_timeout }}'
+      edit_topology_allow_missed_instances: '{{ edit_topology_allow_missed_instances }}'
 
       ## Cluster configuration
 

@@ -165,6 +165,7 @@ end
 
 RANDOM_PREFIX = random.randint(1, 1000)
 DEBUG_MESSAGES = []
+WARNINGS = []
 
 
 class ModuleRes:
@@ -197,8 +198,12 @@ class ModuleRes:
 
         if self.warnings is None:
             self.warnings = []
+        self.warnings += WARNINGS
         self.warnings += DEBUG_MESSAGES
         res['warnings'] = self.warnings
+
+        del WARNINGS[:]
+        del DEBUG_MESSAGES[:]
 
         for key, value in self.kwargs.items():
             res[key] = value
@@ -371,6 +376,11 @@ def debug(value, key=None):
     DEBUG_MESSAGES += value
 
 
+def warn(msg):
+    global WARNINGS
+    WARNINGS.append(msg)
+
+
 def execute_module(argument_spec, function):
     module = AnsibleModule(argument_spec=argument_spec)
     try:
@@ -490,6 +500,7 @@ class Helpers:
     Console = Console
 
     debug = staticmethod(debug)
+    warn = staticmethod(warn)
     execute_module = staticmethod(execute_module)
     get_control_console = staticmethod(get_control_console)
     is_expelled = staticmethod(is_expelled)

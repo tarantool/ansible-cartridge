@@ -23,6 +23,12 @@ PARAMS_THE_SAME_FOR_ALL_HOSTS = [
     'cartridge_custom_steps_dir',
     'cartridge_custom_steps',
     'cartridge_failover_promote_params',
+    'twophase_netbox_call_timeout',
+    'twophase_upload_config_timeout',
+    'twophase_apply_config_timeout',
+    'edit_topology_timeout',
+    'edit_topology_healthy_timeout',
+    'edit_topology_allow_missed_instances',
 ]
 
 CONFIG_REQUIRED_PARAMS = ['advertise_uri']
@@ -106,6 +112,7 @@ SCHEMA = {
     'twophase_apply_config_timeout': int,
     'edit_topology_timeout': int,
     'edit_topology_healthy_timeout': int,
+    'edit_topology_allow_missed_instances': bool,
     'replicaset_alias': str,
     'failover_priority': [str],
     'roles': [str],

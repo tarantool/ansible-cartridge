@@ -12,6 +12,7 @@ argument_spec = {
     'netbox_call_timeout': {'required': False, 'type': 'int'},
     'upload_config_timeout': {'required': False, 'type': 'int'},
     'apply_config_timeout': {'required': False, 'type': 'int'},
+    'allow_missed_instances': {'required': True, 'type': 'bool'},
 }
 
 edit_topology_func_body = '''
@@ -114,7 +115,97 @@ def add_replicaset_param_if_required(replicaset_params, replicaset, cluster_repl
     replicaset_params[param_name] = replicaset.get(param_name)
 
 
-def get_replicaset_params(replicaset, cluster_replicaset, cluster_instances):
+def check_filtered_instances(instances, filtered_instances, fmt, allow_missed_instances):
+    if len(instances) == len(filtered_instances):
+        return None
+
+    missed_instances = ', '.join(sorted(
+        set(instances).difference(filtered_instances)
+    ))
+
+    msg = fmt % missed_instances
+
+    if allow_missed_instances:
+        helpers.warn(msg)
+        return None
+
+    return msg
+
+
+def sort_instances_to_join_by_failover_priority(
+        instances_to_join, replicaset, cluster_instances, allow_missed_instances):
+    failover_priority = replicaset.get('failover_priority')
+    if not failover_priority:
+        return instances_to_join, None
+
+    started_failover_priority_instances = set(filter(
+        lambda s: s in cluster_instances, failover_priority
+    ))
+
+    err = check_filtered_instances(
+        failover_priority,
+        started_failover_priority_instances,
+        "Some of instances specified in failover_priority aren't found in cluster: %s",
+        allow_missed_instances
+    )
+
+    if err is not None:
+        return None, err
+
+    instances_to_join = list(sorted(
+        instances_to_join,
+        key=lambda s: failover_priority.index(s) if s in failover_priority else len(instances_to_join)
+    ))
+
+    return instances_to_join, None
+
+
+def get_join_servers(replicaset, cluster_replicaset, cluster_instances, allow_missed_instances):
+    current_instances = []
+    if cluster_replicaset is not None:
+        current_instances = cluster_replicaset.get('instances')
+
+    remaining_instances = set(replicaset['instances']) - set(current_instances)
+    if not remaining_instances:
+        return None, None
+
+    instances_to_join = list(filter(lambda s: s in cluster_instances, remaining_instances))
+
+    err = check_filtered_instances(
+        remaining_instances,
+        instances_to_join,
+        "Some of replicaset instances aren't found in cluster: %s",
+        allow_missed_instances
+    )
+
+    if err is not None:
+        return None, err
+
+    # When the new replicaset is created, instances can be joined in failover
+    # priority order.
+    # When the existing replicaset is edited, failover priority is configured
+    # later when all replicaset instances UUIDs are set (when new instances
+    # are joined, UUID isn't specified).
+
+    if instances_to_join:
+        if cluster_replicaset is None:
+            # we create new replicaset - let's join instances in failover priority
+            # to avoid second edit_toplogy call
+            instances_to_join, err = sort_instances_to_join_by_failover_priority(
+                instances_to_join, replicaset, cluster_instances, allow_missed_instances
+            )
+            if err is not None:
+                return None, err
+
+    join_servers = [
+        {'uri': cluster_instances[s]['uri']}
+        for s in instances_to_join
+    ]
+
+    return join_servers, None
+
+
+def get_replicaset_params(replicaset, cluster_replicaset, cluster_instances, allow_missed_instances):
     """
     input EditReplicasetInput {
         uuid: String
@@ -140,53 +231,14 @@ def get_replicaset_params(replicaset, cluster_replicaset, cluster_instances):
             replicaset_params, replicaset, cluster_replicaset, param_name
         )
 
-    current_instances = []
-    if cluster_replicaset is not None:
-        current_instances = cluster_replicaset.get('instances')
-
-    instances_to_join = list(
-        set(replicaset['instances']) - set(current_instances)
+    join_servers, err = get_join_servers(
+        replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
     )
+    if err is not None:
+        return None, err
 
-    # generally, we always apply failover priority AFTER
-    # all other changes
-    # the only one optimization is to join new replicaset
-    # with failover priority
-    # and call second `edit_topology` only for replicasets that have
-    # failover priority different from the specified
-
-    if instances_to_join:
-        if cluster_replicaset is None:
-            # we create new replicaset - let's join instances in failover priority
-            # to avoid second edit_toplogy call
-            if replicaset['failover_priority']:
-                if not all([s in cluster_instances for s in replicaset['failover_priority']]):
-                    instances_not_in_cluster_str = ', '.join([
-                        s for s in replicaset['failover_priority'] if s not in cluster_instances
-                    ])
-                    err = "Some of instances specified in failover_priority aren't found in cluster: %s"
-                    return None, err % instances_not_in_cluster_str
-
-                first_instances_to_join = [
-                    instance_name for instance_name in replicaset['failover_priority']
-                    if instance_name in instances_to_join
-                ]
-
-                instances_to_join = first_instances_to_join + [
-                    instance for instance in instances_to_join if instance not in first_instances_to_join
-                ]
-
-        if not all([s in cluster_instances for s in instances_to_join]):
-            instances_not_in_cluster_str = ', '.join([
-                s for s in instances_to_join if s not in cluster_instances
-            ])
-
-            return None, "Some of replicaset instances aren't found in cluster: %s " % instances_not_in_cluster_str
-
-        replicaset_params['join_servers'] = [
-            {'uri': cluster_instances[s]['uri']}
-            for s in instances_to_join
-        ]
+    if join_servers:
+        replicaset_params['join_servers'] = join_servers
 
     if 'uuid' in replicaset_params and len(replicaset_params) == 1:
         # replicaset is already exists
@@ -196,14 +248,14 @@ def get_replicaset_params(replicaset, cluster_replicaset, cluster_instances):
     return replicaset_params, None
 
 
-def get_replicasets_params(replicasets, cluster_replicasets, cluster_instances):
+def get_replicasets_params(replicasets, cluster_replicasets, cluster_instances, allow_missed_instances):
     replicasets_params = []
 
     for _, replicaset in replicasets.items():
         cluster_replicaset = cluster_replicasets.get(replicaset['alias'])
 
         replicaset_params, err = get_replicaset_params(
-            replicaset, cluster_replicaset, cluster_instances
+            replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
         )
 
         if err is not None:
@@ -217,7 +269,8 @@ def get_replicasets_params(replicasets, cluster_replicasets, cluster_instances):
     return replicasets_params, None
 
 
-def get_replicasets_params_for_changing_failover_priority(replicasets, cluster_replicasets, cluster_instances):
+def get_replicasets_params_for_changing_failover_priority(replicasets, cluster_replicasets,
+                                                          cluster_instances, allow_missed_instances):
     replicasets_params = []
 
     for alias, cluster_replicaset in cluster_replicasets.items():
@@ -228,19 +281,32 @@ def get_replicasets_params_for_changing_failover_priority(replicasets, cluster_r
         if failover_priority is None:
             continue
 
-        if cluster_replicaset['instances'][:len(failover_priority)] != failover_priority:
-            failover_priority_uuids = []
-            for instance_name in failover_priority:
-                if instance_name not in cluster_instances or not cluster_instances[instance_name].get('uuid'):
-                    return None, "Instance %s from %s failover_priority isn't joined to cluster" % (
-                        instance_name, alias
-                    )
-                failover_priority_uuids.append(cluster_instances[instance_name]['uuid'])
+        if cluster_replicaset['instances'][:len(failover_priority)] == failover_priority:
+            return None, None
 
-            replicasets_params.append({
-                'uuid': cluster_replicaset['uuid'],
-                'failover_priority': failover_priority_uuids,
-            })
+        filtered_failover_priority = list(filter(
+            lambda s: s in cluster_instances and cluster_instances[s].get('uuid'),
+            failover_priority
+        ))
+
+        err = check_filtered_instances(
+            failover_priority,
+            filtered_failover_priority,
+            "Instances %s from %s failover_priority aren't joined to cluster" % ("%s", alias),
+            allow_missed_instances
+        )
+
+        if err is not None:
+            return None, err
+
+        failover_priority_uuids = [
+            cluster_instances[s]['uuid'] for s in filtered_failover_priority
+        ]
+
+        replicasets_params.append({
+            'uuid': cluster_replicaset['uuid'],
+            'failover_priority': failover_priority_uuids,
+        })
 
     return replicasets_params, None
 
@@ -256,11 +322,17 @@ def add_server_param_if_required(server_params, instance_params, cluster_instanc
     server_params[param_name] = instance_params.get(param_name)
 
 
-def get_server_params(instance_name, instance_params, cluster_instances):
+def get_server_params(instance_name, instance_params, cluster_instances, allow_missed_instances):
     if instance_name not in cluster_instances:
         if instance_params.get('expelled') is True:
             return None, None
-        return None, "Instance %s isn't found in cluster" % instance_name
+
+        msg = "Instance %s isn't found in cluster" % instance_name
+        if allow_missed_instances:
+            helpers.warn(msg)
+            return None, None
+        else:
+            return None, msg
 
     cluster_instance = cluster_instances[instance_name]
 
@@ -284,10 +356,12 @@ def get_server_params(instance_name, instance_params, cluster_instances):
     return server_params, None
 
 
-def get_servers_params(instances, cluster_instances):
+def get_servers_params(instances, cluster_instances, allow_missed_instances):
     servers_params = []
     for instance_name, instance_params in instances.items():
-        server_params, err = get_server_params(instance_name, instance_params, cluster_instances)
+        server_params, err = get_server_params(
+            instance_name, instance_params, cluster_instances, allow_missed_instances
+        )
         if err is not None:
             return None, "Failed to get edit topology params for instance %s: %s" % (instance_name, err)
 
@@ -297,17 +371,19 @@ def get_servers_params(instances, cluster_instances):
     return servers_params, None
 
 
-def get_topology_params(replicasets, cluster_replicasets, instances, cluster_instances):
+def get_topology_params(replicasets, cluster_replicasets, instances, cluster_instances, allow_missed_instances):
     topology_params = {}
 
-    replicasets_params, err = get_replicasets_params(replicasets, cluster_replicasets, cluster_instances)
+    replicasets_params, err = get_replicasets_params(
+        replicasets, cluster_replicasets, cluster_instances, allow_missed_instances
+    )
     if err is not None:
         return None, err
 
     if replicasets_params:
         topology_params['replicasets'] = replicasets_params
 
-    servers_params, err = get_servers_params(instances, cluster_instances)
+    servers_params, err = get_servers_params(instances, cluster_instances, allow_missed_instances)
     if err is not None:
         return None, err
 
@@ -318,12 +394,12 @@ def get_topology_params(replicasets, cluster_replicasets, instances, cluster_ins
 
 
 def get_replicasets_failover_priority_and_instances_params(
-    replicasets, cluster_replicasets, instances, cluster_instances
+    replicasets, cluster_replicasets, instances, cluster_instances, allow_missed_instances
 ):
     topology_params = {}
 
     replicasets_params, err = get_replicasets_params_for_changing_failover_priority(
-        replicasets, cluster_replicasets, cluster_instances
+        replicasets, cluster_replicasets, cluster_instances, allow_missed_instances
     )
     if err is not None:
         return None, err
@@ -332,7 +408,7 @@ def get_replicasets_failover_priority_and_instances_params(
         topology_params['replicasets'] = replicasets_params
 
     # manage instances that were joined on previous call
-    servers_params, err = get_servers_params(instances, cluster_instances)
+    servers_params, err = get_servers_params(instances, cluster_instances, allow_missed_instances)
     if err is not None:
         return None, err
 
@@ -382,6 +458,7 @@ def edit_topology(params):
     module_hostvars = params['module_hostvars']
     play_hosts = params['play_hosts']
     healthy_timeout = params['healthy_timeout']
+    allow_missed_instances = params['allow_missed_instances']
 
     replicasets = get_configured_replicasets(module_hostvars, play_hosts)
     instances = get_instances_to_configure(module_hostvars, play_hosts)
@@ -406,7 +483,7 @@ def edit_topology(params):
     #   New instances aren't configured here since they don't have
     #   UUIDs before join.
     topology_params, err = get_topology_params(
-        replicasets, cluster_replicasets, instances, cluster_instances
+        replicasets, cluster_replicasets, instances, cluster_instances, allow_missed_instances
     )
     if err is not None:
         return helpers.ModuleRes(
@@ -449,7 +526,7 @@ def edit_topology(params):
     # * Edit failover_priority of replicasets if it's needed.
     # * Configure instances that weren't configured on first `edit_topology` call.
     topology_params, err = get_replicasets_failover_priority_and_instances_params(
-        replicasets, cluster_replicasets, instances, cluster_instances
+        replicasets, cluster_replicasets, instances, cluster_instances, allow_missed_instances
     )
     if err is not None:
         return helpers.ModuleRes(

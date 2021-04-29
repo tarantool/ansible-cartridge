@@ -111,6 +111,9 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `edit_topology_healthy_timeout` (`number`, default: `60`): time in seconds to wait until a cluster become
   healthy after editing topology;
 - [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.
+- `edit_topology_allow_missed_instances` (`boolean`, default: `false`) - if set, then
+  instances that aren't started yet are ignored on editing topology. A warning
+  message is shown in case of error.
 
 ## Cluster configuration
 
