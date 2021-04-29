@@ -587,6 +587,8 @@ Input facts (set by config):
 
 - `cartridge_app_config_path` - path to application config to patch;
 - `cartridge_app_config_upload_endpoint` - mode of config uploading (`lua`, `http` or `tdg`);
+- `cartridge_app_config_upload_http_port` - http port of instance to upload config
+  (control instance http port by default);
 - `cartridge_cluster_cookie` - cluster cookie for all cluster instances;
 - `cartridge_tdg_token` - token to upload config by HTTP in TDG.
 

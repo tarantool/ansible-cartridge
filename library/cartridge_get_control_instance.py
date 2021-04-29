@@ -180,14 +180,18 @@ def get_control_instance(params):
     # instance_vars['instance_info'], but if control instance is not
     # in play_hosts, instance_info isn't computed for it
     instance_vars = module_hostvars[control_instance_name]
+
     run_dir = instance_vars.get('cartridge_run_dir')
     control_instance_console_sock = helpers.get_instance_console_sock(
         run_dir, app_name, control_instance_name,
     )
 
+    http_port = instance_vars.get('config', {}).get('http_port')
+
     return helpers.ModuleRes(changed=False, fact={
         'name': control_instance_name,
         'console_sock': control_instance_console_sock,
+        'http_port': http_port,
     })
 
 

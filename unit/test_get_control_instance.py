@@ -36,10 +36,13 @@ def call_get_control_instance(app_name, console_sock, module_hostvars=None, play
     })
 
 
-def get_instance_hostvars(alias, replicaset_alias=None, run_dir=None, expelled=False):
+def get_instance_hostvars(alias, replicaset_alias=None, run_dir=None, expelled=False, http_port=8080):
     return {
         alias: {
-            'config': {'advertise_uri': '%s-uri' % alias},
+            'config': {
+                'advertise_uri': '%s-uri' % alias,
+                'http_port': http_port,
+            },
             'replicaset_alias': replicaset_alias,
             'cartridge_run_dir': run_dir,
             'expelled': expelled,
@@ -118,6 +121,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'instance-1',
             'console_sock': '/var/run/tarantool/myapp.instance-1.control',
+            'http_port': 8080,
         })
 
     def test_one_instance(self):
@@ -133,6 +137,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'instance-1',
             'console_sock': 'run-dir/myapp.instance-1.control',
+            'http_port': 8080,
         })
 
         # without UUID
@@ -146,8 +151,8 @@ class TestGetControlInstance(unittest.TestCase):
 
     def test_two_instances(self):
         hostvars = {}
-        hostvars.update(get_instance_hostvars('instance-1', run_dir='run-dir-1'))
-        hostvars.update(get_instance_hostvars('instance-2', run_dir='run-dir-2'))
+        hostvars.update(get_instance_hostvars('instance-1', run_dir='run-dir-1', http_port=8081))
+        hostvars.update(get_instance_hostvars('instance-2', run_dir='run-dir-2', http_port=8082))
 
         # both with UUID and alias
         # instance-1 is selected since it's URI is
@@ -161,6 +166,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'instance-1',
             'console_sock': 'run-dir-1/myapp.instance-1.control',
+            'http_port': 8081,
         })
 
         # one with UUID (it is selected)
@@ -173,6 +179,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'instance-2',
             'console_sock': 'run-dir-2/myapp.instance-2.control',
+            'http_port': 8082,
         })
 
         # one with UUID (but without alias)
@@ -195,10 +202,10 @@ class TestGetControlInstance(unittest.TestCase):
 
     def test_no_joined_instances(self):
         hostvars = {}
-        hostvars.update(get_instance_hostvars('instance-4', 'some-rpl', run_dir='run-dir-4'))
-        hostvars.update(get_instance_hostvars('instance-3', 'some-rpl', run_dir='run-dir-3'))
-        hostvars.update(get_instance_hostvars('instance-2-no-rpl', run_dir='run-dir-2'))
-        hostvars.update(get_instance_hostvars('instance-1-expelled', run_dir='run-dir-1'))
+        hostvars.update(get_instance_hostvars('instance-4', 'some-rpl', run_dir='run-dir-4', http_port=8084))
+        hostvars.update(get_instance_hostvars('instance-3', 'some-rpl', run_dir='run-dir-3', http_port=8083))
+        hostvars.update(get_instance_hostvars('instance-2-no-rpl', run_dir='run-dir-2', http_port=8082))
+        hostvars.update(get_instance_hostvars('instance-1-expelled', run_dir='run-dir-1', http_port=8081))
         hostvars.update({'my-stateboard': {'stateboard': True}})
 
         set_membership_members(self.instance, [
@@ -215,6 +222,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'instance-3',
             'console_sock': 'run-dir-3/myapp.instance-3.control',
+            'http_port': 8083,
         })
 
         # only instances w/o replicaset_alias, expelled and stateboard
@@ -242,9 +250,9 @@ class TestGetControlInstance(unittest.TestCase):
 
     def test_twophase_commit_versions(self):
         hostvars = {}
-        hostvars.update(get_instance_hostvars('instance-1', 'some-rpl', run_dir='run-dir-1'))
-        hostvars.update(get_instance_hostvars('instance-2', 'some-rpl', run_dir='run-dir-2'))
-        hostvars.update(get_instance_hostvars('instance-3', 'some-rpl', run_dir='run-dir-3'))
+        hostvars.update(get_instance_hostvars('instance-1', 'some-rpl', run_dir='run-dir-1', http_port=8081))
+        hostvars.update(get_instance_hostvars('instance-2', 'some-rpl', run_dir='run-dir-2', http_port=8082))
+        hostvars.update(get_instance_hostvars('instance-3', 'some-rpl', run_dir='run-dir-3', http_port=8083))
 
         # instance-3 has lower version of twophase commit
         global twophase_commit_versions
@@ -266,6 +274,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'instance-3',
             'console_sock': 'run-dir-3/myapp.instance-3.control',
+            'http_port': 8083,
         })
 
         # all without UUID - instance-3 is selected
@@ -280,6 +289,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'instance-3',
             'console_sock': 'run-dir-3/myapp.instance-3.control',
+            'http_port': 8083,
         })
 
         # instance-1 and instance-2 has UUIDs
@@ -295,15 +305,16 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'instance-2',
             'console_sock': 'run-dir-2/myapp.instance-2.control',
+            'http_port': 8082,
         })
 
     def test_dead_instances(self):
         # first joined instance is dead
         hostvars = {}
-        hostvars.update(get_instance_hostvars('joined-1', 'some-rpl'))
-        hostvars.update(get_instance_hostvars('joined-2', 'some-rpl'))
-        hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl'))
-        hostvars.update(get_instance_hostvars('not-joined-2', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('joined-1', 'some-rpl', http_port=8081))
+        hostvars.update(get_instance_hostvars('joined-2', 'some-rpl', http_port=8082))
+        hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl', http_port=8083))
+        hostvars.update(get_instance_hostvars('not-joined-2', 'some-rpl', http_port=8084))
 
         set_membership_members(self.instance, [
             get_member('joined-1', with_uuid=True, status='dead'),
@@ -317,6 +328,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'joined-2',
             'console_sock': '/var/run/tarantool/myapp.joined-2.control',
+            'http_port': 8082,
         })
 
         # all joined instances are dead
@@ -339,8 +351,8 @@ class TestGetControlInstance(unittest.TestCase):
 
         # no joined, first unjoined instance is dead
         hostvars = {}
-        hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl'))
-        hostvars.update(get_instance_hostvars('not-joined-2', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl', http_port=8081))
+        hostvars.update(get_instance_hostvars('not-joined-2', 'some-rpl', http_port=8082))
 
         set_membership_members(self.instance, [
             get_member('not-joined-1', status='dead'),
@@ -352,14 +364,15 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'not-joined-2',
             'console_sock': '/var/run/tarantool/myapp.not-joined-2.control',
+            'http_port': 8082,
         })
 
         # no joined, first unjoined instance is dead,
         # second doesn't have replicaset alias
         hostvars = {}
-        hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl'))
-        hostvars.update(get_instance_hostvars('not-joined-2'))
-        hostvars.update(get_instance_hostvars('not-joined-3', 'some-rpl'))
+        hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl', http_port=8081))
+        hostvars.update(get_instance_hostvars('not-joined-2', http_port=8082))
+        hostvars.update(get_instance_hostvars('not-joined-3', 'some-rpl', http_port=8083))
 
         set_membership_members(self.instance, [
             get_member('not-joined-1', status='dead'),
@@ -372,6 +385,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'not-joined-3',
             'console_sock': '/var/run/tarantool/myapp.not-joined-3.control',
+            'http_port': 8083,
         })
 
     def tearDown(self):

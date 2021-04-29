@@ -17,7 +17,7 @@
         remote_dir: '/tmp/'
         upload_endpoint: '{{ cartridge_app_config_upload_endpoint }}'
         console_sock: '{{ control_instance.console_sock }}'
-        http_port: '{{ app_config_upload_http_port }}'
+        http_port: '{{ cartridge_app_config_upload_http_port or control_instance.http_port }}'
         cluster_cookie: '{{ cartridge_cluster_cookie }}'
         tdg_token: '{{ cartridge_tdg_token }}'
       register: apply_app_config_res
