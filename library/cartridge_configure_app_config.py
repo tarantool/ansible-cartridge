@@ -32,10 +32,6 @@ def config_app(params):
     if err is not None:
         return helpers.ModuleRes(failed=True, msg=err)
 
-    helpers.debug(control_console.eval_res_err('''
-        return require('cartridge').config_get_readonly()
-    ''')[0].get('test-section'), 'test-section')
-
     return helpers.ModuleRes(changed=changed)
 
 
