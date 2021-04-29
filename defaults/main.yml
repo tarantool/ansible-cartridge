@@ -119,7 +119,7 @@ edit_topology_allow_missed_instances: false
 
 cartridge_app_config: null
 cartridge_app_config_path: null
-cartridge_app_config_upload_endpoint: null
+cartridge_app_config_upload_mode: null
 cartridge_app_config_upload_http_port: null
 cartridge_tdg_token: null
 

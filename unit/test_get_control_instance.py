@@ -36,7 +36,7 @@ def call_get_control_instance(app_name, console_sock, module_hostvars=None, play
     })
 
 
-def get_instance_hostvars(alias, replicaset_alias=None, run_dir=None, expelled=False, http_port=8080):
+def get_instance_hostvars(alias, replicaset_alias=None, run_dir=None, expelled=False, http_port=None):
     return {
         alias: {
             'config': {
@@ -121,7 +121,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'instance-1',
             'console_sock': '/var/run/tarantool/myapp.instance-1.control',
-            'http_port': 8080,
+            'http_port': None,
         })
 
     def test_one_instance(self):
@@ -137,7 +137,7 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertEqual(res.fact, {
             'name': 'instance-1',
             'console_sock': 'run-dir/myapp.instance-1.control',
-            'http_port': 8080,
+            'http_port': None,
         })
 
         # without UUID

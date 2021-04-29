@@ -51,16 +51,16 @@ MEMORY_SIZE_BOX_CFG_PARAMS = {
 }
 
 SYSTEM_CONFIG_SECTIONS = {
-    'auth': True,
-    'auth.yml': True,
-    'topology': True,
-    'topology.yml': True,
-    'users_acl': True,
-    'users_acl.yml': True,
-    'vshard': True,
-    'vshard.yml': True,
-    'vshard_groups': True,
-    'vshard_groups.yml': True,
+    'auth',
+    'auth.yml',
+    'topology',
+    'topology.yml',
+    'users_acl',
+    'users_acl.yml',
+    'vshard',
+    'vshard.yml',
+    'vshard_groups',
+    'vshard_groups.yml',
 }
 
 FORMAT_REPLICASET_FUNC = '''
@@ -556,13 +556,19 @@ def patch_clusterwide_config(control_console, new_sections):
     if err is not None:
         return None, err
 
+    passed_system_sections = []
     patch = {}
+
     for section_name, section in new_sections.items():
         if section_name in SYSTEM_CONFIG_SECTIONS:
-            return None, "Unable to patch config system section: '%s'" % section_name
+            passed_system_sections.append(section_name)
+            continue
 
         if current_config.get(section_name) != section:
             patch[section_name] = section
+
+    if passed_system_sections:
+        return None, "Unable to patch config system sections: %s" % ', '.join(passed_system_sections)
 
     if not patch:
         return False, None

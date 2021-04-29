@@ -15,7 +15,7 @@
       cartridge_apply_app_config:
         local_config_path: '{{ cartridge_app_config_path }}'
         remote_dir: '/tmp/'
-        upload_endpoint: '{{ cartridge_app_config_upload_endpoint }}'
+        upload_mode: '{{ cartridge_app_config_upload_mode }}'
         console_sock: '{{ control_instance.console_sock }}'
         http_port: '{{ cartridge_app_config_upload_http_port or control_instance.http_port }}'
         cluster_cookie: '{{ cartridge_cluster_cookie }}'

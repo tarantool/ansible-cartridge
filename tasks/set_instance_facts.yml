@@ -86,7 +86,7 @@
 
       cartridge_app_config: '{{ cartridge_app_config }}'
       cartridge_app_config_path: '{{ cartridge_app_config_path }}'
-      cartridge_app_config_upload_endpoint: '{{ cartridge_app_config_upload_endpoint }}'
+      cartridge_app_config_upload_mode: '{{ cartridge_app_config_upload_mode }}'
       cartridge_app_config_upload_http_port: '{{ cartridge_app_config_upload_http_port }}'
       cartridge_tdg_token: '{{ cartridge_tdg_token }}'
 

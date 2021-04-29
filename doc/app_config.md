@@ -73,20 +73,20 @@ cartridge_app_config_path: '../my_app_config.zip'
 cartridge_app_config_path: '../my_app_config_dir'
 ```
 
-There are 3 types of endpoints for config loading:
+There are 3 modes for config loading:
 - `lua` - config will be uploaded by Lua-function `cartridge.config_patch_clusterwide()`;
 - `http` - config will be uploaded to `http://localhost:port/admin/config`
   with basic authentication by cluster cookie;
 - `tdg` - config will be loaded by a Lua-function in TDG with a version `1.6.15`+, `1.7.6`+ or `2.1.0`+;
   config will be loaded by HTTP in an older version.
 
-To select any of these types, you should use the variable `cartridge_app_config_upload_endpoint`:
+To select any of these types, you should use the variable `cartridge_app_config_upload_mode`:
 ```yaml
-cartridge_app_config_upload_endpoint: 'lua'
+cartridge_app_config_upload_mode: 'lua'
 # OR
-cartridge_app_config_upload_endpoint: 'http'
+cartridge_app_config_upload_mode: 'http'
 # OR
-cartridge_app_config_upload_endpoint: 'tdg'
+cartridge_app_config_upload_mode: 'tdg'
 ```
 
 ### Default modes
@@ -125,9 +125,9 @@ cartridge_app_config_upload_http_port: 8083
 ### TDG mode
 
 > By default, this mode is disabled. To enable it,
-> you should select it by `cartridge_app_config_upload_endpoint` variable:
+> you should select it by `cartridge_app_config_upload_mode` variable:
 > ```yaml
-> cartridge_app_config_upload_endpoint: 'tdg'
+> cartridge_app_config_upload_mode: 'tdg'
 > ```
 
 TDG mode - smart mode for loading config into TDG.
@@ -150,6 +150,6 @@ to which the archive will be uploaded by `cartridge_app_config_upload_http_port`
 Full example for loading TDG config:
 ```yaml
 cartridge_app_config_path: '../tdg_config_dir'
-cartridge_app_config_upload_endpoint: 'tdg'
+cartridge_app_config_upload_mode: 'tdg'
 cartridge_tdg_token: '878e45aa-f79e-4cf9-8938-d5904828c4d2'
 ```
