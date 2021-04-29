@@ -82,6 +82,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_install_tarantool_for_tgz',
                 'cartridge_remove_temporary_files',
                 'cartridge_failover_params.fencing_enabled',
+                'edit_topology_allow_missed_instances',
             },
             dict: {
                 'cartridge_defaults',

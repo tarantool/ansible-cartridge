@@ -115,6 +115,51 @@ def add_replicaset_param_if_required(replicaset_params, replicaset, cluster_repl
     replicaset_params[param_name] = replicaset.get(param_name)
 
 
+def check_filtered_instances(instances, filtered_instances, fmt, allow_missed_instances):
+    if len(instances) == len(filtered_instances):
+        return None
+
+    missed_instances = ', '.join(sorted(
+        set(instances).difference(filtered_instances)
+    ))
+
+    msg = fmt % missed_instances
+
+    if allow_missed_instances:
+        helpers.warn(msg)
+        return None
+
+    return msg
+
+
+def sort_instances_to_join_by_failover_priority(
+        instances_to_join, replicaset, cluster_instances, allow_missed_instances):
+    failover_priority = replicaset.get('failover_priority')
+    if not failover_priority:
+        return instances_to_join, None
+
+    started_failover_priority_instances = set(filter(
+        lambda s: s in cluster_instances, failover_priority
+    ))
+
+    err = check_filtered_instances(
+        failover_priority,
+        started_failover_priority_instances,
+        "Some of instances specified in failover_priority aren't found in cluster: %s",
+        allow_missed_instances
+    )
+
+    if err is not None:
+        return None, err
+
+    instances_to_join = list(sorted(
+        instances_to_join,
+        key=lambda s: failover_priority.index(s) if s in failover_priority else len(instances_to_join)
+    ))
+
+    return instances_to_join, None
+
+
 def get_join_servers(replicaset, cluster_replicaset, cluster_instances, allow_missed_instances):
     current_instances = []
     if cluster_replicaset is not None:
@@ -126,17 +171,15 @@ def get_join_servers(replicaset, cluster_replicaset, cluster_instances, allow_mi
 
     instances_to_join = list(filter(lambda s: s in cluster_instances, remaining_instances))
 
-    if len(instances_to_join) < len(remaining_instances):
-        instances_not_in_cluster_str = ', '.join(sorted(
-            remaining_instances.difference(set(instances_to_join))
-        ))
+    err = check_filtered_instances(
+        remaining_instances,
+        instances_to_join,
+        "Some of replicaset instances aren't found in cluster: %s",
+        allow_missed_instances
+    )
 
-        msg = "Some of replicaset instances aren't found in cluster: %s" % instances_not_in_cluster_str
-
-        if allow_missed_instances:
-            helpers.warn(msg)
-        else:
-            return None, msg
+    if err is not None:
+        return None, err
 
     # generally, we always apply failover priority AFTER
     # all other changes
@@ -149,29 +192,11 @@ def get_join_servers(replicaset, cluster_replicaset, cluster_instances, allow_mi
         if cluster_replicaset is None:
             # we create new replicaset - let's join instances in failover priority
             # to avoid second edit_toplogy call
-            failover_priority = replicaset.get('failover_priority')
-            if failover_priority:
-                started_failover_priority_instances = set(filter(
-                    lambda s: s in cluster_instances, failover_priority
-                ))
-
-                if len(started_failover_priority_instances) < len(failover_priority):
-                    instances_not_in_cluster_str = ', '.join(sorted(
-                        set(failover_priority).difference(started_failover_priority_instances)
-                    ))
-
-                    msg = "Some of instances specified in failover_priority aren't found in cluster: %s" % (
-                        instances_not_in_cluster_str
-                    )
-                    if allow_missed_instances:
-                        helpers.warn(msg)
-                    else:
-                        return None, msg
-
-                instances_to_join = list(sorted(
-                    instances_to_join,
-                    key=lambda s: failover_priority.index(s) if s in failover_priority else len(instances_to_join)
-                ))
+            instances_to_join, err = sort_instances_to_join_by_failover_priority(
+                instances_to_join, replicaset, cluster_instances, allow_missed_instances
+            )
+            if err is not None:
+                return None, err
 
     join_servers = [
         {'uri': cluster_instances[s]['uri']}
@@ -257,25 +282,32 @@ def get_replicasets_params_for_changing_failover_priority(replicasets, cluster_r
         if failover_priority is None:
             continue
 
-        if cluster_replicaset['instances'][:len(failover_priority)] != failover_priority:
-            failover_priority_uuids = []
-            for instance_name in failover_priority:
-                if instance_name not in cluster_instances or not cluster_instances[instance_name].get('uuid'):
-                    msg = "Instance %s from %s failover_priority isn't joined to cluster" % (
-                        instance_name, alias
-                    )
+        if cluster_replicaset['instances'][:len(failover_priority)] == failover_priority:
+            return None, None
 
-                    if allow_missed_instances:
-                        helpers.warn(msg)
-                        continue
-                    else:
-                        return None, msg
-                failover_priority_uuids.append(cluster_instances[instance_name]['uuid'])
+        filtered_failover_priority = list(filter(
+            lambda s: s in cluster_instances and cluster_instances[s].get('uuid'),
+            failover_priority
+        ))
 
-            replicasets_params.append({
-                'uuid': cluster_replicaset['uuid'],
-                'failover_priority': failover_priority_uuids,
-            })
+        err = check_filtered_instances(
+            failover_priority,
+            filtered_failover_priority,
+            "Instances %s from %s failover_priority aren't joined to cluster" % ("%s", alias),
+            allow_missed_instances
+        )
+
+        if err is not None:
+            return None, err
+
+        failover_priority_uuids = [
+            cluster_instances[s]['uuid'] for s in filtered_failover_priority
+        ]
+
+        replicasets_params.append({
+            'uuid': cluster_replicaset['uuid'],
+            'failover_priority': failover_priority_uuids,
+        })
 
     return replicasets_params, None
 
