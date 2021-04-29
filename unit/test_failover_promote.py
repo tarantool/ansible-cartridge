@@ -86,7 +86,10 @@ class TestEditTopology(unittest.TestCase):
         self.assertEqual(len(calls), 1)
 
         exp_replicaset_leaders_params = {'r1-uuid': 'r1-replica-uuid'}
-        self.assertEqual(calls[0], [exp_replicaset_leaders_params, None])
+        exp_opts = {
+            'force_inconsistency': None,
+        }
+        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_opts])
 
     def test_replicaset_not_in_cluster(self):
         self.instance.add_replicaset(
@@ -189,8 +192,11 @@ class TestEditTopology(unittest.TestCase):
             'r3-uuid': 'r3-replica-uuid',
         }
 
-        exp_force_inconsistency = True if force_inconsistency is True else None
-        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_force_inconsistency])
+        exp_opts = {
+            'force_inconsistency': True if force_inconsistency is True else None,
+        }
+
+        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_opts])
 
     @parameterized.expand([
         [True],  # force_inconsistency
@@ -245,8 +251,10 @@ class TestEditTopology(unittest.TestCase):
             'r3-uuid': 'r3-leader-uuid',
         }
 
-        exp_force_inconsistency = True if force_inconsistency is True else None
-        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_force_inconsistency])
+        exp_opts = {
+            'force_inconsistency': True if force_inconsistency is True else None,
+        }
+        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_opts])
 
     @parameterized.expand([
         [True],  # force_inconsistency
@@ -303,7 +311,9 @@ class TestEditTopology(unittest.TestCase):
         if force_inconsistency:
             params = {'force_inconsistency': True}
 
-        exp_force_inconsistency = True if force_inconsistency is True else None
+        exp_opts = {
+            'force_inconsistency': True if force_inconsistency is True else None,
+        }
 
         # all hosts specified
         play_hosts = [
@@ -333,7 +343,7 @@ class TestEditTopology(unittest.TestCase):
             'r2-uuid': 'r2-replica-uuid',
             'r3-uuid': 'r3-replica-uuid',
         }
-        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_force_inconsistency])
+        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_opts])
 
         # all hosts specified (failed)
         play_hosts = [
@@ -384,7 +394,7 @@ class TestEditTopology(unittest.TestCase):
             'r1-uuid': 'r1-leader-uuid',
             'r3-uuid': 'r3-replica-uuid',
         }
-        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_force_inconsistency])
+        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_opts])
 
         # no joined hosts specified
         play_hosts = [
@@ -436,7 +446,7 @@ class TestEditTopology(unittest.TestCase):
         exp_replicaset_leaders_params = {
             'r1-uuid': 'r1-replica-uuid',
         }
-        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_force_inconsistency])
+        self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_opts])
 
         # the same, but call fails
         self.instance.set_fail_on('failover_promote')

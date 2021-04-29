@@ -42,9 +42,12 @@ def get_active_leaders(control_console):
 
 
 def call_failover_promote(control_console, replicaset_leaders, force_inconsistency):
+    opts = {
+        'force_inconsistency': force_inconsistency,
+    }
     return control_console.eval_res_err('''
         return require('cartridge').failover_promote(...)
-    ''', replicaset_leaders, force_inconsistency)
+    ''', replicaset_leaders, opts)
 
 
 def get_replicaset_leaders_by_play_hosts(play_hosts, module_hostvars, control_console):

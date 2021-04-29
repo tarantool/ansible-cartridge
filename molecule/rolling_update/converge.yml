@@ -117,6 +117,8 @@
   vars:
     cartridge_scenario:
       - force_leaders
+    cartridge_failover_promote_params:
+      force_inconsistency: false
 
 - name: 'Check new replicasets leaders'
   hosts: core-1
@@ -245,6 +247,7 @@
         core-1: core-1
         storage-1: storage-1-leader
         storage-2: storage-2-leader
+      force_inconsistency: false
 
 - name: 'Check new replicasets leaders'
   hosts: core-1
