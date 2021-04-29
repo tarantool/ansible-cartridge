@@ -3,6 +3,7 @@ from yaml import CLoader as Loader
 
 import testinfra.utils.ansible_runner
 import requests
+import functools
 
 from ansible.inventory.manager import InventoryManager
 from ansible.vars.manager import VariableManager
@@ -111,6 +112,27 @@ def get_admin_api_url(instances):
     )
 
     return admin_api_url
+
+
+def get_deps_by_roles(admin_api_url):
+    query = '''
+        query {
+            cluster {
+                known_roles {
+                    name
+                    dependencies
+                }
+            }
+        }
+    '''
+
+    session = get_authorized_session(cluster_cookie)
+    response = session.post(admin_api_url, json={'query': query})
+    assert response.status_code == 200
+
+    known_roles = response.json()['data']['cluster']['known_roles']
+
+    return {r['name']: r['dependencies'] for r in known_roles}
 
 
 def user_is_deleted(user):
@@ -298,6 +320,7 @@ def test_replicasets():
     started_replicasets = {r['alias']: r for r in started_replicasets}
 
     configured_replicasets = get_configured_replicasets()
+    deps_by_roles = get_deps_by_roles(admin_api_url)
 
     # Check if started replicasets are equal to configured
     assert len(started_replicasets) == len(configured_replicasets)
@@ -306,7 +329,12 @@ def test_replicasets():
         started_replicaset = started_replicasets[name]
         configured_replicaset = configured_replicasets[name]
 
-        assert set(started_replicaset['roles']) == set(configured_replicaset['roles'])
+        exp_roles = list(functools.reduce(
+            lambda roles, role: roles + deps_by_roles[role],
+            started_replicaset['roles'],
+            started_replicaset['roles'],
+        ))
+        assert set(started_replicaset['roles']) == set(exp_roles)
 
         started_replicaset_instances = [i['alias'] for i in started_replicaset['servers']]
         assert set(started_replicaset_instances) == set(configured_replicaset['instances'])
