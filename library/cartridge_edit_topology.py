@@ -509,7 +509,6 @@ def edit_topology(params):
 
     cluster_instances = helpers.get_cluster_instances(control_console)
     cluster_replicasets = helpers.get_cluster_replicasets(control_console)
-    # roles_deps = get_roles_deps(control_console)
 
     # Configure replicasets and instances:
     # * Create new replicasets.
