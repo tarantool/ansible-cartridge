@@ -24,6 +24,8 @@ README.md to use the newest tag with new release
   - If there are some joined instances, but no one of them isn't alive,
     getting control instance fails.
 - `set_control_instance` is improved to consider non-joined instance status
+- `edit_topology` step now considers roles dependencies, permanent and hidden roles
+  and don't perform unnecessary calls if enabled roles list isn't changed
 
 ### Added
 
