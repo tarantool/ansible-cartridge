@@ -181,12 +181,11 @@ def get_join_servers(replicaset, cluster_replicaset, cluster_instances, allow_mi
     if err is not None:
         return None, err
 
-    # generally, we always apply failover priority AFTER
-    # all other changes
-    # the only one optimization is to join new replicaset
-    # with failover priority
-    # and call second `edit_topology` only for replicasets that have
-    # failover priority different from the specified
+    # When the new replicaset is created, instances can be joined in failover
+    # priority order.
+    # When the existing replicaset is edited, failover priority is configured
+    # later when all replicaset instances UUIDs are set (when new instances
+    # are joined, UUID isn't specified).
 
     if instances_to_join:
         if cluster_replicaset is None:
