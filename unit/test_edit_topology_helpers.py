@@ -299,7 +299,8 @@ class TestGetReplicasetParams(unittest.TestCase):
             'uuid': 'r1-uuid',
             'alias': 'r1',
             'instances': ['i1', 'i2', 'i3', 'i4'],
-            'roles': ['role-1', 'role-3', 'role-2'],
+            'roles': ['role-1', 'role-2'],
+            'enabled_roles': ['role-1', 'role-3', 'role-2'],
             'all_rw': False,
             'weight': 321,
             'vshard_group': 'cold',
@@ -310,6 +311,7 @@ class TestGetReplicasetParams(unittest.TestCase):
             'instances': ['i3', 'i2', 'i4', 'i1'],
             'failover_priority': ['i1', 'i2', 'i3'],
             'roles': ['role-1', 'role-3', 'role-2'],
+            'enabled_roles': ['role-1', 'role-3', 'role-2'],
             'all_rw': False,
             'weight': 321,
             'vshard_group': 'cold',
@@ -323,14 +325,12 @@ class TestGetReplicasetParams(unittest.TestCase):
 
         # additional params changed
         additional_params = {
-            'roles': ['role-1', 'role-2'],
             'all_rw': True,
             'weight': 123,
             'vshard_group': 'hot',
         }
 
         new_additional_params = {
-            'roles': ['role-1', 'role-3', 'role-2'],
             'all_rw': False,
             'weight': 321,
             'vshard_group': 'cold',
@@ -405,6 +405,71 @@ class TestGetReplicasetParams(unittest.TestCase):
             )
             self.assertIsNone(err)
             self.assertIsNone(params)
+
+        # roles changed
+        cluster_replicaset = {
+            'uuid': 'r1-uuid',
+            'instances': ['i1', 'i2', 'i3', 'i4'],
+            'roles': ['role-1', 'role-2'],
+            'enabled_roles': ['role-1', 'role-3', 'role-2'],
+        }
+
+        # nothing changed
+        replicaset = {
+            'alias': 'r1',
+            'instances': ['i3', 'i2', 'i4', 'i1'],
+            'roles': ['role-1', 'role-2'],
+            'enabled_roles': ['role-1', 'role-3', 'role-2'],
+        }
+
+        params, err = get_replicaset_params(
+            replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
+        )
+        self.assertIsNone(err)
+        self.assertIsNone(params)
+
+        # roles are changed, but enabled aren't
+        replicaset = {
+            'alias': 'r1',
+            'instances': ['i3', 'i2', 'i4', 'i1'],
+            'roles': ['role-1', 'role-2', 'role-3'],
+            'enabled_roles': ['role-1', 'role-3', 'role-2'],
+        }
+
+        params, err = get_replicaset_params(
+            replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
+        )
+        self.assertIsNone(err)
+        self.assertIsNone(params)
+
+        # roles aren't change, but enabled are
+        replicaset = {
+            'alias': 'r1',
+            'instances': ['i3', 'i2', 'i4', 'i1'],
+            'roles': ['role-1', 'role-2'],
+            'enabled_roles': ['role-1', 'role-3', 'role-2', 'role-4'],
+        }
+
+        params, err = get_replicaset_params(
+            replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
+        )
+        self.assertIsNone(err)
+        self.assertEqual(params, {
+            'uuid': 'r1-uuid',
+            'roles': ['role-1', 'role-2'],
+        })
+
+        # roles aren't specified
+        replicaset = {
+            'alias': 'r1',
+            'instances': ['i3', 'i2', 'i4', 'i1'],
+        }
+
+        params, err = get_replicaset_params(
+            replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
+        )
+        self.assertIsNone(err)
+        self.assertIsNone(params)
 
     @parameterized.expand([
         [True],  # allow_missed_instances

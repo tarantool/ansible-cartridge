@@ -100,19 +100,51 @@ def get_instances_to_configure(module_hostvars, play_hosts):
     return instances
 
 
+def set_enabled_roles(replicasets, control_console):
+    roles_by_aliases = {alias: r['roles'] for alias, r in replicasets.items()}
+
+    if not roles_by_aliases:
+        return
+
+    enabled_roles_by_aliases, _ = control_console.eval_res_err('''
+        local cartridge_roles = require('cartridge.roles')
+
+        local roles_by_aliases = ...
+        local enabled_roles_by_aliases = {}
+
+        for alias, roles in pairs(roles_by_aliases) do
+            enabled_roles_by_aliases[alias] = cartridge_roles.get_enabled_roles(roles or {})
+        end
+
+        return enabled_roles_by_aliases
+    ''', roles_by_aliases)
+
+    for alias, enabled_roles in enabled_roles_by_aliases.items():
+        replicasets[alias].update({
+            'enabled_roles': enabled_roles,
+        })
+
+
 def add_replicaset_param_if_required(replicaset_params, replicaset, cluster_replicaset, param_name):
     if replicaset.get(param_name) is None:
         return
 
     if cluster_replicaset is not None:
-        if param_name == 'roles':
-            if set(replicaset.get('roles', [])) == set(cluster_replicaset.get('roles', [])):
-                return
-
         if replicaset.get(param_name) == cluster_replicaset.get(param_name):
             return
 
     replicaset_params[param_name] = replicaset.get(param_name)
+
+
+def add_replicaset_roles_param_if_required(replicaset_params, replicaset, cluster_replicaset):
+    if replicaset.get('roles') is None:
+        return
+
+    if cluster_replicaset is not None:
+        if set(replicaset['enabled_roles']) == set(cluster_replicaset['enabled_roles']):
+            return
+
+    replicaset_params['roles'] = replicaset['roles']
 
 
 def check_filtered_instances(instances, filtered_instances, fmt, allow_missed_instances):
@@ -226,10 +258,14 @@ def get_replicaset_params(replicaset, cluster_replicaset, cluster_instances, all
     else:
         replicaset_params['alias'] = replicaset['alias']
 
-    for param_name in ['weight', 'vshard_group', 'all_rw', 'roles']:
+    for param_name in ['weight', 'vshard_group', 'all_rw']:
         add_replicaset_param_if_required(
             replicaset_params, replicaset, cluster_replicaset, param_name
         )
+
+    add_replicaset_roles_param_if_required(
+        replicaset_params, replicaset, cluster_replicaset
+    )
 
     join_servers, err = get_join_servers(
         replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
@@ -469,6 +505,7 @@ def edit_topology(params):
     control_console = helpers.get_control_console(console_sock)
 
     helpers.set_twophase_options_from_params(control_console, params)
+    set_enabled_roles(replicasets, control_console)
 
     cluster_instances = helpers.get_cluster_instances(control_console)
     cluster_replicasets = helpers.get_cluster_replicasets(control_console)

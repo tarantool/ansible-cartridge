@@ -4,9 +4,6 @@ local checks = require('checks')
 local cartridge = {}
 cartridge.internal = {}
 
-local cartridge_roles = {}
-package.loaded['cartridge.roles'] = cartridge_roles
-
 local cartridge_vshard_utils = {}
 package.loaded['cartridge.vshard-utils'] = cartridge_vshard_utils
 
@@ -157,33 +154,6 @@ function cartridge_twophase.patch_clusterwide(patch)
     return true
 end
 
--- * ----------------- Module cartridge.roles -------------------
-
-function cartridge_roles.get_known_roles()
-    local known_roles = {}
-    for role_name in pairs(vars.roles_map) do
-        table.insert(known_roles, role_name)
-    end
-    return known_roles
-end
-
-function cartridge_roles.get_enabled_roles(rpl_roles)
-    local enabled_roles = {}
-
-    for k, v in pairs(rpl_roles) do
-        local role_name
-        if type(k) == 'number' and type(v) == 'string' then
-            role_name = v
-        else
-            role_name = k
-        end
-
-        enabled_roles[role_name] = true
-    end
-
-    return enabled_roles
-end
-
 -- * ---------------------- Module membership ----------------------
 
 membership.myself = wrap_func('membership_myself', function()
@@ -208,6 +178,7 @@ end
 
 local clusterwide_config = require('cartridge.clusterwide-config')
 local lua_api_topology = require('cartridge.lua-api.topology')
+local cartridge_roles = require('cartridge.roles')
 
 
 -- * ---------------------- Vshard router --------------------------
@@ -513,6 +484,34 @@ function cartridge.internal.set_member_status(uri, status)
     local member = vars.membership_members[uri]
     assert(member ~= nil)
     member.status = status
+end
+
+function cartridge.internal.cfg_roles(roles_cfg)
+    --[[
+    role_cfg = {
+        name = 'name',
+        known = false,
+        dependencies = {'dep-1', 'dep-2'},
+        permanent = true,
+        hidden = true,
+    }
+    --]]
+
+    local roles = {}
+    for _, role_cfg in ipairs(roles_cfg) do
+        table.insert(roles, role_cfg.name)
+        if not roles.known then
+            package.loaded[role_cfg.name] = {
+                role_name = role_cfg.name,
+                dependencies = role_cfg.dependencies,
+                permanent = role_cfg.permanent,
+                hidden = role_cfg.hidden,
+            }
+        end
+    end
+
+    local ok, err = cartridge_roles.cfg(roles)
+    assert(ok, tostring(err))
 end
 
 function cartridge.internal.add_replicaset(rpl)
