@@ -4,25 +4,30 @@ import argparse
 import json
 
 
-def get_matrix_base(ansible_version=None, molecule_command=None, molecule_scenario=None):
+def get_matrix_base(molecule_scenario=None, ansible_version=None):
     return {
-        'ansible_version': ansible_version or '2.8.0',
-        'molecule_command': molecule_command or 'test',
         'molecule_scenario': molecule_scenario or 'default',
+        'ansible_version': ansible_version or '2.8.0',
     }
 
 
-def get_ce_params(tarantool_version=None, ansible_version=None, molecule_command=None, molecule_scenario=None):
+def get_molecule_command(molecule_command=None):
+    return molecule_command or 'test'
+
+
+def get_ce_params(molecule_scenario=None, ansible_version=None, tarantool_version=None, molecule_command=None):
     return {
-        **get_matrix_base(ansible_version, molecule_command, molecule_scenario),
+        **get_matrix_base(molecule_scenario, ansible_version),
         'tarantool_version': tarantool_version or '2.6',
+        'molecule_command': get_molecule_command(molecule_command),
     }
 
 
-def get_ee_params(sdk_version=None, ansible_version=None, molecule_command=None, molecule_scenario=None):
+def get_ee_params(molecule_scenario=None, ansible_version=None, sdk_version=None, molecule_command=None):
     return {
-        **get_matrix_base(ansible_version, molecule_command, molecule_scenario),
+        **get_matrix_base(molecule_scenario, ansible_version),
         'sdk_version': sdk_version or '2.6.2-124-g2c3b91439-r391',
+        'molecule_command': get_molecule_command(molecule_command),
     }
 
 
@@ -48,6 +53,7 @@ def main(event_name, repo_owner, review_state, ref):
 
         ce_matrix.append(get_ce_params(ansible_version='2.9.0'))
         ce_matrix.append(get_ce_params(ansible_version='2.10.0'))
+
         # TODO: Uncomment after fixing the check mode
         # ce_matrix.append(get_ce_version(molecule_command='check'))
 
