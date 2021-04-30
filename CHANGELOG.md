@@ -10,6 +10,8 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+## [1.9.0] - 2021-04-30
+
 ### Fixed
 
 - Running the role with python 2.7
