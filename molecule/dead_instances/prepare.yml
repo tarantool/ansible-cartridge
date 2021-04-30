@@ -8,6 +8,7 @@
   become_user: root
   gather_facts: false
   vars:
+    cartridge_cluster_cookie: secret-cookie
     cartridge_scenario_name: configure_instances
 
 - name: Join all instances except instance-5-not-joined

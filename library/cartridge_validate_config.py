@@ -10,7 +10,7 @@ argument_spec = {
     'module_hostvars': {'required': True, 'type': 'dict'}
 }
 
-INSTANCE_REQUIRED_PARAMS = ['cartridge_app_name', 'cartridge_cluster_cookie', 'config']
+INSTANCE_REQUIRED_PARAMS = ['cartridge_app_name', 'config']
 PARAMS_THE_SAME_FOR_ALL_HOSTS = [
     'cartridge_app_name',
     'cartridge_cluster_cookie',
@@ -228,6 +228,9 @@ def validate_types(all_vars):
 
 
 def check_cluster_cookie_symbols(cluster_cookie):
+    if cluster_cookie is None:
+        return None
+
     if len(cluster_cookie) > CLUSTER_COOKIE_MAX_LEN:
         errmsg = 'Cluster cookie cannot be longer than {}'.format(CLUSTER_COOKIE_MAX_LEN)
         return errmsg
@@ -246,10 +249,6 @@ def check_required_params(instance_vars, host):
         if instance_vars.get(p) is None:
             errmsg = '"{}" must be specified (missed for "{}")'.format(p, host)
             return errmsg
-
-    errmsg = check_cluster_cookie_symbols(instance_vars['cartridge_cluster_cookie'])
-    if errmsg is not None:
-        return errmsg
 
     return None
 
@@ -547,6 +546,10 @@ def validate_config(params):
         errmsg = check_required_params(instance_vars, host)
         if errmsg is not None:
             return helpers.ModuleRes(failed=True, msg=errmsg)
+
+        errmsg = check_cluster_cookie_symbols(instance_vars.get('cartridge_cluster_cookie'))
+        if errmsg is not None:
+            return errmsg
 
         # Instance config
         errmsg = check_instance_config(instance_vars['config'], host)
