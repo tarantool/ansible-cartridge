@@ -254,3 +254,8 @@ $RECYCLE.BIN/
 *.rpm
 *.deb
 *.tgz
+
+#VSCode
+
+.history
+.vscode

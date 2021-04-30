@@ -1,0 +1,8 @@
+---
+- name: 'Check cluster is healthy'
+  cartridge_check_cluster_state:
+    console_sock: '{{ control_instance.console_sock }}'
+  register: check_cluster
+  failed_when: check_cluster.failed
+  delegate_to: '{{ control_instance.name }}'
+...
