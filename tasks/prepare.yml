@@ -3,8 +3,8 @@
 - name: 'Check that OS family is supported'
   assert:
     msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
-    success_msg: 'Deploy to {{ ansible_os_family }} distributions is supported'
     that: ansible_os_family in ["RedHat", "Debian"]
+    quiet: true
   when: ansible_os_family is defined
 
 - name: 'Set "remote_user" for delegated tasks'
