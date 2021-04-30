@@ -1,4 +1,5 @@
 ---
+
 - name: 'BLOCK: Select control instance'
   include_tasks: 'blocks/set_control_instance.yml'
   run_once: true

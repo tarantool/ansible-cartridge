@@ -1,5 +1,10 @@
 ---
 
+- name: 'BLOCK: Select control instance'
+  include_tasks: 'blocks/set_control_instance.yml'
+  run_once: true
+  when: not control_instance
+
 - run_once: true
   delegate_to: '{{ control_instance.name }}'
   when: cartridge_app_config_path is not none

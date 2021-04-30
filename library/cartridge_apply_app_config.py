@@ -161,49 +161,62 @@ def get_upload_mode(upload_mode, remote_config_path):
     return upload_mode
 
 
+def get_apply_config_func_for_lua(console_sock):
+    assert console_sock is not None, "Console socket is required for Cartridge endpoint"
+
+    control_console = helpers.get_control_console(console_sock)
+
+    return lambda path: patch_file_clusterwide(control_console, path)
+
+
+def get_apply_config_func_for_http(http_port, cluster_cookie):
+    assert cluster_cookie is not None, 'Cluster cookie is required for HTTP endpoint'
+    assert http_port is not None, 'HTTP port is required for HTTP endpoint'
+
+    headers = {'Authorization': basic_auth_header('admin', cluster_cookie)}
+
+    return lambda path: send_on_http(http_port, headers, path)
+
+
+def get_apply_config_func_for_tdg(console_sock, http_port, tdg_token):
+    tdg_upload_mode = get_tdg_upload_mode(console_sock)
+
+    if tdg_upload_mode == 'http':
+        assert http_port is not None, 'HTTP port is required for TDG endpoint'
+
+        headers = get_tdg_auth_headers(console_sock, tdg_token)
+
+        return lambda path: send_on_http(http_port, headers, path), ZIP_DIR_MODE
+
+    elif tdg_upload_mode == 'lua':
+        return lambda path: apply_tdg_config(console_sock, path), PURE_DIR_MODE
+
+    raise AssertionError("Unknown TDG upload mode '%s'" % tdg_upload_mode)
+
+
 def get_apply_config_func(upload_mode, console_sock=None, http_port=None, cluster_cookie=None, tdg_token=None):
     dir_mode = ZIP_DIR_MODE
 
     if upload_mode == LUA_MODE:
-        assert console_sock is not None, "Console socket is required for Cartridge endpoint"
-        control_console = helpers.get_control_console(console_sock)
-
-        def apply_config(path):
-            return patch_file_clusterwide(control_console, path)
+        apply_func = get_apply_config_func_for_lua(console_sock)
 
     elif upload_mode == HTTP_MODE:
-        assert cluster_cookie is not None, 'Cluster cookie is required for HTTP endpoint'
-        assert http_port is not None, 'HTTP port is required for HTTP endpoint'
-        headers = {'Authorization': basic_auth_header('admin', cluster_cookie)}
-
-        def apply_config(path):
-            return send_on_http(http_port, headers, path)
+        apply_func = get_apply_config_func_for_http(http_port, cluster_cookie)
 
     elif upload_mode == TDG_MODE:
-        tdg_upload_mode = get_tdg_upload_mode(console_sock)
-        if tdg_upload_mode == 'http':
-            assert http_port is not None, 'HTTP port is required for TDG endpoint'
-            headers = get_tdg_auth_headers(console_sock, tdg_token)
-
-            def apply_config(path):
-                return send_on_http(http_port, headers, path)
-
-        elif tdg_upload_mode == 'lua':
-            dir_mode = PURE_DIR_MODE
-
-            def apply_config(path):
-                return apply_tdg_config(console_sock, path)
-
-        else:
-            raise AssertionError("Unknown TDG upload mode '%s'" % tdg_upload_mode)
+        apply_func, dir_mode = get_apply_config_func_for_tdg(console_sock, http_port, tdg_token)
 
     else:
         raise AssertionError("Unknown upload mode '%s'" % upload_mode)
 
-    return apply_config, dir_mode
+    return apply_func, dir_mode
 
 
 def apply_app_config(params):
+    # We cannot use the fact 'dest' from the copy task,
+    # because in the case of transferring a folder with one file,
+    # 'dest' will contain the path to the file, not the path to the folder.
+    # Therefore, we consider the path ourselves.
     remote_config_path = os.path.join(params['remote_dir'], os.path.basename(params['local_config_path']))
 
     upload_mode = get_upload_mode(
