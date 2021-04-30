@@ -1,0 +1,23 @@
+---
+
+- tags:
+    - cartridge-instances
+    - cartridge-replicasets
+    - cartridge-config
+  block:
+    - name: 'BLOCK: Select control instance'
+      include_tasks: 'blocks/set_control_instance.yml'
+      run_once: true
+      when: not control_instance
+
+    - name: 'Wait until all instances become alive'
+      cartridge_check_members_alive:
+        console_sock: '{{ control_instance.console_sock }}'
+        allowed_states: '{{ allowed_members_states }}'
+      register: check_members_alive_res
+      until: not check_members_alive_res.failed
+      retries: '{{ wait_members_alive_retries }}'
+      delay: '{{ wait_members_alive_delay }}'
+      when: not expelled
+      run_once: true
+      delegate_to: '{{ control_instance.name }}'

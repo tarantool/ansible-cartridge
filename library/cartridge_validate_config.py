@@ -185,6 +185,13 @@ SCHEMA = {
         'replicaset_leaders': dict,
         'force_inconsistency': bool,
     },
+    'allowed_members_states': [str],
+    'wait_members_alive_retries': int,
+    'wait_members_alive_delay': int,
+    'allow_warning_issues': bool,
+    'show_issues': bool,
+    'wait_cluster_has_no_issues_retries': int,
+    'wait_cluster_has_no_issues_delay': int,
 }
 
 

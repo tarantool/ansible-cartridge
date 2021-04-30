@@ -67,6 +67,13 @@ FACTS_BY_TARGETS = {
         'cartridge_eval_body',
         'cartridge_eval_args',
         'cartridge_eval_file',
+        'allowed_members_states',
+        'wait_members_alive_retries',
+        'wait_members_alive_delay',
+        'allow_warning_issues',
+        'show_issues',
+        'wait_cluster_has_no_issues_retries',
+        'wait_cluster_has_no_issues_delay',
     ],
     'single_instances_for_each_machine': [
         'expelled',

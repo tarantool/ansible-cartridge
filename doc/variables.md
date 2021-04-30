@@ -93,6 +93,11 @@ For more details see [scenario documentation](/doc/scenario.md).
   flag that indicates if routers should wait for buckets discovery after vshard bootstrap;
 * `instance_discover_buckets_timeout` (`number`, default: 60): time in seconds
   to wait for instance to discover buckets;
+* `allowed_members_states` (`list-of-strings`, default: `[RolesConfigured]`):
+  list of allowed instance states;
+* `wait_members_alive_retries` (`number`, default: 60) retries to check that all instances become alive;
+  all instances become alive;
+* `wait_members_alive_delay` (`number`, default: 5): delay to retry instances status check;
 
 ## Replicasets configuration
 
@@ -125,3 +130,7 @@ For more details see [scenario documentation](/doc/scenario.md).
 * [DEPRECATED] `cartridge_failover` (`boolean`): a boolean flag that
   indicates if eventual failover should be enabled or disabled;
 * `cartridge_failover_promote_params` (`dict`): [failover promote](/doc/rolling_update.md#leaders-promotion) params.
+- `wait_cluster_has_no_issues_retries` (`number`, default: 60): retries to check cluster has no issues;
+- `wait_cluster_has_no_issues_delay` (`number`, default: 5): delay to retry cluster issues check;
+- `allow_warning_issues` (`boolean`, default: `false`): allow issues with `warning` level.
+- `show_issues`(`boolean`, default: `true`): - log cluster issues as a warnings.

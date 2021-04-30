@@ -272,6 +272,30 @@ class Instance:
             require('cartridge').internal.set_box_cfg(...)
         ''', new_box_cfg)
 
+    def set_membership_members(self, specified_members, with_payload=True):
+        members = {}
+
+        for m in specified_members:
+            uri = m['uri']
+            member = {
+                'uri': uri,
+                'status': m.get('status', 'alive'),
+                'incarnation': 1,
+            }
+
+            if with_payload:
+                member.update({
+                    'payload': {
+                        'uuid': m.get('uuid'),
+                        'alias': m.get('alias'),
+                        'state': m.get('state'),
+                    }
+                })
+
+            members[uri] = member
+
+        self.set_variable('membership_members', members)
+
     def add_membership_members(self, members):
         self.eval_res_err('''
             require('cartridge').internal.add_membership_members(...)

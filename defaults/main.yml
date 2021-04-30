@@ -30,6 +30,8 @@ cartridge_role_scenarios:
     - configure_app_config
     - bootstrap_vshard
     - configure_failover
+    - wait_members_alive
+    - wait_cluster_has_no_issues
     - cleanup
   configure_instances:
     - deliver_package
@@ -38,11 +40,14 @@ cartridge_role_scenarios:
     - configure_instance
     - restart_instance
     - wait_instance_started
+    - wait_cluster_has_no_issues
     - cleanup
   configure_topology:
     - connect_to_membership
     - edit_topology
     - cleanup_expelled
+    - wait_members_alive
+    - wait_cluster_has_no_issues
     - cleanup
   configure_app:
     - configure_auth
@@ -50,6 +55,8 @@ cartridge_role_scenarios:
     - configure_app_config
     - bootstrap_vshard
     - configure_failover
+    - wait_members_alive
+    - wait_cluster_has_no_issues
     - cleanup
 
 # Application package configuration
@@ -98,6 +105,10 @@ cartridge_wait_buckets_discovery: true
 instance_start_timeout: 60
 instance_discover_buckets_timeout: 60
 
+allowed_members_states: ['RolesConfigured']
+wait_members_alive_retries: 10
+wait_members_alive_delay: 5
+
 # Replicasets configuration
 
 replicaset_alias: null
@@ -128,6 +139,11 @@ cartridge_bootstrap_vshard: false
 cartridge_failover: null  # DEPRECATED
 cartridge_failover_params: null
 cartridge_failover_promote_params: null
+
+allow_warning_issues: false
+show_issues: true
+wait_cluster_has_no_issues_retries: 10
+wait_cluster_has_no_issues_delay: 5
 
 # Internal role facts that can be set by the user
 

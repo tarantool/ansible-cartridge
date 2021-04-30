@@ -10,6 +10,12 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+### Added
+
+- `wait_members_alive` step to wait until all cluster members have `alive` status
+  and specified state
+- `wait_cluster_has_no_issues` step to wait until cluster has no issues
+
 ## [1.9.0] - 2021-04-30
 
 ### Fixed

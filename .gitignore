@@ -254,3 +254,13 @@ $RECYCLE.BIN/
 *.rpm
 *.deb
 *.tgz
+
+### VisualStudioCode ###
+
+# Common
+.vscode/
+*.code-workspace
+
+# Ignore all local history of files
+.history
+.ionide

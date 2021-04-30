@@ -37,6 +37,8 @@ The default scenario includes the following steps:
 - [configure_app_config](#configure_app_config)
 - [bootstrap_vshard](#bootstrap_vshard)
 - [configure_failover](#configure_failover)
+- [wait_members_alive](#wait_members_alive)
+- [wait_cluster_has_no_issues](#wait_cluster_has_no_issues)
 - [cleanup](#cleanup)
 
 More scenarios you can see in [scenarios](#scenarios) section.
@@ -86,17 +88,22 @@ In addition to the default scenario (see [steps](#steps)), there are also the fo
   - [configure_instance](#configure_instance)
   - [restart_instance](#restart_instance)
   - [wait_instance_started](#wait_instance_started)
+  - [wait_cluster_has_no_issues](#wait_cluster_has_no_issues)
   - [cleanup](#cleanup)
 - `configure_topology`:
   - [connect_to_membership](#connect_to_membership)
   - [edit_topology](#edit_topology)
   - [cleanup_expelled](#cleanup_expelled)
+  - [wait_members_alive](#wait_members_alive)
+  - [wait_cluster_has_no_issues](#wait_cluster_has_no_issues)
   - [cleanup](#cleanup)
 - `configure_app`:
   - [configure_auth](#configure_auth)
   - [configure_app_config](#configure_app_config)
   - [bootstrap_vshard](#bootstrap_vshard)
   - [configure_failover](#configure_failover)
+  - [wait_members_alive](#wait_members_alive)
+  - [wait_cluster_has_no_issues](#wait_cluster_has_no_issues)
   - [cleanup](#cleanup)
 
 To add new scenarios or replace the role scenarios with your own, you should use `cartridge_custom_scenarios` option
@@ -624,7 +631,7 @@ Input facts (set by config):
 - `stateboard` - indicates that the instance is a stateboard;
 - `cartridge_bootstrap_vshard` - indicates if vshard should be bootstrapped;
 - `instance_discover_buckets_timeout` - time in seconds to wait for instance to discover buckets;
-- `cartridge_wait_buckets_discovery` - indicates if routers should wait for buckets discovery after vshard bootstrap.
+- `cartridge_wait_buckets_discovery` - indicates if routers should wait for buckets discovery after vshard bootstrap;
 
 ### configure_failover
 
@@ -640,6 +647,40 @@ Input facts (set by config):
 
 - [DEPRECATED] `cartridge_failover` - indicates if eventual failover should be enabled or disabled;
 - `cartridge_failover_params` - failover parameters.
+
+### wait_members_alive
+
+Waits until all cluster instances become alive and come to a specified state
+(by default, it's `RolesConfigured`).
+
+*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+
+Input facts (set by role):
+
+- `control_instance` - information about control instance ([more details here](#set_control_instance)).
+
+Input facts (set by config):
+
+- `allowed_members_states` - list of allowed states. If empty then instance state isn't checked;
+- `wait_members_alive_retries` - retries to check that all instances become alive;
+- `wait_members_alive_delay` - delay to retry instances status check.
+
+### wait_cluster_has_no_issues
+
+Waits until the cluster has no issues.
+
+*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+
+Input facts (set by role):
+
+- `control_instance` - information about control instance ([more details here](#set_control_instance)).
+
+Input facts (set by config):
+
+- `wait_cluster_has_no_issues_retries` - retries to check that cluster has no issues;
+- `wait_cluster_has_no_issues_delay` - delay to retry cluster issues check;
+- `allow_warning_issues` - allow issues with `warning` level;
+- `show_issues` - log cluster issues as a warnings;
 
 ### cleanup
 
