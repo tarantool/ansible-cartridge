@@ -78,7 +78,6 @@ FACTS_BY_TARGETS = {
         'config',
     ],
     'alive_not_expelled_instance': [
-        'cartridge_cluster_cookie',
         'expelled',
         'stateboard',
         'config',
