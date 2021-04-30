@@ -48,6 +48,7 @@ README.md to use the newest tag with new release
 - `edit_topology_allow_missed_instances` variable to allow replicasets containing
   the instances that are not started yet
 - `upload_app_config` step to load the file or directory config
+  (Cartridge and TDG supported)
 
 ### Changed
 

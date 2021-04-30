@@ -59,9 +59,9 @@ section-2:
 
 ## Config uploading
 
-In contrast to using `cartridge_app_config`, `cartridge_app_config_path`
-allows loading the config not in sections, but in its entirety.
-To do this, you should specify the path to the configuration file or folder.
+[Step `upload_app_config`](/doc/scenario.md#upload_app_config) allows loading
+the entire config using Lua API or HTTP endpoint. To do this, you should specify
+the path to the configuration file or folder using `cartridge_app_config_path`.
 
 An example of indicating the path to different types of config:
 
@@ -91,12 +91,13 @@ cartridge_app_config_upload_mode: 'tdg'
 
 ### Default modes
 
-To upload file config, you can use Lua-function or HTTP endpoint.
-By default, Lua-function is used to upload YAML files,
-and HTTP endpoint is used to upload other file types.
+To upload file config, you can use:
+- Lua mode (default for YAML files);
+- HTTP mode (default for not-YAML files).
 
-To upload directory config, you can use HTTP or TDG upload mode.
-The default upload mode is HTTP.
+To upload directory config, you can use:
+- HTTP mode (default);
+- TDG mode.
 
 ### Lua mode
 
@@ -114,7 +115,9 @@ If you use HTTP mode to upload a directory, it will be pre-zipped into a ZIP arc
 This ZIP archive will be uploaded to `http://localhost:port/admin/config` just like any other file.
 
 The port used to send the config will be taken from the control instance config
-or from the `cartridge_app_config_upload_http_port` variable, if specified.
+or from the `cartridge_app_config_upload_http_port` variable.
+Variable `cartridge_app_config_upload_http_port` takes precedence
+over control instance HTTP port.
 
 For example, you can specify the port of the instance,
 which is on the same machine as the control instance:
@@ -139,7 +142,7 @@ To do this, you do not need to specify an authorization token or HTTP port.
 With older versions of TDG, things are a little more complicated.
 It's possible to upload config only by HTTP.
 Therefore, if authorization is enabled in the application,
-then it is necessary to generate a token and add it to the `cartridge_tdg_token` variable:
+then it is necessary to generate a token and pass it to the `cartridge_tdg_token` variable:
 ```yaml
 cartridge_tdg_token: '878e45aa-f79e-4cf9-8938-d5904828c4d2'
 ```

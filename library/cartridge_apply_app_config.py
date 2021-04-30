@@ -151,18 +151,18 @@ def get_upload_mode(upload_mode, remote_config_path):
             upload_mode = upload_mode or HTTP_MODE
 
         assert upload_mode in [LUA_MODE, HTTP_MODE], \
-            'File config available only for Lua or HTTP endpoints'
+            'Uploading file config is possible only for Lua and HTTP modes'
     else:
         upload_mode = upload_mode or HTTP_MODE
 
         assert upload_mode in [HTTP_MODE, TDG_MODE], \
-            'Directory config available only for HTTP or TDG endpoints'
+            'Uploading directory config is possible only for HTTP or TDG endpoints'
 
     return upload_mode
 
 
 def get_apply_config_func_for_lua(console_sock):
-    assert console_sock is not None, "Console socket is required for Cartridge endpoint"
+    assert console_sock is not None, "Console socket is required for Lua mode"
 
     control_console = helpers.get_control_console(console_sock)
 
@@ -170,8 +170,8 @@ def get_apply_config_func_for_lua(console_sock):
 
 
 def get_apply_config_func_for_http(http_port, cluster_cookie):
-    assert cluster_cookie is not None, 'Cluster cookie is required for HTTP endpoint'
-    assert http_port is not None, 'HTTP port is required for HTTP endpoint'
+    assert cluster_cookie is not None, 'Cluster cookie is required for HTTP mode'
+    assert http_port is not None, 'HTTP port is required for HTTP mode'
 
     headers = {'Authorization': basic_auth_header('admin', cluster_cookie)}
 
@@ -182,7 +182,7 @@ def get_apply_config_func_for_tdg(console_sock, http_port, tdg_token):
     tdg_upload_mode = get_tdg_upload_mode(console_sock)
 
     if tdg_upload_mode == 'http':
-        assert http_port is not None, 'HTTP port is required for TDG endpoint'
+        assert http_port is not None, 'HTTP port is required for TDG mode'
 
         headers = get_tdg_auth_headers(console_sock, tdg_token)
 

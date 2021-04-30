@@ -6,7 +6,8 @@
   become_user: root
   gather_facts: false
   vars:
-    cartridge_eval_body: return require('cartridge').config_get_readonly()['test-section']
+    cartridge_eval_body: >-
+      return require('cartridge').config_get_readonly()['test-section']
     cartridge_custom_steps_dir: 'steps'
     cartridge_scenario:
       - upload_app_config
@@ -72,7 +73,7 @@
         success_msg: 'Upload folder config by Lua failed'
         that:
           - apply_app_config_res.failed
-          - apply_app_config_res.msg == 'Directory config available only for HTTP or TDG endpoints'
+          - apply_app_config_res.msg == 'Uploading directory config is possible only for HTTP or TDG endpoints'
       run_once: true
 
     # Folder configs to Cartridge by HTTP
@@ -106,5 +107,5 @@
         success_msg: 'Upload file config to TDG failed'
         that:
           - apply_app_config_res.failed
-          - apply_app_config_res.msg == 'File config available only for Lua or HTTP endpoints'
+          - apply_app_config_res.msg == 'Uploading file config is possible only for Lua and HTTP modes'
       run_once: true
