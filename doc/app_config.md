@@ -115,7 +115,7 @@ If you use HTTP mode to upload a directory, it will be pre-zipped into a ZIP arc
 This ZIP archive will be uploaded to `http://localhost:port/admin/config` just like any other file.
 
 The url used to send the config will be taken from the control instance config
-(`http://127.0.0.1:{control_instance.http_port}/admin/config` will be used)
+(`http://127.0.0.1:{{ control_instance.http_port }}/admin/config` will be used)
 or from the `cartridge_app_config_upload_url` variable. Variable
 `cartridge_app_config_upload_url` takes precedence over control instance url.
 

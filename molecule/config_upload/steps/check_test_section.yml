@@ -1,3 +1,5 @@
+---
+
 - name: 'Debug upload result'
   debug:
     msg: '{{ apply_app_config_res }}'
