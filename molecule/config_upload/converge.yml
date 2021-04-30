@@ -78,7 +78,7 @@
         success_msg: 'Upload folder config by Lua failed'
         that:
           - apply_app_config_res.failed
-          - apply_app_config_res.msg == 'Uploading directory config is possible only for HTTP or TDG endpoints'
+          - apply_app_config_res.msg == 'Uploading directory config is possible only for HTTP or TDG modes'
       run_once: true
 
     # Folder configs to Cartridge by HTTP

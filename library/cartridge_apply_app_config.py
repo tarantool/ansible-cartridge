@@ -115,7 +115,7 @@ def get_tdg_auth_headers(console_sock, tdg_token):
     if tdg_token is None:
         return {}
 
-    assert console_sock is not None, "Console socket is required for TDG endpoint"
+    assert console_sock is not None, "Console socket is required for TDG mode"
     control_console = helpers.get_control_console(console_sock)
 
     tdg_version = control_console.eval_res_err('''
@@ -155,7 +155,7 @@ def get_upload_mode(upload_mode, remote_config_path):
         upload_mode = upload_mode or HTTP_MODE
 
         assert upload_mode in [HTTP_MODE, TDG_MODE], \
-            'Uploading directory config is possible only for HTTP or TDG endpoints'
+            'Uploading directory config is possible only for HTTP or TDG modes'
 
     return upload_mode
 
