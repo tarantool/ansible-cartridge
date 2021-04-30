@@ -20,7 +20,8 @@ HOSTS_PATH = os.path.join('molecule', scenario_name, 'hosts.yml')
 inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
 variable_manager = VariableManager(loader=DataLoader(), inventory=inventory)
 
-cluster_cookie = inventory.groups['cluster'].get_vars()['cartridge_cluster_cookie']
+cluster_vars = inventory.groups['cluster'].get_vars()
+cluster_cookie = cluster_vars.get('cartridge_cluster_cookie', 'secret-cookie')
 
 __authorized_session = None
 __configured_instances = None

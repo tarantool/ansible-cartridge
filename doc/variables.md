@@ -6,7 +6,7 @@ vshard bootstrapping, and failover.
 ## Common variables
 
 * `cartridge_app_name` (`string`): application name, required;
-* `cartridge_cluster_cookie` (`string`, required): cluster cookie for all
+* `cartridge_cluster_cookie` (`string`): cluster cookie for all
   cluster instances;
 * `cartridge_remove_temporary_files` (`boolean`, optional, default: `false`):
   indicates if temporary files should be removed

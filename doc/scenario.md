@@ -439,6 +439,7 @@ Input facts (set by role):
 
 Input facts (set by config):
 
+- `cartridge_cluster_cookie` - cluster cookie for all cluster instances (is needed to check if configuration file was changed);
 - `restarted` - if instance should be restarted or not (user forced decision).
 
 ### wait_instance_started

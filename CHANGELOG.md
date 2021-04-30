@@ -54,6 +54,8 @@ README.md to use the newest tag with new release
 
 - Timeout to wait for cluster health after topology editing
   renamed from `edit_topology_timeout` to `edit_topology_healthy_timeout`
+- `cartridge_cluster_cookie` now is required only for `configure_instance`,
+  `restart_instance` and `upload_app_config` steps
 
 ## [1.8.3] - 2021-04-06
 

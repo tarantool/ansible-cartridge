@@ -189,7 +189,6 @@ class TestValidateConfig(unittest.TestCase):
     def test_instance_required_params(self):
         required_params = {
             'cartridge_app_name': 'app-name',
-            'cartridge_cluster_cookie': 'cookie',
             'config': {'advertise_uri': 'localhost:3301'}
         }
 

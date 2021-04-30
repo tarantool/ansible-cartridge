@@ -29,6 +29,13 @@
         needs_restart: '{{ needs_restart_res.fact }}'
       when: "'fact' in needs_restart_res"
 
+    - name: 'Check that cluster cookie is specified'
+      assert:
+        that: cartridge_cluster_cookie is not none
+        msg: 'cartridge_cluster_cookie should be specified to configure instance'
+        quiet: true
+      when: inventory_hostname in single_instances_for_each_machine
+
     - name: 'Place default config'
       copy:
         content: >-
@@ -40,8 +47,7 @@
         owner: '{{ cartridge_app_user }}'
         group: '{{ cartridge_app_group }}'
         mode: '644'
-      when:
-        - inventory_hostname in single_instances_for_each_machine
+      when: inventory_hostname in single_instances_for_each_machine
 
     - name: 'Place instance config'
       copy:

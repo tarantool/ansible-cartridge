@@ -7,3 +7,5 @@
   become: true
   become_user: root
   gather_facts: false
+  vars:
+    cartridge_cluster_cookie: secret-cookie

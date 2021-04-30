@@ -72,7 +72,6 @@ class TestGetCachedFacts(unittest.TestCase):
                 'instance_1': {
                     'expelled': True,
                     'config': {'advertise_uri': '10.0.0.1:3001'},
-                    'cartridge_cluster_cookie': 'some-cookie',
                     'cartridge_run_dir': 'some-run-dir',
                 },
                 'instance_2': {
