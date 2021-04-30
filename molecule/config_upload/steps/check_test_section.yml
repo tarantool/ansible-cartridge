@@ -1,3 +1,8 @@
+- name: 'Debug upload result'
+  debug:
+    msg: '{{ apply_app_config_res }}'
+  run_once: true
+
 - name: 'Debug config section'
   debug:
     msg: '{{ eval_res }}'

@@ -114,15 +114,15 @@ the `Authorization` header for basic authorization using a cluster cookie.
 If you use HTTP mode to upload a directory, it will be pre-zipped into a ZIP archive.
 This ZIP archive will be uploaded to `http://localhost:port/admin/config` just like any other file.
 
-The port used to send the config will be taken from the control instance config
-or from the `cartridge_app_config_upload_http_port` variable.
-Variable `cartridge_app_config_upload_http_port` takes precedence
-over control instance HTTP port.
+The url used to send the config will be taken from the control instance config
+(`http://127.0.0.1:{control_instance.http_port}/admin/config` will be used)
+or from the `cartridge_app_config_upload_url` variable. Variable
+`cartridge_app_config_upload_url` takes precedence over control instance url.
 
 For example, you can specify the port of the instance,
 which is on the same machine as the control instance:
 ```yaml
-cartridge_app_config_upload_http_port: 8083
+cartridge_app_config_upload_url: 'http://10.0.0.102:8083/admin/config'
 ```
 
 ### TDG mode
@@ -147,8 +147,8 @@ then it is necessary to generate a token and pass it to the `cartridge_tdg_token
 cartridge_tdg_token: '878e45aa-f79e-4cf9-8938-d5904828c4d2'
 ```
 
-Also, as with uploading over HTTP, you can select the port of the instance
-to which the archive will be uploaded by `cartridge_app_config_upload_http_port`.
+Also, as with uploading over HTTP, you can select the url of the instance
+to which the archive will be uploaded by `cartridge_app_config_upload_url`.
 
 Full example for loading TDG config:
 ```yaml

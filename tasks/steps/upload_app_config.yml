@@ -22,7 +22,10 @@
         remote_dir: '/tmp/'
         upload_mode: '{{ cartridge_app_config_upload_mode }}'
         console_sock: '{{ control_instance.console_sock }}'
-        http_port: '{{ cartridge_app_config_upload_http_port or control_instance.http_port }}'
+        upload_url: '{{
+          cartridge_app_config_upload_url or
+          "http://127.0.0.1:" + (control_instance.http_port | string) + "/admin/config"
+        }}'
         cluster_cookie: '{{ cartridge_cluster_cookie }}'
         tdg_token: '{{ cartridge_tdg_token }}'
       register: apply_app_config_res

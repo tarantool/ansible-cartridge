@@ -12,7 +12,7 @@ argument_spec = {
     'remote_dir': {'required': False, 'type': 'str', 'default': '/tmp/'},
     'upload_mode': {'required': False, 'type': 'str'},
     'console_sock': {'required': False, 'type': 'str'},
-    'http_port': {'required': False, 'type': 'int'},
+    'upload_url': {'required': False, 'type': 'str'},
     'cluster_cookie': {'required': False, 'type': 'str'},
     'tdg_token': {'required': False, 'type': 'str'},
 }
@@ -43,15 +43,14 @@ def patch_file_clusterwide(control_console, file_path):
     return changed
 
 
-def send_on_http(http_port, headers, config_path):
-    url = 'http://127.0.0.1:{port}/admin/config'.format(port=http_port)
+def send_on_http(upload_url, headers, config_path):
     headers.update({
         'Content-Length': os.stat(config_path).st_size
     })
 
     with open(config_path, 'rb') as data:
         try:
-            resp = open_url(url, method='PUT', headers=headers, data=data)
+            resp = open_url(upload_url, method='PUT', headers=headers, data=data)
         except Exception as e:
             assert hasattr(e, 'code'), str(e)
             resp = e
@@ -169,24 +168,24 @@ def get_apply_config_func_for_lua(console_sock):
     return lambda path: patch_file_clusterwide(control_console, path)
 
 
-def get_apply_config_func_for_http(http_port, cluster_cookie):
+def get_apply_config_func_for_http(upload_url, cluster_cookie):
     assert cluster_cookie is not None, 'Cluster cookie is required for HTTP mode'
-    assert http_port is not None, 'HTTP port is required for HTTP mode'
+    assert upload_url is not None, 'Upload URL is required for HTTP mode'
 
     headers = {'Authorization': basic_auth_header('admin', cluster_cookie)}
 
-    return lambda path: send_on_http(http_port, headers, path)
+    return lambda path: send_on_http(upload_url, headers, path)
 
 
-def get_apply_config_func_for_tdg(console_sock, http_port, tdg_token):
+def get_apply_config_func_for_tdg(console_sock, upload_url, tdg_token):
     tdg_upload_mode = get_tdg_upload_mode(console_sock)
 
     if tdg_upload_mode == 'http':
-        assert http_port is not None, 'HTTP port is required for TDG mode'
+        assert upload_url is not None, 'Upload URL is required for TDG mode'
 
         headers = get_tdg_auth_headers(console_sock, tdg_token)
 
-        return lambda path: send_on_http(http_port, headers, path), ZIP_DIR_MODE
+        return lambda path: send_on_http(upload_url, headers, path), ZIP_DIR_MODE
 
     elif tdg_upload_mode == 'lua':
         return lambda path: apply_tdg_config(console_sock, path), PURE_DIR_MODE
@@ -194,17 +193,17 @@ def get_apply_config_func_for_tdg(console_sock, http_port, tdg_token):
     raise AssertionError("Unknown TDG upload mode '%s'" % tdg_upload_mode)
 
 
-def get_apply_config_func(upload_mode, console_sock=None, http_port=None, cluster_cookie=None, tdg_token=None):
+def get_apply_config_func(upload_mode, console_sock=None, upload_url=None, cluster_cookie=None, tdg_token=None):
     dir_mode = ZIP_DIR_MODE
 
     if upload_mode == LUA_MODE:
         apply_func = get_apply_config_func_for_lua(console_sock)
 
     elif upload_mode == HTTP_MODE:
-        apply_func = get_apply_config_func_for_http(http_port, cluster_cookie)
+        apply_func = get_apply_config_func_for_http(upload_url, cluster_cookie)
 
     elif upload_mode == TDG_MODE:
-        apply_func, dir_mode = get_apply_config_func_for_tdg(console_sock, http_port, tdg_token)
+        apply_func, dir_mode = get_apply_config_func_for_tdg(console_sock, upload_url, tdg_token)
 
     else:
         raise AssertionError("Unknown upload mode '%s'" % upload_mode)
@@ -227,7 +226,7 @@ def apply_app_config(params):
     apply_config, dir_mode = get_apply_config_func(
         upload_mode,
         console_sock=params['console_sock'],
-        http_port=params['http_port'],
+        upload_url=params['upload_url'],
         cluster_cookie=params['cluster_cookie'],
         tdg_token=params['tdg_token'],
     )
@@ -237,7 +236,11 @@ def apply_app_config(params):
     else:
         changed = apply_config(remote_config_path)
 
-    return helpers.ModuleRes(changed=changed, fact={'dest_path': remote_config_path})
+    return helpers.ModuleRes(changed=changed, fact={
+        'dest_path': remote_config_path,
+        'upload_url': params['upload_url'],
+        'upload_mode': params['upload_mode'],
+    })
 
 
 if __name__ == '__main__':

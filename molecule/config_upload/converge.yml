@@ -26,6 +26,7 @@
       vars:
         cartridge_app_config_path: './configs/config.yml'
         cartridge_app_config_upload_mode: null
+        cartridge_app_config_upload_url: 'http://vm1:3301/admin/config'
         expected_test_section: {config-file-key: yml}
 
     - name: 'Upload YAML config by Lua'
@@ -34,6 +35,7 @@
       vars:
         cartridge_app_config_path: './configs/config.yaml'
         cartridge_app_config_upload_mode: null
+        cartridge_app_config_upload_url: 'http://vm1:3302/admin/config'
         expected_test_section: {config-file-key: yaml}
 
     # File configs to Cartridge by HTTP
@@ -44,6 +46,7 @@
       vars:
         cartridge_app_config_path: './configs/config.yml'
         cartridge_app_config_upload_mode: 'http'
+        cartridge_app_config_upload_url: null
         expected_test_section: {config-file-key: yml}
 
     - name: 'Upload YAML config by HTTP'
@@ -52,6 +55,7 @@
       vars:
         cartridge_app_config_path: './configs/config.yaml'
         cartridge_app_config_upload_mode: 'http'
+        cartridge_app_config_upload_url: null
         expected_test_section: {config-file-key: yaml}
 
     ###############
@@ -67,6 +71,7 @@
       vars:
         cartridge_app_config_path: './configs/config-yaml'
         cartridge_app_config_upload_mode: 'lua'
+        cartridge_app_config_upload_url: null
     - name: 'Check upload config failed'
       assert:
         fail_msg: 'Upload folder config by Lua should fail'
@@ -85,6 +90,7 @@
       vars:
         cartridge_app_config_path: './configs/config-yml-json'
         cartridge_app_config_upload_mode: null
+        cartridge_app_config_upload_url: null
     - name: 'Check upload config failed'
       assert:
         fail_msg: 'Upload folder config by HTTP to Cartridge should fail'
@@ -101,6 +107,7 @@
       vars:
         cartridge_app_config_path: './configs/config.yml'
         cartridge_app_config_upload_mode: 'tdg'
+        cartridge_app_config_upload_url: null
     - name: 'Check upload config failed'
       assert:
         fail_msg: 'Upload file config to TDG should fail'
