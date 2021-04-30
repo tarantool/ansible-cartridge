@@ -2,8 +2,8 @@
 
 - name: 'Check that OS family is supported'
   assert:
-    msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
     that: ansible_os_family in ["RedHat", "Debian"]
+    fail_msg: 'Deploy to {{ ansible_os_family }} distributions is not supported yet'
     quiet: true
   when: ansible_os_family is defined
 
