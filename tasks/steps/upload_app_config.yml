@@ -1,0 +1,35 @@
+---
+
+- name: 'BLOCK: Select control instance'
+  include_tasks: 'blocks/set_control_instance.yml'
+  run_once: true
+  when: not control_instance
+
+- run_once: true
+  delegate_to: '{{ control_instance.name }}'
+  when: cartridge_app_config_path is not none
+  tags: cartridge-config
+  block:
+    - name: 'Copy application config on remote host'
+      any_errors_fatal: true
+      copy:
+        src: '{{ cartridge_app_config_path }}'
+        dest: '/tmp/'
+
+    - name: 'Apply application config'
+      cartridge_apply_app_config:
+        local_config_path: '{{ cartridge_app_config_path }}'
+        remote_dir: '/tmp/'
+        upload_mode: '{{ cartridge_app_config_upload_mode }}'
+        console_sock: '{{ control_instance.console_sock }}'
+        upload_url: '{{
+          cartridge_app_config_upload_url or
+          "http://127.0.0.1:" + (control_instance.http_port | string) + "/admin/config"
+        }}'
+        cluster_cookie: '{{ cartridge_cluster_cookie }}'
+        tdg_token: '{{ cartridge_tdg_token }}'
+      register: apply_app_config_res
+
+    - name: 'Add uploaded config to "temporary_files" fact'
+      set_fact:
+        temporary_files: "{{ temporary_files + [apply_app_config_res.fact.dest_path] }}"

@@ -50,6 +50,19 @@ MEMORY_SIZE_BOX_CFG_PARAMS = {
     'vinyl_memory',
 }
 
+SYSTEM_CONFIG_SECTIONS = {
+    'auth',
+    'auth.yml',
+    'topology',
+    'topology.yml',
+    'users_acl',
+    'users_acl.yml',
+    'vshard',
+    'vshard.yml',
+    'vshard_groups',
+    'vshard_groups.yml',
+}
+
 FORMAT_REPLICASET_FUNC = '''
 local cartridge_roles = require('cartridge.roles')
 local function format_replicaset(r)
@@ -162,6 +175,35 @@ if vars.options ~= nil then
         vars.options[name] = value
     end
 end
+'''
+
+READ_YAML_FILE_FUNC_BODY = '''
+    local file_path = ...
+    local file = require('fio').open(file_path)
+    if file == nil then
+        return nil, string.format("Failed to open YAML file: '%s'", file_path)
+    end
+
+    local buf = {}
+    while true do
+        local val = file:read(1024)
+        if val == nil then
+            return nil, string.format("Failed to read from YAML file: '%s'", file_path)
+        elseif val == '' then
+            break
+        end
+        table.insert(buf, val)
+    end
+
+    file:close()
+
+    local data = table.concat(buf, '')
+
+    local ok, result = pcall(require('yaml').decode, data)
+    if not ok then
+        return nil, string.format("Failed to decode YAML file: '%s'", file_path)
+    end
+    return result
 '''
 
 RANDOM_PREFIX = random.randint(1, 1000)
@@ -489,6 +531,57 @@ def set_twophase_options_from_params(control_console, params):
     set_twophase_options(control_console, twophase_options)
 
 
+def read_yaml_file(control_console, file_path):
+    return control_console.eval_res_err(READ_YAML_FILE_FUNC_BODY, file_path)
+
+
+def get_clusterwide_config(control_console, filter_system=True):
+    current_config, err = control_console.eval_res_err('''
+        return require('cartridge').config_get_readonly()
+    ''')
+    if err is not None:
+        return None, err
+    if current_config is None:
+        return None, "Cluster isn't bootstrapped yet"
+
+    filtered = {}
+    for key, value in (current_config or {}).items():
+        if not key.endswith('.yml') and not (filter_system and key in SYSTEM_CONFIG_SECTIONS):
+            filtered[key] = value
+    return filtered, None
+
+
+def patch_clusterwide_config(control_console, new_sections):
+    current_config, err = get_clusterwide_config(control_console)
+    if err is not None:
+        return None, err
+
+    passed_system_sections = []
+    patch = {}
+
+    for section_name, section in new_sections.items():
+        if section_name in SYSTEM_CONFIG_SECTIONS:
+            passed_system_sections.append(section_name)
+            continue
+
+        if current_config.get(section_name) != section:
+            patch[section_name] = section
+
+    if passed_system_sections:
+        return None, "Unable to patch config system sections: %s" % ', '.join(passed_system_sections)
+
+    if not patch:
+        return False, None
+
+    ok, err = control_console.eval_res_err('''
+        return require('cartridge').config_patch_clusterwide(...)
+    ''', patch)
+    if not ok:
+        return None, "Config patch failed: '%s'" % err
+
+    return True, None
+
+
 class Helpers:
     DYNAMIC_BOX_CFG_PARAMS = DYNAMIC_BOX_CFG_PARAMS
     MEMORY_SIZE_BOX_CFG_PARAMS = MEMORY_SIZE_BOX_CFG_PARAMS
@@ -519,3 +612,6 @@ class Helpers:
     get_cluster_replicasets = staticmethod(get_cluster_replicasets)
     set_twophase_options = staticmethod(set_twophase_options)
     set_twophase_options_from_params = staticmethod(set_twophase_options_from_params)
+    read_yaml_file = staticmethod(read_yaml_file)
+    get_clusterwide_config = staticmethod(get_clusterwide_config)
+    patch_clusterwide_config = staticmethod(patch_clusterwide_config)

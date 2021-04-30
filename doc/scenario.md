@@ -33,6 +33,7 @@ The default scenario includes the following steps:
 - [edit_topology](#edit_topology)
 - [cleanup_expelled](#cleanup_expelled)
 - [configure_auth](#configure_auth)
+- [upload_app_config](#upload_app_config)
 - [configure_app_config](#configure_app_config)
 - [bootstrap_vshard](#bootstrap_vshard)
 - [configure_failover](#configure_failover)
@@ -571,6 +572,25 @@ Input facts (set by role):
 Input facts (set by config):
 
 - `cartridge_auth` - authorization configuration.
+
+### upload_app_config
+
+Upload application configuration (mode details in [application config doc](/doc/app_config.md#config-uploading)).
+
+*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+
+Input facts (set by role):
+
+- `control_instance` - information about control instance ([more details here](#set_control_instance)).
+
+Input facts (set by config):
+
+- `cartridge_app_config_path` - path to application config to patch;
+- `cartridge_app_config_upload_mode` - mode of config uploading (`lua`, `http` or `tdg`);
+- `cartridge_app_config_upload_url` - url of instance to upload config
+  (`http://127.0.0.1:{control_instance.http_port}/admin/config` by default);
+- `cartridge_cluster_cookie` - cluster cookie for all cluster instances;
+- `cartridge_tdg_token` - token to upload config by HTTP in TDG.
 
 ### configure_app_config
 
