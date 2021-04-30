@@ -19,7 +19,7 @@ Only `RedHat` and `Debian` OS families are supported.
 
 ## Requirements
 
-* Tarantool Cartridge >= 2.0.0, <3;
+* Tarantool Cartridge >= 2.0.0, < 3;
 * Ansible 2.8.4 or higher.
 
 Note that running the role may require
@@ -30,7 +30,7 @@ Note that running the role may require
 First, you need to install this role using `ansible-galaxy`:
 
 ```bash
-$ ansible-galaxy install tarantool.cartridge,1.8.3
+$ ansible-galaxy install tarantool.cartridge,1.9.0
 ```
 
 ## Quick start
