@@ -97,6 +97,8 @@ stateboard: false
 cartridge_wait_buckets_discovery: true
 instance_start_timeout: 60
 instance_discover_buckets_timeout: 60
+snapshot_is_finished_timeout: 60
+snapshot_is_finished_delay: 5
 
 # Replicasets configuration
 

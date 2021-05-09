@@ -1,0 +1,10 @@
+---
+- name: 'Wait for snapshot is finished'
+  cartridge_check_snapshot_state:
+    console_sock: '{{ instance_info.console_sock }}'
+  register: check_snapshot
+  until: not check_snapshot.failed
+  retries: '{{ snapshot_is_finished_timeout//snapshot_is_finished_delay }}'
+  delay: '{{ snapshot_is_finished_delay }}'
+  when: not expelled
+...
