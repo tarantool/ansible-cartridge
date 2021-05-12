@@ -419,9 +419,9 @@ def debug(value, key=None):
     DEBUG_MESSAGES += value
 
 
-def warn(msg):
+def warn(*messages):
     global WARNINGS
-    WARNINGS.append(msg)
+    WARNINGS += list(messages)
 
 
 def execute_module(argument_spec, function):

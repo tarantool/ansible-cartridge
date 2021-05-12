@@ -96,6 +96,10 @@
       cartridge_failover_params: '{{ cartridge_failover_params }}'
       cartridge_failover_promote_params: '{{ cartridge_failover_promote_params }}'
 
+      wait_cluster_has_no_issues_timeout: '{{ wait_cluster_has_no_issues_timeout }}'
+      wait_cluster_has_no_issues_delay: '{{ wait_cluster_has_no_issues_delay }}'
+      allow_warning_issues: '{{ allow_warning_issues }}'
+
       # Internal role facts that can be set by the user
 
       cartridge_delivered_package_path: '{{ cartridge_delivered_package_path }}'
