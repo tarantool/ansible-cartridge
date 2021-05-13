@@ -30,6 +30,7 @@ cartridge_role_scenarios:
     - configure_app_config
     - bootstrap_vshard
     - configure_failover
+    - wait_members_alive
     - wait_cluster_has_no_issues
     - cleanup
   configure_instances:
@@ -45,6 +46,7 @@ cartridge_role_scenarios:
     - connect_to_membership
     - edit_topology
     - cleanup_expelled
+    - wait_members_alive
     - wait_cluster_has_no_issues
     - cleanup
   configure_app:
@@ -53,6 +55,7 @@ cartridge_role_scenarios:
     - configure_app_config
     - bootstrap_vshard
     - configure_failover
+    - wait_members_alive
     - wait_cluster_has_no_issues
     - cleanup
 

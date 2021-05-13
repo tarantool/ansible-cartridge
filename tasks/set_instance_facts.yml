@@ -66,6 +66,9 @@
       instance_start_timeout: '{{ instance_start_timeout }}'
       instance_discover_buckets_timeout: '{{ instance_discover_buckets_timeout }}'
 
+      wait_members_alive_timeout: '{{ wait_members_alive_timeout }}'
+      wait_members_alive_delay: '{{ wait_members_alive_delay }}'
+
       # Replicasets configuration
 
       replicaset_alias: '{{ replicaset_alias }}'
