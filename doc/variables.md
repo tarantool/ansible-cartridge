@@ -133,3 +133,4 @@ For more details see [scenario documentation](/doc/scenario.md).
 - `wait_cluster_has_no_issues_timeout` (`number`, default: 60): time to wait until cluster has no issues;
 - `wait_cluster_has_no_issues_delay` (`number`, default: 5): delay to retry cluster issues check;
 - `allow_warning_issues` (`boolean`, default: `false`): allow issues with `warning` level.
+- `show_issues`(`boolean`, default: `true`): - log cluster issues as a warnings.

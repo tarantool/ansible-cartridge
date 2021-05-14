@@ -679,7 +679,8 @@ Input facts (set by config):
 
 - `wait_cluster_has_no_issues_timeout` - time to wait until cluster has no issues;
 - `wait_cluster_has_no_issues_delay` - delay to retry cluster issues check;
-- `allow_warning_issues` - allow issues with `warning` level.
+- `allow_warning_issues` - allow issues with `warning` level;
+- `show_issues` - log cluster issues as a warnings;
 
 ### cleanup
 

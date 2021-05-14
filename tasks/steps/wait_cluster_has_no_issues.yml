@@ -13,6 +13,7 @@
     - name: 'Wait until cluster has no issues'
       cartridge_check_cluster_issues:
         allow_warnings: '{{ allow_warning_issues }}'
+        show_issues: '{{ show_issues }}'
         console_sock: '{{ control_instance.console_sock }}'
       register: cluster_issues_res
       until: not cluster_issues_res.failed

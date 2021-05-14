@@ -3,6 +3,7 @@
 from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
+    'show_issues': {'required': True, 'type': 'bool'},
     'allow_warnings': {'required': True, 'type': 'bool'},
     'console_sock': {'required': True, 'type': 'str'},
 }
@@ -25,6 +26,7 @@ def get_messages(**issues_by_level):
 
 def check_cluster_issues(params):
     allow_warnings = params['allow_warnings']
+    show_issues = params['show_issues']
     console_sock = params['console_sock']
 
     control_console = helpers.get_control_console(console_sock)
@@ -36,7 +38,6 @@ def check_cluster_issues(params):
     if err is not None:
         helpers.warn(
             "Received error on getting list of cluster issues: %s" % err,
-            "",
         )
 
     warning_issues = list(filter(lambda issue: issue['level'] == 'warning', issues))
@@ -44,7 +45,8 @@ def check_cluster_issues(params):
     unknown_issues = list(filter(lambda issue: issue['level'] not in ['warning', 'critical'], issues))
 
     messages = get_messages(warning=warning_issues, critical=critical_issues, unknown=unknown_issues)
-    helpers.warn(*messages)
+    if show_issues:
+        helpers.warn(*messages)
 
     if issues:
         if allow_warnings:

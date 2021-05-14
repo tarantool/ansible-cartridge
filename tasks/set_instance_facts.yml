@@ -101,6 +101,7 @@
       cartridge_failover_promote_params: '{{ cartridge_failover_promote_params }}'
 
       allow_warning_issues: '{{ allow_warning_issues }}'
+      show_issues: '{{ show_issues }}'
       wait_cluster_has_no_issues_timeout: '{{ wait_cluster_has_no_issues_timeout }}'
       wait_cluster_has_no_issues_delay: '{{ wait_cluster_has_no_issues_delay }}'
 

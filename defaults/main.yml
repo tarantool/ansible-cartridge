@@ -141,6 +141,7 @@ cartridge_failover_params: null
 cartridge_failover_promote_params: null
 
 allow_warning_issues: false
+show_issues: true
 wait_cluster_has_no_issues_timeout: 60
 wait_cluster_has_no_issues_delay: 5
 

@@ -1,5 +1,6 @@
 import sys
 import unittest
+from parameterized import parameterized
 
 import module_utils.helpers as helpers
 from unit.instance import Instance
@@ -8,9 +9,10 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_check_cluster_issues import check_cluster_issues
 
 
-def call_check_cluster_issues(console_sock, allow_warnings=False):
+def call_check_cluster_issues(console_sock, show_issues=True, allow_warnings=False):
     return check_cluster_issues({
         'console_sock': console_sock,
+        'show_issues': show_issues,
         'allow_warnings': allow_warnings,
     })
 
@@ -47,7 +49,11 @@ class TestInstanceStarted(unittest.TestCase):
         res = call_check_cluster_issues(self.console_sock)
         self.assertFalse(res.failed, res.msg)
 
-    def test_issues(self):
+    @parameterized.expand([
+        [True],
+        [False],
+    ])
+    def test_issues(self, show_issues):
         set_issues(self.instance, [
             {'level': 'critical', 'message': 'Some critical issue 1'},
             {'level': 'warning', 'message': 'Some warning issue 2'},
@@ -57,22 +63,26 @@ class TestInstanceStarted(unittest.TestCase):
             {'level': 'critical', 'message': 'Some critical issue 6'},
         ])
 
-        res = call_check_cluster_issues(self.console_sock)
+        res = call_check_cluster_issues(self.console_sock, show_issues=show_issues)
         self.assertTrue(res.failed)
         self.assertEqual(res.msg, "Cluster has 6 issues")
-        self.assertEqual(get_warnings(res), [
-            'Issues (critical):',
-            'Some critical issue 1',
-            'Some critical issue 3',
-            'Some critical issue 6',
-            '',
-            'Issues (unknown):',
-            'Some other-level issue 4',
-            '',
-            'Issues (warning):',
-            'Some warning issue 2',
-            'Some warning issue 5',
-        ])
+
+        if not show_issues:
+            self.assertEqual(len(get_warnings(res)), 0)
+        else:
+            self.assertEqual(get_warnings(res), [
+                'Issues (critical):',
+                'Some critical issue 1',
+                'Some critical issue 3',
+                'Some critical issue 6',
+                '',
+                'Issues (unknown):',
+                'Some other-level issue 4',
+                '',
+                'Issues (warning):',
+                'Some warning issue 2',
+                'Some warning issue 5',
+            ])
 
         # only critical
         set_issues(self.instance, [
@@ -81,15 +91,19 @@ class TestInstanceStarted(unittest.TestCase):
             {'level': 'critical', 'message': 'Some critical issue 6'},
         ])
 
-        res = call_check_cluster_issues(self.console_sock)
+        res = call_check_cluster_issues(self.console_sock, show_issues=show_issues)
         self.assertTrue(res.failed)
         self.assertEqual(res.msg, "Cluster has 3 issues")
-        self.assertEqual(get_warnings(res), [
-            'Issues (critical):',
-            'Some critical issue 1',
-            'Some critical issue 3',
-            'Some critical issue 6',
-        ])
+
+        if not show_issues:
+            self.assertEqual(len(get_warnings(res)), 0)
+        else:
+            self.assertEqual(get_warnings(res), [
+                'Issues (critical):',
+                'Some critical issue 1',
+                'Some critical issue 3',
+                'Some critical issue 6',
+            ])
 
         # only warnings
         set_issues(self.instance, [
@@ -97,29 +111,41 @@ class TestInstanceStarted(unittest.TestCase):
             {'level': 'warning', 'message': 'Some warning issue 5'},
         ])
 
-        res = call_check_cluster_issues(self.console_sock)
+        res = call_check_cluster_issues(self.console_sock, show_issues=show_issues)
         self.assertTrue(res.failed)
         self.assertEqual(res.msg, "Cluster has 2 issues")
-        self.assertEqual(get_warnings(res), [
-            'Issues (warning):',
-            'Some warning issue 2',
-            'Some warning issue 5',
-        ])
+
+        if not show_issues:
+            self.assertEqual(len(get_warnings(res)), 0)
+        else:
+            self.assertEqual(get_warnings(res), [
+                'Issues (warning):',
+                'Some warning issue 2',
+                'Some warning issue 5',
+            ])
 
         # only unknown
         set_issues(self.instance, [
             {'level': 'other-level', 'message': 'Some other-level issue 4'},
         ])
 
-        res = call_check_cluster_issues(self.console_sock)
+        res = call_check_cluster_issues(self.console_sock, show_issues=show_issues)
         self.assertTrue(res.failed)
         self.assertEqual(res.msg, "Cluster has 1 issues")
-        self.assertEqual(get_warnings(res), [
-            'Issues (unknown):',
-            'Some other-level issue 4',
-        ])
 
-    def test_warnings(self):
+        if not show_issues:
+            self.assertEqual(len(get_warnings(res)), 0)
+        else:
+            self.assertEqual(get_warnings(res), [
+                'Issues (unknown):',
+                'Some other-level issue 4',
+            ])
+
+    @parameterized.expand([
+        [True],
+        [False],
+    ])
+    def test_warnings(self, show_issues):
         set_issues(self.instance, [
             {'level': 'critical', 'message': 'Some critical issue 1'},
             {'level': 'warning', 'message': 'Some warning issue 2'},
@@ -129,22 +155,26 @@ class TestInstanceStarted(unittest.TestCase):
             {'level': 'critical', 'message': 'Some critical issue 6'},
         ])
 
-        res = call_check_cluster_issues(self.console_sock, allow_warnings=True)
+        res = call_check_cluster_issues(self.console_sock, allow_warnings=True, show_issues=show_issues)
         self.assertTrue(res.failed)
         self.assertEqual(res.msg, "Cluster has 4 critical issues")
-        self.assertEqual(get_warnings(res), [
-            'Issues (critical):',
-            'Some critical issue 1',
-            'Some critical issue 3',
-            'Some critical issue 6',
-            '',
-            'Issues (unknown):',
-            'Some other-level issue 4',
-            '',
-            'Issues (warning):',
-            'Some warning issue 2',
-            'Some warning issue 5',
-        ])
+
+        if not show_issues:
+            self.assertEqual(len(get_warnings(res)), 0)
+        else:
+            self.assertEqual(get_warnings(res), [
+                'Issues (critical):',
+                'Some critical issue 1',
+                'Some critical issue 3',
+                'Some critical issue 6',
+                '',
+                'Issues (unknown):',
+                'Some other-level issue 4',
+                '',
+                'Issues (warning):',
+                'Some warning issue 2',
+                'Some warning issue 5',
+            ])
 
         # only warnings
         set_issues(self.instance, [
@@ -152,13 +182,17 @@ class TestInstanceStarted(unittest.TestCase):
             {'level': 'warning', 'message': 'Some warning issue 5'},
         ])
 
-        res = call_check_cluster_issues(self.console_sock, allow_warnings=True)
+        res = call_check_cluster_issues(self.console_sock, allow_warnings=True, show_issues=show_issues)
         self.assertFalse(res.failed)
-        self.assertEqual(get_warnings(res), [
-            'Issues (warning):',
-            'Some warning issue 2',
-            'Some warning issue 5',
-        ])
+
+        if not show_issues:
+            self.assertEqual(len(get_warnings(res)), 0)
+        else:
+            self.assertEqual(get_warnings(res), [
+                'Issues (warning):',
+                'Some warning issue 2',
+                'Some warning issue 5',
+            ])
 
         # only critical
         set_issues(self.instance, [
@@ -167,30 +201,42 @@ class TestInstanceStarted(unittest.TestCase):
             {'level': 'critical', 'message': 'Some critical issue 6'},
         ])
 
-        res = call_check_cluster_issues(self.console_sock, allow_warnings=True)
+        res = call_check_cluster_issues(self.console_sock, allow_warnings=True, show_issues=show_issues)
         self.assertTrue(res.failed)
         self.assertEqual(res.msg, "Cluster has 3 critical issues")
-        self.assertEqual(get_warnings(res), [
-            'Issues (critical):',
-            'Some critical issue 1',
-            'Some critical issue 3',
-            'Some critical issue 6',
-        ])
+
+        if not show_issues:
+            self.assertEqual(len(get_warnings(res)), 0)
+        else:
+            self.assertEqual(get_warnings(res), [
+                'Issues (critical):',
+                'Some critical issue 1',
+                'Some critical issue 3',
+                'Some critical issue 6',
+            ])
 
         # only unknown
         set_issues(self.instance, [
             {'level': 'other-level', 'message': 'Some other-level issue 4'},
         ])
 
-        res = call_check_cluster_issues(self.console_sock, allow_warnings=True)
+        res = call_check_cluster_issues(self.console_sock, allow_warnings=True, show_issues=show_issues)
         self.assertTrue(res.failed)
         self.assertEqual(res.msg, "Cluster has 1 critical issues")
-        self.assertEqual(get_warnings(res), [
-            'Issues (unknown):',
-            'Some other-level issue 4',
-        ])
 
-    def test_list_on_cluster_returns_error(self):
+        if not show_issues:
+            self.assertEqual(len(get_warnings(res)), 0)
+        else:
+            self.assertEqual(get_warnings(res), [
+                'Issues (unknown):',
+                'Some other-level issue 4',
+            ])
+
+    @parameterized.expand([
+        [True],
+        [False],
+    ])
+    def test_list_on_cluster_returns_error(self, show_issues):
         set_issues(self.instance, [
             {'level': 'critical', 'message': 'Some critical issue 1'},
             {'level': 'warning', 'message': 'Some warning issue 2'},
@@ -202,24 +248,29 @@ class TestInstanceStarted(unittest.TestCase):
 
         self.instance.set_fail_on('issues_list_on_clister')
 
-        res = call_check_cluster_issues(self.console_sock)
+        res = call_check_cluster_issues(self.console_sock, show_issues=show_issues)
         self.assertTrue(res.failed)
         self.assertEqual(res.msg, "Cluster has 6 issues")
-        self.assertEqual(get_warnings(res), [
-            'Received error on getting list of cluster issues: cartridge err',
-            '',
-            'Issues (critical):',
-            'Some critical issue 1',
-            'Some critical issue 3',
-            'Some critical issue 6',
-            '',
-            'Issues (unknown):',
-            'Some other-level issue 4',
-            '',
-            'Issues (warning):',
-            'Some warning issue 2',
-            'Some warning issue 5',
-        ])
+
+        warnings = get_warnings(res)
+        self.assertEqual(warnings[0], 'Received error on getting list of cluster issues: cartridge err')
+
+        if not show_issues:
+            self.assertEqual(len(warnings), 1)
+        else:
+            self.assertEqual(warnings[1:], [
+                'Issues (critical):',
+                'Some critical issue 1',
+                'Some critical issue 3',
+                'Some critical issue 6',
+                '',
+                'Issues (unknown):',
+                'Some other-level issue 4',
+                '',
+                'Issues (warning):',
+                'Some warning issue 2',
+                'Some warning issue 5',
+            ])
 
     def tearDown(self):
         self.instance.stop()
