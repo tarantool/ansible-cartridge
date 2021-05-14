@@ -10,7 +10,7 @@ argument_spec = {
 
 def get_messages(**issues_by_level):
     messages = []
-    for level, issues in issues_by_level.items():
+    for level, issues in sorted(issues_by_level.items()):
         if not issues:
             continue
 
@@ -33,8 +33,11 @@ def check_cluster_issues(params):
         return require('cartridge.issues').list_on_cluster()
     ''')
 
-    if err:
-        helpers.warn("Received error on getting list of cluster issues: %s" % err)
+    if err is not None:
+        helpers.warn(
+            "Received error on getting list of cluster issues: %s" % err,
+            "",
+        )
 
     warning_issues = list(filter(lambda issue: issue['level'] == 'warning', issues))
     critical_issues = list(filter(lambda issue: issue['level'] == 'critical', issues))

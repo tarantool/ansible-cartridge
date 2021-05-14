@@ -33,6 +33,9 @@ local cartridge_auth_lib = require('cartridge.auth')
 local cartridge_auth = {}
 package.loaded['cartridge.auth'] = cartridge_auth
 
+local cartridge_issues = {}
+package.loaded['cartridge.issues'] = cartridge_issues
+
 local errors = require('errors')
 local CARTRIDGE_ERR = errors.new('CartridgeError', 'cartridge err')
 
@@ -152,6 +155,18 @@ function cartridge_twophase.patch_clusterwide(patch)
     vars.clusterwide_config = new_clusterwide_config
 
     return true
+end
+
+-- * ------------------- Module cartridge.issues -------------------
+
+function cartridge_issues.list_on_cluster()
+    local err
+
+    if fail_on.issues_list_on_clister then
+        err = CARTRIDGE_ERR
+    end
+
+    return vars.issues or {}, err
 end
 
 -- * ---------------------- Module membership ----------------------

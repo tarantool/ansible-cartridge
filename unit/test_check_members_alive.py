@@ -78,6 +78,25 @@ class TestInstanceStarted(unittest.TestCase):
             "instance-4-joined-uri state is OperationError"
         )
 
+    def test_allowed_states(self):
+        self.instance.add_replicaset(
+            alias='r1',
+            instances=['instance-1-joined', 'instance-2-joined', 'instance-3-joined'],
+        )
+
+        self.instance.set_membership_members([
+            utils.get_member('instance-1-joined', with_uuid=True, status='alive', state='SomeState'),
+            utils.get_member('instance-2-joined', with_uuid=True, status='alive', state='SomeOtherState'),
+            utils.get_member('instance-3-joined', with_uuid=True, status='alive', state='OneMoreState'),
+            utils.get_member('instance-4', status='dead', state='Unconfigured'),
+            utils.get_member('instance-5', status='dead', state='Unconfigured'),
+        ])
+
+        res = call_check_members_alive(self.console_sock, allowed_states=[
+            'SomeState', 'SomeOtherState', 'OneMoreState',
+        ])
+        self.assertFalse(res.failed, res.msg)
+
     def tearDown(self):
         self.instance.stop()
         del self.instance
