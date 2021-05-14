@@ -66,6 +66,7 @@
       instance_start_timeout: '{{ instance_start_timeout }}'
       instance_discover_buckets_timeout: '{{ instance_discover_buckets_timeout }}'
 
+      allowed_members_states: '{{ allowed_members_states }}'
       wait_members_alive_timeout: '{{ wait_members_alive_timeout }}'
       wait_members_alive_delay: '{{ wait_members_alive_delay }}'
 
@@ -99,9 +100,9 @@
       cartridge_failover_params: '{{ cartridge_failover_params }}'
       cartridge_failover_promote_params: '{{ cartridge_failover_promote_params }}'
 
+      allow_warning_issues: '{{ allow_warning_issues }}'
       wait_cluster_has_no_issues_timeout: '{{ wait_cluster_has_no_issues_timeout }}'
       wait_cluster_has_no_issues_delay: '{{ wait_cluster_has_no_issues_delay }}'
-      allow_warning_issues: '{{ allow_warning_issues }}'
 
       # Internal role facts that can be set by the user
 
