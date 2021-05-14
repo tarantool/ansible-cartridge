@@ -2,6 +2,7 @@ import sys
 import unittest
 
 import module_utils.helpers as helpers
+import unit.utils as utils
 from unit.instance import Instance
 
 sys.modules['ansible.module_utils.helpers'] = helpers
@@ -50,45 +51,6 @@ def get_instance_hostvars(alias, replicaset_alias=None, run_dir=None, expelled=F
     }
 
 
-def get_member(alias, with_alias=True, with_uuid=False, status=None):
-    member = {'uri': '%s-uri' % alias}
-
-    if with_alias:
-        member.update({'alias': alias})
-
-    if with_uuid:
-        member.update({'uuid': '%s-uuid' % alias})
-
-    if status is not None:
-        member.update({'status': status})
-
-    return member
-
-
-def set_membership_members(instance, specified_members, with_payload=True):
-    members = {}
-
-    for m in specified_members:
-        uri = m['uri']
-        member = {
-            'uri': uri,
-            'status': m.get('status', 'alive'),
-            'incarnation': 1,
-        }
-
-        if with_payload:
-            member.update({
-                'payload': {
-                    'uuid': m.get('uuid'),
-                    'alias': m.get('alias')
-                }
-            })
-
-        members[uri] = member
-
-    instance.set_variable('membership_members', members)
-
-
 class TestGetControlInstance(unittest.TestCase):
     def setUp(self):
         self.instance = Instance()
@@ -101,8 +63,8 @@ class TestGetControlInstance(unittest.TestCase):
         hostvars = get_instance_hostvars('instance-1')
 
         # with UUID (already bootstrapped) and without alias
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=True, with_alias=False),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=True, with_alias=False),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
@@ -112,8 +74,8 @@ class TestGetControlInstance(unittest.TestCase):
         hostvars = get_instance_hostvars('instance-1', 'some-rpl')
 
         # with UUID and alias
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=True),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=True),
         ])
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
@@ -128,8 +90,8 @@ class TestGetControlInstance(unittest.TestCase):
         hostvars = get_instance_hostvars('instance-1', run_dir='run-dir')
 
         # with UUID and alias
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=True),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=True),
         ])
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
@@ -141,8 +103,8 @@ class TestGetControlInstance(unittest.TestCase):
         })
 
         # without UUID
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=False),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=False),
         ])
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
@@ -157,9 +119,9 @@ class TestGetControlInstance(unittest.TestCase):
         # both with UUID and alias
         # instance-1 is selected since it's URI is
         # first lexicographically
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=True),
-            get_member('instance-2', with_uuid=True),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=True),
+            utils.get_member('instance-2', with_uuid=True),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
@@ -170,9 +132,9 @@ class TestGetControlInstance(unittest.TestCase):
         })
 
         # one with UUID (it is selected)
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=False),
-            get_member('instance-2', with_uuid=True),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=False),
+            utils.get_member('instance-2', with_uuid=True),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
@@ -183,18 +145,18 @@ class TestGetControlInstance(unittest.TestCase):
         })
 
         # one with UUID (but without alias)
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=False),
-            get_member('instance-2', with_uuid=True, with_alias=False),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=False),
+            utils.get_member('instance-2', with_uuid=True, with_alias=False),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
         self.assertIn("Instance with URI instance-2-uri payload doesn't contain alias", res.msg)
 
         # both without UUID (no one selected)
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=False),
-            get_member('instance-2', with_uuid=False),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=False),
+            utils.get_member('instance-2', with_uuid=False),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
@@ -208,11 +170,11 @@ class TestGetControlInstance(unittest.TestCase):
         hostvars.update(get_instance_hostvars('instance-1-expelled', run_dir='run-dir-1', http_port=8081))
         hostvars.update({'my-stateboard': {'stateboard': True}})
 
-        set_membership_members(self.instance, [
-            get_member('instance-4', with_uuid=False),
-            get_member('instance-3', with_uuid=False),
-            get_member('instance-2-no-rpl', with_uuid=False),
-            get_member('instance-1-expelled', with_uuid=False),
+        self.instance.set_membership_members([
+            utils.get_member('instance-4', with_uuid=False),
+            utils.get_member('instance-3', with_uuid=False),
+            utils.get_member('instance-2-no-rpl', with_uuid=False),
+            utils.get_member('instance-1-expelled', with_uuid=False),
         ])
 
         # all instances are in play_hosts
@@ -238,10 +200,10 @@ class TestGetControlInstance(unittest.TestCase):
         hostvars.update(get_instance_hostvars('instance-1', 'some-rpl'))
         hostvars.update(get_instance_hostvars('instance-2', 'some-rpl'))
 
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=False),
-            get_member('instance-2', with_uuid=False),
-            get_member('instance-3', with_uuid=True),  # has UUID but not in hostvars
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=False),
+            utils.get_member('instance-2', with_uuid=False),
+            utils.get_member('instance-3', with_uuid=True),  # has UUID but not in hostvars
         ])
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
@@ -264,10 +226,10 @@ class TestGetControlInstance(unittest.TestCase):
 
         # all with UUID and alias - instance-3 is selected
         # (instead of instance-1 by lexicographic order)
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=True),
-            get_member('instance-2', with_uuid=True),
-            get_member('instance-3', with_uuid=True),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=True),
+            utils.get_member('instance-2', with_uuid=True),
+            utils.get_member('instance-3', with_uuid=True),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
@@ -279,10 +241,10 @@ class TestGetControlInstance(unittest.TestCase):
 
         # all without UUID - instance-3 is selected
         # (instead of instance-1 by lexicographic order)
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=False),
-            get_member('instance-2', with_uuid=False),
-            get_member('instance-3', with_uuid=False),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=False),
+            utils.get_member('instance-2', with_uuid=False),
+            utils.get_member('instance-3', with_uuid=False),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
@@ -295,10 +257,10 @@ class TestGetControlInstance(unittest.TestCase):
         # instance-1 and instance-2 has UUIDs
         # instance-2 is chosen instead of instance-3 with minimal twophase commit version
         # because instance-2 has minimal twophase commit version between instances with UUIDS
-        set_membership_members(self.instance, [
-            get_member('instance-1', with_uuid=True),
-            get_member('instance-2', with_uuid=True),
-            get_member('instance-3', with_uuid=False),
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=True),
+            utils.get_member('instance-2', with_uuid=True),
+            utils.get_member('instance-3', with_uuid=False),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertFalse(res.failed, msg=res.msg)
@@ -316,11 +278,11 @@ class TestGetControlInstance(unittest.TestCase):
         hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl', http_port=8083))
         hostvars.update(get_instance_hostvars('not-joined-2', 'some-rpl', http_port=8084))
 
-        set_membership_members(self.instance, [
-            get_member('joined-1', with_uuid=True, status='dead'),
-            get_member('joined-2', with_uuid=True),
-            get_member('not-joined-1'),
-            get_member('not-joined-2'),
+        self.instance.set_membership_members([
+            utils.get_member('joined-1', with_uuid=True, status='dead'),
+            utils.get_member('joined-2', with_uuid=True),
+            utils.get_member('not-joined-1'),
+            utils.get_member('not-joined-2'),
         ])
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
@@ -338,11 +300,11 @@ class TestGetControlInstance(unittest.TestCase):
         hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl'))
         hostvars.update(get_instance_hostvars('not-joined-2', 'some-rpl'))
 
-        set_membership_members(self.instance, [
-            get_member('joined-1', with_uuid=True, status='dead'),
-            get_member('joined-2', with_uuid=True, status='suspect'),
-            get_member('not-joined-1'),
-            get_member('not-joined-2'),
+        self.instance.set_membership_members([
+            utils.get_member('joined-1', with_uuid=True, status='dead'),
+            utils.get_member('joined-2', with_uuid=True, status='suspect'),
+            utils.get_member('not-joined-1'),
+            utils.get_member('not-joined-2'),
         ])
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
@@ -354,9 +316,9 @@ class TestGetControlInstance(unittest.TestCase):
         hostvars.update(get_instance_hostvars('not-joined-1', 'some-rpl', http_port=8081))
         hostvars.update(get_instance_hostvars('not-joined-2', 'some-rpl', http_port=8082))
 
-        set_membership_members(self.instance, [
-            get_member('not-joined-1', status='dead'),
-            get_member('not-joined-2'),
+        self.instance.set_membership_members([
+            utils.get_member('not-joined-1', status='dead'),
+            utils.get_member('not-joined-2'),
         ])
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
@@ -374,10 +336,10 @@ class TestGetControlInstance(unittest.TestCase):
         hostvars.update(get_instance_hostvars('not-joined-2', http_port=8082))
         hostvars.update(get_instance_hostvars('not-joined-3', 'some-rpl', http_port=8083))
 
-        set_membership_members(self.instance, [
-            get_member('not-joined-1', status='dead'),
-            get_member('not-joined-2'),
-            get_member('not-joined-3'),
+        self.instance.set_membership_members([
+            utils.get_member('not-joined-1', status='dead'),
+            utils.get_member('not-joined-2'),
+            utils.get_member('not-joined-3'),
         ])
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
