@@ -1,10 +1,63 @@
 ---
 
+- name: 'Two joined instances are in OperationError state'
+  hosts: instance-2-joined,instance-6-joined
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set state to OperationError'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: |
+          local confapplier = require('cartridge.confapplier')
+          confapplier.set_state('ConfiguringRoles')
+          confapplier.set_state('OperationError')
+
+    - name: 'Wail until all instances are alive and cluster has no issues'
+      import_role:
+        name: ansible-cartridge
+      ignore_errors: true
+      vars:
+        cartridge_scenario:
+          - wait_members_alive
+          - wait_cluster_has_no_issues
+
+    - name: 'Check that members check failed'
+      assert:
+        msg: 'Membership check should fail'
+        success_msg: 'Membership check failed'
+        that: check_members_alive_res.failed
+      run_once: true
+
+    - name: 'Check members check error'
+      assert:
+        msg: 'Membership check returned bad error'
+        success_msg: 'Membership check error is right'
+        that: |
+          check_members_alive_res.msg ==
+            "Some instances aren't alive: vm1:3102 state is OperationError, vm1:3106 state is OperationError"
+      run_once: true
+
+    - name: 'Set state back to RolesConfigured'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: |
+          local confapplier = require('cartridge.confapplier')
+          confapplier.set_state('ConfiguringRoles')
+          confapplier.set_state('RolesConfigured')
+
 # All instances are alive
 # alive_not_expelled_instance: instance-1
 # control_instance: instance-2-joined
 
-- name: 'All instances are alive'
+- name: 'All instances are alive: Select control instance'
   hosts: cluster
   become: true
   become_user: root
@@ -58,7 +111,21 @@
         cartridge_scenario:
           - stop_instance
 
-- name: 'Next alive instance is chosen'
+- name: 'Cluster healthiness checks: All joined instances are alive'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Wail until all instances are alive and cluster has no issues'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - wait_members_alive
+          - wait_cluster_has_no_issues
+
+- name: 'Select control instance: Next alive instance is chosen'
   hosts: cluster
   become: true
   become_user: root
@@ -112,7 +179,53 @@
         cartridge_scenario:
           - stop_instance
 
-- name: 'Only one joined instance is alive'
+- name: 'Cluster healthiness checks: Only one joined instance is alive'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Wail until all instances are alive and cluster has no issues'
+      import_role:
+        name: ansible-cartridge
+      ignore_errors: true
+      vars:
+        cartridge_scenario:
+          - wait_members_alive
+          - wait_cluster_has_no_issues
+
+    - name: 'Check that members check failed'
+      assert:
+        msg: 'Membership check should fail'
+        success_msg: 'Membership check failed'
+        that: check_members_alive_res.failed
+      run_once: true
+
+    - name: 'Check members check error'
+      assert:
+        msg: 'Membership check returned bad error'
+        success_msg: 'Membership check error is right'
+        that: |
+          check_members_alive_res.msg == "Some instances aren't alive: vm1:3102 status is left, vm1:3103 status is left"
+      run_once: true
+
+    - name: 'Check that cluster issues check failed'
+      assert:
+        msg: 'Cluster issues check should fail'
+        success_msg: 'Cluster issues check failed'
+        that: cluster_issues_res.failed
+      run_once: true
+
+    - name: 'Check cluster issues check error'
+      assert:
+        msg: 'Cluster issues check check returned bad error'
+        success_msg: 'Cluster issues check check error is right'
+        that: |
+          cluster_issues_res.msg == "Cluster has 2 issues"
+          and cluster_issues_res.warnings | length > 0
+      run_once: true
+
+- name: 'Select control instance: Only one joined instance is alive'
   hosts: cluster
   become: true
   become_user: root
