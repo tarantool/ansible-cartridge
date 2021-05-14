@@ -421,7 +421,7 @@ def debug(value, key=None):
 
 def warn(*messages):
     global WARNINGS
-    WARNINGS += list(messages)
+    WARNINGS += messages
 
 
 def execute_module(argument_spec, function):

@@ -1,6 +1,7 @@
 ---
 
 - tags:
+    - cartridge-instances
     - cartridge-replicasets
     - cartridge-config
   block:

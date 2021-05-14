@@ -131,5 +131,5 @@ For more details see [scenario documentation](/doc/scenario.md).
   indicates if eventual failover should be enabled or disabled;
 * `cartridge_failover_promote_params` (`dict`): [failover promote](/doc/rolling_update.md#leaders-promotion) params.
 - `wait_cluster_has_no_issues_timeout` (`number`, default: 60): time to wait until cluster has no issues;
-- `wait_members_alive_delay` (`number`, default: 5): delay to retry cluster issues check;
+- `wait_cluster_has_no_issues_delay` (`number`, default: 5): delay to retry cluster issues check;
 - `allow_warning_issues` (`boolean`, default: `false`): allow issues with `warning` level.
