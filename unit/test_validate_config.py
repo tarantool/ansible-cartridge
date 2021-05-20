@@ -65,6 +65,7 @@ class TestValidateConfig(unittest.TestCase):
                 'zone',
                 'cartridge_eval_body',
                 'cartridge_eval_file',
+                'allowed_members_states[0]'
             },
             bool: {
                 'cartridge_bootstrap_vshard',
@@ -83,6 +84,8 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_remove_temporary_files',
                 'cartridge_failover_params.fencing_enabled',
                 'edit_topology_allow_missed_instances',
+                'allow_warning_issues',
+                'show_issues',
             },
             dict: {
                 'cartridge_defaults',
@@ -110,6 +113,10 @@ class TestValidateConfig(unittest.TestCase):
                 'twophase_apply_config_timeout',
                 'edit_topology_timeout',
                 'edit_topology_healthy_timeout',
+                'wait_members_alive_retries',
+                'wait_members_alive_delay',
+                'wait_cluster_has_no_issues_retries',
+                'wait_cluster_has_no_issues_delay',
             },
             list: {
                 'roles',
@@ -132,6 +139,9 @@ class TestValidateConfig(unittest.TestCase):
 
             if path.startswith('failover_priority[0]'):
                 return {'failover_priority': [wrong_type_value]}
+
+            if path.startswith('allowed_members_states[0]'):
+                return {'allowed_members_states': [wrong_type_value]}
 
             if path.startswith('cartridge_auth.users[0].'):
                 p = path.split('.')[-1]
