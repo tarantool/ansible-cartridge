@@ -8,6 +8,9 @@ There are two steps that allow running code snippets:
 * [`eval_on_control_instance`](/doc/scenario.md#eval_on_control_instance) runs
   specified snipped only on the control instance.
 
+By default, result is simply saved to `eval_res` variable, but if
+`cartridge_eval_with_retries` is set to `true`, than [eval with retries](#eval-with-retries) is performed.
+
 ## How to pass a code snippet?
 
 There are two ways to specify code that should be ran:
@@ -109,4 +112,39 @@ The code above can be ran from a file:
       - 'Elizabeth'
       - age: 24
         city: 'Moscow'
+```
+
+## Eval with retries
+
+If `cartridge_eval_with_retries` is set, that `eval` expects that function
+return `res, err`.
+It retries until `err` is received.
+
+It can be useful to perform some checks in Lua code and wait until some condition is met.
+
+Retries and delay can be configured:
+- `cartridge_eval_retries` (`number`, default: `3`) number of eval retries;
+- `cartridge_eval_delay` (`number`, default: `5`)  - eval retries delay;
+
+```yaml
+- name: Eval with retries
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - eval
+    cartridge_eval_with_retries: true
+    cartridge_eval_retries: 10
+    cartridge_eval_delay: 1
+    cartridge_eval_body: |
+      local checkpoint_is_in_progress = box.info().gc().checkpoint_is_in_progress
+      if checkpoint_is_in_progress then
+        return nil, "Checkpoint is still in progress"
+      end
+
+      return true
 ```

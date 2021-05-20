@@ -123,3 +123,6 @@
       cartridge_eval_file: '{{ cartridge_eval_file }}'
       cartridge_eval_body: '{{ cartridge_eval_body }}'
       cartridge_eval_args: '{{ cartridge_eval_args }}'
+      cartridge_eval_with_retries: '{{ cartridge_eval_with_retries }}'
+      cartridge_eval_retries: '{{ cartridge_eval_retries }}'
+      cartridge_eval_delay: '{{ cartridge_eval_delay }}'
