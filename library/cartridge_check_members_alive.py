@@ -23,30 +23,30 @@ def check_members_alive(params):
 
         local topology_cfg = confapplier.get_readonly('topology')
 
-        local allowed_states = ...
-        local errors = {}
-
         if topology_cfg == nil then
             return nil, "Instances aren't joined to cluster yet"
         end
+
+        local allowed_states = ...
+        local bad_members = {}
 
         for _it, instance_uuid, server in fun.filter(cartridge_topology.not_disabled, topology_cfg.servers) do
             local member = membership.get_member(server.uri) or {}
 
             if (member.payload.uuid ~= instance_uuid) then
-                table.insert(errors, string.format(
+                table.insert(bad_members, string.format(
                     '%s uuid mismatch: expected %s, have %s',
                     server.uri, instance_uuid, member.payload.uuid
                 ))
             elseif (member.status ~= 'alive') then
-                table.insert(errors, string.format(
+                table.insert(bad_members, string.format(
                     '%s status is %s',
                     server.uri, member.status
                 ))
-            elseif next(allowed_states or {}) ~= nil then
+            elseif allowed_states ~= nil and next(allowed_states) ~= nil then
                 local member_state = member.payload.state
                 if fun.index(member_state, allowed_states) == nil then
-                    table.insert(errors, string.format(
+                    table.insert(bad_members, string.format(
                     '%s state is %s',
                     server.uri, member_state
                 ))
@@ -54,7 +54,7 @@ def check_members_alive(params):
             end
         end
 
-        return errors
+        return bad_members
     ''', allowed_states)
 
     if err is not None:

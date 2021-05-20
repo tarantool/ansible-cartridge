@@ -106,7 +106,7 @@ instance_start_timeout: 60
 instance_discover_buckets_timeout: 60
 
 allowed_members_states: ['RolesConfigured']
-wait_members_alive_timeout: 60
+wait_members_alive_retries: 10
 wait_members_alive_delay: 5
 
 # Replicasets configuration
@@ -142,7 +142,7 @@ cartridge_failover_promote_params: null
 
 allow_warning_issues: false
 show_issues: true
-wait_cluster_has_no_issues_timeout: 60
+wait_cluster_has_no_issues_retries: 10
 wait_cluster_has_no_issues_delay: 5
 
 # Internal role facts that can be set by the user

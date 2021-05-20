@@ -9,16 +9,13 @@ argument_spec = {
 }
 
 
-def get_messages(**issues_by_level):
+def get_messages(issues_by_level):
     messages = []
     for level, issues in sorted(issues_by_level.items()):
         if not issues:
             continue
 
-        if messages:
-            messages += ['']
-
-        messages += ['Issues (%s):' % level]
+        messages += ['* Issues (%s): '.ljust(60, "*") % level]
         messages += [issue['message'] for issue in issues]
 
     return messages
@@ -36,21 +33,27 @@ def check_cluster_issues(params):
     ''')
 
     if err is not None:
-        helpers.warn(
-            "Received error on getting list of cluster issues: %s" % err,
-        )
+        msg = "Received error on getting list of cluster issues: %s" % err
+        if issues is None:
+            return helpers.ModuleRes(failed=True, msg=msg)
 
-    warning_issues = list(filter(lambda issue: issue['level'] == 'warning', issues))
-    critical_issues = list(filter(lambda issue: issue['level'] == 'critical', issues))
-    unknown_issues = list(filter(lambda issue: issue['level'] not in ['warning', 'critical'], issues))
+        helpers.warn(msg)
 
-    messages = get_messages(warning=warning_issues, critical=critical_issues, unknown=unknown_issues)
+    issues_by_level = {}
+    for issue in issues:
+        level = issue['level']
+        if level not in issues_by_level:
+            issues_by_level[level] = []
+
+        issues_by_level[level].append(issue)
+
     if show_issues:
+        messages = get_messages(issues_by_level)
         helpers.warn(*messages)
 
     if issues:
         if allow_warnings:
-            critical_issues_num = len(issues) - len(warning_issues)
+            critical_issues_num = len(issues) - len(issues_by_level.get('warning', []))
             if critical_issues_num > 0:
                 return helpers.ModuleRes(failed=True, msg="Cluster has %s critical issues" % critical_issues_num)
         else:

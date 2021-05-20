@@ -17,7 +17,7 @@
         console_sock: '{{ control_instance.console_sock }}'
       register: cluster_issues_res
       until: not cluster_issues_res.failed
-      retries: '{{ wait_cluster_has_no_issues_timeout // wait_cluster_has_no_issues_delay }}'
+      retries: '{{ wait_cluster_has_no_issues_retries }}'
       delay: '{{ wait_cluster_has_no_issues_delay }}'
       when: not expelled
       run_once: true

@@ -9,6 +9,11 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_check_cluster_issues import check_cluster_issues
 
 
+ISSUES_WARN_HEADER = '* Issues (warning): *********************************************'
+ISSUES_CRIT_HEADER = '* Issues (critical): *********************************************'
+ISSUES_OTHER_HEADER = '* Issues (other-level): *********************************************'
+
+
 def call_check_cluster_issues(console_sock, show_issues=True, allow_warnings=False):
     return check_cluster_issues({
         'console_sock': console_sock,
@@ -71,15 +76,13 @@ class TestInstanceStarted(unittest.TestCase):
             self.assertEqual(len(get_warnings(res)), 0)
         else:
             self.assertEqual(get_warnings(res), [
-                'Issues (critical):',
+                ISSUES_CRIT_HEADER,
                 'Some critical issue 1',
                 'Some critical issue 3',
                 'Some critical issue 6',
-                '',
-                'Issues (unknown):',
+                ISSUES_OTHER_HEADER,
                 'Some other-level issue 4',
-                '',
-                'Issues (warning):',
+                ISSUES_WARN_HEADER,
                 'Some warning issue 2',
                 'Some warning issue 5',
             ])
@@ -99,7 +102,7 @@ class TestInstanceStarted(unittest.TestCase):
             self.assertEqual(len(get_warnings(res)), 0)
         else:
             self.assertEqual(get_warnings(res), [
-                'Issues (critical):',
+                ISSUES_CRIT_HEADER,
                 'Some critical issue 1',
                 'Some critical issue 3',
                 'Some critical issue 6',
@@ -119,7 +122,7 @@ class TestInstanceStarted(unittest.TestCase):
             self.assertEqual(len(get_warnings(res)), 0)
         else:
             self.assertEqual(get_warnings(res), [
-                'Issues (warning):',
+                ISSUES_WARN_HEADER,
                 'Some warning issue 2',
                 'Some warning issue 5',
             ])
@@ -137,7 +140,7 @@ class TestInstanceStarted(unittest.TestCase):
             self.assertEqual(len(get_warnings(res)), 0)
         else:
             self.assertEqual(get_warnings(res), [
-                'Issues (unknown):',
+                ISSUES_OTHER_HEADER,
                 'Some other-level issue 4',
             ])
 
@@ -163,15 +166,13 @@ class TestInstanceStarted(unittest.TestCase):
             self.assertEqual(len(get_warnings(res)), 0)
         else:
             self.assertEqual(get_warnings(res), [
-                'Issues (critical):',
+                ISSUES_CRIT_HEADER,
                 'Some critical issue 1',
                 'Some critical issue 3',
                 'Some critical issue 6',
-                '',
-                'Issues (unknown):',
+                ISSUES_OTHER_HEADER,
                 'Some other-level issue 4',
-                '',
-                'Issues (warning):',
+                ISSUES_WARN_HEADER,
                 'Some warning issue 2',
                 'Some warning issue 5',
             ])
@@ -189,7 +190,7 @@ class TestInstanceStarted(unittest.TestCase):
             self.assertEqual(len(get_warnings(res)), 0)
         else:
             self.assertEqual(get_warnings(res), [
-                'Issues (warning):',
+                ISSUES_WARN_HEADER,
                 'Some warning issue 2',
                 'Some warning issue 5',
             ])
@@ -209,7 +210,7 @@ class TestInstanceStarted(unittest.TestCase):
             self.assertEqual(len(get_warnings(res)), 0)
         else:
             self.assertEqual(get_warnings(res), [
-                'Issues (critical):',
+                ISSUES_CRIT_HEADER,
                 'Some critical issue 1',
                 'Some critical issue 3',
                 'Some critical issue 6',
@@ -228,7 +229,7 @@ class TestInstanceStarted(unittest.TestCase):
             self.assertEqual(len(get_warnings(res)), 0)
         else:
             self.assertEqual(get_warnings(res), [
-                'Issues (unknown):',
+                ISSUES_OTHER_HEADER,
                 'Some other-level issue 4',
             ])
 
@@ -259,15 +260,13 @@ class TestInstanceStarted(unittest.TestCase):
             self.assertEqual(len(warnings), 1)
         else:
             self.assertEqual(warnings[1:], [
-                'Issues (critical):',
+                ISSUES_CRIT_HEADER,
                 'Some critical issue 1',
                 'Some critical issue 3',
                 'Some critical issue 6',
-                '',
-                'Issues (unknown):',
+                ISSUES_OTHER_HEADER,
                 'Some other-level issue 4',
-                '',
-                'Issues (warning):',
+                ISSUES_WARN_HEADER,
                 'Some warning issue 2',
                 'Some warning issue 5',
             ])

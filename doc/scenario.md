@@ -662,7 +662,7 @@ Input facts (set by role):
 Input facts (set by config):
 
 - `allowed_members_states` - list of allowed states. If empty then instance state isn't checked;
-- `wait_members_alive_timeout` - time to wait until all instances become alive;
+- `wait_members_alive_retries` - retries to check that all instances become alive;
 - `wait_members_alive_delay` - delay to retry instances status check.
 
 ### wait_cluster_has_no_issues
@@ -677,7 +677,7 @@ Input facts (set by role):
 
 Input facts (set by config):
 
-- `wait_cluster_has_no_issues_timeout` - time to wait until cluster has no issues;
+- `wait_cluster_has_no_issues_retries` - retries to check that cluster has no issues;
 - `wait_cluster_has_no_issues_delay` - delay to retry cluster issues check;
 - `allow_warning_issues` - allow issues with `warning` level;
 - `show_issues` - log cluster issues as a warnings;
