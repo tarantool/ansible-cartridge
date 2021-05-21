@@ -259,9 +259,6 @@
         cartridge_scenario:
           - eval
         cartridge_eval_body: return "I am some res"
-        cartridge_eval_with_retries: true
-        cartridge_eval_retries: 2
-        cartridge_eval_delay: 1
 
     - name: 'Check result'
       assert:

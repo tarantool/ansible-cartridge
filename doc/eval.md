@@ -129,23 +129,41 @@ Retries and delay can be configured:
 
 ```yaml
 - name: Eval with retries
-  hosts: cluster
-  roles:
-    - ansible-cartridge
+  hosts: cluster:!*stateboard*
   become: true
   become_user: root
   gather_facts: false
-  vars:
-    cartridge_scenario:
-      - eval
-    cartridge_eval_with_retries: true
-    cartridge_eval_retries: 10
-    cartridge_eval_delay: 1
-    cartridge_eval_body: |
-      local checkpoint_is_in_progress = box.info().gc().checkpoint_is_in_progress
-      if checkpoint_is_in_progress then
-        return nil, "Checkpoint is still in progress"
-      end
+  tasks:
+    - import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_with_retries: true
+        cartridge_eval_retries: 10
+        cartridge_eval_delay: 1
+        cartridge_eval_args:
+          - 'Unconfigured'
+          - 'RolesConfigured'
+        cartridge_eval_body: |
+          local confapplier = require('cartridge.confapplier')
 
-      return true
+          local expected_states = {...}
+
+          local state, err = confapplier.get_state()
+          if err ~= nil then
+              return nil, string.format("Failed to get state: %s", err)
+          end
+
+          for _, expected_state in ipairs(expected_states) do
+              if state == expected_state then
+                return state
+              end
+          end
+
+          return nil, string.format("Instance stuck in %s state", state)
+
+    - name: 'Debug instance state'
+      debug:
+        msg: 'Instance state is {{ eval_res[0] }}'
 ```
