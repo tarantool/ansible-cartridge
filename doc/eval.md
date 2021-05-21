@@ -9,7 +9,8 @@ There are two steps that allow running code snippets:
   specified snipped only on the control instance.
 
 By default, result is simply saved to `eval_res` variable, but if
-`cartridge_eval_with_retries` is set to `true`, than [eval with retries](#eval-with-retries) is performed.
+`cartridge_eval_with_retries` is set to `true`, result will be checked for errors,
+more info [here](#eval-with-retries).
 
 ## How to pass a code snippet?
 
@@ -123,7 +124,7 @@ It retries until `err` is received.
 It can be useful to perform some checks in Lua code and wait until some condition is met.
 
 Retries and delay can be configured:
-- `cartridge_eval_retries` (`number`, default: `3`) number of eval retries;
+- `cartridge_eval_retries` (`number`, default: `3`) - number of eval retries;
 - `cartridge_eval_delay` (`number`, default: `5`)  - eval retries delay;
 
 ```yaml
