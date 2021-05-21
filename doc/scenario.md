@@ -775,7 +775,10 @@ Input facts (set by config):
 - `cartridge_eval_file` - path to file with Lua code to eval (isn't used if
   `cartridge_eval_body` is specified);
 - `cartridge_eval_body` - code to eval;
-- `cartridge_eval_args` - function arguments.
+- `cartridge_eval_args` - function arguments;
+- `cartridge_eval_with_retries` - flag indicates that eval should be performed with retries;
+- `cartridge_eval_retries` number of eval retries;
+- `cartridge_eval_delay` - eval retries delay.
 
 ### eval_on_control_instance
 
@@ -791,7 +794,10 @@ Input facts (set by config):
 - `cartridge_eval_file` - path to file with Lua code to eval (isn't used if
   `cartridge_eval_body` is specified);
 - `cartridge_eval_body` - code to eval;
-- `cartridge_eval_args` - function arguments.
+- `cartridge_eval_args` - function arguments;
+- `cartridge_eval_with_retries` - flag indicates that eval should be performed with retries;
+- `cartridge_eval_retries` number of eval retries;
+- `cartridge_eval_delay` - eval retries delay.
 
 ### stop_instance
 

@@ -86,6 +86,7 @@ class TestValidateConfig(unittest.TestCase):
                 'edit_topology_allow_missed_instances',
                 'allow_warning_issues',
                 'show_issues',
+                'cartridge_eval_with_retries',
             },
             dict: {
                 'cartridge_defaults',
@@ -117,6 +118,8 @@ class TestValidateConfig(unittest.TestCase):
                 'wait_members_alive_delay',
                 'wait_cluster_has_no_issues_retries',
                 'wait_cluster_has_no_issues_delay',
+                'cartridge_eval_retries',
+                'cartridge_eval_delay',
             },
             list: {
                 'roles',

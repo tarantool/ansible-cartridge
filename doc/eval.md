@@ -8,6 +8,10 @@ There are two steps that allow running code snippets:
 * [`eval_on_control_instance`](/doc/scenario.md#eval_on_control_instance) runs
   specified snipped only on the control instance.
 
+By default, result is simply saved to `eval_res` variable, but if
+`cartridge_eval_with_retries` is set to `true`, result will be checked for errors,
+more info [here](#eval-with-retries).
+
 ## How to pass a code snippet?
 
 There are two ways to specify code that should be ran:
@@ -109,4 +113,57 @@ The code above can be ran from a file:
       - 'Elizabeth'
       - age: 24
         city: 'Moscow'
+```
+
+## Eval with retries
+
+If `cartridge_eval_with_retries` is set, that `eval` expects that function
+return `res, err`.
+It retries until `err` is received.
+
+It can be useful to perform some checks in Lua code and wait until some condition is met.
+
+Retries and delay can be configured:
+- `cartridge_eval_retries` (`number`, default: `3`) - number of eval retries;
+- `cartridge_eval_delay` (`number`, default: `5`)  - eval retries delay;
+
+```yaml
+- name: Eval with retries
+  hosts: cluster:!*stateboard*
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_with_retries: true
+        cartridge_eval_retries: 10
+        cartridge_eval_delay: 1
+        cartridge_eval_args:
+          - 'Unconfigured'
+          - 'RolesConfigured'
+        cartridge_eval_body: |
+          local confapplier = require('cartridge.confapplier')
+
+          local expected_states = {...}
+
+          local state, err = confapplier.get_state()
+          if err ~= nil then
+              return nil, string.format("Failed to get state: %s", err)
+          end
+
+          for _, expected_state in ipairs(expected_states) do
+              if state == expected_state then
+                return state
+              end
+          end
+
+          return nil, string.format("Instance stuck in %s state", state)
+
+    - name: 'Debug instance state'
+      debug:
+        msg: 'Instance state is {{ eval_res[0] }}'
 ```

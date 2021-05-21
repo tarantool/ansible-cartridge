@@ -217,6 +217,55 @@
               "--- {'other': 'cute-table'}\n...\n",
           ]
 
+# EVAL FROM STRING (with retries)
+
+- name: 'Eval with retries'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_eval_with_retries: true
+    cartridge_eval_retries: 2
+    cartridge_eval_delay: 1
+  tasks:
+    - name: Eval returns nil, err
+      import_role:
+        name: ansible-cartridge
+      ignore_errors: true
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: return nil, "I am horrible error"
+
+    - name: 'Check eval failed'
+      assert:
+        msg: 'Eval should fail'
+        success_msg: 'Eval failed'
+        that: eval_res_register.failed
+      run_once: true
+
+    - name: 'Check eval attempts count'
+      assert:
+        msg: 'Eval attempts should be {{ cartridge_eval_retries }}'
+        success_msg: 'Eval retries count is OK'
+        that: eval_res_register.attempts == cartridge_eval_retries
+      run_once: true
+
+    - name: Eval returns res
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: return "I am some res"
+
+    - name: 'Check result'
+      assert:
+        msg: 'Received bad result'
+        success_msg: 'Received result is OK'
+        that: eval_res == ["I am some res"]
+
 # EVAL FROM STRING (control)
 
 - name: 'Eval function from string on control instance'

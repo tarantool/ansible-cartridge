@@ -74,6 +74,9 @@ FACTS_BY_TARGETS = {
         'show_issues',
         'wait_cluster_has_no_issues_retries',
         'wait_cluster_has_no_issues_delay',
+        'cartridge_eval_with_retries',
+        'cartridge_eval_retries',
+        'cartridge_eval_delay',
     ],
     'single_instances_for_each_machine': [
         'expelled',

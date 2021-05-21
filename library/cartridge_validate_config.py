@@ -143,6 +143,9 @@ SCHEMA = {
     'cartridge_eval_body': str,
     'cartridge_eval_file': str,
     'cartridge_eval_args': list,
+    'cartridge_eval_with_retries': bool,
+    'cartridge_eval_retries': int,
+    'cartridge_eval_delay': int,
     'config': {
         'advertise_uri': str,
         'memtx_memory': int,

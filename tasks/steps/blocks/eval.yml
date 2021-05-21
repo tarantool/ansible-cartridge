@@ -17,6 +17,11 @@
         body: '{{ eval_body }}'
         args: '{{ cartridge_eval_args }}'
       register: eval_res_register
+      until: >-
+        not cartridge_eval_with_retries
+        or eval_res_register.fact[1] | default(none) is none
+      retries: '{{ cartridge_eval_retries }}'
+      delay: '{{ cartridge_eval_delay }}'
 
     - name: 'Set "eval_res" fact'
       set_fact:

@@ -163,3 +163,6 @@ alive_not_expelled_instance: null
 cartridge_eval_file: null
 cartridge_eval_body: null
 cartridge_eval_args: []
+cartridge_eval_with_retries: false
+cartridge_eval_retries: 3
+cartridge_eval_delay: 5
