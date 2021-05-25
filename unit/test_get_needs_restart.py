@@ -20,6 +20,7 @@ def call_needs_restart(
     instance_id=Instance.instance_id,
     config=None,
     cluster_cookie=Instance.COOKIE,
+    set_cluster_cookie_in_config=True,
     cartridge_defaults=None,
     stateboard=False,
     check_package_updated=False,
@@ -39,6 +40,7 @@ def call_needs_restart(
         'config': config or {},
         'cartridge_defaults': cartridge_defaults or {},
         'cluster_cookie': cluster_cookie,
+        'set_cluster_cookie_in_config': set_cluster_cookie_in_config,
         'stateboard': stateboard,
         'instance_info': instance_info,
         'check_package_updated': check_package_updated,
@@ -61,7 +63,7 @@ class TestGetNeedsRestart(unittest.TestCase):
         self.instance.start()
 
     def test_optional_fields(self):
-        for key in ['app_name', 'config', 'cartridge_defaults', 'cluster_cookie', 'stateboard']:
+        for key in ['app_name', 'config', 'cartridge_defaults', 'stateboard']:
             res = call_needs_restart(
                 console_sock=self.console_sock,
                 check_config_updated=True,
@@ -69,6 +71,28 @@ class TestGetNeedsRestart(unittest.TestCase):
             )
             self.assertTrue(res.failed)
             self.assertEqual(res.msg, "Argument '%s' is required to check for configuration updates" % key)
+
+    def test_cluster_cookie(self):
+        res = call_needs_restart(
+            console_sock=self.console_sock,
+            check_config_updated=True,
+            set_cluster_cookie_in_config=False,
+            cluster_cookie=None,
+        )
+        self.assertFalse(res.failed)
+
+        res = call_needs_restart(
+            console_sock=self.console_sock,
+            check_config_updated=True,
+            set_cluster_cookie_in_config=True,
+            cluster_cookie=None,
+        )
+        self.assertTrue(res.failed)
+        self.assertEqual(
+            res.msg,
+            "'cartridge_cluster_cookie' should be set to check for configuration "
+            "updates when 'set_cluster_cookie_in_config' is true"
+        )
 
     def test_instance_not_started(self):
         # console sock doesn't exists

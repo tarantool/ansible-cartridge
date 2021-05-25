@@ -18,6 +18,7 @@ FACTS_BY_TARGETS = {
         'cartridge_auth',
         'cartridge_bootstrap_vshard',
         'cartridge_cluster_cookie',
+        'set_cluster_cookie_in_config',
         'cartridge_conf_dir',
         'cartridge_configure_systemd_unit_files',
         'cartridge_configure_tmpfiles',

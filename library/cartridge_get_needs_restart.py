@@ -13,6 +13,7 @@ argument_spec = {
     'config': {'required': False, 'type': 'dict'},
     'cartridge_defaults': {'required': False, 'type': 'dict'},
     'cluster_cookie': {'required': False, 'type': 'str'},
+    'set_cluster_cookie_in_config': {'required': False, 'type': 'bool'},
     'stateboard': {'required': False, 'type': 'bool'},
 }
 
@@ -64,7 +65,7 @@ def check_needs_restart_to_update_config(params, control_console):
         'app_name',
         'config',
         'cartridge_defaults',
-        'cluster_cookie',
+        'set_cluster_cookie_in_config',
         'stateboard',
     }
     for arg in required_args:
@@ -75,8 +76,13 @@ def check_needs_restart_to_update_config(params, control_console):
     app_name = params['app_name']
     new_instance_conf = params['config']
     new_default_conf = params['cartridge_defaults']
-    cluster_cookie = params['cluster_cookie']
+    cluster_cookie = params.get('cluster_cookie')
+    set_cluster_cookie_in_config = params['set_cluster_cookie_in_config']
     stateboard = params['stateboard']
+
+    if set_cluster_cookie_in_config and cluster_cookie is None:
+        return None, "'cartridge_cluster_cookie' should be set to check for configuration updates " + \
+            "when 'set_cluster_cookie_in_config' is true"
 
     if not os.path.exists(instance_info['conf_file']):
         return True, None
@@ -106,7 +112,8 @@ def check_needs_restart_to_update_config(params, control_console):
         if err is not None:
             return None, "Failed to read current default config: %s" % err
 
-        new_default_conf.update({'cluster_cookie': cluster_cookie})
+        if set_cluster_cookie_in_config:
+            new_default_conf.update({'cluster_cookie': cluster_cookie})
         if check_conf_updated(new_default_conf, current_default_conf, helpers.DYNAMIC_BOX_CFG_PARAMS):
             return True, None
 
