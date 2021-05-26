@@ -1,21 +1,17 @@
-import os
 import re
 
-import testinfra.utils.ansible_runner
+from importlib.machinery import SourceFileLoader
+utils = SourceFileLoader("utils", "./molecule/common/tests/utils.py").load_module()
 
 
-ansible_runner = testinfra.utils.ansible_runner.AnsibleRunner(
-    os.environ['MOLECULE_INVENTORY_FILE']
-)
-testinfra_hosts = ansible_runner.get_hosts('all')
-
-APP_NAME = 'myapp'
+testinfra_hosts = utils.get_testinfra_hosts()
 
 
 def test_dists_rotated(host):
+    app_name = utils.get_app_name()
     app_install_dir = host.file('/usr/share/tarantool')
 
-    DIST_DIR_RGX = r'^%s-\d+\.\d+\.\d+-\d+(-\S+)?$' % APP_NAME
+    DIST_DIR_RGX = r'^%s-\d+\.\d+\.\d+-\d+(-\S+)?$' % app_name
 
     dists = list(filter(
         lambda filename: re.match(DIST_DIR_RGX, filename) is not None,
