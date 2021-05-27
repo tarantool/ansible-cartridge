@@ -2,6 +2,7 @@
 
 import json
 import os
+import uuid
 import zipfile
 
 from ansible.module_utils.helpers import Helpers as helpers
@@ -21,8 +22,14 @@ LUA_MODE = 'lua'
 HTTP_MODE = 'http'
 TDG_MODE = 'tdg'
 
-PURE_DIR_MODE = 'pure'
-ZIP_DIR_MODE = 'zip'
+FILE_OUTPUT_FORMAT = 'file'
+DIR_OUTPUT_FORMAT = 'dir'
+ZIP_OUTPUT_FORMAT = 'zip'
+
+
+####################
+# Apply functions  #
+####################
 
 
 def patch_file_clusterwide(control_console, file_path):
@@ -79,23 +86,61 @@ def apply_tdg_config(console_sock, path):
     return True
 
 
-def apply_dir_config(dir_mode, apply_func, config_path):
-    if dir_mode == ZIP_DIR_MODE:
-        zip_config_path = os.path.join(config_path, os.pardir, 'config.zip')
+####################
+# Prepare config   #
+####################
 
-        with zipfile.ZipFile(zip_config_path, 'w') as zf:
-            for root, _, file_paths in os.walk(config_path):
-                rel_dir_path = os.path.relpath(root, config_path)
-                for file_path in file_paths:
-                    rel_file_path = os.path.join(rel_dir_path, file_path)
-                    zf.write(os.path.join(config_path, rel_file_path), rel_file_path)
 
-        config_path = zip_config_path
+def pack_zip(path):
+    zip_config_path = os.path.abspath(os.path.join(path, os.pardir, 'config-%s.zip' % str(uuid.uuid4())))
 
-    elif dir_mode != PURE_DIR_MODE:
-        raise AssertionError("Unknown upload directory mode '%s'" % dir_mode)
+    with zipfile.ZipFile(zip_config_path, 'w') as zf:
+        for root, _, file_paths in os.walk(path):
+            rel_dir_path = os.path.relpath(root, path)
+            for file_path in file_paths:
+                rel_file_path = os.path.join(rel_dir_path, file_path)
+                zf.write(os.path.join(path, rel_file_path), rel_file_path)
 
-    return apply_func(config_path)
+    return zip_config_path
+
+
+def unpack_zip(path):
+    path_to_extract = os.path.abspath(os.path.join(path, os.pardir, 'config-%s' % str(uuid.uuid4())))
+
+    with zipfile.ZipFile(path, 'r') as zip_ref:
+        zip_ref.extractall(path_to_extract)
+
+    return path_to_extract
+
+
+def prepare_config(config_path, output_format, upload_mode):
+    if output_format not in [FILE_OUTPUT_FORMAT, DIR_OUTPUT_FORMAT, ZIP_OUTPUT_FORMAT]:
+        raise AssertionError("Unknown output format '%s'" % output_format)
+
+    if os.path.isdir(config_path):
+        if output_format == ZIP_OUTPUT_FORMAT:
+            config_path = pack_zip(config_path)
+
+        elif output_format != DIR_OUTPUT_FORMAT:
+            raise AssertionError("Impossible to load directory by '%s' upload mode!" % upload_mode)
+
+    else:
+        if output_format == DIR_OUTPUT_FORMAT:
+            file_ext = os.path.splitext(config_path)[1]
+            if file_ext == '.zip':
+                config_path = unpack_zip(config_path)
+            else:
+                raise AssertionError('Impossible to unpack config file!')
+
+        elif output_format != FILE_OUTPUT_FORMAT:
+            raise AssertionError("Impossible to load file by '%s' upload mode!" % upload_mode)
+
+    return config_path
+
+
+####################
+# TDG helpers      #
+####################
 
 
 def get_tdg_upload_mode(console_sock):
@@ -104,14 +149,14 @@ def get_tdg_upload_mode(console_sock):
 
     control_console = helpers.get_control_console(console_sock)
     return control_console.eval_res_err('''
-        if admin ~= nil and admin.upload_config_api ~= nil then
+        if rawget(_G, 'admin') ~= nil and rawget(_G.admin, 'upload_config_api') ~= nil then
             return 'lua'
         end
         return 'http'
     ''')[0]
 
 
-def get_tdg_auth_headers(console_sock, tdg_token):
+def get_tdg_http_headers(console_sock, tdg_token):
     if tdg_token is None:
         return {}
 
@@ -139,7 +184,12 @@ def get_tdg_auth_headers(console_sock, tdg_token):
     return {'Authorization': 'Bearer ' + tdg_token}
 
 
-def get_upload_mode(upload_mode, remote_config_path):
+####################
+# Mode selectors   #
+####################
+
+
+def prepare_upload_mode(upload_mode, remote_config_path):
     if upload_mode is not None:
         upload_mode = upload_mode.lower()
 
@@ -148,67 +198,67 @@ def get_upload_mode(upload_mode, remote_config_path):
             upload_mode = upload_mode or LUA_MODE
         else:
             upload_mode = upload_mode or HTTP_MODE
-
-        assert upload_mode in [LUA_MODE, HTTP_MODE], \
-            'Uploading file config is possible only for Lua and HTTP modes'
     else:
         upload_mode = upload_mode or HTTP_MODE
-
-        assert upload_mode in [HTTP_MODE, TDG_MODE], \
-            'Uploading directory config is possible only for HTTP or TDG modes'
 
     return upload_mode
 
 
-def get_apply_config_func_for_lua(console_sock):
+def get_output_format_and_apply_config_func_for_lua(console_sock):
     assert console_sock is not None, "Console socket is required for Lua mode"
 
     control_console = helpers.get_control_console(console_sock)
 
-    return lambda path: patch_file_clusterwide(control_console, path)
+    return FILE_OUTPUT_FORMAT, lambda path: patch_file_clusterwide(control_console, path)
 
 
-def get_apply_config_func_for_http(upload_url, cluster_cookie):
+def get_output_format_and_apply_config_func_for_http(upload_url, cluster_cookie):
     assert cluster_cookie is not None, 'Cluster cookie is required for HTTP mode'
     assert upload_url is not None, 'Upload URL is required for HTTP mode'
 
     headers = {'Authorization': basic_auth_header('admin', cluster_cookie)}
 
-    return lambda path: send_on_http(upload_url, headers, path)
+    return FILE_OUTPUT_FORMAT, lambda path: send_on_http(upload_url, headers, path)
 
 
-def get_apply_config_func_for_tdg(console_sock, upload_url, tdg_token):
+def get_output_format_and_apply_config_func_for_tdg(console_sock, upload_url, tdg_token):
     tdg_upload_mode = get_tdg_upload_mode(console_sock)
 
     if tdg_upload_mode == 'http':
         assert upload_url is not None, 'Upload URL is required for TDG mode'
 
-        headers = get_tdg_auth_headers(console_sock, tdg_token)
+        headers = get_tdg_http_headers(console_sock, tdg_token)
 
-        return lambda path: send_on_http(upload_url, headers, path), ZIP_DIR_MODE
+        return ZIP_OUTPUT_FORMAT, lambda path: send_on_http(upload_url, headers, path)
 
     elif tdg_upload_mode == 'lua':
-        return lambda path: apply_tdg_config(console_sock, path), PURE_DIR_MODE
+        return DIR_OUTPUT_FORMAT, lambda path: apply_tdg_config(console_sock, path)
 
     raise AssertionError("Unknown TDG upload mode '%s'" % tdg_upload_mode)
 
 
-def get_apply_config_func(upload_mode, console_sock=None, upload_url=None, cluster_cookie=None, tdg_token=None):
-    dir_mode = ZIP_DIR_MODE
-
+def get_output_format_and_apply_config_func(
+    upload_mode,
+    console_sock=None,
+    upload_url=None,
+    cluster_cookie=None,
+    tdg_token=None,
+):
     if upload_mode == LUA_MODE:
-        apply_func = get_apply_config_func_for_lua(console_sock)
+        return get_output_format_and_apply_config_func_for_lua(console_sock)
 
     elif upload_mode == HTTP_MODE:
-        apply_func = get_apply_config_func_for_http(upload_url, cluster_cookie)
+        return get_output_format_and_apply_config_func_for_http(upload_url, cluster_cookie)
 
     elif upload_mode == TDG_MODE:
-        apply_func, dir_mode = get_apply_config_func_for_tdg(console_sock, upload_url, tdg_token)
+        return get_output_format_and_apply_config_func_for_tdg(console_sock, upload_url, tdg_token)
 
-    else:
-        raise AssertionError("Unknown upload mode '%s'" % upload_mode)
+    raise AssertionError("Unknown upload mode '%s'" % upload_mode)
 
-    return apply_func, dir_mode
+
+####################
+# Main function    #
+####################
 
 
 def apply_app_config(params):
@@ -218,12 +268,12 @@ def apply_app_config(params):
     # Therefore, we consider the path ourselves.
     remote_config_path = os.path.join(params['remote_dir'], os.path.basename(params['local_config_path']))
 
-    upload_mode = get_upload_mode(
+    upload_mode = prepare_upload_mode(
         upload_mode=params['upload_mode'],
         remote_config_path=remote_config_path,
     )
 
-    apply_config, dir_mode = get_apply_config_func(
+    output_format, apply_config_func = get_output_format_and_apply_config_func(
         upload_mode,
         console_sock=params['console_sock'],
         upload_url=params['upload_url'],
@@ -231,13 +281,15 @@ def apply_app_config(params):
         tdg_token=params['tdg_token'],
     )
 
-    if os.path.isdir(remote_config_path):
-        changed = apply_dir_config(dir_mode, apply_config, remote_config_path)
-    else:
-        changed = apply_config(remote_config_path)
+    temp_paths = [remote_config_path]
+    new_config_path = prepare_config(remote_config_path, output_format, upload_mode)
+    if new_config_path != remote_config_path:
+        temp_paths.append(new_config_path)
+
+    changed = apply_config_func(new_config_path)
 
     return helpers.ModuleRes(changed=changed, fact={
-        'dest_path': remote_config_path,
+        'temp_paths': temp_paths,
         'upload_url': params['upload_url'],
         'upload_mode': params['upload_mode'],
     })

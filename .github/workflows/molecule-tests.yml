@@ -32,6 +32,8 @@ jobs:
       ce-tests-found: ${{ steps.setup-matrix.outputs.ce-tests-found }}
       ee-matrix: ${{ steps.setup-matrix.outputs.ee-matrix }}
       ee-tests-found: ${{ steps.setup-matrix.outputs.ee-tests-found }}
+      tdg-matrix: ${{ steps.setup-matrix.outputs.tdg-matrix }}
+      tdg-tests-found: ${{ steps.setup-matrix.outputs.tdg-tests-found }}
 
   molecule-tests-ce:
     needs: setup-molecule-test-matrix
@@ -82,7 +84,7 @@ jobs:
           tarantool --version
           cartridge version
 
-          ./create-packages.sh
+          ./create-packages.sh --skip-tdg
 
       - name: Molecule test
         run: molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
@@ -126,7 +128,7 @@ jobs:
 
           ARCHIVE_NAME=tarantool-enterprise-bundle-${{ matrix.sdk_version }}.tar.gz
           curl -O -L \
-            https://tarantool:${{ secrets.SDK_DOWNLOAD_TOKEN }}@download.tarantool.io/enterprise/${ARCHIVE_NAME}
+            https://tarantool:${{ secrets.DOWNLOAD_TNT_TOKEN }}@download.tarantool.io/enterprise/${ARCHIVE_NAME}
           tar -xzf ${ARCHIVE_NAME}
           rm -f ${ARCHIVE_NAME}
           source tarantool-enterprise/env.sh
@@ -134,7 +136,44 @@ jobs:
           tarantool --version
           cartridge version
 
-          ./create-packages.sh
+          ./create-packages.sh --skip-tdg
+
+      - name: Molecule test
+        run: molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
+
+  molecule-tests-tdg:
+    needs: setup-molecule-test-matrix
+    runs-on: ubuntu-latest
+    if: needs.setup-molecule-test-matrix.outputs.tdg-tests-found == 'true'
+    strategy:
+      matrix: ${{ fromJson(needs.setup-molecule-test-matrix.outputs.tdg-matrix) }}
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '2.7'
+
+      - name: Install molecule requirements
+        run: |
+          pip3 install --upgrade -r requirements.txt
+          pip3 uninstall -y ansible ansible-base
+          pip3 install ansible~=${{ matrix.ansible_version }}
+
+      - name: Cache TDG test packages
+        id: cache-packages
+        uses: actions/cache@v2
+        with:
+          path: 'packages'
+          key: tdg-${{ matrix.tdg_version }}-${{ hashFiles('./create-packages.sh') }}
+
+      - name: Create test packages
+        if: steps.cache-packages.outputs.cache-hit != 'true'
+        run: |
+          export DOWNLOAD_TNT_TOKEN=${{ secrets.DOWNLOAD_TNT_TOKEN }}
+          ./create-packages.sh --skip-cartridge
 
       - name: Molecule test
         run: molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'

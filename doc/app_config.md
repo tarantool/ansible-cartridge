@@ -77,7 +77,7 @@ There are 3 modes for config loading:
 - `lua` - config will be uploaded by Lua-function `cartridge.config_patch_clusterwide()`;
 - `http` - config will be uploaded to `http://localhost:port/admin/config`
   with basic authentication by cluster cookie;
-- `tdg` - config will be loaded by a Lua-function in TDG with a version `1.6.15`+, `1.7.6`+ or `2.1.0`+;
+- `tdg` - config will be loaded by a Lua-function in TDG with a version `1.6.15`+ or `1.7.6`+;
   config will be loaded by HTTP in an older version.
 
 To select any of these types, you should use the variable `cartridge_app_config_upload_mode`:
@@ -89,15 +89,14 @@ cartridge_app_config_upload_mode: 'http'
 cartridge_app_config_upload_mode: 'tdg'
 ```
 
-### Default modes
+### Upload modes
 
-To upload file config, you can use:
-- Lua mode (default for YAML files);
-- HTTP mode (default for not-YAML files).
-
-To upload directory config, you can use:
-- HTTP mode (default);
-- TDG mode.
+|              |   Lua mode  |  HTTP mode  | TDG mode |
+|--------------|:-----------:|:-----------:|:--------:|
+| YAML files   | + (default) |      +      |     -    |
+| ZIP files    |      -      | + (default) |     +    |
+| Other files  |      -      | + (default) |     +    |
+| Folder files |      -      |      -      |     +    |
 
 ### Lua mode
 
@@ -111,9 +110,6 @@ If you use HTTP mode to upload a file, then the file will be sent as is
 to `http://localhost:port/admin/config`. Also, in this mode will be added
 the `Authorization` header for basic authorization using a cluster cookie.
 
-If you use HTTP mode to upload a directory, it will be pre-zipped into a ZIP archive.
-This ZIP archive will be uploaded to `http://localhost:port/admin/config` just like any other file.
-
 The url used to send the config will be taken from the control instance config
 (`http://127.0.0.1:{{ control_instance.http_port }}/admin/config` will be used)
 or from the `cartridge_app_config_upload_url` variable. Variable
@@ -125,6 +121,8 @@ which is on the same machine as the control instance:
 cartridge_app_config_upload_url: 'http://10.0.0.102:8083/admin/config'
 ```
 
+**Note** that directory uploading by HTTP mode is not yet supported.
+
 ### TDG mode
 
 > By default, this mode is disabled. To enable it,
@@ -135,14 +133,14 @@ cartridge_app_config_upload_url: 'http://10.0.0.102:8083/admin/config'
 
 TDG mode - smart mode for loading config into TDG.
 On new versions of TDG (`1.6.15`+,` 1.7.6`+ or `2.1.0`+),
-the directory with the config will be delivered to the machine
-and then the path to the archive will be transferred to TDG by Lua.
+the ZIP config or directory with the config will be delivered to the machine
+and then the path to the config will be transferred to TDG by Lua.
 To do this, you do not need to specify an authorization token or HTTP port.
 
 With older versions of TDG, things are a little more complicated.
 It's possible to upload config only by HTTP.
-Therefore, if authorization is enabled in the application,
-then it is necessary to generate a token and pass it to the `cartridge_tdg_token` variable:
+Therefore, if authorization is enabled in the application, then it is necessary
+to generate a token and pass it to the `cartridge_tdg_token` variable:
 ```yaml
 cartridge_tdg_token: '878e45aa-f79e-4cf9-8938-d5904828c4d2'
 ```
@@ -152,7 +150,8 @@ to which the archive will be uploaded by `cartridge_app_config_upload_url`.
 
 Full example for loading TDG config:
 ```yaml
-cartridge_app_config_path: '../tdg_config_dir'
+cartridge_app_config_path: './tdg_config_dir'
+# OR: cartridge_app_config_path: './tdg_config.zip'
 cartridge_app_config_upload_mode: 'tdg'
 cartridge_tdg_token: '878e45aa-f79e-4cf9-8938-d5904828c4d2'
 ```

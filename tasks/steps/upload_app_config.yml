@@ -32,4 +32,4 @@
 
     - name: 'Add uploaded config to "temporary_files" fact'
       set_fact:
-        temporary_files: "{{ temporary_files + [apply_app_config_res.fact.dest_path] }}"
+        temporary_files: "{{ temporary_files + apply_app_config_res.fact.temp_paths }}"
