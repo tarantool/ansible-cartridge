@@ -1,5 +1,16 @@
 ---
 
+- name: 'Prepare machines'
+  hosts: core-1
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Install dependencies'
+      yum:
+        name: unzip
+        state: present
+
 - name: 'Deploy cluster'
   hosts: cluster
   become: true
