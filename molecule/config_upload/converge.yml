@@ -18,7 +18,7 @@
     # CORRECT CASES #
     #################
 
-    # File configs to Cartridge by Lua
+    # File config to Cartridge by Lua
 
     - name: 'Upload YML config by Lua'
       import_role:
@@ -38,7 +38,7 @@
         cartridge_app_config_upload_url: 'http://vm1:3302/admin/config'
         expected_test_section: {config-file-key: yaml}
 
-    # File configs to Cartridge by HTTP
+    # File config to Cartridge by HTTP
 
     - name: 'Upload YML config by HTTP'
       import_role:
@@ -62,7 +62,7 @@
     # ERROR CASES #
     ###############
 
-    # Folder configs to Cartridge by Lua
+    # Folder config to Cartridge by Lua
 
     - name: 'Upload folder config by Lua'
       ignore_errors: true
@@ -78,10 +78,10 @@
         success_msg: 'Upload folder config by Lua failed'
         that:
           - apply_app_config_res.failed
-          - apply_app_config_res.msg == 'Uploading directory config is possible only for HTTP or TDG modes'
+          - apply_app_config_res.msg == "Impossible to load directory by 'lua' upload mode!"
       run_once: true
 
-    # Folder configs to Cartridge by HTTP
+    # Folder config to Cartridge by HTTP
 
     - name: 'Upload folder config by HTTP to Cartridge'
       ignore_errors: true
@@ -95,12 +95,14 @@
       assert:
         fail_msg: 'Upload folder config by HTTP to Cartridge should fail'
         success_msg: 'Upload folder config by HTTP to Cartridge failed'
-        that: apply_app_config_res.failed  # There will be some error message from the cartridge
+        that:
+          - apply_app_config_res.failed
+          - apply_app_config_res.msg == "Impossible to load directory by 'http' upload mode!"
       run_once: true
 
     # File config to TDG
 
-    - name: 'Upload file config to TDG'
+    - name: 'Upload file config to Cartridge by TDG mode'
       ignore_errors: true
       import_role:
         name: ansible-cartridge
@@ -110,9 +112,9 @@
         cartridge_app_config_upload_url: null
     - name: 'Check upload config failed'
       assert:
-        fail_msg: 'Upload file config to TDG should fail'
-        success_msg: 'Upload file config to TDG failed'
+        fail_msg: 'Upload file config to Cartridge by TDG mode should fail'
+        success_msg: 'Upload file config to Cartridge by TDG mode failed'
         that:
           - apply_app_config_res.failed
-          - apply_app_config_res.msg == 'Uploading file config is possible only for Lua and HTTP modes'
+          - apply_app_config_res.msg == "Impossible to load file by 'tdg' upload mode!"
       run_once: true

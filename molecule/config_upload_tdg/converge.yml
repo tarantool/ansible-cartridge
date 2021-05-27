@@ -1,0 +1,73 @@
+---
+
+- name: 'Test file config'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_app_config_upload_mode: 'tdg'
+    cartridge_eval_body: >-
+      return require('cartridge').config_get_readonly()['test-section']
+    cartridge_custom_steps_dir: 'steps'
+    cartridge_scenario:
+      - upload_app_config
+      - eval_on_control_instance
+      - check_test_section
+  tasks:
+    #################
+    # CORRECT CASES #
+    #################
+
+    # ZIP file config
+
+    - name: 'Upload ZIP config'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_app_config_path: './configs/config.zip'
+        cartridge_app_config_upload_url: 'http://vm1:3301/admin/config'
+        expected_test_section: {config-dir-key: zip}
+
+    # Folder config with "config.yml"
+
+    - name: 'Upload folder config with "config.yml" only'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_app_config_path: './configs/config-yml'
+        cartridge_app_config_upload_url: null
+        expected_test_section: {config-dir-key: yml}
+
+    # Folder config
+
+    - name: 'Upload folder config'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_app_config_path: './configs/config-yml-avsc'
+        cartridge_app_config_upload_url: null
+        expected_test_section: {config-dir-key: yml-avsc}
+
+    ###############
+    # ERROR CASES #
+    ###############
+
+    # YAML file config
+
+    - name: 'Upload YAML config'
+      ignore_errors: true
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_app_config_path: './configs/config.yml'
+        cartridge_app_config_upload_mode: 'tdg'
+        cartridge_app_config_upload_url: null
+    - name: 'Check upload config failed'
+      assert:
+        fail_msg: 'Upload file config to TDG should fail'
+        success_msg: 'Upload file config to TDG failed'
+        that:
+          - apply_app_config_res.failed
+          - apply_app_config_res.msg == 'Impossible to unpack config file!'
+      run_once: true
