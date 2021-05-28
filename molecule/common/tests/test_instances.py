@@ -149,8 +149,9 @@ def test_instances():
     '''
     session = utils.get_authorized_session()
     response = session.post(admin_api_url, json={'query': query})
+    data = utils.get_response_data(response)
 
-    started_instances = response.json()['data']['servers']
+    started_instances = data['servers']
     started_instances = {i['alias']: i for i in started_instances}
 
     # filter out expelled instances and stateboard

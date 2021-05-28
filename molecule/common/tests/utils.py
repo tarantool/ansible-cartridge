@@ -143,3 +143,12 @@ def get_instance_id(app_name, instance_vars):
         return '%s-stateboard' % app_name
 
     return '%s.%s' % (app_name, instance_name)
+
+
+def get_response_data(response):
+    response_json = response.json()
+
+    assert response.status_code == 200, response_json
+    assert 'errors' not in response_json, response_json
+
+    return response_json['data']

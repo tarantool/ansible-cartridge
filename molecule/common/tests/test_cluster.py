@@ -53,9 +53,9 @@ def get_deps_by_roles(admin_api_url):
 
     session = utils.get_authorized_session()
     response = session.post(admin_api_url, json={'query': query})
-    assert response.status_code == 200
+    data = utils.get_response_data(response)
 
-    known_roles = response.json()['data']['cluster']['known_roles']
+    known_roles = data['cluster']['known_roles']
 
     return {r['name']: r['dependencies'] for r in known_roles}
 
@@ -103,8 +103,9 @@ def test_replicasets():
     '''
     session = utils.get_authorized_session()
     response = session.post(admin_api_url, json={'query': query})
+    data = utils.get_response_data(response)
 
-    started_replicasets = response.json()['data']['replicasets']
+    started_replicasets = data['replicasets']
     started_replicasets = {r['alias']: r for r in started_replicasets}
 
     configured_replicasets = get_configured_replicasets()
@@ -180,8 +181,9 @@ def test_failover():
     '''
     session = utils.get_authorized_session()
     response = session.post(admin_api_url, json={'query': query})
+    data = utils.get_response_data(response)
 
-    failover_params = response.json()['data']['cluster']['failover_params']
+    failover_params = data['cluster']['failover_params']
 
     FAILOVER_PARAMS = [
         'failover_timeout',
@@ -237,8 +239,9 @@ def test_auth_params():
 
     session = utils.get_authorized_session()
     response = session.post(admin_api_url, json={'query': query})
+    data = utils.get_response_data(response)
 
-    auth = response.json()['data']['cluster']['auth_params']
+    auth = data['cluster']['auth_params']
 
     for key in ['enabled', 'cookie_max_age', 'cookie_renew_age']:
         if key in configured_auth:
@@ -274,8 +277,9 @@ def test_auth_users():
 
     session = utils.get_authorized_session()
     response = session.post(admin_api_url, json={'query': query})
+    data = utils.get_response_data(response)
 
-    auth_users = response.json()['data']['cluster']['users']
+    auth_users = data['cluster']['users']
     auth_users = {
         u['username']: u for u in auth_users
         if u['username'] != 'admin' and not user_is_deleted(u)
@@ -356,9 +360,9 @@ def test_cluster_has_no_issues():
 
     session = utils.get_authorized_session()
     response = session.post(admin_api_url, json={'query': query})
-    assert response.status_code == 200
+    data = utils.get_response_data(response)
 
-    issues = response.json()['data']['cluster']['issues']
+    issues = data['cluster']['issues']
 
     assert len(issues) == 0, 'Found issues: %s' % ', '.join([
         '%s: %s' % (issue['topic'], issue['message'])
