@@ -110,7 +110,10 @@ def test_configs(host):
     assert machine_instances
 
     default_conf = utils.get_cluster_var('cartridge_defaults', default={})
-    default_conf.update(cluster_cookie=utils.get_cluster_cookie())
+
+    cookie_set_in_config = utils.get_cluster_var('set_cluster_cookie_in_config', True)
+    if cookie_set_in_config:
+        default_conf.update(cluster_cookie=utils.get_cluster_cookie())
 
     for instance in machine_instances:
         instance_vars = utils.get_instance_vars(instance)

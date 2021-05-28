@@ -1,0 +1,22 @@
+---
+
+- name: 'Configure instances'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - deliver_package
+      - update_package
+      - update_instance
+      - configure_instance
+      - restart_instance
+      - wait_instance_started
+      - connect_to_membership
+      - edit_topology
+      - configure_auth
+      - wait_members_alive
+      - wait_cluster_has_no_issues
