@@ -208,9 +208,10 @@ class Instance:
         )
         self.write_file(instance_conf_file, conf)
 
-    def set_app_config(self, config):
+    def set_app_config(self, config, set_cookie=True):
         config = config.copy()
-        config.update({'cluster_cookie': self.COOKIE})
+        if set_cookie:
+            config.update({'cluster_cookie': self.COOKIE})
 
         params = ', '.join([
             '{}: {}'.format(k, v)

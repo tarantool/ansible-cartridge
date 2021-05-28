@@ -94,6 +94,50 @@ class TestGetNeedsRestart(unittest.TestCase):
             "updates when 'set_cluster_cookie_in_config' is true"
         )
 
+        # cookie isn't in config
+        self.instance.set_app_config({}, set_cookie=False)
+        res = call_needs_restart(
+            console_sock=self.console_sock,
+            check_config_updated=True,
+            set_cluster_cookie_in_config=False,
+            cluster_cookie="some-new-cookie",
+        )
+        self.assertFalse(res.failed, res.msg)
+        self.assertFalse(res.fact)
+
+        # cookie was in config, but now it isn't
+        self.instance.set_app_config({})
+        res = call_needs_restart(
+            console_sock=self.console_sock,
+            check_config_updated=True,
+            set_cluster_cookie_in_config=False,
+            cluster_cookie="some-new-cookie",
+        )
+        self.assertFalse(res.failed, res.msg)
+        self.assertTrue(res.fact)
+
+        # cookie is in config and it changed
+        self.instance.set_app_config({})
+        res = call_needs_restart(
+            console_sock=self.console_sock,
+            check_config_updated=True,
+            set_cluster_cookie_in_config=True,
+            cluster_cookie="some-new-cookie",
+        )
+        self.assertFalse(res.failed, res.msg)
+        self.assertTrue(res.fact)
+
+        # cookie wasn't in config, but now it is
+        self.instance.set_app_config({}, set_cookie=False)
+        res = call_needs_restart(
+            console_sock=self.console_sock,
+            check_config_updated=True,
+            set_cluster_cookie_in_config=True,
+            cluster_cookie=self.instance.COOKIE,
+        )
+        self.assertFalse(res.failed, res.msg)
+        self.assertTrue(res.fact)
+
     def test_instance_not_started(self):
         # console sock doesn't exists
         self.instance.remove_file(self.console_sock)
