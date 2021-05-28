@@ -21,6 +21,8 @@ README.md to use the newest tag with new release
   and specified state
 - `wait_cluster_has_no_issues` step to wait until cluster has no issues
 - availability to upload ZIP configs to TDG
+- `set_cluster_cookie_in_config` variable that allows to disable persisting cluster
+  cookie in the application configuration file
 
 ## [1.9.0] - 2021-04-30
 
