@@ -10,6 +10,11 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+### Fixed
+
+- Fail on getting control instance when all unjoined instances haven't
+  `replicaset_alias` set
+
 ### Added
 
 - `wait_members_alive` step to wait until all cluster members have `alive` status

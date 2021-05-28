@@ -97,6 +97,7 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
     alive_instances_uris = set()
     joined_instances_uris = set()
     not_joined_instances_uris = set()
+    to_be_joined_instances = set()
 
     names_by_uris = {}
 
@@ -124,19 +125,35 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
         if member_uuid is not None:
             joined_instances_uris.add(uri)
         else:
+            not_joined_instances_uris.add(uri)
             if instance_name in play_hosts and instance_vars.get('replicaset_alias') is not None:
-                not_joined_instances_uris.add(uri)
+                to_be_joined_instances.add(uri)
 
     if joined_instances_uris:
-        # if there is at least one joined instance
-        # we can use only one of them as control instance
+        # If there is at least one joined instance,
+        # we should use any alive one of them as control instance.
         candidates_uris = joined_instances_uris.intersection(alive_instances_uris)
+
+        if not candidates_uris:
+            return None, "There is no alive joined instances in the cluster"
+    elif to_be_joined_instances:
+        # There are no joined instances, but some unjoined instances
+        # have replicaset_alias set.
+        # One of this instances that is alive should be used for join
+        # and cluster configuration.
+        candidates_uris = to_be_joined_instances.intersection(alive_instances_uris)
+
+        if not candidates_uris:
+            return None, "There is no alive instances that should be be joined"
     else:
-        # there is no one joined instance - let's find some alive of them
+        # There are no joined instances and instances that
+        # have replicaset_alias set.
+        # One of this instances that is alive should be used for join
+        # and cluster configuration.
         candidates_uris = not_joined_instances_uris.intersection(alive_instances_uris)
 
-    if not candidates_uris:
-        return None, "There is no alive instances in the cluster"
+        if not candidates_uris:
+            return None, "There is no alive instances in the cluster"
 
     # filter out instances that are marked to be expelled
     candidates_uris = list(filter(

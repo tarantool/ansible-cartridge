@@ -102,14 +102,27 @@ class TestGetControlInstance(unittest.TestCase):
             'http_port': None,
         })
 
+        # without UUID, instance is dead
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=False, status='dead'),
+        ])
+
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
+        self.assertTrue(res.failed)
+        self.assertIn("There is no alive instances in the cluster", res.msg)
+
         # without UUID
         self.instance.set_membership_members([
             utils.get_member('instance-1', with_uuid=False),
         ])
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
-        self.assertTrue(res.failed)
-        self.assertIn("There is no alive instances", res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.fact, {
+            'name': 'instance-1',
+            'console_sock': 'run-dir/myapp.instance-1.control',
+            'http_port': None,
+        })
 
     def test_two_instances(self):
         hostvars = {}
@@ -144,6 +157,15 @@ class TestGetControlInstance(unittest.TestCase):
             'http_port': 8082,
         })
 
+        # one with UUID, but dead
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=False),
+            utils.get_member('instance-2', with_uuid=True, status='dead'),
+        ])
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
+        self.assertTrue(res.failed)
+        self.assertIn("There is no alive joined instances in the cluster", res.msg)
+
         # one with UUID (but without alias)
         self.instance.set_membership_members([
             utils.get_member('instance-1', with_uuid=False),
@@ -153,21 +175,36 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertTrue(res.failed)
         self.assertIn("Instance with URI instance-2-uri payload doesn't contain alias", res.msg)
 
-        # both without UUID (no one selected)
+        # both without UUID (one is selected)
         self.instance.set_membership_members([
             utils.get_member('instance-1', with_uuid=False),
             utils.get_member('instance-2', with_uuid=False),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.fact, {
+            'name': 'instance-1',
+            'console_sock': 'run-dir-1/myapp.instance-1.control',
+            'http_port': 8081,
+        })
+
+        # both without UUID and dead
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=False, status='dead'),
+            utils.get_member('instance-2', with_uuid=False, status='dead'),
+        ])
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
-        self.assertIn("There is no alive instances", res.msg)
+        self.assertIn("There is no alive instances in the cluster", res.msg)
 
     def test_no_joined_instances(self):
         hostvars = {}
         hostvars.update(get_instance_hostvars('instance-4', 'some-rpl', run_dir='run-dir-4', http_port=8084))
         hostvars.update(get_instance_hostvars('instance-3', 'some-rpl', run_dir='run-dir-3', http_port=8083))
         hostvars.update(get_instance_hostvars('instance-2-no-rpl', run_dir='run-dir-2', http_port=8082))
-        hostvars.update(get_instance_hostvars('instance-1-expelled', run_dir='run-dir-1', http_port=8081))
+        hostvars.update(get_instance_hostvars(
+            'instance-1-expelled', run_dir='run-dir-1', http_port=8081, expelled=True
+        ))
         hostvars.update({'my-stateboard': {'stateboard': True}})
 
         self.instance.set_membership_members([
@@ -190,10 +227,44 @@ class TestGetControlInstance(unittest.TestCase):
         # only instances w/o replicaset_alias, expelled and stateboard
         # are in play_hosts
         res = call_get_control_instance('myapp', self.console_sock, hostvars, play_hosts=[
-            'instance-not-in-replicaset', 'expelled-instance', 'my-stateboard',
+            'instance-2-no-rpl', 'expelled-instance', 'my-stateboard',
         ])
-        self.assertTrue(res.failed, res.fact)
-        self.assertIn("There is no alive instances", res.msg)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.fact, {
+            'name': 'instance-2-no-rpl',
+            'console_sock': 'run-dir-2/myapp.instance-2-no-rpl.control',
+            'http_port': 8082,
+        })
+
+        # only expelled and stateboard instances are in play_hosts
+        res = call_get_control_instance('myapp', self.console_sock, hostvars, play_hosts=[
+            'expelled-instance', 'my-stateboard',
+        ])
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.fact, {
+            'name': 'instance-2-no-rpl',
+            'console_sock': 'run-dir-2/myapp.instance-2-no-rpl.control',
+            'http_port': 8082,
+        })
+
+        # instance w/o replicaset alias is deas
+        self.instance.set_membership_members([
+            utils.get_member('instance-4', with_uuid=False),
+            utils.get_member('instance-3', with_uuid=False),
+            utils.get_member('instance-2-no-rpl', with_uuid=False, status='dead'),
+            utils.get_member('instance-1-expelled', with_uuid=False),
+        ])
+
+        # only expelled and stateboard instances are in play_hosts
+        res = call_get_control_instance('myapp', self.console_sock, hostvars, play_hosts=[
+            'expelled-instance', 'my-stateboard',
+        ])
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.fact, {
+            'name': 'instance-3',
+            'console_sock': 'run-dir-3/myapp.instance-3.control',
+            'http_port': 8083,
+        })
 
     def test_instance_not_in_hostvars(self):
         hostvars = {}
@@ -309,7 +380,7 @@ class TestGetControlInstance(unittest.TestCase):
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
-        self.assertEqual(res.msg, "There is no alive instances in the cluster")
+        self.assertEqual(res.msg, "There is no alive joined instances in the cluster")
 
         # no joined, first unjoined instance is dead
         hostvars = {}
