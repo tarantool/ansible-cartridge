@@ -100,7 +100,7 @@
           - apply_app_config_res.msg == "Impossible to load directory by 'http' upload mode!"
       run_once: true
 
-    # File config to TDG
+    # File config to Cartridge by TDG mode
 
     - name: 'Upload file config to Cartridge by TDG mode'
       ignore_errors: true
@@ -116,5 +116,22 @@
         success_msg: 'Upload file config to Cartridge by TDG mode failed'
         that:
           - apply_app_config_res.failed
-          - apply_app_config_res.msg == "Impossible to load file by 'tdg' upload mode!"
+          - apply_app_config_res.msg == "Impossible to load not ZIP file!"
+      run_once: true
+
+    # ZIP config to Cartridge by TDG mode
+
+    - name: 'Upload ZIP config to Cartridge by TDG mode'
+      ignore_errors: true
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_app_config_path: './configs/config.zip'
+        cartridge_app_config_upload_mode: 'tdg'
+        cartridge_app_config_upload_url: null
+    - name: 'Check upload config failed'
+      assert:
+        fail_msg: 'Upload ZIP config to Cartridge by TDG mode should fail'
+        success_msg: 'Upload ZIP config to Cartridge by TDG mode failed'
+        that: apply_app_config_res.failed  # Here will be error from Cartridge
       run_once: true
