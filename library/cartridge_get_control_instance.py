@@ -144,7 +144,7 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
         candidates_uris = to_be_joined_instances.intersection(alive_instances_uris)
 
         if not candidates_uris:
-            return None, "There is no alive instances that are configured to be joined"
+            return None, "There is no alive instances that should be be joined"
     else:
         # There are no joined instances and instances that
         # have replicaset_alias set.
@@ -154,8 +154,6 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
 
         if not candidates_uris:
             return None, "There is no alive instances in the cluster"
-
-    assert candidates_uris
 
     # filter out instances that are marked to be expelled
     candidates_uris = list(filter(

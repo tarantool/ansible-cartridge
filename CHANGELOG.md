@@ -12,7 +12,7 @@ README.md to use the newest tag with new release
 
 ### Fixed
 
-- Fail on getting control instance when there are not unjoined instances with
+- Fail on getting control instance when all unjoined instances haven't
   `replicaset_alias` set
 
 ### Added
