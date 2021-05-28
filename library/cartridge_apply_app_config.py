@@ -107,8 +107,8 @@ def pack_zip(path):
 def unpack_zip(path):
     path_to_extract = os.path.abspath(os.path.join(path, os.pardir, 'config-%s' % str(uuid.uuid4())))
 
-    with zipfile.ZipFile(path, 'r') as zip_ref:
-        zip_ref.extractall(path_to_extract)
+    with zipfile.ZipFile(path, 'r') as zf:
+        zf.extractall(path_to_extract)
 
     return path_to_extract
 
@@ -125,12 +125,16 @@ def prepare_config(config_path, output_format, upload_mode):
             raise AssertionError("Impossible to load directory by '%s' upload mode!" % upload_mode)
 
     else:
+        file_ext = os.path.splitext(config_path)[1]
         if output_format == DIR_OUTPUT_FORMAT:
-            file_ext = os.path.splitext(config_path)[1]
             if file_ext == '.zip':
                 config_path = unpack_zip(config_path)
             else:
                 raise AssertionError('Impossible to unpack config file!')
+
+        elif output_format == ZIP_OUTPUT_FORMAT:
+            if file_ext != '.zip':
+                raise AssertionError('Impossible to load not ZIP file!')
 
         elif output_format != FILE_OUTPUT_FORMAT:
             raise AssertionError("Impossible to load file by '%s' upload mode!" % upload_mode)
@@ -292,6 +296,7 @@ def apply_app_config(params):
         'temp_paths': temp_paths,
         'upload_url': params['upload_url'],
         'upload_mode': params['upload_mode'],
+        'expected_format': output_format,
     })
 
 

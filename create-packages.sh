@@ -188,12 +188,12 @@ if [ -z "${skip_tdg}" ]; then
         echo "TDG package 'tdg.tar.gz' already downloaded"
     else
         if [ -n "${DOWNLOAD_TNT_TOKEN}" ]; then
-            printf "Downloading TDG package from 'download.tarantool.io'... "
+            printf "Downloading TDG %s package from 'download.tarantool.io'... " "${tdg_version}"
             curl -L -s -o "tdg.tar.gz" \
                 "https://tarantool:${DOWNLOAD_TNT_TOKEN}@download.tarantool.io/tdg/tdg-${tdg_version}.tar.gz" >/dev/null
             echo 'OK'
         elif (command -v aws &>/dev/null) && [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
-            printf "Downloading TDG package from MCS... "
+            printf "Downloading TDG %s package from MCS... " "${tdg_version}"
             aws --endpoint-url https://hb.bizmrg.com s3 cp \
                 "s3://packages/tdg/tdg-${tdg_version}.tar.gz" "tdg.tar.gz" >/dev/null
             echo 'OK'

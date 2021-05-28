@@ -173,7 +173,7 @@ jobs:
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
           export DOWNLOAD_TNT_TOKEN=${{ secrets.DOWNLOAD_TNT_TOKEN }}
-          ./create-packages.sh --skip-cartridge
+          ./create-packages.sh --skip-cartridge --tdg-version ${{ matrix.tdg_version }}
 
       - name: Molecule test
         run: molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
