@@ -113,7 +113,7 @@ def check_needs_restart_to_update_config(params, control_console):
             return None, "Failed to read current default config: %s" % err
 
         if not cartridge_not_save_cookie_in_app_config:
-            new_default_conf.update({'cluster_cookie': cluster_cookie})
+            new_default_conf['cluster_cookie'] = cluster_cookie
         if check_conf_updated(new_default_conf, current_default_conf, helpers.DYNAMIC_BOX_CFG_PARAMS):
             return True, None
 

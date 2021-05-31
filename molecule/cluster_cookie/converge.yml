@@ -25,7 +25,7 @@
 
     - name: 'Check instance cluster cookie'
       assert:
-        msg: 'Received bad cluster cookie'
-        success_msg: 'Received cluster cookie is OK'
+        msg: 'Default Cartridge cluster cookie should be set'
+        success_msg: 'Default Cartridge cluster cookie is set'
         that: >-
           eval_res[0] == "secret-cluster-cookie"
