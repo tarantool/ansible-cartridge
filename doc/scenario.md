@@ -427,6 +427,7 @@ Input facts (set by config):
 - `stateboard` - indicates that the instance is a stateboard;
 - `cartridge_app_name` - application name;
 - `cartridge_cluster_cookie` - cluster cookie for all cluster instances;
+- `cartridge_not_save_cookie_in_app_config` - flag indicates that cluster cookie shouldn't be persisted in application configuration file;
 - `cartridge_defaults` - default configuration parameters values for instances;
 - `cartridge_app_user` - user which will own the links;
 - `cartridge_app_group` - group which will own the links.
@@ -447,6 +448,7 @@ Input facts (set by role):
 Input facts (set by config):
 
 - `cartridge_cluster_cookie` - cluster cookie for all cluster instances (is needed to check if configuration file was changed);
+- `cartridge_not_save_cookie_in_app_config` - flag indicates that cluster cookie shouldn't be persisted in application configuration file;
 - `restarted` - if instance should be restarted or not (user forced decision).
 
 ### wait_instance_started

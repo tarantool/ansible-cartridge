@@ -14,6 +14,7 @@ INSTANCE_REQUIRED_PARAMS = ['cartridge_app_name', 'config']
 PARAMS_THE_SAME_FOR_ALL_HOSTS = [
     'cartridge_app_name',
     'cartridge_cluster_cookie',
+    'cartridge_not_save_cookie_in_app_config',
     'cartridge_auth',
     'cartridge_bootstrap_vshard',
     'cartridge_failover',
@@ -91,6 +92,7 @@ SCHEMA = {
     'cartridge_package_path': str,
     'cartridge_app_name': str,
     'cartridge_cluster_cookie': str,
+    'cartridge_not_save_cookie_in_app_config': bool,
     'cartridge_defaults': dict,
     'cartridge_bootstrap_vshard': bool,
     'cartridge_wait_buckets_discovery': bool,

@@ -133,13 +133,20 @@ if [ -z "${skip_cartridge}" ]; then
     rm -rf ${app_name}
     cartridge create --name ${app_name}
 
+    # configure vshard group "hot"
     awk '{gsub(/cartridge.cfg\({/, "&\n    vshard_groups = { hot = { bucket_count = 20000 } },")}1' \
         ${app_name}/init.lua >${app_name}/temp.lua
     mv ${app_name}/temp.lua ${app_name}/init.lua
 
+    # add dependencies to app.roles.custom role
     awk '{gsub(/-- dependencies/, "dependencies")}1' \
         ${app_name}/app/roles/custom.lua >${app_name}/temp.lua
     mv ${app_name}/temp.lua ${app_name}/app/roles/custom.lua
+
+    # remove setting cluster_cookie on cartridge.cfg
+    awk '{gsub(/cluster_cookie/, "-- cluster_cookie")}1' \
+        ${app_name}/init.lua >${app_name}/temp.lua
+    mv ${app_name}/temp.lua ${app_name}/init.lua
 
     lazy_pack tgz "${app_name}" "${version}"
     lazy_pack rpm "${app_name}" "${version}"

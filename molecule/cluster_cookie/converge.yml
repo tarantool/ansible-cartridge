@@ -1,0 +1,31 @@
+---
+
+- name: 'Configure instances'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - eval
+    cartridge_eval_body:
+      return require('cartridge.cluster-cookie').cookie()
+
+- name: 'Print and check instances cluster cookie'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Debug instance cluster cookie'
+      debug:
+        msg: '{{ eval_res[0] }}'
+
+    - name: 'Check instance cluster cookie'
+      assert:
+        msg: 'Default Cartridge cluster cookie should be set'
+        success_msg: 'Default Cartridge cluster cookie is set'
+        that: >-
+          eval_res[0] == "secret-cluster-cookie"

@@ -16,6 +16,7 @@
         config: '{{ config }}'
         cartridge_defaults: '{{ cartridge_defaults }}'
         cluster_cookie: '{{ cartridge_cluster_cookie }}'
+        cartridge_not_save_cookie_in_app_config: '{{ cartridge_not_save_cookie_in_app_config }}'
         stateboard: '{{ stateboard }}'
         instance_info: '{{ instance_info }}'
         check_config_updated: true
@@ -29,9 +30,9 @@
         needs_restart: '{{ needs_restart_res.fact }}'
       when: "'fact' in needs_restart_res"
 
-    - name: 'Check that cluster cookie is specified'
+    - name: 'Check that cluster cookie is specified or cartridge_not_save_cookie_in_app_config is true'
       assert:
-        that: cartridge_cluster_cookie is not none
+        that: cartridge_not_save_cookie_in_app_config or cartridge_cluster_cookie is not none
         msg: 'cartridge_cluster_cookie should be specified to configure instance'
         quiet: true
       when: inventory_hostname in single_instances_for_each_machine
@@ -40,8 +41,13 @@
       copy:
         content: >-
           {{
-            { cartridge_app_name: cartridge_defaults | combine({"cluster_cookie": cartridge_cluster_cookie}) }
-            | to_nice_yaml
+            {
+              cartridge_app_name: cartridge_defaults | combine(
+                {"cluster_cookie": cartridge_cluster_cookie}
+                if not cartridge_not_save_cookie_in_app_config
+                else {}
+              )
+            } | to_nice_yaml
           }}
         dest: '{{ instance_info.app_conf_file }}'
         owner: '{{ cartridge_app_user }}'

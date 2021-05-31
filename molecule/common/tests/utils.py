@@ -9,6 +9,7 @@ from ansible.parsing.dataloader import DataLoader
 scenario_name = os.environ['MOLECULE_SCENARIO_NAME']
 
 DEFAULT_APP_NAME = 'myapp'
+DEFAULT_CLUSTER_COOKIE = 'secret-cluster-cookie'
 
 __inventory = None
 __variable_manager = None
@@ -96,7 +97,11 @@ def get_app_name():
 def get_cluster_cookie():
     global __cluster_cookie
     if __cluster_cookie is None:
-        __cluster_cookie = get_cluster_var('cartridge_cluster_cookie')
+        not_save_cookie_in_app_config = get_cluster_var('cartridge_not_save_cookie_in_app_config', False)
+        if not not_save_cookie_in_app_config:
+            __cluster_cookie = get_cluster_var('cartridge_cluster_cookie')
+        else:
+            __cluster_cookie = DEFAULT_CLUSTER_COOKIE
 
     return __cluster_cookie
 
@@ -105,6 +110,7 @@ def get_authorized_session():
     global __authorized_session
     if __authorized_session is None:
         cluster_cookie = get_cluster_cookie()
+
         __authorized_session = requests.Session()
         __authorized_session.auth = ('admin', cluster_cookie)
 
