@@ -91,6 +91,7 @@ class TestValidateConfig(unittest.TestCase):
             },
             dict: {
                 'cartridge_defaults',
+                'cartridge_box_cfg_params',
                 'cartridge_app_config',
                 'cartridge_failover_params',
                 'cartridge_failover_params.stateboard_params',

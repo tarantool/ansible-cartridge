@@ -10,10 +10,10 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_configure_instance import configure_instance
 
 
-def call_configure_instance(console_sock, config=None, cartridge_defaults=None):
+def call_configure_instance(console_sock, instance_config=None, cartridge_defaults=None):
     return configure_instance({
         'console_sock': console_sock,
-        'config': config or {},
+        'instance_config': instance_config or {},
         'cartridge_defaults': cartridge_defaults or {},
     })
 
@@ -76,7 +76,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 param_name: new_instance_value,
             }
         )
@@ -108,7 +108,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 param_name: new_instance_value,
             },
             cartridge_defaults={
@@ -134,7 +134,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 param_name: SMALL_MEMORY,
             }
         )
@@ -158,7 +158,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 param_name: INSTANCE_BIG_MEMORY,
             }
         )
@@ -192,7 +192,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 param_name: INSTANCE_BIG_MEMORY,
             },
             cartridge_defaults={
@@ -223,7 +223,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 param_name: INSTANCE_BIG_MEMORY,
             }
         )
@@ -257,7 +257,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 param_name: INSTANCE_BIG_MEMORY,
             },
             cartridge_defaults={
@@ -279,7 +279,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 'memtx_memory': BIG_MEMTX_MEMORY,
             }
         )
@@ -303,7 +303,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 param_name: new_instance_value,
             }
         )
@@ -337,7 +337,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 param_name: new_instance_value,
             },
             cartridge_defaults={
@@ -357,7 +357,7 @@ class TestManageInstance(unittest.TestCase):
 
         res = call_configure_instance(
             console_sock=self.console_sock,
-            config={
+            instance_config={
                 param_name: old_value,
             }
         )
@@ -365,8 +365,7 @@ class TestManageInstance(unittest.TestCase):
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
-        self.assertEqual(len(calls), 1)
-        self.assertIn({param_name: old_value}, calls)
+        self.assertEqual(len(calls), 0)
 
         # specified in app config, isn't changed
         self.instance.clear_calls('box_cfg')
@@ -382,8 +381,7 @@ class TestManageInstance(unittest.TestCase):
         self.assertFalse(res.changed)
 
         calls = self.instance.get_calls('box_cfg')
-        self.assertEqual(len(calls), 1)
-        self.assertIn({param_name: old_value}, calls)
+        self.assertEqual(len(calls), 0)
 
     def tearDown(self):
         self.instance.stop()
