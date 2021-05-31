@@ -8,8 +8,7 @@ vshard bootstrapping, and failover.
 * `cartridge_app_name` (`string`): application name, required;
 * `cartridge_cluster_cookie` (`string`): cluster cookie for all
   cluster instances;
-* `cartridge_not_save_cookie_in_app_config` (`boolean`, default: `false`) - indicates if
-  cluster cookie shouldn't be persisted in application configuration file;
+* `cartridge_not_save_cookie_in_app_config` (`boolean`, default: `false`) - flag indicates that cluster cookie shouldn't be persisted in application configuration file;
 * `cartridge_remove_temporary_files` (`boolean`, optional, default: `false`):
   indicates if temporary files should be removed
   (more details in description of [`cleanup` step API](/doc/scenario.md#cleanup));
