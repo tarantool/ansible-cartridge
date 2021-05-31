@@ -20,7 +20,7 @@ def call_needs_restart(
     instance_id=Instance.instance_id,
     config=None,
     cluster_cookie=Instance.COOKIE,
-    set_cluster_cookie_in_config=True,
+    cartridge_not_save_cookie_in_app_config=False,
     cartridge_defaults=None,
     stateboard=False,
     check_package_updated=False,
@@ -40,7 +40,7 @@ def call_needs_restart(
         'config': config or {},
         'cartridge_defaults': cartridge_defaults or {},
         'cluster_cookie': cluster_cookie,
-        'set_cluster_cookie_in_config': set_cluster_cookie_in_config,
+        'cartridge_not_save_cookie_in_app_config': cartridge_not_save_cookie_in_app_config,
         'stateboard': stateboard,
         'instance_info': instance_info,
         'check_package_updated': check_package_updated,
@@ -76,7 +76,7 @@ class TestGetNeedsRestart(unittest.TestCase):
         res = call_needs_restart(
             console_sock=self.console_sock,
             check_config_updated=True,
-            set_cluster_cookie_in_config=False,
+            cartridge_not_save_cookie_in_app_config=True,
             cluster_cookie=None,
         )
         self.assertFalse(res.failed)
@@ -84,14 +84,14 @@ class TestGetNeedsRestart(unittest.TestCase):
         res = call_needs_restart(
             console_sock=self.console_sock,
             check_config_updated=True,
-            set_cluster_cookie_in_config=True,
+            cartridge_not_save_cookie_in_app_config=False,
             cluster_cookie=None,
         )
         self.assertTrue(res.failed)
         self.assertEqual(
             res.msg,
             "'cartridge_cluster_cookie' should be set to check for configuration "
-            "updates when 'set_cluster_cookie_in_config' is true"
+            "updates when 'cartridge_not_save_cookie_in_app_config' is false"
         )
 
         # cookie isn't in config
@@ -99,7 +99,7 @@ class TestGetNeedsRestart(unittest.TestCase):
         res = call_needs_restart(
             console_sock=self.console_sock,
             check_config_updated=True,
-            set_cluster_cookie_in_config=False,
+            cartridge_not_save_cookie_in_app_config=True,
             cluster_cookie="some-new-cookie",
         )
         self.assertFalse(res.failed, res.msg)
@@ -110,7 +110,7 @@ class TestGetNeedsRestart(unittest.TestCase):
         res = call_needs_restart(
             console_sock=self.console_sock,
             check_config_updated=True,
-            set_cluster_cookie_in_config=False,
+            cartridge_not_save_cookie_in_app_config=True,
             cluster_cookie="some-new-cookie",
         )
         self.assertFalse(res.failed, res.msg)
@@ -121,7 +121,7 @@ class TestGetNeedsRestart(unittest.TestCase):
         res = call_needs_restart(
             console_sock=self.console_sock,
             check_config_updated=True,
-            set_cluster_cookie_in_config=True,
+            cartridge_not_save_cookie_in_app_config=False,
             cluster_cookie="some-new-cookie",
         )
         self.assertFalse(res.failed, res.msg)
@@ -132,7 +132,7 @@ class TestGetNeedsRestart(unittest.TestCase):
         res = call_needs_restart(
             console_sock=self.console_sock,
             check_config_updated=True,
-            set_cluster_cookie_in_config=True,
+            cartridge_not_save_cookie_in_app_config=False,
             cluster_cookie=self.instance.COOKIE,
         )
         self.assertFalse(res.failed, res.msg)

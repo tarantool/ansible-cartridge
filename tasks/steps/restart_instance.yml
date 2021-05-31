@@ -12,7 +12,7 @@
         config: '{{ config }}'
         cartridge_defaults: '{{ cartridge_defaults }}'
         cluster_cookie: '{{ cartridge_cluster_cookie }}'
-        set_cluster_cookie_in_config: '{{ set_cluster_cookie_in_config }}'
+        cartridge_not_save_cookie_in_app_config: '{{ cartridge_not_save_cookie_in_app_config }}'
         stateboard: '{{ stateboard }}'
         instance_info: '{{ instance_info }}'
         check_package_updated: true

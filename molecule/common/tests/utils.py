@@ -97,8 +97,8 @@ def get_app_name():
 def get_cluster_cookie():
     global __cluster_cookie
     if __cluster_cookie is None:
-        cookie_set_in_config = get_cluster_var('set_cluster_cookie_in_config', True)
-        if cookie_set_in_config:
+        not_save_cookie_in_app_config = get_cluster_var('cartridge_not_save_cookie_in_app_config', False)
+        if not not_save_cookie_in_app_config:
             __cluster_cookie = get_cluster_var('cartridge_cluster_cookie')
         else:
             __cluster_cookie = DEFAULT_CLUSTER_COOKIE

@@ -8,7 +8,7 @@
 
       cartridge_app_name: '{{ cartridge_app_name }}'
       cartridge_cluster_cookie: '{{ cartridge_cluster_cookie }}'
-      set_cluster_cookie_in_config: '{{ set_cluster_cookie_in_config }}'
+      cartridge_not_save_cookie_in_app_config: '{{ cartridge_not_save_cookie_in_app_config }}'
       cartridge_remove_temporary_files: '{{ cartridge_remove_temporary_files }}'
 
       # Role scenario configuration

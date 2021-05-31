@@ -111,8 +111,8 @@ def test_configs(host):
 
     default_conf = utils.get_cluster_var('cartridge_defaults', default={})
 
-    cookie_set_in_config = utils.get_cluster_var('set_cluster_cookie_in_config', True)
-    if cookie_set_in_config:
+    not_save_cookie_in_app_config = utils.get_cluster_var('cartridge_not_save_cookie_in_app_config', True)
+    if not not_save_cookie_in_app_config:
         default_conf.update(cluster_cookie=utils.get_cluster_cookie())
 
     for instance in machine_instances:

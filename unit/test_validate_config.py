@@ -87,7 +87,7 @@ class TestValidateConfig(unittest.TestCase):
                 'allow_warning_issues',
                 'show_issues',
                 'cartridge_eval_with_retries',
-                'set_cluster_cookie_in_config',
+                'cartridge_not_save_cookie_in_app_config',
             },
             dict: {
                 'cartridge_defaults',
@@ -284,7 +284,7 @@ class TestValidateConfig(unittest.TestCase):
         params = {
             'cartridge_app_name': ['app-name', 'other-app-name'],
             'cartridge_cluster_cookie': ['cookie', 'other-cookie'],
-            'set_cluster_cookie_in_config': [True, False],
+            'cartridge_not_save_cookie_in_app_config': [True, False],
             'cartridge_auth': [{'enabled': True}, {'enabled': False}],
             'cartridge_bootstrap_vshard': [True, False],
             'cartridge_failover': [True, False],
