@@ -7,11 +7,11 @@ import module_utils.helpers as helpers
 from unit.instance import Instance
 
 sys.modules['ansible.module_utils.helpers'] = helpers
-from library.cartridge_instance import manage_instance
+from library.cartridge_configure_instance import configure_instance
 
 
-def call_manage_instance(console_sock, config=None, cartridge_defaults=None):
-    return manage_instance({
+def call_configure_instance(console_sock, config=None, cartridge_defaults=None):
+    return configure_instance({
         'console_sock': console_sock,
         'config': config or {},
         'cartridge_defaults': cartridge_defaults or {},
@@ -31,7 +31,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.remove_file(self.console_sock)
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock
         )
 
@@ -44,7 +44,7 @@ class TestManageInstance(unittest.TestCase):
         bad_socket_path = 'bad-socket-path'
         self.instance.write_file(bad_socket_path)
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=bad_socket_path
         )
 
@@ -56,7 +56,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(memtx_memory=None)
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock
         )
 
@@ -74,7 +74,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: old_value})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 param_name: new_instance_value,
@@ -90,7 +90,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: old_value})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             cartridge_defaults={
                 param_name: new_app_value,
@@ -106,7 +106,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: old_value})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 param_name: new_instance_value,
@@ -132,7 +132,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: BIG_MEMORY})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 param_name: SMALL_MEMORY,
@@ -156,7 +156,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 param_name: INSTANCE_BIG_MEMORY,
@@ -173,7 +173,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             cartridge_defaults={
                 param_name: APP_BIG_MEMORY,
@@ -190,7 +190,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 param_name: INSTANCE_BIG_MEMORY,
@@ -221,7 +221,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 param_name: INSTANCE_BIG_MEMORY,
@@ -238,7 +238,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             cartridge_defaults={
                 param_name: APP_BIG_MEMORY,
@@ -255,7 +255,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: SMALL_MEMORY})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 param_name: INSTANCE_BIG_MEMORY,
@@ -277,7 +277,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg_function()
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 'memtx_memory': BIG_MEMTX_MEMORY,
@@ -301,7 +301,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: old_value})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 param_name: new_instance_value,
@@ -318,7 +318,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: old_value})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             cartridge_defaults={
                 param_name: new_app_value,
@@ -335,7 +335,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: old_value})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 param_name: new_instance_value,
@@ -355,7 +355,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: old_value})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             config={
                 param_name: old_value,
@@ -372,7 +372,7 @@ class TestManageInstance(unittest.TestCase):
         self.instance.clear_calls('box_cfg')
         self.instance.set_box_cfg(**{param_name: old_value})
 
-        res = call_manage_instance(
+        res = call_configure_instance(
             console_sock=self.console_sock,
             cartridge_defaults={
                 param_name: old_value,

@@ -96,6 +96,7 @@ cartridge_keep_num_latest_dists: 2
 
 cartridge_defaults: {}
 config: null
+cartridge_box_cfg_params: null
 zone: null
 
 restarted: null

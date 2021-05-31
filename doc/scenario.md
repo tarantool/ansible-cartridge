@@ -54,6 +54,7 @@ There are additional steps that are not included in the default scenario, but ca
 - [stop_instance](#stop_instance)
 - [start_instance](#start_instance)
 - [restart_instance_force](#restart_instance_force)
+- [configure_box_cfg_params](#configure_box_cfg_params)
 
 To replace the steps of the role with your own or add new steps, you should use `cartridge_custom_steps_dir`
 or `cartridge_custom_steps` options (see [examples](#examples)).
@@ -824,3 +825,16 @@ Restart and enable instance systemd service without any conditions.
 Input facts (set by role):
 
 - `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+
+### configure_box_cfg_params
+
+Configure instance in runtime only.
+
+Input facts (set by role):
+
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+
+Input facts (set by config):
+
+- `cartridge_box_cfg_params` - new instance parameters ([more details here](/doc/instances.md));
+- `expelled` - indicates if instance must be expelled from topology.

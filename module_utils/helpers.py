@@ -437,6 +437,24 @@ def get_control_console(socket_path):
     return Console(socket_path)
 
 
+def get_control_console_if_started(console_sock):
+    if not os.path.exists(console_sock):
+        return None, "Console socket '%s' doesn't exists" % console_sock
+
+    try:
+        return get_control_console(console_sock), None
+    except CartridgeException as e:
+        allowed_errcodes = [
+            CartridgeErrorCodes.SOCKET_NOT_FOUND,
+            CartridgeErrorCodes.FAILED_TO_CONNECT_TO_SOCKET,
+            CartridgeErrorCodes.INSTANCE_IS_NOT_STARTED_YET
+        ]
+        if e.code in allowed_errcodes:
+            return None, "Impossible to connect to socket '%s'" % console_sock
+
+        raise e
+
+
 def is_expelled(host_vars):
     return host_vars.get('expelled') is True
 
@@ -597,6 +615,7 @@ class Helpers:
     warn = staticmethod(warn)
     execute_module = staticmethod(execute_module)
     get_control_console = staticmethod(get_control_console)
+    get_control_console_if_started = staticmethod(get_control_console_if_started)
     is_expelled = staticmethod(is_expelled)
     is_stateboard = staticmethod(is_stateboard)
     get_instance_id = staticmethod(get_instance_id)

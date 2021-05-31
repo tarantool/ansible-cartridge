@@ -1,0 +1,85 @@
+---
+
+- name: 'Test file config'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_eval_body: >-
+      return box.cfg
+  tasks:
+    #################
+    # CORRECT CASES #
+    #################
+
+    - name: 'Get old box cfg params'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval_on_control_instance
+
+    - name: 'Debug box config'
+      debug:
+        msg: '{{ eval_res }}'
+      run_once: true
+
+    - name: 'Check changed sections'
+      assert:
+        fail_msg: 'Box config params are incorrect'
+        success_msg: 'Box config params are correct'
+        that:
+          - eval_res[0]['log_level'] != 4
+          - eval_res[0]['memtx_memory'] != 33554433
+
+    - name: 'Update box config params'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - configure_box_cfg_params
+          - eval_on_control_instance
+        cartridge_box_cfg_params:
+          log_level: 4  # param from cartridge_defaults
+          memtx_memory: 33554433  # param from config
+
+    - name: 'Debug box config'
+      debug:
+        msg: '{{ eval_res }}'
+      run_once: true
+
+    - name: 'Check changed sections'
+      assert:
+        fail_msg: 'Box config params are incorrect'
+        success_msg: 'Box config params are correct'
+        that:
+          - eval_res[0]['log_level'] == 4
+          - eval_res[0]['memtx_memory'] == 33554433
+
+    ###############
+    # ERROR CASES #
+    ###############
+
+    - name: 'Incorrect update of box memory'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - configure_box_cfg_params
+          - eval_on_control_instance
+        cartridge_box_cfg_params:
+          memtx_memory: 33554432
+
+    - name: 'Debug box config'
+      debug:
+        msg: '{{ eval_res }}'
+      run_once: true
+
+    - name: 'Check changed sections'
+      assert:
+        fail_msg: 'Box config params are incorrect'
+        success_msg: 'Box config params are correct'
+        that:
+          - eval_res[0]['log_level'] == 4
+          - eval_res[0]['memtx_memory'] == 33554433
