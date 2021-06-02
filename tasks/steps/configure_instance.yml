@@ -4,7 +4,7 @@
   tags: cartridge-instances
   block:
     - name: 'Manage instance parameters in runtime'
-      cartridge_configure_instance:
+      cartridge_patch_instance_in_runtime:
         console_sock: '{{ instance_info.console_sock }}'
         instance_config: '{{ config }}'
         cartridge_defaults: '{{ cartridge_defaults }}'

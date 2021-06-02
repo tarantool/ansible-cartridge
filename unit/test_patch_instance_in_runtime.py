@@ -7,14 +7,15 @@ import module_utils.helpers as helpers
 from unit.instance import Instance
 
 sys.modules['ansible.module_utils.helpers'] = helpers
-from library.cartridge_configure_instance import configure_instance
+from library.cartridge_patch_instance_in_runtime import patch_instance_in_runtime
 
 
-def call_configure_instance(console_sock, instance_config=None, cartridge_defaults=None):
-    return configure_instance({
+def call_configure_instance(console_sock, instance_config=None, cartridge_defaults=None, strict_mode=False):
+    return patch_instance_in_runtime({
         'console_sock': console_sock,
         'instance_config': instance_config or {},
         'cartridge_defaults': cartridge_defaults or {},
+        'strict_mode': strict_mode,
     })
 
 
@@ -121,6 +122,40 @@ class TestManageInstance(unittest.TestCase):
         calls = self.instance.get_calls('box_cfg')
         self.assertEqual(len(calls), 0)
 
+        # changed only in instance config with strict mode
+        self.instance.clear_calls('box_cfg')
+        self.instance.set_box_cfg(**{param_name: old_value})
+
+        res = call_configure_instance(
+            console_sock=self.console_sock,
+            instance_config={
+                param_name: new_instance_value,
+            },
+            strict_mode=True,
+        )
+        self.assertTrue(res.failed)
+        self.assertEqual(res.msg, "impossible to change '%s' in runtime" % param_name)
+
+        calls = self.instance.get_calls('box_cfg')
+        self.assertEqual(len(calls), 0)
+
+        # changed only in app config with strict mode
+        self.instance.clear_calls('box_cfg')
+        self.instance.set_box_cfg(**{param_name: old_value})
+
+        res = call_configure_instance(
+            console_sock=self.console_sock,
+            cartridge_defaults={
+                param_name: new_app_value,
+            },
+            strict_mode=True,
+        )
+        self.assertTrue(res.failed)
+        self.assertEqual(res.msg, "impossible to change '%s' in runtime" % param_name)
+
+        calls = self.instance.get_calls('box_cfg')
+        self.assertEqual(len(calls), 0)
+
     @parameterized.expand([
         ["memtx_memory"],
         ["vinyl_memory"],
@@ -140,6 +175,18 @@ class TestManageInstance(unittest.TestCase):
         )
         self.assertFalse(res.failed, msg=res.msg)
         self.assertFalse(res.changed)
+
+        self.assertEqual(len(self.instance.get_calls('box_cfg')), 0)
+
+        res = call_configure_instance(
+            console_sock=self.console_sock,
+            instance_config={
+                param_name: SMALL_MEMORY,
+            },
+            strict_mode=True,
+        )
+        self.assertTrue(res.failed)
+        self.assertEqual(res.msg, "impossible to change '%s' from '1024' to '512' in runtime" % param_name)
 
         self.assertEqual(len(self.instance.get_calls('box_cfg')), 0)
 

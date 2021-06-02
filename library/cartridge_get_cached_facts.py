@@ -17,7 +17,7 @@ FACTS_BY_TARGETS = {
         'cartridge_app_user',
         'cartridge_auth',
         'cartridge_bootstrap_vshard',
-        'cartridge_box_cfg_params',
+        'cartridge_runtime_params',
         'cartridge_cluster_cookie',
         'cartridge_not_save_cookie_in_app_config',
         'cartridge_conf_dir',

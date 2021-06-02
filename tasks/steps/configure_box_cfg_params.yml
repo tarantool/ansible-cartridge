@@ -4,7 +4,8 @@
   tags: cartridge-instances
   block:
     - name: 'Manage instance parameters in runtime'
-      cartridge_configure_instance:
+      cartridge_patch_instance_in_runtime:
         console_sock: '{{ instance_info.console_sock }}'
-        instance_config: '{{ cartridge_box_cfg_params }}'
-      when: cartridge_box_cfg_params is not none
+        instance_config: '{{ cartridge_runtime_params }}'
+        strict_mode: true
+      when: cartridge_runtime_params is not none

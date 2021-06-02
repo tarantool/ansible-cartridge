@@ -40,7 +40,7 @@
         cartridge_scenario:
           - configure_box_cfg_params
           - eval_on_control_instance
-        cartridge_box_cfg_params:
+        cartridge_runtime_params:
           log_level: 4  # param from cartridge_defaults
           memtx_memory: 33554433  # param from config
 
@@ -68,7 +68,7 @@
         cartridge_scenario:
           - configure_box_cfg_params
           - eval_on_control_instance
-        cartridge_box_cfg_params:
+        cartridge_runtime_params:
           memtx_memory: 33554432
 
     - name: 'Debug box config'

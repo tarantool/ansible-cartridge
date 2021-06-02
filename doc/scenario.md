@@ -836,5 +836,5 @@ Input facts (set by role):
 
 Input facts (set by config):
 
-- `cartridge_box_cfg_params` - new instance parameters ([more details here](/doc/instances.md));
+- `cartridge_runtime_params` - new instance parameters ([more details here](/doc/instances.md));
 - `expelled` - indicates if instance must be expelled from topology.

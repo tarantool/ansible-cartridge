@@ -93,7 +93,7 @@ SCHEMA = {
     'cartridge_app_name': str,
     'cartridge_cluster_cookie': str,
     'cartridge_not_save_cookie_in_app_config': bool,
-    'cartridge_box_cfg_params': dict,
+    'cartridge_runtime_params': dict,
     'cartridge_defaults': dict,
     'cartridge_bootstrap_vshard': bool,
     'cartridge_wait_buckets_discovery': bool,
