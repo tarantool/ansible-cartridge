@@ -30,13 +30,13 @@
         msg: '{{ eval_res }}'
       run_once: true
 
-#    - name: 'Check changed sections'
-#      assert:
-#        fail_msg: 'Box config params are incorrect'
-#        success_msg: 'Box config params are correct'
-#        that:
-#          - eval_res[0]['log_level'] == old_log_level
-#          - eval_res[0]['memtx_memory'] == old_memtx_memory
+    - name: 'Check changed sections'
+      assert:
+        fail_msg: 'Box config params are incorrect'
+        success_msg: 'Box config params are correct'
+        that:
+          - eval_res[0]['log_level'] == old_log_level
+          - eval_res[0]['memtx_memory'] == old_memtx_memory
 
     - name: 'Update box config params'
       import_role:

@@ -829,7 +829,7 @@ Input facts (set by role):
 ### patch_instance_in_runtime
 
 Patch dynamic (see [parameters](https://www.tarantool.io/en/doc/latest/reference/configuration/#configuration-parameters)
-with `Dynamic: no`) instance parameters in runtime only
+with `Dynamic: yes`) instance parameters in runtime only
 (now it's possible to change only `box` config parameters).
 If the none-dynamic parameter is specified,
 nothing will be changed, and an error will be returned.
