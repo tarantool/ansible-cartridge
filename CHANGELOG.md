@@ -23,7 +23,7 @@ README.md to use the newest tag with new release
 - availability to upload ZIP configs to TDG
 - `cartridge_not_save_cookie_in_app_config` variable that allows to disable persisting cluster
   cookie in the application configuration file
-- `configure_box_cfg_params` step to update instance parameters in runtime
+- `patch_instance_in_runtime` step to update instance parameters in runtime
 
 ## [1.9.0] - 2021-04-30
 

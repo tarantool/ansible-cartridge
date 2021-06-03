@@ -38,7 +38,7 @@
         name: ansible-cartridge
       vars:
         cartridge_scenario:
-          - configure_box_cfg_params
+          - patch_instance_in_runtime
           - eval_on_control_instance
         cartridge_runtime_params:
           log_level: 4  # param from cartridge_defaults
@@ -66,7 +66,7 @@
         name: ansible-cartridge
       vars:
         cartridge_scenario:
-          - configure_box_cfg_params
+          - patch_instance_in_runtime
           - eval_on_control_instance
         cartridge_runtime_params:
           memtx_memory: 33554432

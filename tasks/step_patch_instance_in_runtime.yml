@@ -6,4 +6,4 @@
     - cartridge-replicasets
     - cartridge-config
 
-- import_tasks: 'steps/configure_box_cfg_params.yml'
+- import_tasks: 'steps/patch_instance_in_runtime.yml'
