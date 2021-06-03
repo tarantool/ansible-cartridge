@@ -57,6 +57,7 @@
 
       cartridge_defaults: '{{ cartridge_defaults }}'
       config: '{{ config }}'
+      cartridge_runtime_params: '{{ cartridge_runtime_params }}'
       zone: '{{ zone }}'
 
       restarted: '{{ restarted }}'

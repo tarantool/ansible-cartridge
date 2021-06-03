@@ -1,0 +1,12 @@
+---
+
+- when: not expelled
+  tags: cartridge-instances
+  block:
+    - name: 'Manage instance parameters in runtime'
+      cartridge_patch_instance_in_runtime:
+        console_sock: '{{ instance_info.console_sock }}'
+        instance_config: '{{ cartridge_runtime_params }}'
+        strict_mode: true
+      when: cartridge_runtime_params is not none
+      register: patch_instance_in_runtime_res

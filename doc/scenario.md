@@ -54,6 +54,7 @@ There are additional steps that are not included in the default scenario, but ca
 - [stop_instance](#stop_instance)
 - [start_instance](#start_instance)
 - [restart_instance_force](#restart_instance_force)
+- [patch_instance_in_runtime](#patch_instance_in_runtime)
 
 To replace the steps of the role with your own or add new steps, you should use `cartridge_custom_steps_dir`
 or `cartridge_custom_steps` options (see [examples](#examples)).
@@ -824,3 +825,22 @@ Restart and enable instance systemd service without any conditions.
 Input facts (set by role):
 
 - `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+
+### patch_instance_in_runtime
+
+Patch dynamic (see [parameters](https://www.tarantool.io/en/doc/latest/reference/configuration/#configuration-parameters)
+with `Dynamic: yes`) instance parameters in runtime only
+(now it's possible to change only `box` config parameters).
+If the none-dynamic parameter is specified,
+nothing will be changed, and an error will be returned.
+
+**Note** that memory size can be only increased in runtime.
+
+Input facts (set by role):
+
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+
+Input facts (set by config):
+
+- `cartridge_runtime_params` - new instance parameters ([more details here](/doc/instances.md));
+- `expelled` - indicates if instance must be expelled from topology.

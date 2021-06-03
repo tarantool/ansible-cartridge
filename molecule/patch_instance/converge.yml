@@ -1,0 +1,98 @@
+---
+
+- name: 'Test file config'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    old_log_level: 5
+    new_log_level: 4
+    old_memtx_memory: 33554432
+    new_memtx_memory: 33554433
+    decreased_memtx_memory: 33554432
+    cartridge_eval_body: >-
+      return box.cfg
+  tasks:
+    #################
+    # CORRECT CASES #
+    #################
+
+    - name: 'Get old box cfg params'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval_on_control_instance
+
+    - name: 'Debug box config'
+      debug:
+        msg: '{{ eval_res }}'
+      run_once: true
+
+    - name: 'Check changed sections'
+      assert:
+        fail_msg: 'Box config params are incorrect'
+        success_msg: 'Box config params are correct'
+        that:
+          - eval_res[0]['log_level'] == old_log_level
+          - eval_res[0]['memtx_memory'] == old_memtx_memory
+
+    - name: 'Update box config params'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - patch_instance_in_runtime
+          - eval_on_control_instance
+        cartridge_runtime_params:
+          log_level: '{{ new_log_level }}'  # param from cartridge_defaults
+          memtx_memory: '{{ new_memtx_memory }}'  # param from config
+
+    - name: 'Debug box config'
+      debug:
+        msg: '{{ eval_res }}'
+      run_once: true
+
+    - name: 'Check changed sections'
+      assert:
+        fail_msg: 'Box config params are incorrect'
+        success_msg: 'Box config params are correct'
+        that:
+          - eval_res[0]['log_level'] == new_log_level
+          - eval_res[0]['memtx_memory'] == new_memtx_memory
+
+    ###############
+    # ERROR CASES #
+    ###############
+
+    - name: 'Incorrect update of box memory'
+      ignore_errors: true
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - patch_instance_in_runtime
+          - eval_on_control_instance
+        cartridge_runtime_params:
+          memtx_memory: '{{ decreased_memtx_memory }}'
+          advertise_uri: 'test'
+
+    - name: 'Debug box config'
+      debug:
+        msg: '{{ eval_res }}'
+      run_once: true
+
+    - name: 'Check changed sections'
+      assert:
+        fail_msg: 'Box config params are incorrect'
+        success_msg: 'Box config params are correct'
+        that:
+          - patch_instance_in_runtime_res is failed
+          - >-
+            patch_instance_in_runtime_res.msg ==
+              "Impossible to patch instance config: " +
+              "impossible to decrease memory sizes in runtime ('memtx_memory' from '33554433' to '33554432'); " +
+              "impossible to change 'advertise_uri' in runtime"
+          - eval_res[0]['log_level'] == new_log_level
+          - eval_res[0]['memtx_memory'] == new_memtx_memory
