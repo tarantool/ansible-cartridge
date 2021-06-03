@@ -9,3 +9,4 @@
         instance_config: '{{ cartridge_runtime_params }}'
         strict_mode: true
       when: cartridge_runtime_params is not none
+      register: patch_instance_in_runtime_res

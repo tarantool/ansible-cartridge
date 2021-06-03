@@ -32,7 +32,8 @@ def change_memory_size(control_console, param_name, new_value):
 def change_dynamic_params(control_console, old_box_config, new_config, strict_mode=False):
     memory_sizes_to_change = {}
     box_params_to_change = {}
-    incorrect_params_errors = []
+    incorrect_memory_changes = []
+    non_dynamic_params = []
 
     for param_name, new_value in new_config.items():
         old_box_value = old_box_config.get(param_name)
@@ -41,19 +42,25 @@ def change_dynamic_params(control_console, old_box_config, new_config, strict_mo
             if new_value > old_box_value:
                 memory_sizes_to_change.update({param_name: new_value})
             else:
-                incorrect_params_errors.append("impossible to change '%s' from '%s' to '%s' in runtime" % (
-                    param_name, old_box_value, new_value,
-                ))
+                incorrect_memory_changes.append((param_name, old_box_value, new_value))
 
         elif param_name in helpers.DYNAMIC_BOX_CFG_PARAMS:
             if new_value != old_box_value:
                 box_params_to_change.update({param_name: new_value})
 
         else:
-            incorrect_params_errors.append("impossible to change '%s' in runtime" % param_name)
+            non_dynamic_params.append(param_name)
 
-    if strict_mode and incorrect_params_errors:
-        return None, ','.join(incorrect_params_errors)
+    if strict_mode:
+        messages = []
+        if incorrect_memory_changes:
+            messages.append('impossible to decrease memory sizes in runtime (%s)' % ', '.join(
+                map(lambda change_info: "'%s' from '%s' to '%s'" % change_info, incorrect_memory_changes)
+            ))
+        if non_dynamic_params:
+            messages.append("impossible to change '%s' in runtime" % ', '.join(non_dynamic_params))
+        if messages:
+            return None, '; '.join(messages)
 
     memory_changed = False
     for param_name, new_value in memory_sizes_to_change.items():
@@ -76,7 +83,7 @@ def change_dynamic_params(control_console, old_box_config, new_config, strict_mo
 
 
 def configure_box_cfg_params(console_sock, instance_config, defaults=None, strict_mode=False):
-    control_console, err = helpers.get_control_console_if_started(console_sock)
+    control_console, err = helpers.get_control_console_if_started(console_sock, strict_mode)
     if err is not None:
         return None, err
     if not control_console:

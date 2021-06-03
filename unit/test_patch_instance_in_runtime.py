@@ -186,7 +186,9 @@ class TestManageInstance(unittest.TestCase):
             strict_mode=True,
         )
         self.assertTrue(res.failed)
-        self.assertEqual(res.msg, "impossible to change '%s' from '1024' to '512' in runtime" % param_name)
+        self.assertEqual(res.msg, "impossible to decrease memory sizes in runtime ('%s' from '%s' to '%s')" % (
+            param_name, BIG_MEMORY, SMALL_MEMORY,
+        ))
 
         self.assertEqual(len(self.instance.get_calls('box_cfg')), 0)
 

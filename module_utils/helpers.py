@@ -444,19 +444,20 @@ def get_control_console(socket_path):
     return Console(socket_path)
 
 
-def get_control_console_if_started(console_sock):
+def get_control_console_if_started(console_sock, strict_mode=False):
     if not os.path.exists(console_sock):
-        # Console socket doesn't exists
+        if strict_mode:
+            return None, "console socket '%s' doesn't exists" % console_sock
         return None, None
 
     try:
         return get_control_console(console_sock), None
     except CartridgeException as e:
-        if e.is_instance_not_started_error():
+        if not strict_mode and e.is_instance_not_started_error():
             # Impossible to connect to socket
             return None, None
 
-        return None, e
+        return None, str(e)
 
 
 def is_expelled(host_vars):

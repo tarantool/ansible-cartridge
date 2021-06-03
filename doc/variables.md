@@ -84,7 +84,7 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `zone` (`string`): instance zone (available since
   [Cartridge 2.4.0](https://github.com/tarantool/cartridge/releases/tag/2.4.0));
 * `cartridge_runtime_params` (`dict``): [instance configuration](/doc/instances.md)
-  to apply parameters in runtime only;
+  parameters to patch in runtime;
 * `restarted` (`boolean`): flag indicates if instance should be
   restarted or not (if this flag isn't specified, instance will be restarted if
   it's needed to apply configuration changes);
