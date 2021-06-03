@@ -134,7 +134,8 @@ class TestManageInstance(unittest.TestCase):
             strict_mode=True,
         )
         self.assertTrue(res.failed)
-        self.assertEqual(res.msg, "impossible to change '%s' in runtime" % param_name)
+        self.assertEqual(res.msg,
+                         "Impossible to patch instance config: impossible to change '%s' in runtime" % param_name)
 
         calls = self.instance.get_calls('box_cfg')
         self.assertEqual(len(calls), 0)
@@ -151,7 +152,8 @@ class TestManageInstance(unittest.TestCase):
             strict_mode=True,
         )
         self.assertTrue(res.failed)
-        self.assertEqual(res.msg, "impossible to change '%s' in runtime" % param_name)
+        self.assertEqual(res.msg,
+                         "Impossible to patch instance config: impossible to change '%s' in runtime" % param_name)
 
         calls = self.instance.get_calls('box_cfg')
         self.assertEqual(len(calls), 0)
@@ -186,9 +188,13 @@ class TestManageInstance(unittest.TestCase):
             strict_mode=True,
         )
         self.assertTrue(res.failed)
-        self.assertEqual(res.msg, "impossible to decrease memory sizes in runtime ('%s' from '%s' to '%s')" % (
-            param_name, BIG_MEMORY, SMALL_MEMORY,
-        ))
+        self.assertEqual(
+            res.msg,
+            "Impossible to patch instance config: "
+            "impossible to decrease memory sizes in runtime ('%s' from '%s' to '%s')" % (
+                param_name, BIG_MEMORY, SMALL_MEMORY,
+            ),
+        )
 
         self.assertEqual(len(self.instance.get_calls('box_cfg')), 0)
 

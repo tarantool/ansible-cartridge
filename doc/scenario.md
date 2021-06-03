@@ -828,10 +828,11 @@ Input facts (set by role):
 
 ### patch_instance_in_runtime
 
-Patch instance parameters (now only box.cfg) in runtime only.
-If the none-dynamic (see [parameters](https://www.tarantool.io/en/doc/latest/reference/configuration/#configuration-parameters)
-with `Dynamic: no`) parameter is specified,
-only dynamic params are changed and error is returned.
+Patch dynamic (see [parameters](https://www.tarantool.io/en/doc/latest/reference/configuration/#configuration-parameters)
+with `Dynamic: no`) instance parameters in runtime only
+(now it's possible to change only `box` config parameters).
+If the none-dynamic parameter is specified,
+nothing will be changed, and an error will be returned.
 
 **Note** that memory size can be only increased in runtime.
 

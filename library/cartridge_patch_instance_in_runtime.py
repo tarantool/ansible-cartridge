@@ -60,7 +60,7 @@ def change_dynamic_params(control_console, old_box_config, new_config, strict_mo
         if non_dynamic_params:
             messages.append("impossible to change '%s' in runtime" % ', '.join(non_dynamic_params))
         if messages:
-            return None, '; '.join(messages)
+            return None, "Impossible to patch instance config: %s" % '; '.join(messages)
 
     memory_changed = False
     for param_name, new_value in memory_sizes_to_change.items():
@@ -90,6 +90,8 @@ def configure_box_cfg_params(console_sock, instance_config, defaults=None, stric
         return False, None
 
     if not helpers.box_cfg_was_called(control_console):
+        if strict_mode:
+            return None, "Impossible to patch instance config: 'box.cfg' wasn't called"
         return False, None
 
     old_box_config = helpers.get_box_cfg(control_console)

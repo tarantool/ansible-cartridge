@@ -91,6 +91,7 @@
           - patch_instance_in_runtime_res is failed
           - >-
             patch_instance_in_runtime_res.msg ==
+              "Impossible to patch instance config: " +
               "impossible to decrease memory sizes in runtime ('memtx_memory' from '33554433' to '33554432'); " +
               "impossible to change 'advertise_uri' in runtime"
           - eval_res[0]['log_level'] == new_log_level
