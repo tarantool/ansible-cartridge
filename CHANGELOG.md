@@ -26,6 +26,15 @@ README.md to use the newest tag with new release
 - `cartridge_not_save_cookie_in_app_config` variable that allows to disable persisting cluster
   cookie in the application configuration file
 - `patch_instance_in_runtime` step to update instance parameters in runtime
+- Variables `bootstrap_vshard_retries`, `bootstrap_vshard_delay`, `connect_to_membership_retries`,
+  `connect_to_membership_delay` to change hardcoded values
+
+### Changed
+
+- Timeout `instance_start_timeout` (to check that all instances become started)
+  replaced with `instance_start_retries` and `instance_start_delay`
+- Timeout `instance_discover_buckets_timeout` (to check that instances discover buckets)
+  replaced with `instance_discover_buckets_retries` and `instance_discover_buckets_delay`
 
 ## [1.9.0] - 2021-04-30
 

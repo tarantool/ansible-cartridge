@@ -464,7 +464,9 @@ Input facts (set by config):
 
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
-- `instance_start_timeout` - time in seconds to wait for instance to be started;
+- [DEPRECATED] `instance_start_timeout` - time in seconds to wait for instance to be started;
+- `instance_start_retries` - retries to check that all instances become started;
+- `instance_start_delay` - delay before retry to check that all instances become started;
 - `cartridge_wait_buckets_discovery` - indicates if routers should wait for buckets discovery after vshard bootstrap.
 
 ### connect_to_membership
@@ -480,7 +482,9 @@ Input facts (set by config):
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
 - `cartridge_app_name` - application name;
-- `config` - instance configuration ([more details here](/doc/instances.md)).
+- `config` - instance configuration ([more details here](/doc/instances.md));
+- `connect_to_membership_retries` - retries to connect to membership;
+- `connect_to_membership_delay` - delay before retry to connect to membership.
 
 Output facts:
 
@@ -633,7 +637,11 @@ Input facts (set by config):
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
 - `cartridge_bootstrap_vshard` - indicates if vshard should be bootstrapped;
-- `instance_discover_buckets_timeout` - time in seconds to wait for instance to discover buckets;
+- `bootstrap_vshard_retries` - retries to bootstrap vshard;
+- `bootstrap_vshard_delay` - delay before retry to bootstrap vshard;
+- [DEPRECATED] `instance_discover_buckets_timeout` - time in seconds to wait for instance to discover buckets;
+- `instance_discover_buckets_retries` - retries to check that instances discover buckets;
+- `instance_discover_buckets_delay` - delay before retry to check that instances discover buckets;
 - `cartridge_wait_buckets_discovery` - indicates if routers should wait for buckets discovery after vshard bootstrap;
 
 ### configure_failover

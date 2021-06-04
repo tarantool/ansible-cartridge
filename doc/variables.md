@@ -91,16 +91,19 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `expelled` (`boolean`, default: `false`): a boolean flag that indicates if instance must be expelled from topology;
 * `stateboard` (`boolean`, default: `false`): a boolean flag that indicates
    that the instance is a [stateboard](/doc/stateboard.md);
-* `instance_start_timeout` (`number`, default: 60): time in seconds to wait for instance to be started;
+* [DEPRECATED] `instance_start_timeout` (`number`, default: 60): time in seconds to wait for instance to be started;
+* `instance_start_retries` (`number`, default: 10) retries to check that all instances become started;
+* `instance_start_delay` (`number`, default: 5): delay before retry to check that all instances become started;
 * `cartridge_wait_buckets_discovery` (`boolean`, default: `true`): a boolean
   flag that indicates if routers should wait for buckets discovery after vshard bootstrap;
-* `instance_discover_buckets_timeout` (`number`, default: 60): time in seconds
+* [DEPRECATED] `instance_discover_buckets_timeout` (`number`, default: 60): time in seconds
   to wait for instance to discover buckets;
+* `instance_discover_buckets_retries` (`number`, default: 20) retries to check that instances discover buckets;
+* `instance_discover_buckets_delay` (`number`, default: 5): delay before retry to check that instances discover buckets;
 * `allowed_members_states` (`list-of-strings`, default: `[RolesConfigured]`):
   list of allowed instance states;
-* `wait_members_alive_retries` (`number`, default: 60) retries to check that all instances become alive;
-  all instances become alive;
-* `wait_members_alive_delay` (`number`, default: 5): delay to retry instances status check;
+* `wait_members_alive_retries` (`number`, default: 10) retries to check that all instances become alive;
+* `wait_members_alive_delay` (`number`, default: 5): delay before retry to check that all instances become alive;
 
 ## Replicasets configuration
 
@@ -125,8 +128,12 @@ For more details see [scenario documentation](/doc/scenario.md).
 
 ## Cluster configuration
 
+- `connect_to_membership_retries` (`number`, default: 3): retries to connect to membership;
+- `connect_to_membership_delay` (`number`, default: 5): delay before retry to connect to membership;
 * `cartridge_bootstrap_vshard` (`boolean`, default: `false`): a boolean
   flag that indicates if vshard should be bootstrapped;
+* `bootstrap_vshard_retries` (`number`, default: 3): retries to bootstrap vshard;
+* `bootstrap_vshard_delay` (`number`, default: 5): delay before retry to bootstrap vshard;
 * `cartridge_app_config` (`dict`): application config sections to patch;
 * `cartridge_auth`: (`dict`): [authorization configuration](/doc/auth.md);
 * `cartridge_failover_params` (`dict`): [failover](/doc/failover.md) parameters;

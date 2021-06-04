@@ -64,9 +64,15 @@
       expelled: '{{ expelled }}'
       stateboard: '{{ stateboard }}'
 
-      cartridge_wait_buckets_discovery: '{{ cartridge_wait_buckets_discovery }}'
       instance_start_timeout: '{{ instance_start_timeout }}'
+      instance_start_retries: '{{ instance_start_retries }}'
+      instance_start_delay: '{{ instance_start_delay }}'
+
+      cartridge_wait_buckets_discovery: '{{ cartridge_wait_buckets_discovery }}'
+
       instance_discover_buckets_timeout: '{{ instance_discover_buckets_timeout }}'
+      instance_discover_buckets_retries: '{{ instance_discover_buckets_retries }}'
+      instance_discover_buckets_delay: '{{ instance_discover_buckets_delay }}'
 
       allowed_members_states: '{{ allowed_members_states }}'
       wait_members_alive_retries: '{{ wait_members_alive_retries }}'
@@ -101,6 +107,12 @@
       cartridge_failover: '{{ cartridge_failover }}'
       cartridge_failover_params: '{{ cartridge_failover_params }}'
       cartridge_failover_promote_params: '{{ cartridge_failover_promote_params }}'
+
+      connect_to_membership_retries: '{{ connect_to_membership_retries }}'
+      connect_to_membership_delay: '{{ connect_to_membership_delay }}'
+
+      bootstrap_vshard_retries: '{{ bootstrap_vshard_retries }}'
+      bootstrap_vshard_delay: '{{ bootstrap_vshard_delay }}'
 
       allow_warning_issues: '{{ allow_warning_issues }}'
       show_issues: '{{ show_issues }}'

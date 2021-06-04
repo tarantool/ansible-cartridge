@@ -7,7 +7,11 @@
     check_buckets_are_discovered: '{{ cartridge_wait_buckets_discovery }}'
   register: check_instance
   until: not check_instance.failed
-  retries: '{{ instance_start_timeout // 5 }}'
-  delay: 5
+  retries: '{{
+      instance_start_timeout // 5
+      if instance_start_timeout is not none
+      else instance_start_retries
+    }}'
+  delay: '{{ instance_start_delay }}'
   when: not expelled
   tags: cartridge-instances
