@@ -1,5 +1,14 @@
-def get_member(alias, with_alias=True, uuid=None, with_uuid=False, status=None, state=None):
+def get_member(alias, with_alias=True, empty=False, empty_payload=False,
+               uuid=None, with_uuid=False, status=None, state=None):
     member = {'uri': '%s-uri' % alias}
+
+    if empty:
+        member.update({'empty': True})
+        return member
+
+    if empty_payload:
+        member.update({'empty_payload': True})
+        return member
 
     if with_alias:
         member.update({'alias': alias})

@@ -278,6 +278,11 @@ class Instance:
 
         for m in specified_members:
             uri = m['uri']
+
+            if m.get('empty'):
+                members[uri] = {}
+                continue
+
             member = {
                 'uri': uri,
                 'status': m.get('status', 'alive'),
@@ -292,6 +297,9 @@ class Instance:
                         'state': m.get('state'),
                     }
                 })
+
+            if m.get('empty_payload'):
+                member.update({"payload": {}})
 
             members[uri] = member
 

@@ -93,6 +93,9 @@ def candidate_is_ok(uri, names_by_uris, module_hostvars):
 def get_control_instance_name(module_hostvars, play_hosts, control_console):
     members = get_membership_members(control_console)
 
+    if not members:
+        return None, "Membership is empty"
+
     # try to find joined alive instance that isn't set to be expelled
     alive_instances_uris = set()
     joined_instances_uris = set()
@@ -102,9 +105,15 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
     names_by_uris = {}
 
     for uri, member in sorted(members.items()):
+        if not member:
+            return None, "Membership contains empty member with URI %s" % uri
+
         member_payload = member.get('payload')
         if member_payload is None:
             return None, "Instance with URI %s doesn't contain payload" % uri
+
+        if not member_payload:
+            return None, "Instance with URI %s has empty payload" % uri
 
         instance_name = member_payload.get('alias')
         if instance_name is None:

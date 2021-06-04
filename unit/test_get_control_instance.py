@@ -59,12 +59,38 @@ class TestGetControlInstance(unittest.TestCase):
 
         self.instance.start()
 
-    def test_instance_without_alias(self):
+    def test_bad_members(self):
         hostvars = get_instance_hostvars('instance-1')
+        hostvars.update(get_instance_hostvars('empty-member'))
+        hostvars.update(get_instance_hostvars('empty-payload'))
 
-        # with UUID (already bootstrapped) and without alias
+        # empty membership
+        self.instance.set_membership_members([])
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
+        self.assertTrue(res.failed)
+        self.assertIn("Membership is empty", res.msg)
+
+        # empty member
         self.instance.set_membership_members([
-            utils.get_member('instance-1', with_uuid=True, with_alias=False),
+            utils.get_member('empty-member', empty=True),
+            utils.get_member('instance-1'),
+        ])
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
+        self.assertTrue(res.failed)
+        self.assertIn("Membership contains empty member with URI empty-member-uri", res.msg)
+
+        # with empty payload
+        self.instance.set_membership_members([
+            utils.get_member('empty-payload', empty_payload=True),
+            utils.get_member('instance-1'),
+        ])
+        res = call_get_control_instance('myapp', self.console_sock, hostvars)
+        self.assertTrue(res.failed)
+        self.assertIn("Instance with URI empty-payload-uri has empty payload", res.msg)
+
+        # without alias
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_alias=False),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)

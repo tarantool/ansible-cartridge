@@ -15,6 +15,7 @@ README.md to use the newest tag with new release
 - Fail on getting control instance when all unjoined instances haven't
   `replicaset_alias` set
 - Support of Ansible 4.0
+- Handling of bad membership members - empty or with empty payload
 
 ### Added
 
