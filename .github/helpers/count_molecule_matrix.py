@@ -49,6 +49,7 @@ def main(event_name, repo_owner, review_state, ref):
 
     if event_name == 'workflow_dispatch' or review_state == 'approved' or ref == 'refs/heads/master':
         ce_matrix.append(get_ce_params(molecule_scenario='check_facts'))
+        ce_matrix.append(get_ce_params(molecule_scenario='cluster_cookie'))
         ce_matrix.append(get_ce_params(molecule_scenario='config_upload'))
         ce_matrix.append(get_ce_params(molecule_scenario='dead_instances'))
         ce_matrix.append(get_ce_params(molecule_scenario='eval'))
@@ -64,6 +65,7 @@ def main(event_name, repo_owner, review_state, ref):
 
         ce_matrix.append(get_ce_params(ansible_version='2.9.0'))
         ce_matrix.append(get_ce_params(ansible_version='2.10.0'))
+        ce_matrix.append(get_ce_params(ansible_version='4.0.0'))
 
         # TODO: Uncomment after fixing the check mode
         # ce_matrix.append(get_ce_version(molecule_command='check'))
