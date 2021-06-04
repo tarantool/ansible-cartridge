@@ -1,0 +1,18 @@
+---
+
+- name: Call backup step
+  ignore_errors: true
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_scenario:
+      - '{{ backup_step }}'
+
+- name: 'Check that {{ backup_step }} step failed'
+  assert:
+    fail_msg: 'Step "{{ backup_step }}" should fail for non-joined instance'
+    success_msg: 'Step "{{ backup_step }}" fails for non-joined instance'
+    that:
+      - backup_res.failed
+      - backup_res.msg == "box.cfg wasn't called yet"
+  run_once: true

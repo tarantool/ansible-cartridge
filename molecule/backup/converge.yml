@@ -1,0 +1,57 @@
+---
+
+- name: 'Check that all backup steps fail on non-joined instance'
+  hosts: instance-1-not-joined
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - include_tasks: include/check_box_cfg_not_called.yml
+      loop_control:
+        loop_var: backup_step
+      with_items:
+        - backup
+        - backup_start
+        - backup_stop
+
+- name: 'Backup joined instance and stateboard without fetching archive'
+  hosts: instance-2-joined,my-stateboard
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - include_tasks: include/check_backup.yml
+      vars:
+        fetch_backups: false
+
+    - name: Check that fetching archive was skipped
+      assert:
+        fail_msg: 'Fetching archive should be skipped'
+        success_msg: 'Fetching archive was skipped'
+        that: backup_archive_fetch_res.skipped
+
+- name: 'Backup joined instance and stateboard with fetching archive'
+  hosts: instance-2-joined,my-stateboard
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - include_tasks: include/check_backup.yml
+      vars:
+        fetch_backups: true
+
+    - name: Check that fetching archive wasn't skipped
+      assert:
+        fail_msg: 'Fetching archive should not be skipped'
+        success_msg: 'Fetching archive was not skipped'
+        that: backup_archive_fetch_res.changed
+
+- name: 'Check backup start and stop for joined instance and stateboard'
+  hosts: instance-2-joined,my-stateboard
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - include_tasks: include/check_backup_start_stop.yml
+      vars:
+        fetch_backups: true

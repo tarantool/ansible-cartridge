@@ -1,0 +1,33 @@
+---
+
+- name: 'Clear facts'
+  set_fact:
+    instance_backup_files: null
+
+- name: 'Call backup'
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_fetch_backups: '{{ fetch_backups }}'
+    cartridge_scenario:
+      - backup
+
+- name: 'Check instance backup files list set in "instance_backup_files"'
+  check_backup_files_list:
+    instance_info: '{{ instance_info }}'
+    files_list: '{{ instance_backup_files }}'
+    stateboard: '{{ stateboard }}'
+
+- name: 'Unpack instance archive'
+  unarchive:
+    list_files: true
+    src: '{{ backup_archive_path }}'
+    remote_src: true
+    dest: /tmp/
+  register: backup_archive_res
+
+- name: 'Check backup archive files list'
+  check_backup_files_list:
+    instance_info: '{{ instance_info }}'
+    files_list: '{{ backup_archive_res.files }}'
+    stateboard: '{{ stateboard }}'
