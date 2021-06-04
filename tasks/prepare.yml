@@ -23,6 +23,9 @@
   run_once: true
   delegate_to: localhost
   become: false
+  when: >-
+    cartridge_delivered_package_path or
+    cartridge_control_instance
 
 - name: 'Collect instance info'
   cartridge_get_instance_info:
