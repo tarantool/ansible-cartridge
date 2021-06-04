@@ -32,9 +32,9 @@ README.md to use the newest tag with new release
 ### Changed
 
 - Timeout `instance_start_timeout` (to check that all instances become started)
-  replaced with `instance_start_retries` and `instance_start_delay`
+  deprecated and replaced with `instance_start_retries` and `instance_start_delay`
 - Timeout `instance_discover_buckets_timeout` (to check that instances discover buckets)
-  replaced with `instance_discover_buckets_retries` and `instance_discover_buckets_delay`
+  deprecated and replaced with `instance_discover_buckets_retries` and `instance_discover_buckets_delay`
 
 ## [1.9.0] - 2021-04-30
 

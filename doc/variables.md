@@ -91,15 +91,15 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `expelled` (`boolean`, default: `false`): a boolean flag that indicates if instance must be expelled from topology;
 * `stateboard` (`boolean`, default: `false`): a boolean flag that indicates
    that the instance is a [stateboard](/doc/stateboard.md);
-* [DEPRECATED] `instance_start_timeout` (`number`, default: 60): time in seconds to wait for instance to be started;
 * `instance_start_retries` (`number`, default: 10) retries to check that all instances become started;
 * `instance_start_delay` (`number`, default: 5): delay before retry to check that all instances become started;
+* [DEPRECATED] `instance_start_timeout` (`number`, default: 60): time in seconds to wait for instance to be started;
 * `cartridge_wait_buckets_discovery` (`boolean`, default: `true`): a boolean
   flag that indicates if routers should wait for buckets discovery after vshard bootstrap;
-* [DEPRECATED] `instance_discover_buckets_timeout` (`number`, default: 60): time in seconds
-  to wait for instance to discover buckets;
 * `instance_discover_buckets_retries` (`number`, default: 20) retries to check that instances discover buckets;
 * `instance_discover_buckets_delay` (`number`, default: 5): delay before retry to check that instances discover buckets;
+* [DEPRECATED] `instance_discover_buckets_timeout` (`number`, default: 60): time in seconds
+  to wait for instance to discover buckets;
 * `allowed_members_states` (`list-of-strings`, default: `[RolesConfigured]`):
   list of allowed instance states;
 * `wait_members_alive_retries` (`number`, default: 10) retries to check that all instances become alive;

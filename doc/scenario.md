@@ -464,9 +464,9 @@ Input facts (set by config):
 
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
-- [DEPRECATED] `instance_start_timeout` - time in seconds to wait for instance to be started;
 - `instance_start_retries` - retries to check that all instances become started;
 - `instance_start_delay` - delay before retry to check that all instances become started;
+- [DEPRECATED] `instance_start_timeout` - time in seconds to wait for instance to be started;
 - `cartridge_wait_buckets_discovery` - indicates if routers should wait for buckets discovery after vshard bootstrap.
 
 ### connect_to_membership
@@ -639,9 +639,9 @@ Input facts (set by config):
 - `cartridge_bootstrap_vshard` - indicates if vshard should be bootstrapped;
 - `bootstrap_vshard_retries` - retries to bootstrap vshard;
 - `bootstrap_vshard_delay` - delay before retry to bootstrap vshard;
-- [DEPRECATED] `instance_discover_buckets_timeout` - time in seconds to wait for instance to discover buckets;
 - `instance_discover_buckets_retries` - retries to check that instances discover buckets;
 - `instance_discover_buckets_delay` - delay before retry to check that instances discover buckets;
+- [DEPRECATED] `instance_discover_buckets_timeout` - time in seconds to wait for instance to discover buckets;
 - `cartridge_wait_buckets_discovery` - indicates if routers should wait for buckets discovery after vshard bootstrap;
 
 ### configure_failover
@@ -656,8 +656,8 @@ Input facts (set by role):
 
 Input facts (set by config):
 
-- [DEPRECATED] `cartridge_failover` - indicates if eventual failover should be enabled or disabled;
-- `cartridge_failover_params` - failover parameters.
+- `cartridge_failover_params` - failover parameters;
+- [DEPRECATED] `cartridge_failover` - indicates if eventual failover should be enabled or disabled.
 
 ### wait_members_alive
 

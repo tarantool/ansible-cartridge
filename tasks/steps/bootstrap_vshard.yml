@@ -31,7 +31,7 @@
       register: check_instance
       until: not check_instance.failed
       retries: '{{
-          instance_discover_buckets_timeout // 5
+          instance_discover_buckets_timeout // instance_discover_buckets_delay
           if instance_discover_buckets_timeout is not none
           else instance_discover_buckets_retries
         }}'

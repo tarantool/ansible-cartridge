@@ -8,7 +8,7 @@
   register: check_instance
   until: not check_instance.failed
   retries: '{{
-      instance_start_timeout // 5
+      instance_start_timeout // instance_start_delay
       if instance_start_timeout is not none
       else instance_start_retries
     }}'
