@@ -10,31 +10,33 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
-### Fixed
-
-- Fail on getting control instance when all unjoined instances haven't
-  `replicaset_alias` set
-- Support of Ansible 4.0
-- Handling of bad membership members - empty or with empty payload
+## [1.10.0] - 2021-06-04
 
 ### Added
 
 - `wait_members_alive` step to wait until all cluster members have `alive` status
-  and specified state
+  and specified state;
 - `wait_cluster_has_no_issues` step to wait until cluster has no issues
-- availability to upload ZIP configs to TDG
+- Availability to upload ZIP configs to TDG;
 - `cartridge_not_save_cookie_in_app_config` variable that allows to disable persisting cluster
-  cookie in the application configuration file
-- `patch_instance_in_runtime` step to update instance parameters in runtime
+  cookie in the application configuration file;
+- `patch_instance_in_runtime` step to update instance parameters in runtime;
 - Variables `bootstrap_vshard_retries`, `bootstrap_vshard_delay`, `connect_to_membership_retries`,
-  `connect_to_membership_delay` to change hardcoded values
+  `connect_to_membership_delay` to change hardcoded values.
 
 ### Changed
 
 - Timeout `instance_start_timeout` (to check that all instances become started)
-  deprecated and replaced with `instance_start_retries` and `instance_start_delay`
+  deprecated and replaced with `instance_start_retries` and `instance_start_delay`;
 - Timeout `instance_discover_buckets_timeout` (to check that instances discover buckets)
-  deprecated and replaced with `instance_discover_buckets_retries` and `instance_discover_buckets_delay`
+  deprecated and replaced with `instance_discover_buckets_retries` and `instance_discover_buckets_delay`.
+
+### Fixed
+
+- Fail on getting control instance when all unjoined instances haven't
+  `replicaset_alias` set;
+- Support of Ansible 4.0;
+- Handling of bad membership members - empty or with empty payload.
 
 ## [1.9.0] - 2021-04-30
 
