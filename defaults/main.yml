@@ -103,9 +103,15 @@ restarted: null
 expelled: false
 stateboard: false
 
+instance_start_timeout: null  # DEPRECATED
+instance_start_retries: 10
+instance_start_delay: 5
+
 cartridge_wait_buckets_discovery: true
-instance_start_timeout: 60
-instance_discover_buckets_timeout: 60
+
+instance_discover_buckets_timeout: null  # DEPRECATED
+instance_discover_buckets_retries: 20
+instance_discover_buckets_delay: 5
 
 allowed_members_states: ['RolesConfigured']
 wait_members_alive_retries: 10
@@ -141,6 +147,12 @@ cartridge_bootstrap_vshard: false
 cartridge_failover: null  # DEPRECATED
 cartridge_failover_params: null
 cartridge_failover_promote_params: null
+
+connect_to_membership_retries: 3
+connect_to_membership_delay: 5
+
+bootstrap_vshard_retries: 3
+bootstrap_vshard_delay: 5
 
 allow_warning_issues: false
 show_issues: true

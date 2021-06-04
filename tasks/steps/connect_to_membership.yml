@@ -10,8 +10,8 @@
     play_hosts: '{{ play_hosts }}'
   register: probe
   until: not probe.failed
-  retries: 3
-  delay: 5
+  retries: '{{ connect_to_membership_retries }}'
+  delay: '{{ connect_to_membership_delay }}'
   run_once: true
   delegate_to: '{{ alive_not_expelled_instance.name }}'
   tags:

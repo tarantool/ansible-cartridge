@@ -17,6 +17,10 @@ PARAMS_THE_SAME_FOR_ALL_HOSTS = [
     'cartridge_not_save_cookie_in_app_config',
     'cartridge_auth',
     'cartridge_bootstrap_vshard',
+    'bootstrap_vshard_retries',
+    'bootstrap_vshard_delay',
+    'connect_to_membership_retries',
+    'connect_to_membership_delay',
     'cartridge_failover',
     'cartridge_failover_params',
     'cartridge_app_config',
@@ -96,6 +100,10 @@ SCHEMA = {
     'cartridge_runtime_params': dict,
     'cartridge_defaults': dict,
     'cartridge_bootstrap_vshard': bool,
+    'bootstrap_vshard_retries': int,
+    'bootstrap_vshard_delay': int,
+    'connect_to_membership_retries': int,
+    'connect_to_membership_delay': int,
     'cartridge_wait_buckets_discovery': bool,
     'cartridge_failover': bool,
     'cartridge_app_config': dict,
@@ -109,7 +117,11 @@ SCHEMA = {
     'stateboard': bool,
     'cartridge_multiversion': bool,
     'instance_start_timeout': int,
+    'instance_start_retries': int,
+    'instance_start_delay': int,
     'instance_discover_buckets_timeout': int,
+    'instance_discover_buckets_retries': int,
+    'instance_discover_buckets_delay': int,
     'twophase_netbox_call_timeout': int,
     'twophase_upload_config_timeout': int,
     'twophase_apply_config_timeout': int,
@@ -542,6 +554,16 @@ def validate_config(params):
             warnings.append(
                 "Variable 'edit_topology_timeout' is deprecated since 1.9.0 and will be removed in 2.0.0. "
                 "Use 'edit_topology_healthy_timeout' instead."
+            )
+        if instance_vars.get('instance_start_timeout') is not None:
+            warnings.append(
+                "Variable 'instance_start_timeout' is deprecated since 1.10.0 and will be removed in 2.0.0. "
+                "Use 'instance_start_retries' and 'instance_start_delay' instead."
+            )
+        if instance_vars.get('instance_discover_buckets_timeout') is not None:
+            warnings.append(
+                "Variable 'instance_discover_buckets_timeout' is deprecated since 1.10.0 and will be removed in 2.0.0. "
+                "Use 'instance_discover_buckets_retries' and 'instance_discover_buckets_delay' instead."
             )
 
         # Validate types
