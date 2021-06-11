@@ -91,6 +91,7 @@ FACTS_BY_TARGETS = {
     'single_instances_for_each_machine': [
         'expelled',
         'ansible_host',
+        'ansible_port',
     ],
     'connect_to_membership': [
         'expelled',
