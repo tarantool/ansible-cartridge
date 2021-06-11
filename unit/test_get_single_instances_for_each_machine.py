@@ -28,8 +28,20 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
                 'ansible_host': 'host-1',
                 'expelled': True,
             },
-            'instance-1': {
+            'instance-1-1': {
                 'ansible_host': 'host-1',
+            },
+            'instance-1-2': {
+                'ansible_host': 'host-1',
+                'ansible_port': 22,
+            },
+            'instance-1-3': {
+                'ansible_host': 'host-1',
+                'ansible_port': 33,  # different port
+            },
+            'instance-1-4': {
+                'ansible_host': 'host-1',
+                'ansible_port': 33,  # different port
             },
             'stateboard-2': {
                 'ansible_host': 'host-2',
@@ -39,8 +51,20 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
                 'ansible_host': 'host-2',
                 'expelled': True,
             },
-            'instance-2': {
+            'instance-2-1': {
                 'ansible_host': 'host-2',
+            },
+            'instance-2-2': {
+                'ansible_host': 'host-2',
+                'ansible_port': 22,
+            },
+            'instance-2-3': {
+                'ansible_host': 'host-2',
+                'ansible_port': 33,  # different port
+            },
+            'instance-2-4': {
+                'ansible_host': 'host-2',
+                'ansible_port': 44,  # one more different port
             },
         }
 
@@ -58,13 +82,17 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
         self.assertFalse(res.failed, res.msg)
         self.assertEqual(res.fact, ['stateboard-1', 'stateboard-2'])
 
-    def test_instances_found(self):
+    def test_all_instances_specified(self):
         res = call_get_one_not_expelled_instance_for_machine(self.hostvars, [
-            'expelled-1', 'expelled-2', 'instance-1', 'instance-2', 'stateboard-1', 'stateboard-2',
+            'expelled-1', 'expelled-2',
+            'stateboard-1', 'stateboard-2',
+            'instance-1-1', 'instance-1-2', 'instance-1-3', 'instance-1-4',
+            'instance-2-1', 'instance-2-2', 'instance-2-3', 'instance-2-4',
         ])
         self.assertFalse(res.failed, res.msg)
 
         single_instances = res.fact
-        self.assertEqual(len(single_instances), 2)
-        self.assertTrue('instance-1' in single_instances or 'stateboard-1' in single_instances)
-        self.assertTrue('instance-2' in single_instances or 'stateboard-2' in single_instances)
+        self.assertSetEqual(set(single_instances), {
+            'instance-1-1', 'instance-1-3',
+            'instance-2-1', 'instance-2-3', 'instance-2-4',
+        })
