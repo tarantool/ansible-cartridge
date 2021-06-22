@@ -122,12 +122,23 @@ class TestGetInstanceInfo(unittest.TestCase):
             'instance_dist_dir': 'some/install/dir/myapp',
             'paths_to_remove_on_expel': [
                 'some/conf/dir/myapp.instance-1.yml',
+                'some/data/dir/myapp.instance-1',
+                'some/memtx/dir/myapp.instance-1',
                 'some/run/dir/myapp.instance-1.control',
+                'some/run/dir/myapp.instance-1.pid',
+                'some/vinyl/dir/myapp.instance-1',
+                'some/wal/dir/myapp.instance-1',
+            ],
+            'files_to_remove_on_cleanup': [
+                'some/run/dir/myapp.instance-1.control',
+                'some/run/dir/myapp.instance-1.pid',
+            ],
+            'dirs_to_remove_on_cleanup': [
                 'some/data/dir/myapp.instance-1',
                 'some/memtx/dir/myapp.instance-1',
                 'some/vinyl/dir/myapp.instance-1',
                 'some/wal/dir/myapp.instance-1',
-            ]
+            ],
         })
 
     def test_get_instance_info_multiversion(self):
@@ -166,9 +177,17 @@ class TestGetInstanceInfo(unittest.TestCase):
             'instance_dist_dir': 'some/instances/dir/myapp.instance-1',
             'paths_to_remove_on_expel': [
                 'some/conf/dir/myapp.instance-1.yml',
-                'some/run/dir/myapp.instance-1.control',
                 'some/data/dir/myapp.instance-1',
-            ]
+                'some/run/dir/myapp.instance-1.control',
+                'some/run/dir/myapp.instance-1.pid',
+            ],
+            'files_to_remove_on_cleanup': [
+                'some/run/dir/myapp.instance-1.control',
+                'some/run/dir/myapp.instance-1.pid',
+            ],
+            'dirs_to_remove_on_cleanup': [
+                'some/data/dir/myapp.instance-1',
+            ],
         })
 
         # cartridge_package_path isn't specified
@@ -204,7 +223,15 @@ class TestGetInstanceInfo(unittest.TestCase):
             'instance_dist_dir': 'some/instances/dir/myapp.instance-1',
             'paths_to_remove_on_expel': [
                 'some/conf/dir/myapp.instance-1.yml',
+                'some/data/dir/myapp.instance-1',
                 'some/run/dir/myapp.instance-1.control',
+                'some/run/dir/myapp.instance-1.pid',
+            ],
+            'files_to_remove_on_cleanup': [
+                'some/run/dir/myapp.instance-1.control',
+                'some/run/dir/myapp.instance-1.pid',
+            ],
+            'dirs_to_remove_on_cleanup': [
                 'some/data/dir/myapp.instance-1',
             ],
         })
@@ -225,11 +252,6 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
             'cartridge_multiversion': False,
             'stateboard': True,
-            'paths_to_remove_on_expel': [
-                'some/conf/dir/myapp.instance-1.yml',
-                'some/run/dir/myapp.instance-1.control',
-                'some/data/dir/myapp.instance-1',
-            ],
         }
 
         res = call_get_instance_info(app_name, instance_name, instance_vars)
@@ -250,7 +272,15 @@ class TestGetInstanceInfo(unittest.TestCase):
             'instance_dist_dir': 'some/install/dir/myapp',
             'paths_to_remove_on_expel': [
                 'some/conf/dir/myapp-stateboard.yml',
+                'some/data/dir/myapp-stateboard',
                 'some/run/dir/myapp-stateboard.control',
+                'some/run/dir/myapp-stateboard.pid',
+            ],
+            'files_to_remove_on_cleanup': [
+                'some/run/dir/myapp-stateboard.control',
+                'some/run/dir/myapp-stateboard.pid',
+            ],
+            'dirs_to_remove_on_cleanup': [
                 'some/data/dir/myapp-stateboard',
             ],
         })
@@ -291,10 +321,21 @@ class TestGetInstanceInfo(unittest.TestCase):
             'instance_dist_dir': 'some/instances/dir/myapp-stateboard',
             'paths_to_remove_on_expel': [
                 'some/conf/dir/myapp-stateboard.yml',
+                'some/data/dir/myapp-stateboard',
+                'some/memtx/dir/myapp-stateboard',
                 'some/run/dir/myapp-stateboard.control',
+                'some/run/dir/myapp-stateboard.pid',
+                'some/vinyl/dir/myapp-stateboard',
+                'some/wal/dir/myapp-stateboard',
+            ],
+            'files_to_remove_on_cleanup': [
+                'some/run/dir/myapp-stateboard.control',
+                'some/run/dir/myapp-stateboard.pid',
+            ],
+            'dirs_to_remove_on_cleanup': [
                 'some/data/dir/myapp-stateboard',
                 'some/memtx/dir/myapp-stateboard',
                 'some/vinyl/dir/myapp-stateboard',
                 'some/wal/dir/myapp-stateboard',
-            ]
+            ],
         })

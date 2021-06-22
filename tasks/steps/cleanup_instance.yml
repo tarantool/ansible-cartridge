@@ -1,0 +1,30 @@
+---
+
+- name: 'Check that instance is not started'
+  cartridge_check_instance_not_started:
+    console_sock: '{{ instance_info.console_sock }}'
+  register: check_instance_not_started_res
+
+- name: 'Cleanup instance files'
+  file:
+    path: '{{ file_path }}'
+    state: absent
+  loop_control:
+    loop_var: file_path
+  with_items: '{{ instance_info.files_to_remove_on_cleanup }}'
+
+- name: 'Find data to remove from instance directories'
+  find:
+    file_type: any
+    hidden: true
+    paths: '{{ instance_info.dirs_to_remove_on_cleanup }}'
+    excludes: '{{ ["config", ".tarantool.cookie"] + cartridge_cleanup_excluded_paths }}'
+  register: paths_to_remove_on_cleanup
+
+- name: 'Cleanup instance directories'
+  file:
+    path: '{{ item.path }}'
+    state: absent
+  loop_control:
+    label: '{{ item.path }}'
+  with_items: '{{ paths_to_remove_on_cleanup.files }}'

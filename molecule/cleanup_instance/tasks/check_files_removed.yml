@@ -1,0 +1,20 @@
+- name: 'Find data in work dir'
+  find:
+    file_type: any
+    paths:
+      - '{{ instance_info.work_dir }}'
+  register: work_dir_files
+
+- name: 'Get work dir paths'
+  set_fact:
+    work_dir_paths: '{{ work_dir_files.files | map(attribute="path") | map("basename") }}'
+
+- name: 'Show work dir paths'
+  debug:
+    var: 'work_dir_paths'
+
+- name: 'Check work dir files list'
+  assert:
+    fail_msg: 'Files list is incorrect'
+    success_msg: 'Files list is correct'
+    that: work_dir_paths == ['config']

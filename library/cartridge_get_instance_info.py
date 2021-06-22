@@ -50,7 +50,9 @@ def get_instance_info(params):
     instance_vars = params['instance_vars']
 
     instance_info = {
-        'paths_to_remove_on_expel': []
+        'paths_to_remove_on_expel': set(),
+        'files_to_remove_on_cleanup': set(),
+        'dirs_to_remove_on_cleanup': set(),
     }
 
     # app conf file
@@ -62,7 +64,7 @@ def get_instance_info(params):
     instance_info['conf_file'] = get_instance_conf_file(
         instance_vars['cartridge_conf_dir'], app_name, instance_name, instance_vars['stateboard'],
     )
-    instance_info['paths_to_remove_on_expel'].append(instance_info['conf_file'])
+    instance_info['paths_to_remove_on_expel'].add(instance_info['conf_file'])
 
     # instance id (e.g. used for conf section name)
     instance_info['instance_id'] = get_instance_conf_section(
@@ -73,17 +75,21 @@ def get_instance_info(params):
     instance_info['console_sock'] = helpers.get_instance_console_sock(
         instance_vars['cartridge_run_dir'], app_name, instance_name, instance_vars['stateboard']
     )
-    instance_info['paths_to_remove_on_expel'].append(instance_info['console_sock'])
+    instance_info['paths_to_remove_on_expel'].add(instance_info['console_sock'])
+    instance_info['files_to_remove_on_cleanup'].add(instance_info['console_sock'])
 
     instance_info['pid_file'] = helpers.get_instance_pid_file(
         instance_vars['cartridge_run_dir'], app_name, instance_name, instance_vars['stateboard']
     )
+    instance_info['paths_to_remove_on_expel'].add(instance_info['pid_file'])
+    instance_info['files_to_remove_on_cleanup'].add(instance_info['pid_file'])
 
     # instance work dir
     instance_info['work_dir'] = helpers.get_instance_dir(
         instance_vars['cartridge_data_dir'], app_name, instance_name, instance_vars['stateboard']
     )
-    instance_info['paths_to_remove_on_expel'].append(instance_info['work_dir'])
+    instance_info['paths_to_remove_on_expel'].add(instance_info['work_dir'])
+    instance_info['dirs_to_remove_on_cleanup'].add(instance_info['work_dir'])
 
     # instance memtx dir
     instance_info['memtx_dir'] = None
@@ -91,7 +97,8 @@ def get_instance_info(params):
         instance_info['memtx_dir'] = helpers.get_instance_dir(
             instance_vars['cartridge_memtx_dir_parent'], app_name, instance_name, instance_vars['stateboard']
         )
-        instance_info['paths_to_remove_on_expel'].append(instance_info['memtx_dir'])
+        instance_info['paths_to_remove_on_expel'].add(instance_info['memtx_dir'])
+        instance_info['dirs_to_remove_on_cleanup'].add(instance_info['memtx_dir'])
 
     # instance vinyl dir
     instance_info['vinyl_dir'] = None
@@ -99,7 +106,8 @@ def get_instance_info(params):
         instance_info['vinyl_dir'] = helpers.get_instance_dir(
             instance_vars['cartridge_vinyl_dir_parent'], app_name, instance_name, instance_vars['stateboard']
         )
-        instance_info['paths_to_remove_on_expel'].append(instance_info['vinyl_dir'])
+        instance_info['paths_to_remove_on_expel'].add(instance_info['vinyl_dir'])
+        instance_info['dirs_to_remove_on_cleanup'].add(instance_info['vinyl_dir'])
 
     # instance wal dir
     instance_info['wal_dir'] = None
@@ -107,7 +115,8 @@ def get_instance_info(params):
         instance_info['wal_dir'] = helpers.get_instance_dir(
             instance_vars['cartridge_wal_dir_parent'], app_name, instance_name, instance_vars['stateboard']
         )
-        instance_info['paths_to_remove_on_expel'].append(instance_info['wal_dir'])
+        instance_info['paths_to_remove_on_expel'].add(instance_info['wal_dir'])
+        instance_info['dirs_to_remove_on_cleanup'].add(instance_info['wal_dir'])
 
     # systemd service name
     instance_info['systemd_service'] = get_instance_systemd_service(
@@ -135,6 +144,10 @@ def get_instance_info(params):
             instance_vars['cartridge_app_instances_dir'],
             app_name, instance_name, instance_vars['stateboard'],
         )
+
+    instance_info['paths_to_remove_on_expel'] = list(sorted(instance_info['paths_to_remove_on_expel']))
+    instance_info['files_to_remove_on_cleanup'] = list(sorted(instance_info['files_to_remove_on_cleanup']))
+    instance_info['dirs_to_remove_on_cleanup'] = list(sorted(instance_info['dirs_to_remove_on_cleanup']))
 
     return helpers.ModuleRes(changed=False, fact=instance_info)
 

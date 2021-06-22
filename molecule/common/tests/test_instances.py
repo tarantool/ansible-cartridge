@@ -163,7 +163,7 @@ def test_instances():
         if not utils.instance_is_expelled(instance_vars) and not utils.instance_is_stateboard(instance_vars)
     }
 
-    # Check if all configured instances are started and avaliable
+    # Check if all configured instances are started and available
     assert len(configured_instances) == len(started_instances)
     assert set(configured_instances.keys()) == set(started_instances.keys())
     assert all([

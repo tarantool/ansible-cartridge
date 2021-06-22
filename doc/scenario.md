@@ -55,6 +55,7 @@ There are additional steps that are not included in the default scenario, but ca
 - [start_instance](#start_instance)
 - [restart_instance_force](#restart_instance_force)
 - [patch_instance_in_runtime](#patch_instance_in_runtime)
+- [cleanup_instance](#cleanup_instance)
 
 To replace the steps of the role with your own or add new steps, you should use `cartridge_custom_steps_dir`
 or `cartridge_custom_steps` options (see [examples](#examples)).
@@ -852,3 +853,17 @@ Input facts (set by config):
 
 - `cartridge_runtime_params` - new instance parameters ([more details here](/doc/instances.md));
 - `expelled` - indicates if instance must be expelled from topology.
+
+### cleanup_instance
+
+Clean up data of stopped instance.
+If instance is started, an error will be returned.
+
+Input facts (set by role):
+
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+
+Input facts (set by config):
+
+- `cartridge_cleanup_excluded_paths` - list of folders and files
+  in working directory that should be kept on instance cleanup;

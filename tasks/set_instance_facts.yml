@@ -10,6 +10,7 @@
       cartridge_cluster_cookie: '{{ cartridge_cluster_cookie }}'
       cartridge_not_save_cookie_in_app_config: '{{ cartridge_not_save_cookie_in_app_config }}'
       cartridge_remove_temporary_files: '{{ cartridge_remove_temporary_files }}'
+      cartridge_cleanup_excluded_paths: '{{ cartridge_cleanup_excluded_paths }}'
 
       # Role scenario configuration
 
