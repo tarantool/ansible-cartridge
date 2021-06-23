@@ -85,10 +85,6 @@ cartridge_conf_dir: /etc/tarantool/conf.d
 cartridge_app_install_dir: /usr/share/tarantool
 cartridge_app_instances_dir: /usr/share/tarantool
 
-cartridge_instances_backups_dir: /opt/tarantool/backups
-cartridge_fetch_backups: false
-cartridge_fetch_backups_dir: backups/
-
 cartridge_configure_systemd_unit_files: true
 cartridge_systemd_dir: /etc/systemd/system
 
@@ -194,3 +190,9 @@ cartridge_eval_args: []
 cartridge_eval_with_retries: false
 cartridge_eval_retries: 3
 cartridge_eval_delay: 5
+
+# Backups params
+
+cartridge_instances_backups_dir: /opt/tarantool/backups
+cartridge_fetch_backups: false
+cartridge_fetch_backups_dir: backups/

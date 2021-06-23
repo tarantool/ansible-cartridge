@@ -163,6 +163,9 @@ SCHEMA = {
     'cartridge_eval_with_retries': bool,
     'cartridge_eval_retries': int,
     'cartridge_eval_delay': int,
+    'cartridge_instances_backups_dir': str,
+    'cartridge_fetch_backups': bool,
+    'cartridge_fetch_backups_dir': str,
     'config': {
         'advertise_uri': str,
         'memtx_memory': int,
