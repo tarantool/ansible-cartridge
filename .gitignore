@@ -264,3 +264,6 @@ $RECYCLE.BIN/
 # Ignore all local history of files
 .history
 .ionide
+
+# Ignore backups fetched in molecule test
+molecule/backup/backups/
