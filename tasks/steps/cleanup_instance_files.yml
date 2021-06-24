@@ -1,6 +1,6 @@
 ---
 
-- name: 'Check that instance is not started'
+- name: 'Check that instance is not running'
   cartridge_check_instance_not_started:
     console_sock: '{{ instance_info.console_sock }}'
   register: check_instance_not_started_res
@@ -17,8 +17,9 @@
   find:
     file_type: any
     hidden: true
+    use_regex: true
     paths: '{{ instance_info.dirs_to_remove_on_cleanup }}'
-    excludes: '{{ ["config", ".tarantool.cookie"] + cartridge_cleanup_excluded_paths }}'
+    excludes: '{{ ["config", ".tarantool.cookie"] + cartridge_paths_to_keep_on_cleanup }}'
   register: paths_to_remove_on_cleanup
 
 - name: 'Cleanup instance directories'

@@ -9,7 +9,7 @@ argument_spec = {
 
 def check_state(params):
     if helpers.is_instance_started(params['console_sock']):
-        return helpers.ModuleRes(failed=True, msg='instance is not stopped')
+        return helpers.ModuleRes(failed=True, msg="instance shouldn't be running")
 
     return helpers.ModuleRes(changed=False)
 

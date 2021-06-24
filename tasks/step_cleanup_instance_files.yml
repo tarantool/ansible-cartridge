@@ -6,4 +6,4 @@
     - cartridge-replicasets
     - cartridge-config
 
-- import_tasks: 'steps/cleanup_instance.yml'
+- import_tasks: 'steps/cleanup_instance_files.yml'

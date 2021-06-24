@@ -12,7 +12,7 @@ README.md to use the newest tag with new release
 
 ### Added
 
-- Step `cleanup_instance` to clean up data of stopped instance.
+- Step `cleanup_instance_files` to clean up data of stopped instance.
 
 ### Changed
 

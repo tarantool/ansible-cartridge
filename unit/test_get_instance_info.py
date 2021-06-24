@@ -12,11 +12,12 @@ from library.cartridge_get_instance_info import get_instance_systemd_service
 from library.cartridge_get_instance_info import get_multiversion_dist_dir
 
 
-def call_get_instance_info(app_name, instance_name, instance_vars):
+def call_get_instance_info(app_name, instance_name, instance_vars, paths_to_keep_on_cleanup=None):
     return get_instance_info({
         'app_name': app_name,
         'instance_name': instance_name,
         'instance_vars': instance_vars,
+        'paths_to_keep_on_cleanup': paths_to_keep_on_cleanup or [],
     })
 
 
@@ -339,3 +340,64 @@ class TestGetInstanceInfo(unittest.TestCase):
                 'some/wal/dir/myapp-stateboard',
             ],
         })
+
+    def test_paths_to_keep_on_cleanup(self):
+        app_name = 'myapp'
+        instance_name = 'instance-1'
+        instance_vars = {
+            'cartridge_package_path': 'myapp-0.1.0-1.rpm',
+            'cartridge_conf_dir': 'some/conf/dir',
+            'cartridge_run_dir': 'some/run/dir',
+            'cartridge_data_dir': 'some/data/dir',
+            'cartridge_memtx_dir_parent': 'some/memtx/dir',
+            'cartridge_vinyl_dir_parent': 'some/vinyl/dir',
+            'cartridge_wal_dir_parent': 'some/wal/dir',
+            'cartridge_app_install_dir': 'some/install/dir',
+            'cartridge_app_instances_dir': 'some/instances/dir',
+            'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
+            'cartridge_multiversion': True,
+            'stateboard': False,
+        }
+
+        res = call_get_instance_info(app_name, instance_name, instance_vars)
+        self.assertEqual(res.fact['files_to_remove_on_cleanup'], [
+            'some/run/dir/myapp.instance-1.control',
+            'some/run/dir/myapp.instance-1.pid',
+        ])
+        self.assertEqual(res.fact['dirs_to_remove_on_cleanup'], [
+            'some/data/dir/myapp.instance-1',
+            'some/memtx/dir/myapp.instance-1',
+            'some/vinyl/dir/myapp.instance-1',
+            'some/wal/dir/myapp.instance-1',
+        ])
+
+        res = call_get_instance_info(app_name, instance_name, instance_vars, [
+            r'.*.control',
+            r'myapp.instance-1.pid',
+            r'some/data/dir/',
+            r'vinyl/dir',
+        ])
+        self.assertFalse(res.failed)
+        self.assertEqual(res.fact['files_to_remove_on_cleanup'], [])
+        self.assertEqual(res.fact['dirs_to_remove_on_cleanup'], [
+            'some/memtx/dir/myapp.instance-1',
+            'some/wal/dir/myapp.instance-1',
+        ])
+
+        res = call_get_instance_info(app_name, instance_name, instance_vars, [
+            r'.*.contr',
+            r'instance-1.pid',
+            r'som',
+            r'ome/wal/dir',
+        ])
+        self.assertFalse(res.failed)
+        self.assertEqual(res.fact['files_to_remove_on_cleanup'], [
+            'some/run/dir/myapp.instance-1.control',
+            'some/run/dir/myapp.instance-1.pid',
+        ])
+        self.assertEqual(res.fact['dirs_to_remove_on_cleanup'], [
+            'some/data/dir/myapp.instance-1',
+            'some/memtx/dir/myapp.instance-1',
+            'some/vinyl/dir/myapp.instance-1',
+            'some/wal/dir/myapp.instance-1',
+        ])

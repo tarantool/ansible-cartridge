@@ -6,7 +6,7 @@ cartridge_app_name: null
 cartridge_cluster_cookie: null
 cartridge_not_save_cookie_in_app_config: false
 cartridge_remove_temporary_files: false
-cartridge_cleanup_excluded_paths: []
+cartridge_paths_to_keep_on_cleanup: []
 
 # Role scenario configuration
 

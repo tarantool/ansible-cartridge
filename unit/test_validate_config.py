@@ -139,7 +139,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_scenario',
                 'cartridge_custom_steps',
                 'cartridge_eval_args',
-                'cartridge_cleanup_excluded_paths',
+                'cartridge_paths_to_keep_on_cleanup',
             }
         }
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import re
 
 from ansible.module_utils.helpers import Helpers as helpers
 
@@ -8,6 +9,7 @@ argument_spec = {
     'app_name': {'required': False, 'type': 'str'},
     'instance_name': {'required': True, 'type': 'str'},
     'instance_vars': {'required': True, 'type': 'dict'},
+    'paths_to_keep_on_cleanup': {'required': False, 'type': 'list', 'default': []},
 }
 
 
@@ -44,10 +46,31 @@ def get_multiversion_dist_dir(install_dir, package_path):
     return os.path.join(install_dir, package_name_version)
 
 
+def filter_paths_by_regex_list(paths_list, regex_list):
+    new_list = []
+    for path in paths_list:
+        should_kept = False
+        for path_to_keep in regex_list:
+            if re.search(
+                r'(^|{sep}){path}({sep}|$)'.format(
+                    sep=os.path.sep,
+                    path=path_to_keep.strip(os.path.sep),
+                ),
+                path,
+            ) is not None:
+                should_kept = True
+                break
+        if not should_kept:
+            new_list.append(path)
+
+    return new_list
+
+
 def get_instance_info(params):
     app_name = params['app_name']
     instance_name = params['instance_name']
     instance_vars = params['instance_vars']
+    paths_to_keep_on_cleanup = params['paths_to_keep_on_cleanup']
 
     instance_info = {
         'paths_to_remove_on_expel': set(),
@@ -146,8 +169,15 @@ def get_instance_info(params):
         )
 
     instance_info['paths_to_remove_on_expel'] = list(sorted(instance_info['paths_to_remove_on_expel']))
-    instance_info['files_to_remove_on_cleanup'] = list(sorted(instance_info['files_to_remove_on_cleanup']))
-    instance_info['dirs_to_remove_on_cleanup'] = list(sorted(instance_info['dirs_to_remove_on_cleanup']))
+
+    instance_info['files_to_remove_on_cleanup'] = list(sorted(filter_paths_by_regex_list(
+        instance_info['files_to_remove_on_cleanup'],
+        paths_to_keep_on_cleanup,
+    )))
+    instance_info['dirs_to_remove_on_cleanup'] = list(sorted(filter_paths_by_regex_list(
+        instance_info['dirs_to_remove_on_cleanup'],
+        paths_to_keep_on_cleanup,
+    )))
 
     return helpers.ModuleRes(changed=False, fact=instance_info)
 

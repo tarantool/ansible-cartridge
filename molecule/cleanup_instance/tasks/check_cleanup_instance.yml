@@ -14,15 +14,15 @@
     name: ansible-cartridge
   vars:
     cartridge_scenario:
-      - cleanup_instance
+      - cleanup_instance_files
 
 - name: 'Check message of cleanup error'
   assert:
-    fail_msg: 'cleanup should be failed because instance is not stopped'
-    success_msg: 'cleanup failed because instance is not stopped'
+    fail_msg: "cleanup should be failed because instance shouldn't be running"
+    success_msg: "cleanup failed because instance shouldn't be running"
     that:
       - check_instance_not_started_res is failed
-      - check_instance_not_started_res.msg == 'instance is not stopped'
+      - check_instance_not_started_res.msg == "instance shouldn't be running"
 
 - name: 'Cleanup instance'
   import_role:
@@ -30,7 +30,7 @@
   vars:
     cartridge_scenario:
       - stop_instance
-      - cleanup_instance
+      - cleanup_instance_files
       - check_files_removed
       - start_instance
       - wait_instance_started
