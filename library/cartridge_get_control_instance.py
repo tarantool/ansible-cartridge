@@ -13,11 +13,15 @@ GET_TWOPHASE_COMMIT_VERSION_TIMEOUT = 60
 
 
 def get_membership_members(control_console):
-    members, _ = control_console.eval_res_err('''
+    members, err = control_console.eval_res_err('''
         return require('membership').members()
     ''')
+    if err is not None:
+        return None, "Impossible to get membership members: %s" % err
+    if not members:
+        return None, "No members in membership"
 
-    return members
+    return members, None
 
 
 def get_twophase_commit_versions(control_console, advertise_uris):
@@ -91,12 +95,49 @@ def candidate_is_ok(uri, names_by_uris, module_hostvars):
 
 
 def get_control_instance_name(module_hostvars, play_hosts, control_console):
-    members = get_membership_members(control_console)
+    members, err = get_membership_members(control_console)
+    if err is not None:
+        return None, err
 
-    if not members:
-        return None, "Membership is empty"
+    strange_members_uris = []
+    members_without_uuid = []
+    members_by_uuid = {}
 
-    # try to find joined alive instance that isn't set to be expelled
+    for uri, member in sorted(members.items()):
+        if not member:
+            # it's impossible :)
+            strange_members_uris.append(uri)
+            continue
+
+        member['uri'] = uri
+        member_payload = member.get('payload')
+        member_incarnation = member.get('incarnation')
+        member_status = member.get('status')
+
+        if member_status == 'left':
+            # ignore it, because it was expelled
+            continue
+
+        if not member_incarnation or not member_status or not member_payload or not member_payload.get('alias'):
+            # it's possible for old instances, but it can be an error
+            strange_members_uris.append(uri)
+            continue
+
+        member_uuid = member_payload.get('uuid')
+        if not member_uuid:
+            members_without_uuid.append(member)
+            continue
+
+        existing_member = members_by_uuid.get(member_uuid)
+        if existing_member and existing_member['incarnation'] > member_incarnation:
+            # ignore it, because it's old
+            continue
+
+        members_by_uuid[member_uuid] = member
+
+    if strange_members_uris:
+        helpers.warn('Incorrect members with the following URIs ignored: %s' % ', '.join(strange_members_uris))
+
     alive_instances_uris = set()
     joined_instances_uris = set()
     not_joined_instances_uris = set()
@@ -104,38 +145,26 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
 
     names_by_uris = {}
 
-    for uri, member in sorted(members.items()):
-        if not member:
-            return None, "Membership contains empty member with URI %s" % uri
+    all_correct_members = list(members_by_uuid.items()) + list(map(lambda m: (None, m), members_without_uuid))
+    for uuid, member in all_correct_members:
+        uri = member['uri']
+        status = member['status']
+        alias = member['payload']['alias']
 
-        member_payload = member.get('payload')
-        if member_payload is None:
-            return None, "Instance with URI %s doesn't contain payload" % uri
-
-        if not member_payload:
-            return None, "Instance with URI %s has empty payload" % uri
-
-        instance_name = member_payload.get('alias')
-        if instance_name is None:
-            return None, "Instance with URI %s payload doesn't contain alias" % uri
-
-        instance_vars = module_hostvars.get(instance_name)
+        instance_vars = module_hostvars.get(alias)
         if instance_vars is None:
-            return None, "Membership contains instance %s that isn't described in inventory" % instance_name
+            return None, "Membership contains instance %s that isn't described in inventory" % alias
 
-        names_by_uris[uri] = instance_name
+        names_by_uris[uri] = alias
 
-        member_status = member.get('status')
-        member_uuid = member_payload.get('uuid')
-
-        if member_status == 'alive':
+        if status == 'alive':
             alive_instances_uris.add(uri)
 
-        if member_uuid is not None:
+        if uuid is not None:
             joined_instances_uris.add(uri)
         else:
             not_joined_instances_uris.add(uri)
-            if instance_name in play_hosts and instance_vars.get('replicaset_alias') is not None:
+            if alias in play_hosts and instance_vars.get('replicaset_alias') is not None:
                 to_be_joined_instances.add(uri)
 
     if joined_instances_uris:
