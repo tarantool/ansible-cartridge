@@ -173,6 +173,13 @@ temporary_files: []
 needs_restart: null
 alive_not_expelled_instance: null
 
+# Temp facts
+
+cached_facts_res: null
+cached_facts: null
+single_instances_for_each_machine_res: null
+single_instances_for_each_machine: null
+
 # Eval params
 
 cartridge_eval_file: null

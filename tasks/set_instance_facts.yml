@@ -133,6 +133,13 @@
       needs_restart: '{{ needs_restart }}'
       alive_not_expelled_instance: '{{ alive_not_expelled_instance }}'
 
+      # Temp facts
+
+      cached_facts_res: '{{ cached_facts_res }}'
+      cached_facts: '{{ cached_facts }}'
+      single_instances_for_each_machine_res: '{{ single_instances_for_each_machine_res }}'
+      single_instances_for_each_machine: '{{ single_instances_for_each_machine }}'
+
       # Eval params
 
       cartridge_eval_file: '{{ cartridge_eval_file }}'

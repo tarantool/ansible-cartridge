@@ -51,7 +51,7 @@
   set_fact:
     instance_info: '{{ instance_info_res.fact }}'
 
-- name: 'Get shortened vars sets'
+- name: 'Cache facts for different targets'
   cartridge_get_cached_facts:
     hostvars: '{{ hostvars }}'
   run_once: true
@@ -59,7 +59,7 @@
   become: false
   register: cached_facts_res
 
-- name: 'Cache facts for different targets'
+- name: 'Set "cached_facts" fact'
   set_fact:
     cached_facts: '{{ cached_facts_res.facts }}'
   run_once: true
