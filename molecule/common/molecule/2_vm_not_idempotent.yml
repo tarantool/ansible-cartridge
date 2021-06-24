@@ -42,6 +42,9 @@ provisioner:
   inventory:
     links:
       hosts: hosts.yml
+  config_options:
+    defaults:
+      callback_whitelist: profile_tasks
 
 verifier:
   name: testinfra
