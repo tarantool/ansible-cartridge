@@ -1,9 +1,9 @@
 ---
 
 - name: 'Check that instance is not running'
-  cartridge_check_instance_not_started:
+  cartridge_check_instance_not_running:
     console_sock: '{{ instance_info.console_sock }}'
-  register: check_instance_not_started_res
+  register: check_instance_not_running_res
 
 - name: 'Cleanup instance files'
   file:

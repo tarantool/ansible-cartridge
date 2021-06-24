@@ -138,7 +138,7 @@ class TestGetNeedsRestart(unittest.TestCase):
         self.assertFalse(res.failed, res.msg)
         self.assertTrue(res.fact)
 
-    def test_instance_not_started(self):
+    def test_instance_not_running(self):
         # console sock doesn't exists
         self.instance.remove_file(self.console_sock)
 

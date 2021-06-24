@@ -27,7 +27,7 @@ class TestManageInstance(unittest.TestCase):
 
         self.instance.start()
 
-    def test_instance_not_started(self):
+    def test_instance_not_running(self):
         # console sock doesn't exists
         self.instance.clear_calls('box_cfg')
         self.instance.remove_file(self.console_sock)

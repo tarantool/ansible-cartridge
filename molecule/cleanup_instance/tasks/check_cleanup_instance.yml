@@ -21,8 +21,8 @@
     fail_msg: "cleanup should be failed because instance shouldn't be running"
     success_msg: "cleanup failed because instance shouldn't be running"
     that:
-      - check_instance_not_started_res is failed
-      - check_instance_not_started_res.msg == "instance shouldn't be running"
+      - check_instance_not_running_res is failed
+      - check_instance_not_running_res.msg == "instance shouldn't be running"
 
 - name: 'Cleanup instance'
   import_role:
