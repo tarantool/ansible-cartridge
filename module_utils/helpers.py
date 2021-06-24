@@ -460,7 +460,7 @@ def get_control_console_if_started(console_sock, strict_mode=False):
         return None, str(e)
 
 
-def is_instance_started(console_sock):
+def is_instance_running(console_sock):
     _, err = get_control_console_if_started(console_sock, strict_mode=True)
     return err is None
 
@@ -626,7 +626,7 @@ class Helpers:
     execute_module = staticmethod(execute_module)
     get_control_console = staticmethod(get_control_console)
     get_control_console_if_started = staticmethod(get_control_console_if_started)
-    is_instance_started = staticmethod(is_instance_started)
+    is_instance_running = staticmethod(is_instance_running)
     is_expelled = staticmethod(is_expelled)
     is_stateboard = staticmethod(is_stateboard)
     get_instance_id = staticmethod(get_instance_id)
