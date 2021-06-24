@@ -10,6 +10,10 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+### Added
+
+- Step `cleanup_instance_files` to clean up data of stopped instance.
+
 ### Changed
 
 - Hosts uniqueness considers `ansible_port`, not only `ansible_host`

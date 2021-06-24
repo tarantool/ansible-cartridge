@@ -31,6 +31,7 @@
   cartridge_get_instance_info:
     app_name: '{{ cartridge_app_name }}'
     instance_name: '{{ inventory_hostname }}'
+    paths_to_keep_on_cleanup: '{{ cartridge_paths_to_keep_on_cleanup }}'
     instance_vars:
       cartridge_package_path: '{{ cartridge_package_path }}'
       cartridge_app_install_dir: '{{ cartridge_app_install_dir }}'

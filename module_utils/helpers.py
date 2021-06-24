@@ -275,7 +275,7 @@ class CartridgeException(Exception):
         super(CartridgeException, self).__init__(message)
         self.code = code
 
-    def is_instance_not_started_error(self):
+    def is_instance_not_running_error(self):
         return self.code in [
             CartridgeErrorCodes.SOCKET_NOT_FOUND,
             CartridgeErrorCodes.FAILED_TO_CONNECT_TO_SOCKET,
@@ -453,11 +453,16 @@ def get_control_console_if_started(console_sock, strict_mode=False):
     try:
         return get_control_console(console_sock), None
     except CartridgeException as e:
-        if not strict_mode and e.is_instance_not_started_error():
+        if not strict_mode and e.is_instance_not_running_error():
             # Impossible to connect to socket
             return None, None
 
         return None, str(e)
+
+
+def is_instance_running(console_sock):
+    _, err = get_control_console_if_started(console_sock, strict_mode=True)
+    return err is None
 
 
 def is_expelled(host_vars):
@@ -621,6 +626,7 @@ class Helpers:
     execute_module = staticmethod(execute_module)
     get_control_console = staticmethod(get_control_console)
     get_control_console_if_started = staticmethod(get_control_console_if_started)
+    is_instance_running = staticmethod(is_instance_running)
     is_expelled = staticmethod(is_expelled)
     is_stateboard = staticmethod(is_stateboard)
     get_instance_id = staticmethod(get_instance_id)

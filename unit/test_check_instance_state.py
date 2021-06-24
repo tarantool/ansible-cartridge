@@ -39,7 +39,7 @@ class TestInstanceStarted(unittest.TestCase):
 
         self.instance.start()
 
-    def template_test_instance_not_started(self, stateboard):
+    def template_test_instance_not_running(self, stateboard):
         # console sock doesn't exists
         self.instance.remove_file(self.console_sock)
         res = call_check_instance_state(self.console_sock, stateboard)
@@ -54,8 +54,8 @@ class TestInstanceStarted(unittest.TestCase):
         self.assertTrue(res.failed)
         self.assertIn('Failed to connect to socket', res.msg)
 
-    def test_stateboard_not_started(self):
-        self.template_test_instance_not_started(stateboard=True)
+    def test_stateboard_not_running(self):
+        self.template_test_instance_not_running(stateboard=True)
 
     def test_stateboard_not_box(self):
         # box.cfg == function
@@ -80,8 +80,8 @@ class TestInstanceStarted(unittest.TestCase):
         res = call_check_instance_state(self.console_sock, stateboard=True)
         self.assertFalse(res.failed)
 
-    def test_instance_not_started(self):
-        self.template_test_instance_not_started(stateboard=False)
+    def test_instance_not_running(self):
+        self.template_test_instance_not_running(stateboard=False)
 
     def test_instance_operation_error(self):
         # require('cartridge.confapplier').get_state() == 'OperationError'

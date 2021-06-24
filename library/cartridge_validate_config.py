@@ -154,6 +154,7 @@ SCHEMA = {
     'cartridge_install_tarantool_for_tgz': bool,
     'cartridge_keep_num_latest_dists': int,
     'cartridge_remove_temporary_files': bool,
+    'cartridge_paths_to_keep_on_cleanup': list,
     'zone': str,
     'cartridge_eval_body': str,
     'cartridge_eval_file': str,

@@ -12,6 +12,9 @@ vshard bootstrapping, and failover.
 * `cartridge_remove_temporary_files` (`boolean`, optional, default: `false`):
   indicates if temporary files should be removed
   (more details in description of [`cleanup` step API](/doc/scenario.md#cleanup));
+* `cartridge_paths_to_keep_on_cleanup` (`list-of-strings`, optional, default: `[]`) - list of
+  folders and files in working directory that should be kept on instance cleanup
+  (you can use Python regular expressions here).
 
 ## Role scenario configuration
 

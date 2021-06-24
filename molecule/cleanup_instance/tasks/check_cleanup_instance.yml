@@ -1,0 +1,40 @@
+---
+
+- name: 'Check that data exists'
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_scenario:
+      - eval
+    cartridge_eval_body: 'assert(box.space.customer:get(12345) ~= nil)'
+
+- name: 'Cleanup not stopped instance'
+  ignore_errors: true
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_scenario:
+      - cleanup_instance_files
+
+- name: 'Check message of cleanup error'
+  assert:
+    fail_msg: "cleanup should be failed because instance shouldn't be running"
+    success_msg: "cleanup failed because instance shouldn't be running"
+    that:
+      - check_instance_not_running_res is failed
+      - check_instance_not_running_res.msg == "instance shouldn't be running"
+
+- name: 'Cleanup instance'
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_scenario:
+      - stop_instance
+      - cleanup_instance_files
+      - check_files_removed
+      - start_instance
+      - wait_instance_started
+      - wait_members_alive
+      - wait_cluster_has_no_issues
+      - eval
+    cartridge_eval_body: 'assert(box.space.customer:get(12345) ~= nil)'

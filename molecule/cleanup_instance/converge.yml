@@ -1,0 +1,45 @@
+---
+
+- name: 'Write some data on storages'
+  hosts: storage-1
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - eval
+    cartridge_eval_body: |
+      local space = box.schema.space.create('customer', {
+        format = {
+          {'customer_id', 'unsigned'},
+          {'bucket_id', 'unsigned'},
+          {'name', 'string'},
+        },
+        if_not_exists = true,
+      })
+      space:create_index('customer_id', {
+        parts = { 'customer_id' },
+        if_not_exists = true,
+      })
+      box.once('insert test tuple', function()
+        space:insert({ 12345, 1, 'Test name!'})
+      end)
+      assert(space:get(12345) ~= nil)
+  roles:
+    - ansible-cartridge
+
+- name: 'Check replica cleanup'
+  hosts: storage-1-replica
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - import_tasks: 'tasks/check_cleanup_instance.yml'
+
+- name: 'Check master cleanup'
+  hosts: storage-1
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - import_tasks: 'tasks/check_cleanup_instance.yml'
