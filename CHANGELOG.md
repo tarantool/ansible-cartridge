@@ -10,6 +10,10 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+### Fixed
+
+- Long facts caching when playbook has two or more role imports.
+
 ### Added
 
 - Step `cleanup_instance_files` to clean up data of stopped instance.
