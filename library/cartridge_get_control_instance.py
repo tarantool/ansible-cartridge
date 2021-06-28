@@ -99,14 +99,14 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
     if err is not None:
         return None, err
 
-    strange_members_uris = []
+    alien_members_uris = []
     members_without_uuid = []
     members_by_uuid = {}
 
     for uri, member in sorted(members.items()):
         if not member:
             # it's impossible :)
-            strange_members_uris.append(uri)
+            alien_members_uris.append(uri)
             continue
 
         member['uri'] = uri
@@ -120,7 +120,7 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
 
         if not member_incarnation or not member_status or not member_payload or not member_payload.get('alias'):
             # it's possible for old instances, but it can be an error
-            strange_members_uris.append(uri)
+            alien_members_uris.append(uri)
             continue
 
         member_uuid = member_payload.get('uuid')
@@ -135,8 +135,8 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
 
         members_by_uuid[member_uuid] = member
 
-    if strange_members_uris:
-        helpers.warn('Incorrect members with the following URIs ignored: %s' % ', '.join(strange_members_uris))
+    if alien_members_uris:
+        helpers.warn('Incorrect members with the following URIs ignored: %s' % ', '.join(alien_members_uris))
 
     alive_instances_uris = set()
     joined_instances_uris = set()
@@ -145,11 +145,12 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
 
     names_by_uris = {}
 
-    all_correct_members = list(members_by_uuid.items()) + list(map(lambda m: (None, m), members_without_uuid))
-    for uuid, member in all_correct_members:
+    all_correct_members = list(members_by_uuid.values()) + members_without_uuid
+    for member in all_correct_members:
         uri = member['uri']
         status = member['status']
         alias = member['payload']['alias']
+        uuid = member['payload'].get('uuid')
 
         instance_vars = module_hostvars.get(alias)
         if instance_vars is None:
