@@ -26,9 +26,20 @@
 
     - name: 'Check environment'
       assert:
-        msg: 'Received bad environment'
+        fail_msg: 'Received bad environment'
         success_msg: 'Received environment is OK'
         that: eval_res == []
+
+    - name: 'Get info about service directory'
+      stat:
+        path: '/etc/systemd/system/{{ instance_info.systemd_service_dir }}'
+      register: stat_res
+
+    - name: 'Check service directory'
+      assert:
+        fail_msg: "Directory should exist"
+        success_msg: "Directory shouldn't exist"
+        that: not stat_res.stat.exists
 
 - name: 'Get custom environment'
   hosts: cluster
@@ -58,9 +69,20 @@
 
     - name: 'Check environment'
       assert:
-        msg: 'Received bad environment'
+        fail_msg: 'Received bad environment'
         success_msg: 'Received environment is OK'
         that: eval_res == [instance_info.instance_id]
+
+    - name: 'Get info about service environment file'
+      stat:
+        path: '/etc/systemd/system/{{ instance_info.systemd_service_env_file }}'
+      register: stat_res
+
+    - name: 'Check service environment file'
+      assert:
+        fail_msg: "Environment file shouldn't exist"
+        success_msg: "Environment file should exist"
+        that: stat_res.stat.exists
 
 - name: 'Get removed environment'
   hosts: cluster
@@ -89,6 +111,17 @@
 
     - name: 'Check environment'
       assert:
-        msg: 'Received bad environment'
+        fail_msg: 'Received bad environment'
         success_msg: 'Received environment is OK'
         that: eval_res == []
+
+    - name: 'Get info about service directory'
+      stat:
+        path: '/etc/systemd/system/{{ instance_info.systemd_service_dir }}'
+      register: stat_res
+
+    - name: 'Check service directory'
+      assert:
+        fail_msg: "Directory should exist"
+        success_msg: "Directory shouldn't exist"
+        that: not stat_res.stat.exists

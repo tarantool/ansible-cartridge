@@ -2,28 +2,30 @@
 
 - name: 'Create directory for systemd unit files extensions'
   file:
-    state: directory
-    recurse: true
+    state: '{{ "directory" if cartridge_extra_env else "absent" }}'
+    recurse: '{{ true if cartridge_extra_env else false }}'
     path: '{{ (cartridge_systemd_dir, instance_info.systemd_service_dir) | cartridge_path_join }}'
+  register: systemd_service_dir_res
 
 - name: 'Extend systemd unit files with environment'
   copy:
     dest: '{{ (cartridge_systemd_dir, instance_info.systemd_service_env_file) | cartridge_path_join }}'
     content: |
-      {% if cartridge_extra_env %}
       [Service]
       {% for key, value in cartridge_extra_env.items() %}
       Environment={{ key }}={{ value }}
       {% endfor %}
-      {% endif %}
-  register: systemd_unit_env_res
+  when:
+    - cartridge_extra_env is not none
+    - cartridge_extra_env | length > 0
+  register: systemd_service_env_res
 
 - name: 'Reload systemd daemon'
   systemd:
     daemon_reload: true
-  when: systemd_unit_env_res is changed
+  when: systemd_service_dir_res is changed or systemd_service_env_res is changed
 
 - name: 'Set "needs_restart" fact'
   set_fact:
     needs_restart: true
-  when: systemd_unit_env_res is changed
+  when: systemd_service_dir_res is changed or systemd_service_env_res is changed
