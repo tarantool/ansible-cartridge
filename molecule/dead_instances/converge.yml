@@ -293,6 +293,10 @@
         cartridge_scenario:
           - set_control_instance
 
+    - name: 'Debug select control instance result'
+      debug: var=control_instance_res
+      run_once: true
+
     - name: 'Check setting control instance failed'
       assert:
         msg: 'Setting control instance should fail'

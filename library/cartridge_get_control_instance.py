@@ -114,10 +114,6 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
         member_incarnation = member.get('incarnation')
         member_status = member.get('status')
 
-        if member_status == 'left':
-            # ignore it, because it was expelled
-            continue
-
         if not member_incarnation or not member_status or not member_payload or not member_payload.get('alias'):
             # it's possible for old instances, but it can be an error
             alien_members_uris.append(uri)
@@ -153,7 +149,7 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
         uuid = member['payload'].get('uuid')
 
         instance_vars = module_hostvars.get(alias)
-        if instance_vars is None:
+        if instance_vars is None and status != 'left':
             return None, "Membership contains instance %s that isn't described in inventory" % alias
 
         names_by_uris[uri] = alias
