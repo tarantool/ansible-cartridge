@@ -1,6 +1,6 @@
 ---
 
-- name: 'Stop current backup'
+- name: 'Stop instance backup'
   cartridge_backup_instance:
     console_sock: '{{ instance_info.console_sock }}'
     stop_only: true

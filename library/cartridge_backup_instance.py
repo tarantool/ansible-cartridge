@@ -95,7 +95,7 @@ def call_backup(params):
     start_only = params['start_only']
     stop_only = params['stop_only']
 
-    assert (any(not x for x in [start_only, stop_only]))
+    assert not(start_only and stop_only), "impossible to use 'start_only' with 'stop_only'"
 
     console_sock = params['console_sock']
     control_console = helpers.get_control_console(console_sock)
@@ -103,30 +103,31 @@ def call_backup(params):
     if not helpers.box_cfg_was_called(control_console):
         return helpers.ModuleRes(failed=True, msg="box.cfg wasn't called yet")
 
-    if stop_only:  # STOP ONLY
-        err = backup_stop(control_console)
+    backup_files = None
+    backup_archive_path = None
+
+    # START
+    if not stop_only:
+        backup_files, err = backup_start(control_console, params)
         if err is not None:
             return helpers.ModuleRes(failed=True, msg=err)
-        return helpers.ModuleRes(failed=False, changed=True)
 
-    # start backup
-    backup_files, err = backup_start(control_console, params)
-    if err is not None:
-        return helpers.ModuleRes(failed=True, msg=err)
-
-    if start_only:  # START ONLY
+    if start_only:
         return helpers.ModuleRes(failed=False, changed=True, fact={
             'backup_files': backup_files,
         })
 
-    # create backup archive
-    instance_id = params['instance_id']
-    backups_dir = params['backups_dir']
-    backup_archive_path = backup_pack(instance_id, backups_dir, backup_files)
+    # ARCHIVE
+    if not stop_only:
+        instance_id = params['instance_id']
+        backups_dir = params['backups_dir']
+        backup_archive_path = backup_pack(instance_id, backups_dir, backup_files)
 
-    # stop backup
+    # STOP
     err = backup_stop(control_console)
     if err is not None:
+        if stop_only:
+            return helpers.ModuleRes(failed=True, msg=err)
         helpers.warn("Failed to stop backup: %s" % err)
 
     return helpers.ModuleRes(failed=False, changed=True, fact={

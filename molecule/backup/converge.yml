@@ -21,8 +21,6 @@
   gather_facts: false
   tasks:
     - include_tasks: include/check_backup.yml
-      vars:
-        fetch_backups: false
 
     - name: Check that fetching archive was skipped
       assert:
@@ -38,7 +36,7 @@
   tasks:
     - include_tasks: include/check_backup.yml
       vars:
-        fetch_backups: true
+        cartridge_fetch_backups: true
 
     - name: Check that fetching archive wasn't skipped
       assert:
@@ -54,4 +52,4 @@
   tasks:
     - include_tasks: include/check_backup_start_stop.yml
       vars:
-        fetch_backups: true
+        cartridge_fetch_backups: true

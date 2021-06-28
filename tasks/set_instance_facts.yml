@@ -133,6 +133,8 @@
       temporary_files: '{{ temporary_files }}'
       needs_restart: '{{ needs_restart }}'
       alive_not_expelled_instance: '{{ alive_not_expelled_instance }}'
+      instance_backup_files: '{{ instance_backup_files }}'
+      backup_archive_path: '{{ backup_archive_path }}'
 
       # Temp facts
 
@@ -153,6 +155,6 @@
 
       # Backups params
 
-      cartridge_instances_backups_dir: '{{ cartridge_instances_backups_dir }}'
+      cartridge_remote_backups_dir: '{{ cartridge_remote_backups_dir }}'
       cartridge_fetch_backups: '{{ cartridge_fetch_backups }}'
       cartridge_fetch_backups_dir: '{{ cartridge_fetch_backups_dir }}'

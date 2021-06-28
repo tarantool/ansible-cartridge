@@ -2,7 +2,7 @@
 
 - name: 'Create backups dir'
   file:
-    path: '{{ cartridge_instances_backups_dir }}'
+    path: '{{ cartridge_remote_backups_dir }}'
     owner: '{{ cartridge_app_user }}'
     group: '{{ cartridge_app_group }}'
     state: directory

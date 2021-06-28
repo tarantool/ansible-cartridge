@@ -7,6 +7,8 @@
     temporary_files: []
     needs_restart: null
     alive_not_expelled_instance: null
+    instance_backup_files: null
+    backup_archive_path: null
   run_once: true
   delegate_to: localhost
   become: false

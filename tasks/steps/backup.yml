@@ -2,7 +2,7 @@
 
 - name: 'Create backups dir'
   file:
-    path: '{{ cartridge_instances_backups_dir }}'
+    path: '{{ cartridge_remote_backups_dir }}'
     owner: '{{ cartridge_app_user }}'
     group: '{{ cartridge_app_group }}'
     state: directory
@@ -13,7 +13,7 @@
   cartridge_backup_instance:
     instance_id: '{{ instance_info.instance_id }}'
     stateboard: '{{ stateboard }}'
-    backups_dir: '{{ cartridge_instances_backups_dir }}'
+    backups_dir: '{{ cartridge_remote_backups_dir }}'
     console_sock: '{{ instance_info.console_sock }}'
     instance_conf_file: '{{ instance_info.conf_file }}'
     app_conf_file: '{{ instance_info.app_conf_file }}'

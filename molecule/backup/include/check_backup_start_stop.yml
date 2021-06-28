@@ -2,19 +2,6 @@
 
 # START
 
-- name: 'Clear facts'
-  set_fact:
-    instance_backup_files: null
-
-- name: 'Stop current backup'
-  import_role:
-    name: ansible-cartridge
-  vars:
-    cartridge_scenario:
-      - eval
-    cartridge_eval_body: |
-      box.backup.stop()
-
 - name: 'Call backup_start'
   import_role:
     name: ansible-cartridge
@@ -28,7 +15,7 @@
     files_list: '{{ instance_backup_files }}'
     stateboard: '{{ stateboard }}'
 
-- name: 'Check that box.backup.start() was called'
+- name: 'Try to start a new backup'
   import_role:
     name: ansible-cartridge
   vars:
@@ -38,7 +25,7 @@
       local ok, err = pcall(box.backup.start)
       return ok, err
 
-- name: 'Check that box.backup.start() was called'
+- name: 'Check that box.backup.start() was already called'
   assert:
     fail_msg: 'box.backup.start() was not called'
     success_msg: 'box.backup.start() was called'
@@ -46,11 +33,14 @@
       - not eval_res[0]
       - eval_res[1] == "Backup is already in progress"
 
-# STOP
+- name: 'Check that "backup_archive_path" is empty'
+  assert:
+    fail_msg: 'backup_archive_path should be empty'
+    success_msg: 'backup_archive_path is empty'
+    that: backup_archive_path is none
 
-- name: 'Clear facts'
-  set_fact:
-    instance_backup_files: null
+
+# STOP
 
 - name: 'Call backup_stop'
   import_role:
@@ -65,7 +55,7 @@
     success_msg: 'instance_backup_files was not set'
     that: instance_backup_files is none
 
-- name: 'Check that box.backup.stop() was called'
+- name: 'Try to start a new backup'
   import_role:
     name: ansible-cartridge
   vars:
@@ -84,3 +74,9 @@
     success_msg: 'box.backup.stop() was called'
     that:
       - eval_res[0]
+
+- name: 'Check that "backup_archive_path" is empty'
+  assert:
+    fail_msg: 'backup_archive_path should be empty'
+    success_msg: 'backup_archive_path is empty'
+    that: backup_archive_path is none
