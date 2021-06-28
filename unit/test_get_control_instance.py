@@ -68,33 +68,36 @@ class TestGetControlInstance(unittest.TestCase):
         self.instance.set_membership_members([])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
-        self.assertIn("Membership is empty", res.msg)
+        self.assertIn("No members in membership", res.msg)
 
         # empty member
+        helpers.WARNINGS = []
         self.instance.set_membership_members([
             utils.get_member('empty-member', empty=True),
             utils.get_member('instance-1'),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
-        self.assertTrue(res.failed)
-        self.assertIn("Membership contains empty member with URI empty-member-uri", res.msg)
+        self.assertFalse(res.failed)
+        self.assertIn("Incorrect members with the following URIs ignored: empty-member-uri", helpers.WARNINGS)
 
         # with empty payload
+        helpers.WARNINGS = []
         self.instance.set_membership_members([
             utils.get_member('empty-payload', empty_payload=True),
             utils.get_member('instance-1'),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
-        self.assertTrue(res.failed)
-        self.assertIn("Instance with URI empty-payload-uri has empty payload", res.msg)
+        self.assertFalse(res.failed)
+        self.assertIn("Incorrect members with the following URIs ignored: empty-payload-uri", helpers.WARNINGS)
 
         # without alias
+        helpers.WARNINGS = []
         self.instance.set_membership_members([
             utils.get_member('instance-1', with_alias=False),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed)
-        self.assertIn("Instance with URI instance-1-uri payload doesn't contain alias", res.msg)
+        self.assertIn("There is no alive instances in the cluster", res.msg)
 
     def test_one_instance_without_run_dir(self):
         hostvars = get_instance_hostvars('instance-1', 'some-rpl')
@@ -193,13 +196,14 @@ class TestGetControlInstance(unittest.TestCase):
         self.assertIn("There is no alive joined instances in the cluster", res.msg)
 
         # one with UUID (but without alias)
+        helpers.WARNINGS = []
         self.instance.set_membership_members([
             utils.get_member('instance-1', with_uuid=False),
             utils.get_member('instance-2', with_uuid=True, with_alias=False),
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
-        self.assertTrue(res.failed)
-        self.assertIn("Instance with URI instance-2-uri payload doesn't contain alias", res.msg)
+        self.assertFalse(res.failed)
+        self.assertIn("Incorrect members with the following URIs ignored: instance-2-uri", helpers.WARNINGS)
 
         # both without UUID (one is selected)
         self.instance.set_membership_members([

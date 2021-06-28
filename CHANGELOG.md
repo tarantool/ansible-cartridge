@@ -22,6 +22,10 @@ README.md to use the newest tag with new release
 
 - Hosts uniqueness considers `ansible_port`, not only `ansible_host`
 
+### Fixed
+
+- Now select control instance task ignores bad instances from membership.
+
 ## [1.10.0] - 2021-06-04
 
 ### Added
