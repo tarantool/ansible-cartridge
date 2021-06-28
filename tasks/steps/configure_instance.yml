@@ -3,6 +3,10 @@
 - when: not expelled
   tags: cartridge-instances
   block:
+    - name: 'BLOCK: Extend systemd unit files'
+      include_tasks: 'blocks/extend_systemd_unit_files.yml'
+      when: cartridge_extra_env is not none
+
     - name: 'Manage instance parameters in runtime'
       cartridge_patch_instance_in_runtime:
         console_sock: '{{ instance_info.console_sock }}'

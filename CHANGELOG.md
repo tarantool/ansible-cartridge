@@ -12,7 +12,8 @@ README.md to use the newest tag with new release
 
 ### Added
 
-- Step `cleanup_instance_files` to clean up data of stopped instance.
+- Step `cleanup_instance_files` to clean up data of stopped instance;
+- Add availability to set environment variables for instance service.
 
 ### Changed
 

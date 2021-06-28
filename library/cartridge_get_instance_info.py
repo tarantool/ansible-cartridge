@@ -32,6 +32,16 @@ def get_instance_systemd_service(app_name, instance_name, stateboard=False):
     return '%s@%s' % (app_name, instance_name)
 
 
+def get_instance_systemd_service_dir(service_name):
+    if not service_name.endswith('.service'):
+        service_name += '.service'
+    return service_name + '.d'
+
+
+def get_systemd_service_env_file(service_dir):
+    return os.path.join(service_dir, 'env.conf')
+
+
 def get_multiversion_dist_dir(install_dir, package_path):
     if package_path is None:
         return None
@@ -143,6 +153,8 @@ def get_instance_info(params):
     instance_info['systemd_service'] = get_instance_systemd_service(
         app_name, instance_name, instance_vars['stateboard']
     )
+    instance_info['systemd_service_dir'] = get_instance_systemd_service_dir(instance_info['systemd_service'])
+    instance_info['systemd_service_env_file'] = get_systemd_service_env_file(instance_info['systemd_service_dir'])
 
     # tmpfiles conf
     instance_info['tmpfiles_conf'] = os.path.join(

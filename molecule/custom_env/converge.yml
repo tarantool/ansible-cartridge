@@ -1,0 +1,94 @@
+---
+
+- name: 'Get default environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - configure_instance
+      - restart_instance
+      - wait_instance_started
+      - eval
+  roles:
+    - ansible-cartridge
+
+- name: 'Print and check environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Debug environment'
+      debug:
+        msg: '{{ eval_res }}'
+
+    - name: 'Check environment'
+      assert:
+        msg: 'Received bad environment'
+        success_msg: 'Received environment is OK'
+        that: eval_res == []
+
+- name: 'Get custom environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - configure_instance
+      - restart_instance
+      - wait_instance_started
+      - eval
+    cartridge_extra_env:
+      MY_ID: '{{ instance_info.instance_id }}'
+  roles:
+    - ansible-cartridge
+
+- name: 'Print and check environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Debug environment'
+      debug:
+        msg: '{{ eval_res }}'
+
+    - name: 'Check environment'
+      assert:
+        msg: 'Received bad environment'
+        success_msg: 'Received environment is OK'
+        that: eval_res == [instance_info.instance_id]
+
+- name: 'Get removed environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - configure_instance
+      - restart_instance
+      - wait_instance_started
+      - eval
+    cartridge_extra_env: {}
+  roles:
+    - ansible-cartridge
+
+- name: 'Print and check environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Debug environment'
+      debug:
+        msg: '{{ eval_res }}'
+
+    - name: 'Check environment'
+      assert:
+        msg: 'Received bad environment'
+        success_msg: 'Received environment is OK'
+        that: eval_res == []

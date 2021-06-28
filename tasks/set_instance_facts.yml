@@ -60,6 +60,7 @@
       config: '{{ config }}'
       cartridge_runtime_params: '{{ cartridge_runtime_params }}'
       zone: '{{ zone }}'
+      cartridge_extra_env: '{{ cartridge_extra_env }}'
 
       restarted: '{{ restarted }}'
       expelled: '{{ expelled }}'

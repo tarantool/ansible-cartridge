@@ -35,6 +35,7 @@ FACTS_BY_TARGETS = {
         'cartridge_defaults',
         'cartridge_delivered_package_path',
         'cartridge_enable_tarantool_repo',
+        'cartridge_extra_env',
         'cartridge_failover',
         'cartridge_failover_params',
         'cartridge_failover_promote_params',
