@@ -7,7 +7,7 @@ import yaml
 
 # This tests protects against inattentive people, who do not completely change the variables list
 
-class TestConsistencyFacts(unittest.TestCase):
+class TestFacts(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 

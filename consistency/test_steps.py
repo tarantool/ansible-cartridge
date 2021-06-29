@@ -6,7 +6,7 @@ import unittest
 
 # This test protects against inattentive people, who do not completely change the step list
 
-class TestConsistencySteps(unittest.TestCase):
+class TestSteps(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 
