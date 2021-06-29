@@ -1,0 +1,32 @@
+---
+name: Consistency tests
+
+on: [push, pull_request]
+
+jobs:
+  consistency-tests:
+    if: |
+      github.event_name == 'push' ||
+      github.event_name == 'pull_request' && github.event.pull_request.head.repo.owner.login != 'tarantool'
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        tarantool-version: ["1.10"]
+      fail-fast: false
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Setup python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install Python requirements
+        run: pip3 install --upgrade -r requirements.txt
+
+      - name: Run linter
+        run: |
+          python3 -m flake8 consistency
+
+      - name: Run consistency tests
+        run: python3 -m unittest discover -v consistency

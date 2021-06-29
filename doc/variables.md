@@ -125,26 +125,48 @@ For more details see [scenario documentation](/doc/scenario.md).
   while two-phase commit (Cartridge 2.5+ is required);
 * `edit_topology_healthy_timeout` (`number`, default: `60`): time in seconds to wait until a cluster become
   healthy after editing topology;
-- [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.
-- `edit_topology_allow_missed_instances` (`boolean`, default: `false`) - if set, then
+* [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.
+* `edit_topology_allow_missed_instances` (`boolean`, default: `false`) - if set, then
   instances that aren't started yet are ignored on editing topology. A warning
   message is shown in case of error.
 
 ## Cluster configuration
 
-- `connect_to_membership_retries` (`number`, default: 3): retries to connect to membership;
-- `connect_to_membership_delay` (`number`, default: 5): delay before retry to connect to membership;
+* `connect_to_membership_retries` (`number`, default: 3): retries to connect to membership;
+* `connect_to_membership_delay` (`number`, default: 5): delay before retry to connect to membership;
 * `cartridge_bootstrap_vshard` (`boolean`, default: `false`): a boolean
   flag that indicates if vshard should be bootstrapped;
 * `bootstrap_vshard_retries` (`number`, default: 3): retries to bootstrap vshard;
 * `bootstrap_vshard_delay` (`number`, default: 5): delay before retry to bootstrap vshard;
 * `cartridge_app_config` (`dict`): application config sections to patch;
+* `cartridge_app_config_path` - path to application config to upload;
+* `cartridge_app_config_upload_mode` - mode of config uploading (`lua`, `http` or `tdg`);
+* `cartridge_app_config_upload_url` - url of instance to upload config
+  (`http://127.0.0.1:{control_instance.http_port}/admin/config` by default);
+* `cartridge_tdg_token` - token to upload config by HTTP in TDG;
 * `cartridge_auth`: (`dict`): [authorization configuration](/doc/auth.md);
 * `cartridge_failover_params` (`dict`): [failover](/doc/failover.md) parameters;
 * [DEPRECATED] `cartridge_failover` (`boolean`): a boolean flag that
   indicates if eventual failover should be enabled or disabled;
 * `cartridge_failover_promote_params` (`dict`): [failover promote](/doc/rolling_update.md#leaders-promotion) params.
-- `wait_cluster_has_no_issues_retries` (`number`, default: 60): retries to check cluster has no issues;
-- `wait_cluster_has_no_issues_delay` (`number`, default: 5): delay to retry cluster issues check;
-- `allow_warning_issues` (`boolean`, default: `false`): allow issues with `warning` level.
-- `show_issues`(`boolean`, default: `true`): - log cluster issues as a warnings.
+* `wait_cluster_has_no_issues_retries` (`number`, default: 60): retries to check cluster has no issues;
+* `wait_cluster_has_no_issues_delay` (`number`, default: 5): delay to retry cluster issues check;
+* `allow_warning_issues` (`boolean`, default: `false`): allow issues with `warning` level.
+* `show_issues`(`boolean`, default: `true`): - log cluster issues as a warnings.
+
+## Eval step configuration
+
+* `cartridge_eval_file` - path to file with Lua code to eval
+  (isn't used if `cartridge_eval_body` is specified);
+* `cartridge_eval_body` - code to eval;
+* `cartridge_eval_args` - function arguments;
+* `cartridge_eval_with_retries` - flag indicates that eval should be performed with retries;
+* `cartridge_eval_retries` number of eval retries;
+* `cartridge_eval_delay` - eval retries delay.
+
+## Steps configuration
+
+* `cartridge_delivered_package_path` - remote path to file of delivered package
+  (use it to run `update_package` step without `deliver_package` step);
+* `cartridge_control_instance` - some instance that can be used for editing
+  topology and configuring cluster (use it to skip `set_control_instance` step).
