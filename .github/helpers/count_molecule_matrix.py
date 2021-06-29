@@ -104,11 +104,9 @@ def main(event_name, repo_owner, review_state, ref):
     if event_name == 'workflow_dispatch' or review_state == 'approved' or ref == 'refs/heads/master':
         ee_matrix.append(get_ee_params())
 
-        for name in filter(
-            lambda scenario:
-            scenario != DEFAULT_SCENARIO and scenario not in IGNORED_PATHS and scenario not in TDG_SCENARIOS,
-            sorted(os.listdir(MOLECULE_SCENARIOS_PATH)),
-        ):
+        all_scenarios = sorted(os.listdir(MOLECULE_SCENARIOS_PATH))
+        scenarios_to_skip = [DEFAULT_SCENARIO] + IGNORED_PATHS + TDG_SCENARIOS
+        for name in filter(lambda scenario: scenario not in scenarios_to_skip, all_scenarios):
             ce_matrix.append(get_ce_params(molecule_scenario=name))
 
         for command in NOT_DEFAULT_MOLECULE_COMMANDS:
