@@ -372,10 +372,10 @@ class TestGetInstanceInfo(unittest.TestCase):
         ])
 
         res = call_get_instance_info(app_name, instance_name, instance_vars, [
-            r'.*.control',
+            r'*.control',
             r'myapp.instance-1.pid',
-            r'some/data/dir/',
-            r'vinyl/dir',
+            r'some/data/dir/*',
+            r'*/vinyl/dir/*',
         ])
         self.assertFalse(res.failed)
         self.assertEqual(res.fact['files_to_remove_on_cleanup'], [])
@@ -385,10 +385,10 @@ class TestGetInstanceInfo(unittest.TestCase):
         ])
 
         res = call_get_instance_info(app_name, instance_name, instance_vars, [
-            r'.*.contr',
+            r'*.contr',
             r'instance-1.pid',
-            r'som',
-            r'ome/wal/dir',
+            r'some/data/dir',
+            r'vinyl/dir',
         ])
         self.assertFalse(res.failed)
         self.assertEqual(res.fact['files_to_remove_on_cleanup'], [
