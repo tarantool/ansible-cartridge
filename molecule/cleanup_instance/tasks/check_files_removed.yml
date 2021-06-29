@@ -9,7 +9,7 @@
 
 - name: 'Get work dir paths'
   set_fact:
-    work_dir_paths: '{{ work_dir_files.files | map(attribute="path") | map("basename") }}'
+    work_dir_paths: '{{ work_dir_files.files | map(attribute="path") | map("basename") | list }}'
 
 - name: 'Show work dir paths'
   debug:
