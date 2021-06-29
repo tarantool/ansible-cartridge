@@ -50,6 +50,7 @@ def main(event_name, repo_owner, review_state, ref):
     if event_name == 'workflow_dispatch' or review_state == 'approved' or ref == 'refs/heads/master':
         ce_matrix.append(get_ce_params(molecule_scenario='check_facts'))
         ce_matrix.append(get_ce_params(molecule_scenario='cluster_cookie'))
+        ce_matrix.append(get_ce_params(molecule_scenario='cleanup_instance'))
         ce_matrix.append(get_ce_params(molecule_scenario='config_upload'))
         ce_matrix.append(get_ce_params(molecule_scenario='dead_instances'))
         ce_matrix.append(get_ce_params(molecule_scenario='eval'))

@@ -17,15 +17,15 @@
   find:
     file_type: any
     hidden: true
-    use_regex: true
     paths: '{{ instance_info.dirs_to_remove_on_cleanup }}'
     excludes: '{{ ["config", ".tarantool.cookie"] + cartridge_paths_to_keep_on_cleanup }}'
   register: paths_to_remove_on_cleanup
 
 - name: 'Cleanup instance directories'
   file:
-    path: '{{ item.path }}'
+    path: '{{ file.path }}'
     state: absent
   loop_control:
-    label: '{{ item.path }}'
+    label: '{{ file.path }}'
+    loop_var: file
   with_items: '{{ paths_to_remove_on_cleanup.files }}'

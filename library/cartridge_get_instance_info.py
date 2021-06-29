@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
+import fnmatch
 import os
-import re
 
 from ansible.module_utils.helpers import Helpers as helpers
 
@@ -46,20 +46,18 @@ def get_multiversion_dist_dir(install_dir, package_path):
     return os.path.join(install_dir, package_name_version)
 
 
-def filter_paths_by_regex_list(paths_list, regex_list):
+def filter_paths_by_glob_list(paths_list, regex_list):
     new_list = []
     for path in paths_list:
         should_kept = False
         for path_to_keep in regex_list:
-            if re.search(
-                r'(^|{sep}){path}({sep}|$)'.format(
-                    sep=os.path.sep,
-                    path=path_to_keep.strip(os.path.sep),
-                ),
-                path,
-            ) is not None:
+            norm_path = os.path.normpath(path)
+            base_name = os.path.basename(path)
+
+            if fnmatch.fnmatch(norm_path, path_to_keep) or fnmatch.fnmatch(base_name, path_to_keep):
                 should_kept = True
                 break
+
         if not should_kept:
             new_list.append(path)
 
@@ -170,11 +168,11 @@ def get_instance_info(params):
 
     instance_info['paths_to_remove_on_expel'] = list(sorted(instance_info['paths_to_remove_on_expel']))
 
-    instance_info['files_to_remove_on_cleanup'] = list(sorted(filter_paths_by_regex_list(
+    instance_info['files_to_remove_on_cleanup'] = list(sorted(filter_paths_by_glob_list(
         instance_info['files_to_remove_on_cleanup'],
         paths_to_keep_on_cleanup,
     )))
-    instance_info['dirs_to_remove_on_cleanup'] = list(sorted(filter_paths_by_regex_list(
+    instance_info['dirs_to_remove_on_cleanup'] = list(sorted(filter_paths_by_glob_list(
         instance_info['dirs_to_remove_on_cleanup'],
         paths_to_keep_on_cleanup,
     )))
