@@ -601,7 +601,7 @@ Input facts (set by role):
 
 Input facts (set by config):
 
-- `cartridge_app_config_path` - path to application config to patch;
+- `cartridge_app_config_path` - path to application config to upload;
 - `cartridge_app_config_upload_mode` - mode of config uploading (`lua`, `http` or `tdg`);
 - `cartridge_app_config_upload_url` - url of instance to upload config
   (`http://127.0.0.1:{control_instance.http_port}/admin/config` by default);

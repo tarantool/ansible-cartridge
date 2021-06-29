@@ -10,20 +10,17 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
-### Fixed
-
-- Long facts caching when playbook has two or more role imports.
-
 ### Added
 
 - Step `cleanup_instance_files` to clean up data of stopped instance.
 
 ### Changed
 
-- Hosts uniqueness considers `ansible_port`, not only `ansible_host`
+- Hosts uniqueness considers `ansible_port`, not only `ansible_host`.
 
 ### Fixed
 
+- Long facts caching when playbook has two or more role imports;
 - Now select control instance task ignores bad instances from membership.
 
 ## [1.10.0] - 2021-06-04
