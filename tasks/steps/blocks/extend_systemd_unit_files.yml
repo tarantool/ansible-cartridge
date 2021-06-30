@@ -13,7 +13,7 @@
     content: |
       [Service]
       {% for key, value in cartridge_extra_env.items() %}
-      Environment={{ key }}={{ value }}
+      Environment="{{ key }}={{ value | replace('\\', '\\\\') | replace('"', '\\"') }}"
       {% endfor %}
   when:
     - cartridge_extra_env is not none

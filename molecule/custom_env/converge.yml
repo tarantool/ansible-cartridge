@@ -53,7 +53,9 @@
       - wait_instance_started
       - eval
     cartridge_extra_env:
-      MY_ID: '{{ instance_info.instance_id }}'
+      MY_ID: '{{ inventory_hostname }} with spaces'
+      SPECIAL: >-
+        A1!@#$%&*()[]{}|/\"'+=$@^
   roles:
     - ansible-cartridge
 
@@ -71,7 +73,11 @@
       assert:
         fail_msg: 'Received bad environment'
         success_msg: 'Received environment is OK'
-        that: eval_res == [instance_info.instance_id]
+        that: >-
+          eval_res == [
+            inventory_hostname + ' with spaces',
+            'A1!@#$%&*()[]{}|/\\"\'+=$@^',
+          ]
 
     - name: 'Get info about service environment file'
       stat:
