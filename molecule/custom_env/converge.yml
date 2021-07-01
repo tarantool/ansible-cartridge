@@ -35,9 +35,9 @@
         path: '{{ instance_info.systemd_service_dir }}'
       register: stat_res
 
-    - name: 'Check service directory'
+    - name: "Check service directory doesn't exist"
       assert:
-        fail_msg: "Directory should exist"
+        fail_msg: "Directory exists"
         success_msg: "Directory shouldn't exist"
         that: not stat_res.stat.exists
 
@@ -84,9 +84,9 @@
         path: '{{ instance_info.systemd_service_env_file }}'
       register: stat_res
 
-    - name: 'Check service environment file'
+    - name: 'Check service environment file exist'
       assert:
-        fail_msg: "Environment file shouldn't exist"
+        fail_msg: "Environment file doesn't exist"
         success_msg: "Environment file should exist"
         that: stat_res.stat.exists
 
@@ -126,8 +126,8 @@
         path: '{{ instance_info.systemd_service_dir }}'
       register: stat_res
 
-    - name: 'Check service directory'
+    - name: "Check service directory doesn't exist"
       assert:
-        fail_msg: "Directory should exist"
+        fail_msg: "Directory exists"
         success_msg: "Directory shouldn't exist"
         that: not stat_res.stat.exists
