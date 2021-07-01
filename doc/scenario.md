@@ -432,7 +432,9 @@ Input facts (set by config):
 - `cartridge_not_save_cookie_in_app_config` - flag indicates that cluster cookie shouldn't be persisted in application configuration file;
 - `cartridge_defaults` - default configuration parameters values for instances;
 - `cartridge_app_user` - user which will own the links;
-- `cartridge_app_group` - group which will own the links.
+- `cartridge_app_group` - group which will own the links;
+- `cartridge_systemd_dir` - directory where systemd-unit files should be placed;
+- `cartridge_extra_env` - environment variables for instance service.
 
 Output facts:
 

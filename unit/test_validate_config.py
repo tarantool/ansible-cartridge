@@ -98,6 +98,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover_params.etcd2_params',
                 'cartridge_custom_scenarios',
                 'cartridge_control_instance',
+                'cartridge_extra_env',
             },
             int: {
                 'bootstrap_vshard_retries',

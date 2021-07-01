@@ -37,6 +37,7 @@
       cartridge_app_install_dir: '{{ cartridge_app_install_dir }}'
       cartridge_app_instances_dir: '{{ cartridge_app_instances_dir }}'
       cartridge_conf_dir: '{{ cartridge_conf_dir }}'
+      cartridge_systemd_dir: '{{ cartridge_systemd_dir }}'
       cartridge_run_dir: '{{ cartridge_run_dir }}'
       cartridge_data_dir: '{{ cartridge_data_dir }}'
       cartridge_memtx_dir_parent: '{{ cartridge_memtx_dir_parent }}'

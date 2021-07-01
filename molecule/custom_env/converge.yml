@@ -1,0 +1,133 @@
+---
+
+- name: 'Get default environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - configure_instance
+      - restart_instance
+      - wait_instance_started
+      - eval
+  roles:
+    - ansible-cartridge
+
+- name: 'Print and check environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Debug environment'
+      debug:
+        msg: '{{ eval_res }}'
+
+    - name: 'Check environment'
+      assert:
+        fail_msg: 'Received bad environment'
+        success_msg: 'Received environment is OK'
+        that: eval_res == []
+
+    - name: 'Get info about service directory'
+      stat:
+        path: '{{ instance_info.systemd_service_dir }}'
+      register: stat_res
+
+    - name: "Check service directory doesn't exist"
+      assert:
+        fail_msg: "Directory exists"
+        success_msg: "Directory shouldn't exist"
+        that: not stat_res.stat.exists
+
+- name: 'Get custom environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - configure_instance
+      - restart_instance
+      - wait_instance_started
+      - eval
+    cartridge_extra_env:
+      MY_ID: '{{ inventory_hostname }} with spaces'
+      SPECIAL: >-
+        A1!@#$%&*()[]{}|/\"'+=$@^
+  roles:
+    - ansible-cartridge
+
+- name: 'Print and check environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Debug environment'
+      debug:
+        msg: '{{ eval_res }}'
+
+    - name: 'Check environment'
+      assert:
+        fail_msg: 'Received bad environment'
+        success_msg: 'Received environment is OK'
+        that: >-
+          eval_res == [
+            inventory_hostname + ' with spaces',
+            'A1!@#$%&*()[]{}|/\\"\'+=$@^',
+          ]
+
+    - name: 'Get info about service environment file'
+      stat:
+        path: '{{ instance_info.systemd_service_env_file }}'
+      register: stat_res
+
+    - name: 'Check service environment file exist'
+      assert:
+        fail_msg: "Environment file doesn't exist"
+        success_msg: "Environment file should exist"
+        that: stat_res.stat.exists
+
+- name: 'Get removed environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario:
+      - configure_instance
+      - restart_instance
+      - wait_instance_started
+      - eval
+    cartridge_extra_env: {}
+  roles:
+    - ansible-cartridge
+
+- name: 'Print and check environment'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Debug environment'
+      debug:
+        msg: '{{ eval_res }}'
+
+    - name: 'Check environment'
+      assert:
+        fail_msg: 'Received bad environment'
+        success_msg: 'Received environment is OK'
+        that: eval_res == []
+
+    - name: 'Get info about service directory'
+      stat:
+        path: '{{ instance_info.systemd_service_dir }}'
+      register: stat_res
+
+    - name: "Check service directory doesn't exist"
+      assert:
+        fail_msg: "Directory exists"
+        success_msg: "Directory shouldn't exist"
+        that: not stat_res.stat.exists
