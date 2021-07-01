@@ -32,7 +32,7 @@
 
     - name: 'Get info about service directory'
       stat:
-        path: '/etc/systemd/system/{{ instance_info.systemd_service_dir }}'
+        path: '{{ instance_info.systemd_service_dir }}'
       register: stat_res
 
     - name: 'Check service directory'
@@ -81,7 +81,7 @@
 
     - name: 'Get info about service environment file'
       stat:
-        path: '/etc/systemd/system/{{ instance_info.systemd_service_env_file }}'
+        path: '{{ instance_info.systemd_service_env_file }}'
       register: stat_res
 
     - name: 'Check service environment file'
@@ -123,7 +123,7 @@
 
     - name: 'Get info about service directory'
       stat:
-        path: '/etc/systemd/system/{{ instance_info.systemd_service_dir }}'
+        path: '{{ instance_info.systemd_service_dir }}'
       register: stat_res
 
     - name: 'Check service directory'
