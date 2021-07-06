@@ -45,7 +45,7 @@ This playbook says: **Promote leaders directly to these instances**:
       - failover_promote
     cartridge_failover_promote_params:
       force_inconsistency: true
-      replicasets_leaders:
+      replicaset_leaders:
         storage-1: storage-1-replica
         storage-2: storage-2-replica
 ```
@@ -190,7 +190,7 @@ The example rolling update playbook:
     cartridge_scenario:
       - failover_promote
     cartridge_failover_promote_params:
-      replicasets_leaders:
+      replicaset_leaders:
         storage-1: storage-1-replica
         storage-2: storage-2-replica
 
@@ -216,7 +216,7 @@ The example rolling update playbook:
     cartridge_scenario:
       - failover_promote
     cartridge_failover_promote_params:
-      replicasets_leaders:
+      replicaset_leaders:
         storage-1: storage-1-leader
         storage-2: storage-2-leader
 
@@ -314,7 +314,7 @@ The example rolling update playbook:
     cartridge_scenario:
       - failover_promote
     cartridge_failover_promote_params:
-      replicasets_leaders:
+      replicaset_leaders:
         storage-1: storage-1-replica
         storage-2: storage-2-replica
 
@@ -339,7 +339,7 @@ The example rolling update playbook:
     cartridge_scenario:
       - failover_promote
     cartridge_failover_promote_params:
-      replicasets_leaders:
+      replicaset_leaders:
         storage-1: storage-1-leader
         storage-2: storage-2-leader
 
