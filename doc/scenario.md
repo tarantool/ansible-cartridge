@@ -5,7 +5,7 @@ It's usually not possible to change set of tasks and tasks sequence.
 This is not good! Sometimes we need to run only some subset of tasks,
 execute tasks in a non-standard order or even add our own tasks.
 
-To do this, we grouped tasks in thematic sets, which we called [steps](/doc/steps.md). 
+To do this, we grouped tasks in thematic sets, which we called [steps](/doc/steps.md).
 Steps can be combined in list of **steps**, which we called **scenario**.
 
 **Let's summarize:**

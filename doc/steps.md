@@ -40,6 +40,9 @@ but can be used in a custom one:
 - [restart_instance_force](#step-restart_instance_force)
 - [patch_instance_in_runtime](#step-patch_instance_in_runtime)
 - [cleanup_instance_files](#step-cleanup_instance_files)
+- [backup](#step-backup)
+- [backup_start](#step-backup_start)
+- [backup_stop](#step-backup_stop)
 
 ## Role Variables Descriptions
 
@@ -509,3 +512,50 @@ Input variables from config:
 - `cartridge_paths_to_keep_on_cleanup` - list of full paths or relative paths
   to work/memtx/vinyl/wal directory that should be kept on instance cleanup
   (it's possible to use bash patterns, e.g. `*.control`).
+
+
+### Step `backup`
+
+Create a backup archive for each instance and fetch it on the local machine.
+
+Input facts (set by role):
+
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions));
+- `single_instances_for_each_machine` that allows us to run this task once per each machine.
+
+Input facts (set by config):
+
+- `cartridge_remote_backups_dir` - directory to store backups on the remote;
+- `cartridge_fetch_backups_dir` - flag indicates that backups should be fetched on the local machine;
+- `cartridge_app_user` - user which will own the links;
+- `cartridge_app_group` - group which will own the links;
+- `stateboard` - indicates that the instance is a stateboard.
+
+Output facts:
+
+- `instance_backup_files` - list of instance files that should be added to backup archive;
+- `backup_archive_path` - path to the instance backup archive on the remote machine;
+
+### Step `backup_start`
+
+Start a backup process on the instance.
+
+Input facts (set by role):
+
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
+
+Input facts (set by config):
+
+- `stateboard` - indicates that the instance is a stateboard.
+
+Output facts:
+
+- `instance_backup_files` - list of instance files that should be added to backup archive.
+
+### Step `backup_stop`
+
+Stop started backup on the instance.
+
+Input facts (set by role):
+
+- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
