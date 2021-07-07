@@ -14,14 +14,14 @@ is used to specify failover parameters:
 
 Other parameters are mode-specific.
 
-Read [the doc](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/topics/failover.md/)
+Read [the doc](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_dev/#failover-architecture)
 to learn more about Cartridge failover.
 
 #### Eventual
 
 If `eventual` mode is specified, there are no additional parameters.
 
-Read [the doc](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/topics/failover.md/#eventual-failover)
+Read [the doc](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_dev/#eventual-failover)
 to learn more about eventual failover.
 
 *Example:*
@@ -64,7 +64,7 @@ cartridge_failover_params:
 
     - `password`(`string`).
 
-Read [the doc](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_api/topics/failover.md/#stateful-failover)
+Read [the doc](https://www.tarantool.io/en/doc/latest/book/cartridge/cartridge_dev/#stateful-failover)
 to learn more about stateful failover.
 
 *Example:*
