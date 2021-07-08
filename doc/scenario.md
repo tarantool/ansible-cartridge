@@ -2,13 +2,14 @@
 
 Any Ansible role contains tasks.
 It's usually not possible to change set of tasks and tasks sequence. This is not good!
-Sometimes it's needed to add or delete some tasks, execute some in a non-standard order.
+Sometimes we need to run only some subset of tasks,
+execute tasks in a non-standard order or even add our own tasks.
 
 To do this, we grouped tasks in thematic sets, which we called [steps](/doc/steps.md). 
 For example, we have default step to deliver package.
 
 Next, we were allowed to choose which steps and in what order to run.
-This is done by specifying a list of step names, which we called scenario.
+This is done by specifying a list of **step** names, which we called **scenario**.
 For example, scenario can consist two steps:
 - `deliver_package` to deliver package;
 - `update_package` to extract delivered package.

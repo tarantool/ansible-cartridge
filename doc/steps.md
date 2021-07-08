@@ -27,7 +27,7 @@ Some of useful facts establishes during preparation, so you can use them at any 
   - `name` - name of step;
   - `path` - path to YAML file of step.
 
-# Role Steps Description
+# Role Steps List
 
 List of steps from default scenario:
 
@@ -64,15 +64,17 @@ but can be used in a custom one:
 - [patch_instance_in_runtime](#patch_instance_in_runtime)
 - [cleanup_instance_files](#cleanup_instance_files)
 
+# Role Steps Description
+
 ## deliver_package
 
 Delivery of the application package to physical machines.
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_package_path` - path to file of package to delivery.
 
-Output facts:
+Output variables:
 
 - `delivered_package_path` - remote path to file of delivered package.
 
@@ -80,13 +82,13 @@ Output facts:
 
 Install the delivered package on physical machines.
 
-Facts from steps completed before:
+variables from steps completed before:
 
 - `delivered_package_path` - remote path to file of delivered package.
   It's set in [deliver_package](#deliver_package) step. Also, it's set on role
   preparation if `cartridge_delivered_package_path` is specified.
 
-Input facts from config:
+Input variables from config:
 
 - `expelled` - indicates if instance must be expelled from topology
   (to determine if it's should be checked if instance should be restarted);
@@ -112,7 +114,7 @@ Input facts from config:
 - `cartridge_app_instances_dir` - path to directory with instances links to
   distributions (see [multiversion approach doc](/doc/multiversion.md)).
 
-Output facts:
+Output variables:
 
 - `needs_restart` - if instance should be restarted to apply code or configuration changes.
 
@@ -121,7 +123,7 @@ Output facts:
 Update instance links for a new version of package (if
 [multiversion approach](/doc/multiversion.md) is enabled).
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_package_path` - should be specified to compute app distribution directory
   (otherwise, `update_instance` is skipped);
@@ -132,7 +134,7 @@ Input facts from config:
 - `cartridge_app_user` - user which will own the links;
 - `cartridge_app_group` - group which will own the links.
 
-Output facts:
+Output variables:
 
 - `needs_restart` - if instance should be restarted to apply code or configuration changes.
 
@@ -140,7 +142,7 @@ Output facts:
 
 Configure instance in runtime and change instance config.
 
-Input facts from config:
+Input variables from config:
 
 - `config` - instance configuration ([more details here](/doc/instances.md));
 - `restarted` - if instance should be restarted or not (user forced decision);
@@ -155,7 +157,7 @@ Input facts from config:
 - `cartridge_systemd_dir` - directory where systemd-unit files should be placed;
 - `cartridge_extra_env` - environment variables for instance service.
 
-Output facts:
+Output variables:
 
 - `needs_restart` - if instance should be restarted to apply code or configuration changes.
 
@@ -163,14 +165,14 @@ Output facts:
 
 Restart and enable instance systemd service if it should be restarted.
 
-Facts from steps completed before:
+variables from steps completed before:
 
 - `needs_restart` - if instance should be restarted to apply code or
   configuration changes. It's set in [update_package](#update_package),
   [update_instance](#update_instance) and [configure_instance](#configure_instance)
   steps.
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_cluster_cookie` - cluster cookie for all cluster instances (is needed to check if configuration file was changed);
 - `cartridge_not_save_cookie_in_app_config` - flag indicates that cluster cookie shouldn't be persisted in application configuration file;
@@ -180,7 +182,7 @@ Input facts from config:
 
 Wait until an instance is fully started.
 
-Input facts from config:
+Input variables from config:
 
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
@@ -193,7 +195,7 @@ Input facts from config:
 
 Connect an instance to membership.
 
-Input facts from config:
+Input variables from config:
 
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
@@ -216,20 +218,20 @@ This is instance that is:
   that has lowest version).
 
 Steps that require control instance (such as [`edit_topology`](#edit_topology))
-call `set_control_instance` implicitly if `control_instance` fact isn't set.
+call `set_control_instance` implicitly if `control_instance` variable isn't set.
 
-`control_instance` fact can be set by user via `cartridge_control_instance` variable.
-In this case `control_instance` fact is initialized on preparation step.
+`control_instance` variable can be set by user via `cartridge_control_instance` variable.
+In this case `control_instance` variable is initialized on preparation step.
 
 **This step should be launched only after `connect_to_membership` step. Otherwise, 2 clusters may be created!**
 
-Input facts from config:
+Input variables from config:
 
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
 - `replicaset_alias` - replicaset alias, will be displayed in Web UI;
 
-Output facts:
+Output variables:
 
 - `control_instance` - information about control instance, that should be used for
   managing topology and configuring cluster. It's a dictionary with fields:
@@ -242,7 +244,7 @@ Edit topology of replicasets.
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
@@ -265,7 +267,7 @@ Input facts from config:
 
 Cleanup files if instance is expelled.
 
-Input facts from config:
+Input variables from config:
 
 - `expelled` - indicates if instance must be expelled from topology;
 
@@ -275,7 +277,7 @@ Configure application authentication settings.
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_auth` - authorization configuration.
 
@@ -285,7 +287,7 @@ Upload application configuration (mode details in [application config doc](/doc/
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_app_config_path` - path to application config to upload;
 - `cartridge_app_config_upload_mode` - mode of config uploading (`lua`, `http` or `tdg`);
@@ -300,7 +302,7 @@ Configure application configuration.
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_app_config` - application config sections to patch.
 
@@ -310,7 +312,7 @@ Bootstrap VShard in cluster.
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
@@ -328,7 +330,7 @@ Configure application failover.
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_failover_params` - failover parameters;
 - [DEPRECATED] `cartridge_failover` - indicates if eventual failover should be enabled or disabled.
@@ -340,7 +342,7 @@ Waits until all cluster instances become alive and come to a specified state
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `allowed_members_states` - list of allowed states. If empty then instance state isn't checked;
 - `wait_members_alive_retries` - retries to check that all instances become alive;
@@ -352,7 +354,7 @@ Waits until the cluster has no issues.
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `wait_cluster_has_no_issues_retries` - retries to check that cluster has no issues;
 - `wait_cluster_has_no_issues_delay` - delay to retry cluster issues check;
@@ -378,11 +380,11 @@ For example, you can make a step like this:
     temporary_files: "{{ temporary_files + ['/tmp/my_file'] }}"
 ```
 
-Input facts (set by role):
+Input variables (set by role):
 
 - `temporary_files` - list of temporary files to remove.
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_remove_temporary_files` - indicates if temporary files should be removed.
 
@@ -394,14 +396,14 @@ When [multiversion approach](/doc/multiversion.md) is used, each new application
 version is added to `cartridge_app_install_dir`.
 This step removes redundant distributions.
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_app_name` - application name;
 - `cartridge_app_install_dir` - path to directory where application distributions
   are placed;
 - `cartridge_keep_num_latest_dists` - number of dists that should be kept.
 
-Output facts:
+Output variables:
 
 - `dists_dirs_to_remove` - list of distribution directories paths that
   were removed.
@@ -413,7 +415,7 @@ Output facts:
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_failover_promote_params` - promote leaders params. More details in
   [rolling update doc](/doc/rolling_update.md#leaders-promotion).
@@ -426,17 +428,17 @@ More details in [rolling update doc](/doc/rolling_update.md).
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_failover_promote_params` - promote leaders params.
-  In fact, only `force_inconsistency` parameter is used (leaders are got from specified play hosts).
+  In variable, only `force_inconsistency` parameter is used (leaders are got from specified play hosts).
   More details in [rolling update doc](/doc/rolling_update.md).
 
 ## eval
 
 [Eval code](/doc/eval.md) on instance.
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_eval_file` - path to file with Lua code to eval (isn't used if
   `cartridge_eval_body` is specified);
@@ -452,7 +454,7 @@ Input facts from config:
 
 *If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_eval_file` - path to file with Lua code to eval (isn't used if
   `cartridge_eval_body` is specified);
@@ -484,7 +486,7 @@ nothing will be changed, and an error will be returned.
 
 **Note** that memory size can be only increased in runtime.
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_runtime_params` - new instance parameters ([more details here](/doc/instances.md));
 - `expelled` - indicates if instance must be expelled from topology.
@@ -494,7 +496,7 @@ Input facts from config:
 Clean up data of stopped instance.
 If instance is running, an error will be returned.
 
-Input facts from config:
+Input variables from config:
 
 - `cartridge_paths_to_keep_on_cleanup` - list of full paths or relative paths
   to work/memtx/vinyl/wal directory that should be kept on instance cleanup
