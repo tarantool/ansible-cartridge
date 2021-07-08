@@ -38,7 +38,7 @@ on eval.
 - name: Eval function from string
   hosts: cluster
   roles:
-    - ansible-cartridge
+    - tarantool.cartridge
   become: true
   become_user: root
   gather_facts: false
@@ -101,7 +101,7 @@ The code above can be ran from a file:
 - name: Eval function from string
   hosts: cluster
   roles:
-    - ansible-cartridge
+    - tarantool.cartridge
   become: true
   become_user: root
   gather_facts: false
@@ -135,7 +135,7 @@ Retries and delay can be configured:
   gather_facts: false
   tasks:
     - import_role:
-        name: ansible-cartridge
+        name: tarantool.cartridge
       vars:
         cartridge_scenario:
           - eval
