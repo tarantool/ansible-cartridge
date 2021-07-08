@@ -217,11 +217,11 @@ Import role and say where to find our custom steps:
 Now there is a big problem on deploying huge clusters - [`connect_to_membership` step](#connect_to_membership) is too
 long. Using scenario, we can solve this problem until it isn't solved in `cartridge`.
 
-In fact `connect_to_membership` is used in [`set_control_instance` step](#set_control_instance) to find some instance
+In variable `connect_to_membership` is used in [`set_control_instance` step](#set_control_instance) to find some instance
 that is already in a cluster. This instance should be used for joining other instances (otherwise two different clusters
 are created). This instance is called `control_instance` and is used for editing topology and configuring cluster (auth,
 config and so on). Generally, `connect_to_membership` step can be skipped if you definitely know some instance that is
-already joined to cluster. The solution is to set `cartridge_control_instance` fact manually and
+already joined to cluster. The solution is to set `cartridge_control_instance` variable manually and
 remove `connect_to_membership` step from scenario:
 
 ```yaml
