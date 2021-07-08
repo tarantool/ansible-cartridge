@@ -13,9 +13,9 @@ For example, scenario can consist two steps:
 - `deliver_package` to deliver package;
 - `update_package` to extract delivered package.
 
-> Let's summarize:
-> 1. Scenario consists of steps; 
-> 2. Step consists of tasks.
+**Let's summarize:**
+1. Scenario consists of steps;
+2. Step consists of tasks.
 
 So, using a scenarios, you can:
 

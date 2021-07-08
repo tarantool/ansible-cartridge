@@ -80,10 +80,11 @@ Output facts:
 
 Install the delivered package on physical machines.
 
-Specific input facts, set by role:
+Facts from steps completed before:
 
 - `delivered_package_path` - remote path to file of delivered package.
-  Is set on role preparation if `cartridge_delivered_package_path` is specified.
+  It's set in [deliver_package](#deliver_package) step. Also, it's set on role
+  preparation if `cartridge_delivered_package_path` is specified.
 
 Input facts from config:
 
@@ -162,9 +163,12 @@ Output facts:
 
 Restart and enable instance systemd service if it should be restarted.
 
-Specific input facts, set by role:
+Facts from steps completed before:
 
-- `needs_restart` - if instance should be restarted to apply code or configuration changes.
+- `needs_restart` - if instance should be restarted to apply code or
+  configuration changes. It's set in [update_package](#update_package),
+  [update_instance](#update_instance) and [configure_instance](#configure_instance)
+  steps.
 
 Input facts from config:
 
@@ -361,8 +365,9 @@ Removes temporary files specified in `temporary_files` list.
 By default, `temporary_files` is an empty list. The role,
 depending on the scenario, can add the following files to this list:
 
-- path to delivered package (`delivered_package_path` variable value);
-- path to repository setup script.
+- path to delivered package (`delivered_package_path` variable value
+  from [deliver_package](#deliver_package) step);
+- path to repository setup script (from [update_package](#update_package) step).
 
 In addition, you can add any files to this list by specifying `temporary_files` in configuration or in any custom step.
 For example, you can make a step like this:
