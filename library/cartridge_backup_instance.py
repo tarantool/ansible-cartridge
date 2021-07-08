@@ -106,14 +106,21 @@ def call_backup(params):
     backup_files = None
     backup_archive_path = None
 
-    # START
-    if not stop_only:
-        backup_files, err = backup_start(control_console, params)
+    # STOP ONLY
+    if stop_only:
+        err = backup_stop(control_console)
         if err is not None:
-            return helpers.ModuleRes(failed=True, msg=err)
+            return helpers.ModuleRes(failed=True, msg="Failed to stop backup: %s" % err)
+
+        return helpers.ModuleRes(changed=True)
+
+    # START
+    backup_files, err = backup_start(control_console, params)
+    if err is not None:
+        return helpers.ModuleRes(failed=True, msg="Failed to start backup: %s" % err)
 
     if start_only:
-        return helpers.ModuleRes(failed=False, changed=True, fact={
+        return helpers.ModuleRes(changed=True, fact={
             'backup_files': backup_files,
         })
 
@@ -126,11 +133,9 @@ def call_backup(params):
     # STOP
     err = backup_stop(control_console)
     if err is not None:
-        if stop_only:
-            return helpers.ModuleRes(failed=True, msg=err)
-        helpers.warn("Failed to stop backup: %s" % err)
+        return helpers.ModuleRes(failed=True, msg="Failed to stop backup: %s" % err)
 
-    return helpers.ModuleRes(failed=False, changed=True, fact={
+    return helpers.ModuleRes(changed=True, fact={
         'backup_archive_path': backup_archive_path,
         'backup_files': backup_files,
     })

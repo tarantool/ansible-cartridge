@@ -9,6 +9,12 @@
     cartridge_scenario:
       - backup_start
 
+- name: 'Check that "backup_archive_path" is empty'
+  assert:
+    fail_msg: 'backup_archive_path should be empty'
+    success_msg: 'backup_archive_path is empty'
+    that: backup_archive_path is none
+
 - name: 'Check instance backup files list set in "instance_backup_files"'
   check_backup_files_list:
     instance_info: '{{ instance_info }}'
@@ -33,13 +39,6 @@
       - not eval_res[0]
       - eval_res[1] == "Backup is already in progress"
 
-- name: 'Check that "backup_archive_path" is empty'
-  assert:
-    fail_msg: 'backup_archive_path should be empty'
-    success_msg: 'backup_archive_path is empty'
-    that: backup_archive_path is none
-
-
 # STOP
 
 - name: 'Call backup_stop'
@@ -54,6 +53,12 @@
     fail_msg: 'instance_backup_files was set'
     success_msg: 'instance_backup_files was not set'
     that: instance_backup_files is none
+
+- name: 'Check that "backup_archive_path" is empty'
+  assert:
+    fail_msg: 'backup_archive_path should be empty'
+    success_msg: 'backup_archive_path is empty'
+    that: backup_archive_path is none
 
 - name: 'Try to start a new backup'
   import_role:
@@ -74,9 +79,3 @@
     success_msg: 'box.backup.stop() was called'
     that:
       - eval_res[0]
-
-- name: 'Check that "backup_archive_path" is empty'
-  assert:
-    fail_msg: 'backup_archive_path should be empty'
-    success_msg: 'backup_archive_path is empty'
-    that: backup_archive_path is none

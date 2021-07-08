@@ -12,4 +12,3 @@
 - name: 'Set "instance_backup_files" fact'
   set_fact:
     instance_backup_files: '{{ backup_res.fact.backup_files }}'
-  when: not backup_res.failed

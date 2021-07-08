@@ -23,7 +23,6 @@
   set_fact:
     instance_backup_files: '{{ backup_res.fact.backup_files }}'
     backup_archive_path: '{{ backup_res.fact.backup_archive_path }}'
-  when: not backup_res.failed
 
 - name: Fetch backup archive
   fetch:
