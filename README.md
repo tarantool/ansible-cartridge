@@ -168,6 +168,7 @@ For more details about using scenario and available steps, see
 * [Configuration basics](/doc/configuration-basics.md)
 * [Role variables](/doc/variables.md)
 * [Role scenario](/doc/scenario.md)
+* [Role steps description](/doc/steps.md)
 * [Application package](/doc/package.md)
 * [Deploying TGZ package](/doc/tgz.md)
 * [Using multiversion approach](/doc/multiversion.md)
