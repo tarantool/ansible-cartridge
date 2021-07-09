@@ -11,7 +11,7 @@ vshard bootstrapping, and failover.
 * `cartridge_not_save_cookie_in_app_config` (`boolean`, default: `false`) - flag indicates that cluster cookie shouldn't be persisted in application configuration file;
 * `cartridge_remove_temporary_files` (`boolean`, optional, default: `false`):
   indicates if temporary files should be removed
-  (more details in description of [`cleanup` step API](/doc/scenario.md#cleanup));
+  (more details in description of [`cleanup` step API](/doc/steps.md#step-cleanup));
 * `cartridge_paths_to_keep_on_cleanup` (`list-of-strings`, optional, default: `[]`) -
   list of full paths or relative paths to work/memtx/vinyl/wal
   directory that should be kept on instance cleanup

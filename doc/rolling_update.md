@@ -10,8 +10,8 @@ usual RPM/DEB packages.
 
 ## Leaders promotion
 
-[`failover_promote`](/doc/scenario.md#failover_promote) and
-[`force_leaders`](/doc/scenario.md#force_leaders)
+[`failover_promote`](/doc/steps.md#step-failover_promote) and
+[`force_leaders`](/doc/steps.md#step-force_leaders)
 steps can be used for leaders promotion only if stateful failover is enabled.
 
 The main difference of these steps is:
@@ -113,9 +113,9 @@ The plan is quite simple:
 
 [Multiversion approach](/doc/multiversion.md) allows updating application
 version that each instance uses with
-[`update_instance` step](/doc/scenario.md#update_instance).
+[`update_instance` step](/doc/steps.md#step-update_instance).
 
-Additionally, there is [`rotate_dists` step](/doc/scenario.md#rotate_dists) that
+Additionally, there is [`rotate_dists` step](/doc/steps.md#step-rotate_dists) that
 removes redundant distributions.
 
 Updating and restarting instance scenario can be persisted in inventory
@@ -135,7 +135,7 @@ all:
     ...
 ```
 
-**Note** that [`update_instance` step](/doc/scenario.md#update_instance) requires
+**Note** that [`update_instance` step](/doc/steps.md#step-update_instance) requires
 `cartridge_package_path` variable to set instance application link to unpacked
 distribution.
 

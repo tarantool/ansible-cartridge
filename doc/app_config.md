@@ -59,7 +59,7 @@ section-2:
 
 ## Config uploading
 
-[Step `upload_app_config`](/doc/scenario.md#upload_app_config) allows loading
+[Step `upload_app_config`](/doc/steps.md#step-upload_app_config) allows loading
 the entire config using Lua API or HTTP endpoint. To do this, you should specify
 the path to the configuration file or folder using `cartridge_app_config_path`.
 

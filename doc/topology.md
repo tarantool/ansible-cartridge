@@ -109,7 +109,7 @@ and disabled.
 
 After that, all instance files
 (configuration file, socket and working directory)
-are removed on [`cleanup_expelled`](/doc/scenario.md#cleanup_expelled) step.
+are removed on [`cleanup_expelled`](/doc/steps.md#step-cleanup_expelled) step.
 
 ## Advertise URIs changing
 

@@ -25,11 +25,11 @@ class TestSteps(unittest.TestCase):
             for f in glob.glob(os.path.join(self.entry_points_dir, 'step_*'))
         ])
 
-        self.doc_facts_file = os.path.join(role_dir, 'doc', 'scenario.md')
+        self.doc_facts_file = os.path.join(role_dir, 'doc', 'steps.md')
         with open(self.doc_facts_file, 'r') as f:
             text = f.read()
-            begin = text.find('# Variable `cartridge_scenario`')
-            end = text.find('# Option `tasks_from`')
+            begin = text.find('## Role Steps List')
+            end = text.find('## Role Variables Descriptions')
             text = text[begin:end]
             self.doc_facts = re.findall(r'\n[*-][^\[]*\[([^]]+)]', text)
 
