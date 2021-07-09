@@ -5,6 +5,7 @@ from ansible.module_utils.helpers import Helpers as helpers
 argument_spec = {
     'promote_play_hosts': {'required': True, 'type': 'bool'},
     'module_hostvars': {'required': False, 'type': 'dict'},
+    'cluster_disabled_instances': {'required': False, 'type': 'list'},
     'play_hosts': {'required': False, 'type': 'list'},
 
     'console_sock': {'required': True, 'type': 'str'},
@@ -50,7 +51,7 @@ def call_failover_promote(control_console, replicaset_leaders, force_inconsisten
     ''', replicaset_leaders, opts)
 
 
-def get_replicaset_leaders_by_play_hosts(play_hosts, module_hostvars, control_console):
+def get_replicaset_leaders_by_play_hosts(play_hosts, module_hostvars, cluster_disabled_instances, control_console):
     cluster_instances = helpers.get_cluster_instances_with_replicasets_info(control_console)
 
     dead_replicasets = set()
@@ -60,7 +61,11 @@ def get_replicaset_leaders_by_play_hosts(play_hosts, module_hostvars, control_co
     for instance_name in play_hosts:
         instance_vars = module_hostvars[instance_name]
 
-        if helpers.is_stateboard(instance_vars) or helpers.is_expelled(instance_vars):
+        if any([
+            helpers.is_stateboard(instance_vars),
+            not helpers.is_enabled(instance_vars),
+            instance_name in cluster_disabled_instances,
+        ]):
             continue
 
         cluster_instance = cluster_instances.get(instance_name)
@@ -143,10 +148,11 @@ def failover_promote(params):
     # get replicaset leaders
     if params['promote_play_hosts']:
         module_hostvars = params['module_hostvars']
+        cluster_disabled_instances = params['cluster_disabled_instances']
         play_hosts = params['play_hosts']
 
         replicaset_leaders, dead_replicasets = get_replicaset_leaders_by_play_hosts(
-            play_hosts, module_hostvars, control_console
+            play_hosts, module_hostvars, cluster_disabled_instances, control_console
         )
         if dead_replicasets:
             critical_warnings.append(

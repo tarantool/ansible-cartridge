@@ -68,6 +68,8 @@ def get_all_new_instances(module_hostvars):
         if helpers.is_expelled(instance_vars):
             instance['expelled'] = True
         else:
+            if instance_vars.get('disabled') is not None:
+                instance['disabled'] = instance_vars['disabled']
             if instance_vars.get('zone') is not None:
                 instance['zone'] = instance_vars['zone']
             if instance_vars.get('config') is not None:
@@ -454,6 +456,14 @@ def get_replicasets_params_for_changing_failover_priority(
 ####################################################
 
 
+def add_server_flag_if_required(server_params, new_instance, old_instance, flag_name):
+    if old_instance is not None:
+        if new_instance.get(flag_name, False) == old_instance.get(flag_name, False):
+            return
+
+    server_params[flag_name] = new_instance.get(flag_name, False)
+
+
 def add_server_param_if_required(server_params, new_instance, old_instance, param_name):
     if new_instance.get(param_name) is None:
         return
@@ -489,6 +499,9 @@ def get_server_params(instance_name, new_instance, old_instances, allow_missed_i
     if new_instance.get('expelled') is True:
         server_params['expelled'] = True
     else:
+        for flag_name in ['disabled']:
+            add_server_flag_if_required(server_params, new_instance, old_instance, flag_name)
+
         for param_name in ['zone', 'uri']:
             add_server_param_if_required(server_params, new_instance, old_instance, param_name)
 

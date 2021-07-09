@@ -57,7 +57,7 @@ def get_steps_paths(role_path, custom_steps_dir, custom_steps):
 
 
 def get_scenario(scenario, role_scenarios, custom_scenarios, scenario_name):
-    if not scenario:
+    if scenario is None:
         scenarios = role_scenarios.copy()
         scenarios.update(custom_scenarios)
         if scenario_name not in scenarios:

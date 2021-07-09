@@ -2,26 +2,33 @@ import sys
 import unittest
 
 from parameterized import parameterized
-import module_utils.helpers as helpers
 
+import module_utils.helpers as helpers
 from unit.instance import Instance
 
 sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_failover_promote import failover_promote
 
 
-def call_failover_promote(console_sock, params, promote_play_hosts=False,
-                          module_hostvars=None, play_hosts=None):
+def call_failover_promote(
+    console_sock,
+    params,
+    promote_play_hosts=False,
+    module_hostvars=None,
+    play_hosts=None,
+    cluster_disabled_instances=None,
+):
     return failover_promote({
         'promote_play_hosts': promote_play_hosts,
         'module_hostvars': module_hostvars,
+        'cluster_disabled_instances': cluster_disabled_instances or [],
         'play_hosts': play_hosts,
         'console_sock': console_sock,
         'failover_promote_params': params,
     })
 
 
-class TestEditTopology(unittest.TestCase):
+class TestFailoverPromote(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 

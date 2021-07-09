@@ -8,13 +8,14 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_connect_to_membership import connect_to_membership
 
 
-def call_probe_instance(console_sock, module_hostvars, play_hosts=None):
+def call_probe_instance(console_sock, module_hostvars, play_hosts=None, cluster_disabled_instances=None):
     if play_hosts is None:
         play_hosts = module_hostvars.keys()
 
     return connect_to_membership({
         'console_sock': console_sock,
         'module_hostvars': module_hostvars,
+        'cluster_disabled_instances': cluster_disabled_instances or [],
         'play_hosts': play_hosts,
     })
 

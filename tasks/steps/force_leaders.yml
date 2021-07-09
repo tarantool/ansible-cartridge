@@ -12,6 +12,7 @@
       cartridge_failover_promote:
         promote_play_hosts: true
         module_hostvars: '{{ cached_facts.failover_promote }}'
+        cluster_disabled_instances: '{{ cluster_disabled_instances }}'
         play_hosts: '{{ play_hosts }}'
         failover_promote_params: '{{ cartridge_failover_promote_params }}'
         console_sock: '{{ control_instance.console_sock }}'

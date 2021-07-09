@@ -1,0 +1,216 @@
+---
+
+- name: 'Check full cluster'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - vars:
+        expected_cluster_disabled_instances: ['core-1']
+        expected_control_instance: 'core-2'
+      import_tasks: 'tasks/check_disabled_and_control.yml'
+
+- name: 'Set "disabled" flag for core-2'
+  hosts: core-2
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set "disabled" flag'
+      set_fact:
+        disabled: true
+
+- name: 'Disable core-2 instance'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - vars:
+        expected_cluster_disabled_instances: ['core-1']
+        expected_control_instance: 'core-3'
+      import_tasks: 'tasks/check_disabled_and_control.yml'
+
+    - vars:
+        cartridge_scenario:
+          - edit_topology
+      import_role:
+        name: ansible-cartridge
+
+    - vars:
+        expected_cluster_disabled_instances: ['core-1', 'core-2']
+        expected_control_instance: 'core-3'
+      import_tasks: 'tasks/check_disabled_and_control.yml'
+
+- name: 'Set "disabled" flag for core-3 and core-4'
+  hosts: core-3,core-4
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set "disabled" flag'
+      set_fact:
+        disabled: true
+
+- name: 'Disable core-3 and core-4 instances'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - vars:
+        expected_cluster_disabled_instances: ['core-1', 'core-2']
+        expected_control_instance: 'core-5'
+      import_tasks: 'tasks/check_disabled_and_control.yml'
+
+    - vars:
+        cartridge_scenario:
+          - edit_topology
+      import_role:
+        name: ansible-cartridge
+
+    - vars:
+        expected_cluster_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4']
+        expected_control_instance: 'core-5'
+      import_tasks: 'tasks/check_disabled_and_control.yml'
+
+- name: 'Set "disabled" flag for core-5'
+  hosts: core-5
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set "disabled" flag'
+      set_fact:
+        disabled: true
+
+- name: 'Try to disable last instance'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - vars:
+        expected_cluster_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4']
+        expected_control_instance: null
+        ignore_role_errors: true
+      import_tasks: 'tasks/check_disabled_and_control.yml'
+
+    - name: 'Debug error message'
+      debug:
+        var: alive_not_expelled_instance_res
+      run_once: true
+
+    - name: 'Check error message'
+      assert:
+        fail_msg: "Fact 'alive_not_expelled_instance_res' has incorrect value"
+        success_msg: "Fact 'alive_not_expelled_instance_res' has correct value"
+        that:
+          - alive_not_expelled_instance_res is failed
+          - >-
+            alive_not_expelled_instance_res.msg ==
+            'Not found any alive instance that is not expelled, not disabled and not a stateboard'
+      run_once: true
+
+- name: 'Remove "disabled" flag for core-1'
+  hosts: core-1
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set "disabled" flag'
+      set_fact:
+        disabled: false
+
+- name: 'Try to enable core-1 and disable core-5 instances'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - vars:
+        expected_cluster_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4']
+        expected_control_instance: null
+        ignore_role_errors: true
+      import_tasks: 'tasks/check_disabled_and_control.yml'
+
+    - name: 'Debug error message'
+      debug:
+        var: alive_not_expelled_instance_res
+      run_once: true
+
+    - name: 'Check error message'
+      assert:
+        fail_msg: "Fact 'alive_not_expelled_instance_res' has incorrect value"
+        success_msg: "Fact 'alive_not_expelled_instance_res' has correct value"
+        that:
+          - alive_not_expelled_instance_res is failed
+          - >-
+            alive_not_expelled_instance_res.msg ==
+            'Not found any alive instance that is not expelled, not disabled and not a stateboard'
+      run_once: true
+
+- name: 'Remove "disabled" flag for core-5'
+  hosts: core-5
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set "disabled" flag'
+      set_fact:
+        disabled: false
+
+- name: 'Enable core-1 instance'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - vars:
+        expected_cluster_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4']
+        expected_control_instance: 'core-5'
+      import_tasks: 'tasks/check_disabled_and_control.yml'
+
+    - vars:
+        cartridge_scenario:
+          - edit_topology
+      import_role:
+        name: ansible-cartridge
+
+    - vars:
+        expected_cluster_disabled_instances: ['core-2', 'core-3', 'core-4']
+        expected_control_instance: 'core-1'
+      import_tasks: 'tasks/check_disabled_and_control.yml'
+
+- name: 'Set "disabled" flag for core-5'
+  hosts: core-5
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set "disabled" flag'
+      set_fact:
+        disabled: true
+
+- name: 'Disabled core-5 instance'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - vars:
+        expected_cluster_disabled_instances: ['core-2', 'core-3', 'core-4']
+        expected_control_instance: 'core-1'
+      import_tasks: 'tasks/check_disabled_and_control.yml'
+
+    - vars:
+        cartridge_scenario:
+          - edit_topology
+      import_role:
+        name: ansible-cartridge
+
+    - vars:
+        expected_cluster_disabled_instances: ['core-2', 'core-3', 'core-4', 'core-5']
+        expected_control_instance: 'core-1'
+      import_tasks: 'tasks/check_disabled_and_control.yml'

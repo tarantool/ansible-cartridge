@@ -5,6 +5,7 @@ from ansible.module_utils.helpers import Helpers as helpers
 argument_spec = {
     'console_sock': {'required': True, 'type': 'str'},
     'module_hostvars': {'required': True, 'type': 'dict'},
+    'cluster_disabled_instances': {'required': True, 'type': 'list'},
     'play_hosts': {'required': True, 'type': 'list'},
 }
 
@@ -22,15 +23,18 @@ def probe_server(control_console, uri):
 def connect_to_membership(params):
     control_console = helpers.get_control_console(params['console_sock'])
     module_hostvars = params['module_hostvars']
+    cluster_disabled_instances = params['cluster_disabled_instances']
     play_hosts = params['play_hosts']
 
     changed = False
 
     for instance_name, instance_vars in module_hostvars.items():
-        if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
-            continue
-
-        if 'config' not in instance_vars or 'advertise_uri' not in instance_vars['config']:
+        if any([
+            helpers.is_stateboard(instance_vars),
+            not helpers.is_enabled(instance_vars),
+            instance_name in cluster_disabled_instances,
+            'advertise_uri' not in instance_vars.get('config', {}),
+        ]):
             continue
 
         connected, err = probe_server(control_console, instance_vars['config']['advertise_uri'])

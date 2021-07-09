@@ -53,6 +53,7 @@ class TestFacts(unittest.TestCase):
             'control_instance',
             'temporary_files',
             'needs_restart',
+            'cluster_disabled_instances',
             'alive_not_expelled_instance',
             'instance_backup_files',
             'backup_archive_path',

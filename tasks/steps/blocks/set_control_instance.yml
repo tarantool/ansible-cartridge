@@ -6,6 +6,7 @@
 - name: 'Select control instance to manage topology and configuration via {{ alive_not_expelled_instance.name }}'
   cartridge_get_control_instance:
     module_hostvars: '{{ cached_facts.control_instance }}'
+    cluster_disabled_instances: '{{ cluster_disabled_instances }}'
     play_hosts: '{{ play_hosts }}'
     console_sock: '{{ alive_not_expelled_instance.console_sock }}'
     app_name: '{{ cartridge_app_name }}'

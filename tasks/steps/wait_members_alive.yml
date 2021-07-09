@@ -18,6 +18,5 @@
       until: not check_members_alive_res.failed
       retries: '{{ wait_members_alive_retries }}'
       delay: '{{ wait_members_alive_delay }}'
-      when: not expelled
       run_once: true
       delegate_to: '{{ control_instance.name }}'

@@ -7,12 +7,13 @@ sys.modules['ansible.module_utils.helpers'] = helpers
 from library.cartridge_get_facts_for_machines import get_facts_for_machines
 
 
-def call_get_facts_for_machine(module_hostvars, play_hosts=None):
+def call_get_facts_for_machine(module_hostvars, play_hosts=None, cluster_disabled_instances=None):
     if play_hosts is None:
         play_hosts = module_hostvars.keys()
 
     return get_facts_for_machines({
         'module_hostvars': module_hostvars,
+        'cluster_disabled_instances': cluster_disabled_instances or [],
         'play_hosts': play_hosts,
     })
 

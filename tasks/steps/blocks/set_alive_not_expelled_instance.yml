@@ -3,6 +3,7 @@
 - name: 'Select one not expelled instance'
   cartridge_get_alive_not_expelled_instance:
     module_hostvars: '{{ cached_facts.alive_not_expelled_instance }}'
+    cluster_disabled_instances: '{{ cluster_disabled_instances }}'
     play_hosts: '{{ play_hosts }}'
     app_name: '{{ cartridge_app_name }}'
   run_once: true

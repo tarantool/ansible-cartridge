@@ -141,9 +141,14 @@ class TestGetInstancesToConfigure(unittest.TestCase):
                 'expelled': True,
                 'zone': 'Hogwarts',
             },
-            'instance-zone': {  # expelled, with zone
+            'instance-disabled-zone': {  # expelled, with zone
                 'replicaset_alias': 'replicaset-1',
                 'zone': 'Narnia',
+                'disabled': True,
+            },
+            'instance-not-disabled': {  # expelled, with zone
+                'replicaset_alias': 'replicaset-1',
+                'disabled': False,
             },
             'instance-1': {
                 'replicaset_alias': 'replicaset-1',
@@ -170,7 +175,8 @@ class TestGetInstancesToConfigure(unittest.TestCase):
         self.assertEqual(instances, {
             'instance-expelled': {'expelled': True},
             'instance-expelled-zone': {'expelled': True},
-            'instance-zone': {'zone': 'Narnia'},
+            'instance-disabled-zone': {'zone': 'Narnia', 'disabled': True},
+            'instance-not-disabled': {'disabled': False},
             'instance-3': {'uri': '10.0.0.103:3301'},
         })
 

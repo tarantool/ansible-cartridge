@@ -97,6 +97,7 @@ local function format_server(s)
         uri = s.uri,
         alias = s.alias,
         zone = s.zone,
+        disabled = s.disabled,
         replicaset_uuid = replicaset_uuid,
     }
 end
@@ -469,6 +470,14 @@ def is_expelled(host_vars):
     return host_vars.get('expelled') is True
 
 
+def is_disabled(host_vars):
+    return host_vars.get('disabled') is True
+
+
+def is_enabled(host_vars):
+    return not is_expelled(host_vars) and not is_disabled(host_vars)
+
+
 def is_stateboard(host_vars):
     return host_vars.get('stateboard') is True
 
@@ -626,6 +635,48 @@ def enrich_replicasets_with_leaders(control_console, replicasets):
     return None
 
 
+def get_disabled_instances(console_sock, stateboard):
+    if stateboard:
+        return None, None
+
+    control_console, err = get_control_console_if_started(console_sock)
+    if err is not None:
+        return None, err
+    if not control_console:
+        return None, None
+
+    instances = get_cluster_instances(control_console)
+    return [name for name, info in (instances or {}).items() if info.get('disabled')], None
+
+
+def get_topology_checksum(console_sock, stateboard):
+    if stateboard:
+        return None, None
+
+    control_console, err = get_control_console_if_started(console_sock)
+    if err is not None:
+        return None, err
+    if not control_console:
+        return None, None
+
+    return control_console.eval_res_err('''
+        local digest = require('digest')
+        local confapplier = require('cartridge.confapplier')
+
+        local active_config = confapplier.get_active_config()
+        if active_config == nil then
+            return nil
+        end
+
+        local topology_section = active_config:get_plaintext('topology.yml')
+        if topology_section == nil then
+            return nil
+        end
+
+        return digest.crc32(topology_section)
+    ''')
+
+
 class Helpers:
     DYNAMIC_BOX_CFG_PARAMS = DYNAMIC_BOX_CFG_PARAMS
     MEMORY_SIZE_BOX_CFG_PARAMS = MEMORY_SIZE_BOX_CFG_PARAMS
@@ -644,6 +695,8 @@ class Helpers:
     get_control_console_if_started = staticmethod(get_control_console_if_started)
     is_instance_running = staticmethod(is_instance_running)
     is_expelled = staticmethod(is_expelled)
+    is_disabled = staticmethod(is_disabled)
+    is_enabled = staticmethod(is_enabled)
     is_stateboard = staticmethod(is_stateboard)
     get_instance_id = staticmethod(get_instance_id)
     get_instance_console_sock = staticmethod(get_instance_console_sock)
@@ -662,3 +715,5 @@ class Helpers:
     get_clusterwide_config = staticmethod(get_clusterwide_config)
     patch_clusterwide_config = staticmethod(patch_clusterwide_config)
     enrich_replicasets_with_leaders = staticmethod(enrich_replicasets_with_leaders)
+    get_disabled_instances = staticmethod(get_disabled_instances)
+    get_topology_checksum = staticmethod(get_topology_checksum)

@@ -26,13 +26,22 @@ class TestGetCachedFacts(unittest.TestCase):
                 'ansible_host': 'some_host',
                 'cartridge_cluster_cookie': 'some-cookie',
                 'cartridge_run_dir': 'some-run-dir',
+                'instance_info': {
+                    'cluster_disabled_instances': [],
+                },
             },
             'instance_2': {
                 'stateboard': False,
                 'random_arg': {'test': 'value'},
+                'instance_info': {
+                    'cluster_disabled_instances': ['instance_2'],
+                },
             },
             'instance_3': {
                 'random_arg': {'test': 'value'},
+                'instance_info': {
+                    'cluster_disabled_instances': ['instance_2'],
+                },
             },
         })
         self.assertFalse(res.failed, res.msg)
@@ -49,6 +58,23 @@ class TestGetCachedFacts(unittest.TestCase):
                     'stateboard': False,
                 },
                 'instance_3': {},
+            },
+            'count_disabled_instances': {
+                'instance_1': {
+                    'instance_info': {
+                        'cluster_disabled_instances': [],
+                    },
+                },
+                'instance_2': {
+                    'instance_info': {
+                        'cluster_disabled_instances': ['instance_2'],
+                    },
+                },
+                'instance_3': {
+                    'instance_info': {
+                        'cluster_disabled_instances': ['instance_2'],
+                    },
+                },
             },
             'facts_for_machines': {
                 'instance_1': {

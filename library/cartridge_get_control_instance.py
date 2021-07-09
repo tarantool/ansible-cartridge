@@ -4,6 +4,7 @@ from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
     'module_hostvars': {'required': True, 'type': 'dict'},
+    'cluster_disabled_instances': {'required': True, 'type': 'list'},
     'play_hosts': {'required': True, 'type': 'list'},
     'console_sock': {'required': True, 'type': 'str'},
     'app_name': {'required': True, 'type': 'str'},
@@ -84,17 +85,16 @@ def get_twophase_commit_versions(control_console, advertise_uris):
     return versions, err
 
 
-def candidate_is_ok(uri, names_by_uris, module_hostvars):
+def candidate_is_ok(uri, names_by_uris, module_hostvars, cluster_disabled_instances):
     instance_name = names_by_uris[uri]
-    instance_vars = module_hostvars[instance_name]
-
-    if helpers.is_expelled(instance_vars):
+    if instance_name in cluster_disabled_instances:
         return False
 
-    return True
+    instance_vars = module_hostvars[instance_name]
+    return helpers.is_enabled(instance_vars)
 
 
-def get_control_instance_name(module_hostvars, play_hosts, control_console):
+def get_control_instance_name(module_hostvars, cluster_disabled_instances, play_hosts, control_console):
     members, err = get_membership_members(control_console)
     if err is not None:
         return None, err
@@ -192,7 +192,7 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
 
     # filter out instances that are marked to be expelled
     candidates_uris = list(filter(
-        lambda uri: candidate_is_ok(uri, names_by_uris, module_hostvars),
+        lambda uri: candidate_is_ok(uri, names_by_uris, module_hostvars, cluster_disabled_instances),
         candidates_uris
     ))
 
@@ -216,6 +216,7 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
 
 def get_control_instance(params):
     module_hostvars = params['module_hostvars']
+    cluster_disabled_instances = params['cluster_disabled_instances']
     play_hosts = params['play_hosts']
     console_sock = params['console_sock']
     app_name = params['app_name']
@@ -223,7 +224,7 @@ def get_control_instance(params):
     control_console = helpers.get_control_console(console_sock)
 
     control_instance_name, err = get_control_instance_name(
-        module_hostvars, play_hosts, control_console
+        module_hostvars, cluster_disabled_instances, play_hosts, control_console
     )
     if err is not None:
         return helpers.ModuleRes(failed=True, msg=err)

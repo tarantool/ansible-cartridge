@@ -95,6 +95,7 @@ For more details see [scenario documentation](/doc/scenario.md).
   restarted or not (if this flag isn't specified, instance will be restarted if
   it's needed to apply configuration changes);
 * `expelled` (`boolean`, default: `false`): a boolean flag that indicates if instance must be expelled from topology;
+* `disabled` (`boolean`, default: `false`): a boolean flag that indicates if instance should be disabled;
 * `stateboard` (`boolean`, default: `false`): a boolean flag that indicates
    that the instance is a [stateboard](/doc/stateboard.md);
 * `instance_start_retries` (`number`, default: 10) retries to check that all instances become started;

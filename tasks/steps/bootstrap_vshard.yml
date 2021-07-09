@@ -3,6 +3,7 @@
 - when:
     - cartridge_bootstrap_vshard
     - not expelled
+    - not disabled
   tags: cartridge-config
   block:
     - name: 'BLOCK: Select control instance'

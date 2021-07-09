@@ -4,6 +4,7 @@ from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
     'module_hostvars': {'required': True, 'type': 'dict'},
+    'cluster_disabled_instances': {'required': True, 'type': 'list'},
     'play_hosts': {'required': True, 'type': 'list'},
 }
 
@@ -22,6 +23,7 @@ def get_machine_id(instance_vars, instance_name):
 
 def get_facts_for_machines(params):
     module_hostvars = params['module_hostvars']
+    cluster_disabled_instances = params['cluster_disabled_instances']
     play_hosts = params['play_hosts']
 
     single_instances_for_each_machine = {}
@@ -41,7 +43,8 @@ def get_facts_for_machines(params):
 
         # Calculate single not expelled instance for each machine
         if all([
-            not helpers.is_expelled(instance_vars),
+            helpers.is_enabled(instance_vars),
+            instance_name not in cluster_disabled_instances,
             machine_id not in single_instances_for_each_machine,
         ]):
             single_instances_for_each_machine[machine_id] = instance_name

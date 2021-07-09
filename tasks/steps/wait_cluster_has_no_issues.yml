@@ -19,6 +19,5 @@
       until: not cluster_issues_res.failed
       retries: '{{ wait_cluster_has_no_issues_retries }}'
       delay: '{{ wait_cluster_has_no_issues_delay }}'
-      when: not expelled
       run_once: true
       delegate_to: '{{ control_instance.name }}'

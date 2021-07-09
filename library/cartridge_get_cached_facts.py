@@ -62,6 +62,7 @@ FACTS_BY_TARGETS = {
         'edit_topology_healthy_timeout',
         'edit_topology_allow_missed_instances',
         'expelled',
+        'disabled',
         'failover_priority',
         'instance_discover_buckets_timeout',
         'instance_discover_buckets_retries',
@@ -93,24 +94,31 @@ FACTS_BY_TARGETS = {
         'cartridge_fetch_backups',
         'cartridge_fetch_backups_dir',
     ],
+    'count_disabled_instances': [
+        'instance_info',
+    ],
     'facts_for_machines': [
         'expelled',
+        'disabled',
         'ansible_host',
         'ansible_port',
     ],
     'connect_to_membership': [
         'expelled',
+        'disabled',
         'stateboard',
         'config',
     ],
     'alive_not_expelled_instance': [
         'expelled',
+        'disabled',
         'stateboard',
         'config',
         'cartridge_run_dir',
     ],
     'control_instance': [
         'expelled',
+        'disabled',
         'stateboard',
         'config',
         'replicaset_alias',
@@ -118,6 +126,7 @@ FACTS_BY_TARGETS = {
     ],
     'edit_topology': [
         'expelled',
+        'disabled',
         'stateboard',
         'replicaset_alias',
         'roles',
@@ -130,6 +139,7 @@ FACTS_BY_TARGETS = {
     ],
     'failover_promote': [
         'expelled',
+        'disabled',
         'stateboard',
     ],
 }
