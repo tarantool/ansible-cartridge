@@ -1,6 +1,6 @@
-# Role Facts Descriptions
+# Role Variables Descriptions
 
-Some of useful facts establishes during preparation, so you can use them at any step:
+Some of useful variables establishes during preparation, so you can use them at any step:
 
 - `instance_info` - information for a current instance. It's a dictionary with fields:
   - `app_conf_file` - path to file with application config;

@@ -38,7 +38,7 @@ vars:
 ```
 
 You can use one of [pre-defined scenarios](#pre-defined-scenarios).
-Also you can find more detailed example [here](#add-a-custom-scenario-to-gradually-update-to-a-new-version-of-TGZ)
+Also, you can find more detailed example [here](#add-a-custom-scenario-to-gradually-update-to-a-new-version-of-TGZ)
 
 ## How to combine steps in a scenario?
 
@@ -47,23 +47,22 @@ but [steps API](/doc/steps.md) must be followed.
 
 What does it mean?
 
-Take a look at the `deliver_package` and `update_package` steps.
-They work together:
+Take a look at the [`deliver_package`](/doc/steps.md#deliver_package) and
+[`update_package`](/doc/steps.md#update_package) steps. They work together:
 
 * `deliver_package` delivers package and set `delivered_package_path` variable;
-* `update_package` installs package by `delivered_package_path`.
+* `update_package` installs package with path from `delivered_package_path`.
 
 These steps use `delivered_package_path` variable to communicate with each other.
-Each step described [here](/doc/steps.md) has some facts required
-for the step work and facts that the step produces.
+Each step has variables that are required for the step work and variables that the step produces.
+Descriptions of these variables for each step you can find in [steps doc](/doc/steps.md).
 
 ## Is it possible to add custom steps?
 
-Yes, to replace the steps of the role with your own or add new steps,
-you should use `cartridge_custom_steps_dir` option
-(see [example](#adding-custom-step-to-scenario))
-or `cartridge_custom_steps` option
-(see [example](#importing-steps-from-different-directories)).
+Yes, it's possible to add custom steps or rewrite the existing ones.
+One of `cartridge_custom_steps_dir` (see [example](#adding-custom-step-to-scenario))
+and `cartridge_custom_steps` (see [example](#importing-steps-from-different-directories))
+options should be used.
 
 ## Pre-defined scenarios
 
@@ -94,6 +93,8 @@ Steps:
 
 ### Scenario `configure_instances`
 
+This scenario contains steps for initial deployment of instances without applying topology.
+
 Steps:
 
 - [deliver_package](/doc/steps.md#deliver_package)
@@ -107,6 +108,8 @@ Steps:
 
 ### Scenario `configure_topology`
 
+This scenario contains steps for editing a topology.
+
 Steps:
 
 - [connect_to_membership](/doc/steps.md#connect_to_membership)
@@ -117,6 +120,8 @@ Steps:
 - [cleanup](/doc/steps.md#cleanup)
 
 ### Scenario `configure_app`
+
+This scenario contains steps for editing a configuration of application.
 
 Steps:
 
@@ -129,11 +134,12 @@ Steps:
 - [cleanup](/doc/steps.md#cleanup)
 
 To add new scenarios or replace the role scenarios with your own,
-you should use `cartridge_custom_scenarios` option.
+you should use `cartridge_custom_scenarios` option
+(see [example](#add-a-custom-scenario-to-gradually-update-to-a-new-version-of-tgz)).
 
 ## Using `tasks_from`
 
-You can select a step when importing a role.
+You can choose a step to run on the role import using `tasks_from` option.
 To do this, you just need to specify in the `tasks_from` option
 the name of the role step with the prefix `step_`.
 Unfortunately, using this method you cannot import custom steps
@@ -168,7 +174,7 @@ vars:
 ```
 
 It looks that we will often use this scenario.
-Save it to `cartridge_custom_scenarios` (e.g. in inventory) and then use by name:
+Save it to `cartridge_custom_scenarios` (e.g., in inventory) and then use by name:
 
 ```yaml
 # hosts.yml
@@ -225,10 +231,11 @@ Import role and specify a path to `custom_steps` directory in `cartridge_custom_
 ```
 
 Note, that:
-* [`single_instances_for_each_machine`](/doc/steps.md#role-facts-descriptions)
-  fact is used to download package once for each machine;
-* `delivered_package_path` fact is set to respect [API](/doc/steps.md#deliver_package);
+* [`single_instances_for_each_machine`](/doc/steps.md#role-variables-descriptions)
+  variable is used to download package once for each machine;
+* `delivered_package_path` variable is set to respect [API](/doc/steps.md#deliver_package);
 * previously defined `deliver_and_update_package` scenario will use our custom `deliver_package`;
+* `./custom_steps` path is relative to playbook path.
 
 ## Adding custom step to scenario
 
@@ -313,11 +320,14 @@ You can find more detailed description of rolling update [here](/doc/rolling_upd
 To replace any role scenario with a custom one, you only should define your own scenario
 in `cartridge_custom_scenarios` with the same name as the role script.
 
-For example, you can replace `configure_topology` with a scenario without `connect_to_membership` step (see
-[example for editing topology without connecting to membership](#editing-topology-without-connecting-to-membership))
+For example, you can replace `configure_topology` scenario with
+a scenario without cleanup steps:
+
 ```yaml
 cartridge_custom_scenarios:
   configure_topology:
+    - connect_to_membership
     - edit_topology
-    - cleanup_expelled
+    - wait_members_alive
+    - wait_cluster_has_no_issues
 ```
