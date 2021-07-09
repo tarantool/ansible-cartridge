@@ -1,31 +1,8 @@
-# Role Variables Descriptions
+# Role Steps
 
-Some of useful variables establishes during preparation, so you can use them at any step:
-
-- `instance_info` - information for a current instance. It's a dictionary with fields:
-  - `app_conf_file` - path to file with application config;
-  - `conf_file` - path to file with instance config;
-  - `instance_id` - ID of instance (e.g. for section name in config file);
-  - `console_sock` - path to control socket of instance;
-  - `pid_file` - path to pid file of instance;
-  - `work_dir` - path to working directory of instance;
-  - `memtx_dir` - path to memtx directory of instance;
-  - `vinyl_dir` - path to vinyl directory of instance;
-  - `wal_dir` - path to wal directory of instance;
-  - `systemd_service` - name to systemd service;
-  - `systemd_service_dir` - path to directory of systemd service extensions;
-  - `systemd_service_env_file` - path to file of systemd service environment extensions;
-  - `tmpfiles_conf` - path to config file of temporary files;
-  - `dist_dir` - path to directory of distributed package;
-  - `instance_dist_dir` - path to instance link to distributed package;
-  - `paths_to_remove_on_expel` - paths that will be removed on instance expel;
-  - `files_to_remove_on_cleanup` - files that will be removed on instance cleanup;
-  - `dirs_to_remove_on_cleanup` - dirs that will be removed on instance cleanup;
-- `single_instances_for_each_machine` - list of instances (Ansible hosts), one for each physical machine,
-  for example, can be used in `delegate_to`;
-- `scenario_steps` - description of scenario steps. Each step is a dictionary with fields:
-  - `name` - name of step;
-  - `path` - path to YAML file of step.
+Here are described steps that can be combined in the role scenarios.
+Each step description says what variables are required for the step and
+what variables are set by step.
 
 # Role Steps List
 
@@ -63,6 +40,35 @@ but can be used in a custom one:
 - [restart_instance_force](#restart_instance_force)
 - [patch_instance_in_runtime](#patch_instance_in_runtime)
 - [cleanup_instance_files](#cleanup_instance_files)
+
+# Role Variables Descriptions
+
+Some of useful variables always establishes during role preparation, so them can be used by any step:
+
+- `instance_info` - information for a current instance. It's a dictionary with fields:
+  - `app_conf_file` - path to file with application config;
+  - `conf_file` - path to file with instance config;
+  - `instance_id` - ID of instance (e.g. for section name in config file);
+  - `console_sock` - path to control socket of instance;
+  - `pid_file` - path to pid file of instance;
+  - `work_dir` - path to working directory of instance;
+  - `memtx_dir` - path to memtx directory of instance;
+  - `vinyl_dir` - path to vinyl directory of instance;
+  - `wal_dir` - path to wal directory of instance;
+  - `systemd_service` - name to systemd service;
+  - `systemd_service_dir` - path to directory of systemd service extensions;
+  - `systemd_service_env_file` - path to file of systemd service environment extensions;
+  - `tmpfiles_conf` - path to config file of temporary files;
+  - `dist_dir` - path to directory of distributed package;
+  - `instance_dist_dir` - path to instance link to distributed package;
+  - `paths_to_remove_on_expel` - paths that will be removed on instance expel;
+  - `files_to_remove_on_cleanup` - files that will be removed on instance cleanup;
+  - `dirs_to_remove_on_cleanup` - dirs that will be removed on instance cleanup;
+- `single_instances_for_each_machine` - list of instances (Ansible hosts), one for each physical machine,
+  for example, can be used in `delegate_to`;
+- `scenario_steps` - description of scenario steps. Each step is a dictionary with fields:
+  - `name` - name of step;
+  - `path` - path to YAML file of step.
 
 # Role Steps Description
 
