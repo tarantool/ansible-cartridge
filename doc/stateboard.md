@@ -10,11 +10,11 @@ A stateboard instance is started as a systemd service named `<app_name>-stateboa
 
 Stateboard instance is started and configured by the same steps as other
 instances.
-Pre-defined [configure_instances scenario](/doc/scenario.md#scenarios)
+Pre-defined [configure_instances scenario](/doc/scenario.md#pre-defined-scenarios)
 can be used for this.
 
 To specify stateboard parameters in application failover params
-[configure_failover step](/doc/scenario.md#configure_failover) should be used.
+[configure_failover step](/doc/steps.md#step-configure_failover) should be used.
 
 ## Configuring stateboard instance
 

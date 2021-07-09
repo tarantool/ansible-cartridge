@@ -16,7 +16,7 @@ Multiversion approach:
 * each instance uses fixed version - it is achieved by using symbolic links;
 * updating instance consists of:
   * moving its link to the newest version of application
-    (see [`update_instance` step](/doc/scenario.md#update_instance));
+    (see [`update_instance` step](/doc/steps.md#step-update_instance));
   * instance restart.
 
 ## Configuration
@@ -52,7 +52,7 @@ and stateboard.
 
 Each new version is added to `cartridge_app_install_dir` and sometimes old version
 become redundant.
-To simply rotate distributions use [`rotate_dists` step](/doc/scenario.md#rotate_dists)
+To simply rotate distributions use [`rotate_dists` step](/doc/steps.md#step-rotate_dists)
 
 ## Example
 

@@ -4,8 +4,8 @@ It could be useful to run code on instances by limit.
 
 There are two steps that allow running code snippets:
 
-* [`eval`](/doc/scenario.md#eval) runs specified snipped on each instance from play hosts.
-* [`eval_on_control_instance`](/doc/scenario.md#eval_on_control_instance) runs
+* [`eval`](/doc/steps.md#step-eval) runs specified snipped on each instance from play hosts.
+* [`eval_on_control_instance`](/doc/steps.md#step-eval_on_control_instance) runs
   specified snipped only on the control instance.
 
 By default, result is simply saved to `eval_res` variable, but if

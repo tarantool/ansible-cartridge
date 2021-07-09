@@ -66,13 +66,13 @@ configuration step by step.
 Since version [1.8.0](https://github.com/tarantool/ansible-cartridge/releases/tag/1.8.0)
 `tarantool.cartridge` role allows to specify [scenario](/doc/scenario.md)
 that consists of steps.
-The role has pre-defined [steps](/doc/scenario.md#steps), but you can also
+The role has pre-defined [steps](/doc/steps.md), but you can also
 [write your own step](/doc/scenario.md#adding-custom-step-to-scenario) and
 use it in scenario.
 
 Using scenarios allows to perform different actions with cluster separately.
 
-The role has several common [scenarios](/doc/scenario.md#scenarios) that
+The role has several common [scenarios](/doc/scenario.md#pre-defined-scenarios) that
 can be re-used.
 It's also possible to write custom scenario and then use it in different plays.
 
@@ -165,7 +165,7 @@ diff --git a/cookbook/getting-started/hosts.yml b/cookbook/getting-started/hosts
 ### Configure instances
 
 To start and configure instance we can use
-[`configure_instances`](/doc/scenario.md#scenarios) pre-defined scenario.
+[`configure_instances`](/doc/scenario.md#pre-defined-scenarios) pre-defined scenario.
 But it also contain steps we don't need (like `deliver_package` and `update_package`).
 `update_instance` step is used only with [multiversion approach](/doc/multiversion.md),
 we don't need it too.
@@ -227,7 +227,7 @@ sudo journalctl -u myapp@core-1 | less
 When we sure that instances have started successfully it's time to join them
 to replicasets.
 
-We will use [`configure_topology`](/doc/scenario.md#scenarios) pre-defined scenario
+We will use [`configure_topology`](/doc/scenario.md#pre-defined-scenarios) pre-defined scenario
 to manage replicasets.
 
 Specify `cartridge_scenario_name` in [playbook.configure-topology.yml](./playbook.configure-topology.yml):
@@ -267,7 +267,7 @@ New topology on http://localhost:8182/admin/cluster/dashboard:
 Now we have both `vshard-storage` and `vshard-router` replicasets.
 It's time to bootstrap vshard.
 
-We need the only one [`bootstrap_vshard` step](/doc/scenario.md#bootstrap_vshard).
+We need the only one [`bootstrap_vshard` step](/doc/steps.md#step-bootstrap_vshard).
 It requires `cartridge_bootstrap_vshard` variable set to `true` to run
 vshard bootstrapping.
 
@@ -293,7 +293,7 @@ reload the page and check that `Bootstrap vshard` button was disappeared and ins
 ## What's next?
 
 * start [stateboard instance](/doc/stateboard.md);
-* check out list of [available steps](/doc/scenario.md#steps);
+* check out list of [available steps](/doc/steps.md);
 * set up [cluster configuration](/doc/variables.md#cluster-configuration)
   parameters, such as authorization, failover and application configuration.
 

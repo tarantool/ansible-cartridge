@@ -47,8 +47,8 @@ but [steps API](/doc/steps.md) must be followed.
 
 What does it mean?
 
-Take a look at the [`deliver_package`](/doc/steps.md#deliver_package) and
-[`update_package`](/doc/steps.md#update_package) steps. They work together:
+Take a look at the [`deliver_package`](/doc/steps.md#step-deliver_package) and
+[`update_package`](/doc/steps.md#step-update_package) steps. They work together:
 
 * `deliver_package` delivers package and set `delivered_package_path` variable;
 * `update_package` installs package with path from `delivered_package_path`.
@@ -73,23 +73,23 @@ It contains a complete set of steps for deploying the application.
 
 Steps:
 
-- [deliver_package](/doc/steps.md#deliver_package)
-- [update_package](/doc/steps.md#update_package)
-- [update_instance](/doc/steps.md#update_instance)
-- [configure_instance](/doc/steps.md#configure_instance)
-- [restart_instance](/doc/steps.md#restart_instance)
-- [wait_instance_started](/doc/steps.md#wait_instance_started)
-- [connect_to_membership](/doc/steps.md#connect_to_membership)
-- [edit_topology](/doc/steps.md#edit_topology)
-- [cleanup_expelled](/doc/steps.md#cleanup_expelled)
-- [configure_auth](/doc/steps.md#configure_auth)
-- [upload_app_config](/doc/steps.md#upload_app_config)
-- [configure_app_config](/doc/steps.md#configure_app_config)
-- [bootstrap_vshard](/doc/steps.md#bootstrap_vshard)
-- [configure_failover](/doc/steps.md#configure_failover)
-- [wait_members_alive](/doc/steps.md#wait_members_alive)
-- [wait_cluster_has_no_issues](/doc/steps.md#wait_cluster_has_no_issues)
-- [cleanup](/doc/steps.md#cleanup)
+- [deliver_package](/doc/steps.md#step-deliver_package)
+- [update_package](/doc/steps.md#step-update_package)
+- [update_instance](/doc/steps.md#step-update_instance)
+- [configure_instance](/doc/steps.md#step-configure_instance)
+- [restart_instance](/doc/steps.md#step-restart_instance)
+- [wait_instance_started](/doc/steps.md#step-wait_instance_started)
+- [connect_to_membership](/doc/steps.md#step-connect_to_membership)
+- [edit_topology](/doc/steps.md#step-edit_topology)
+- [cleanup_expelled](/doc/steps.md#step-cleanup_expelled)
+- [configure_auth](/doc/steps.md#step-configure_auth)
+- [upload_app_config](/doc/steps.md#step-upload_app_config)
+- [configure_app_config](/doc/steps.md#step-configure_app_config)
+- [bootstrap_vshard](/doc/steps.md#step-bootstrap_vshard)
+- [configure_failover](/doc/steps.md#step-configure_failover)
+- [wait_members_alive](/doc/steps.md#step-wait_members_alive)
+- [wait_cluster_has_no_issues](/doc/steps.md#step-wait_cluster_has_no_issues)
+- [cleanup](/doc/steps.md#step-cleanup)
 
 ### Scenario `configure_instances`
 
@@ -97,14 +97,14 @@ This scenario contains steps for initial deployment of instances without applyin
 
 Steps:
 
-- [deliver_package](/doc/steps.md#deliver_package)
-- [update_package](/doc/steps.md#update_package)
-- [update_instance](/doc/steps.md#update_instance)
-- [configure_instance](/doc/steps.md#configure_instance)
-- [restart_instance](/doc/steps.md#restart_instance)
-- [wait_instance_started](/doc/steps.md#wait_instance_started)
-- [wait_cluster_has_no_issues](/doc/steps.md#wait_cluster_has_no_issues)
-- [cleanup](/doc/steps.md#cleanup)
+- [deliver_package](/doc/steps.md#step-deliver_package)
+- [update_package](/doc/steps.md#step-update_package)
+- [update_instance](/doc/steps.md#step-update_instance)
+- [configure_instance](/doc/steps.md#step-configure_instance)
+- [restart_instance](/doc/steps.md#step-restart_instance)
+- [wait_instance_started](/doc/steps.md#step-wait_instance_started)
+- [wait_cluster_has_no_issues](/doc/steps.md#step-wait_cluster_has_no_issues)
+- [cleanup](/doc/steps.md#step-cleanup)
 
 ### Scenario `configure_topology`
 
@@ -112,12 +112,12 @@ This scenario contains steps for editing a topology.
 
 Steps:
 
-- [connect_to_membership](/doc/steps.md#connect_to_membership)
-- [edit_topology](/doc/steps.md#edit_topology)
-- [cleanup_expelled](/doc/steps.md#cleanup_expelled)
-- [wait_members_alive](/doc/steps.md#wait_members_alive)
-- [wait_cluster_has_no_issues](/doc/steps.md#wait_cluster_has_no_issues)
-- [cleanup](/doc/steps.md#cleanup)
+- [connect_to_membership](/doc/steps.md#step-connect_to_membership)
+- [edit_topology](/doc/steps.md#step-edit_topology)
+- [cleanup_expelled](/doc/steps.md#step-cleanup_expelled)
+- [wait_members_alive](/doc/steps.md#step-wait_members_alive)
+- [wait_cluster_has_no_issues](/doc/steps.md#step-wait_cluster_has_no_issues)
+- [cleanup](/doc/steps.md#step-cleanup)
 
 ### Scenario `configure_app`
 
@@ -125,13 +125,13 @@ This scenario contains steps for editing a configuration of application.
 
 Steps:
 
-- [configure_auth](/doc/steps.md#configure_auth)
-- [configure_app_config](/doc/steps.md#configure_app_config)
-- [bootstrap_vshard](/doc/steps.md#bootstrap_vshard)
-- [configure_failover](/doc/steps.md#configure_failover)
-- [wait_members_alive](/doc/steps.md#wait_members_alive)
-- [wait_cluster_has_no_issues](/doc/steps.md#wait_cluster_has_no_issues)
-- [cleanup](/doc/steps.md#cleanup)
+- [configure_auth](/doc/steps.md#step-configure_auth)
+- [configure_app_config](/doc/steps.md#step-configure_app_config)
+- [bootstrap_vshard](/doc/steps.md#step-bootstrap_vshard)
+- [configure_failover](/doc/steps.md#step-configure_failover)
+- [wait_members_alive](/doc/steps.md#step-wait_members_alive)
+- [wait_cluster_has_no_issues](/doc/steps.md#step-wait_cluster_has_no_issues)
+- [cleanup](/doc/steps.md#step-cleanup)
 
 To add new scenarios or replace the role scenarios with your own,
 you should use `cartridge_custom_scenarios` option
@@ -233,7 +233,7 @@ Import role and specify a path to `custom_steps` directory in `cartridge_custom_
 Note, that:
 * [`single_instances_for_each_machine`](/doc/steps.md#role-variables-descriptions)
   variable is used to download package once for each machine;
-* `delivered_package_path` variable is set to respect [API](/doc/steps.md#deliver_package);
+* `delivered_package_path` variable is set to respect [API](/doc/steps.md#step-deliver_package);
 * previously defined `deliver_and_update_package` scenario will use our custom `deliver_package`;
 * `./custom_steps` path is relative to playbook path.
 

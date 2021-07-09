@@ -28,8 +28,8 @@ class TestSteps(unittest.TestCase):
         self.doc_facts_file = os.path.join(role_dir, 'doc', 'steps.md')
         with open(self.doc_facts_file, 'r') as f:
             text = f.read()
-            begin = text.find('# Role Steps List')
-            end = text.find('# Role Steps Description')
+            begin = text.find('## Role Steps List')
+            end = text.find('## Role Variables Descriptions')
             text = text[begin:end]
             self.doc_facts = re.findall(r'\n[*-][^\[]*\[([^]]+)]', text)
 

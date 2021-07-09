@@ -4,44 +4,44 @@ Here are described steps that can be combined in the role scenarios.
 Each step description says what variables are required for the step and
 what variables are set by step.
 
-# Role Steps List
+## Role Steps List
 
 List of steps from default scenario:
 
-- [deliver_package](#deliver_package)
-- [update_package](#update_package)
-- [update_instance](#update_instance)
-- [configure_instance](#configure_instance)
-- [restart_instance](#restart_instance)
-- [wait_instance_started](#wait_instance_started)
-- [connect_to_membership](#connect_to_membership)
-- [edit_topology](#edit_topology)
-- [cleanup_expelled](#cleanup_expelled)
-- [configure_auth](#configure_auth)
-- [upload_app_config](#upload_app_config)
-- [configure_app_config](#configure_app_config)
-- [bootstrap_vshard](#bootstrap_vshard)
-- [configure_failover](#configure_failover)
-- [wait_members_alive](#wait_members_alive)
-- [wait_cluster_has_no_issues](#wait_cluster_has_no_issues)
-- [cleanup](#cleanup)
+- [deliver_package](#step-deliver_package)
+- [update_package](#step-update_package)
+- [update_instance](#step-update_instance)
+- [configure_instance](#step-configure_instance)
+- [restart_instance](#step-restart_instance)
+- [wait_instance_started](#step-wait_instance_started)
+- [connect_to_membership](#step-connect_to_membership)
+- [edit_topology](#step-edit_topology)
+- [cleanup_expelled](#step-cleanup_expelled)
+- [configure_auth](#step-configure_auth)
+- [upload_app_config](#step-upload_app_config)
+- [configure_app_config](#step-configure_app_config)
+- [bootstrap_vshard](#step-bootstrap_vshard)
+- [configure_failover](#step-configure_failover)
+- [wait_members_alive](#step-wait_members_alive)
+- [wait_cluster_has_no_issues](#step-wait_cluster_has_no_issues)
+- [cleanup](#step-cleanup)
 
 Additional steps that are not included in the default scenario,
 but can be used in a custom one:
 
-- [set_control_instance](#set_control_instance)
-- [rotate_dists](#rotate_dists)
-- [failover_promote](#failover_promote)
-- [force_leaders](#force_leaders)
-- [eval](#eval)
-- [eval_on_control_instance](#eval_on_control_instance)
-- [stop_instance](#stop_instance)
-- [start_instance](#start_instance)
-- [restart_instance_force](#restart_instance_force)
-- [patch_instance_in_runtime](#patch_instance_in_runtime)
-- [cleanup_instance_files](#cleanup_instance_files)
+- [set_control_instance](#step-set_control_instance)
+- [rotate_dists](#step-rotate_dists)
+- [failover_promote](#step-failover_promote)
+- [force_leaders](#step-force_leaders)
+- [eval](#step-eval)
+- [eval_on_control_instance](#step-eval_on_control_instance)
+- [stop_instance](#step-stop_instance)
+- [start_instance](#step-start_instance)
+- [restart_instance_force](#step-restart_instance_force)
+- [patch_instance_in_runtime](#step-patch_instance_in_runtime)
+- [cleanup_instance_files](#step-cleanup_instance_files)
 
-# Role Variables Descriptions
+## Role Variables Descriptions
 
 Some of useful variables always establishes during role preparation, so them can be used by any step:
 
@@ -70,9 +70,7 @@ Some of useful variables always establishes during role preparation, so them can
   - `name` - name of step;
   - `path` - path to YAML file of step.
 
-# Role Steps Description
-
-## deliver_package
+## Step `deliver_package`
 
 Delivery of the application package to physical machines.
 
@@ -84,14 +82,14 @@ Output variables:
 
 - `delivered_package_path` - remote path to file of delivered package.
 
-## update_package
+## Step `update_package`
 
 Install the delivered package on physical machines.
 
 variables from steps completed before:
 
 - `delivered_package_path` - remote path to file of delivered package.
-  It's set in [deliver_package](#deliver_package) step. Also, it's set on role
+  It's set in [deliver_package](#step-deliver_package) step. Also, it's set on role
   preparation if `cartridge_delivered_package_path` is specified.
 
 Input variables from config:
@@ -124,7 +122,7 @@ Output variables:
 
 - `needs_restart` - if instance should be restarted to apply code or configuration changes.
 
-## update_instance
+## Step `update_instance`
 
 Update instance links for a new version of package (if
 [multiversion approach](/doc/multiversion.md) is enabled).
@@ -144,7 +142,7 @@ Output variables:
 
 - `needs_restart` - if instance should be restarted to apply code or configuration changes.
 
-## configure_instance
+## Step `configure_instance`
 
 Configure instance in runtime and change instance config.
 
@@ -167,15 +165,15 @@ Output variables:
 
 - `needs_restart` - if instance should be restarted to apply code or configuration changes.
 
-## restart_instance
+## Step `restart_instance`
 
 Restart and enable instance systemd service if it should be restarted.
 
 variables from steps completed before:
 
 - `needs_restart` - if instance should be restarted to apply code or
-  configuration changes. It's set in [update_package](#update_package),
-  [update_instance](#update_instance) and [configure_instance](#configure_instance)
+  configuration changes. It's set in [update_package](#step-update_package),
+  [update_instance](#step-update_instance) and [configure_instance](#step-configure_instance)
   steps.
 
 Input variables from config:
@@ -184,7 +182,7 @@ Input variables from config:
 - `cartridge_not_save_cookie_in_app_config` - flag indicates that cluster cookie shouldn't be persisted in application configuration file;
 - `restarted` - if instance should be restarted or not (user forced decision).
 
-## wait_instance_started
+## Step `wait_instance_started`
 
 Wait until an instance is fully started.
 
@@ -197,7 +195,7 @@ Input variables from config:
 - [DEPRECATED] `instance_start_timeout` - time in seconds to wait for instance to be started;
 - `cartridge_wait_buckets_discovery` - indicates if routers should wait for buckets discovery after vshard bootstrap.
 
-## connect_to_membership
+## Step `connect_to_membership`
 
 Connect an instance to membership.
 
@@ -210,7 +208,7 @@ Input variables from config:
 - `connect_to_membership_retries` - retries to connect to membership;
 - `connect_to_membership_delay` - delay before retry to connect to membership.
 
-## set_control_instance
+## Step `set_control_instance`
 
 Find some instance that can be used for editing topology and configuring cluster.
 This is instance that is:
@@ -223,7 +221,7 @@ This is instance that is:
   instances (because Cartridge two-phase commit should be called by instance
   that has lowest version).
 
-Steps that require control instance (such as [`edit_topology`](#edit_topology))
+Steps that require control instance (such as [`edit_topology`](#step-edit_topology))
 call `set_control_instance` implicitly if `control_instance` variable isn't set.
 
 `control_instance` variable can be set by user via `cartridge_control_instance` variable.
@@ -244,11 +242,11 @@ Output variables:
   - `name` - instance name (Ansible host);
   - `console_sock` - path to control socket of instance.
 
-## edit_topology
+## Step `edit_topology`
 
 Edit topology of replicasets.
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
@@ -269,7 +267,7 @@ Input variables from config:
 - `edit_topology_healthy_timeout` - time in seconds to wait until a cluster become healthy after editing topology;
 - [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.
 
-## cleanup_expelled
+## Step `cleanup_expelled`
 
 Cleanup files if instance is expelled.
 
@@ -277,21 +275,21 @@ Input variables from config:
 
 - `expelled` - indicates if instance must be expelled from topology;
 
-## configure_auth
+## Step `configure_auth`
 
 Configure application authentication settings.
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
 - `cartridge_auth` - authorization configuration.
 
-## upload_app_config
+## Step `upload_app_config`
 
 Upload application configuration (mode details in [application config doc](/doc/app_config.md#config-uploading)).
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
@@ -302,21 +300,21 @@ Input variables from config:
 - `cartridge_cluster_cookie` - cluster cookie for all cluster instances;
 - `cartridge_tdg_token` - token to upload config by HTTP in TDG.
 
-## configure_app_config
+## Step `configure_app_config`
 
 Configure application configuration.
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
 - `cartridge_app_config` - application config sections to patch.
 
-## bootstrap_vshard
+## Step `bootstrap_vshard`
 
 Bootstrap VShard in cluster.
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
@@ -330,23 +328,23 @@ Input variables from config:
 - [DEPRECATED] `instance_discover_buckets_timeout` - time in seconds to wait for instance to discover buckets;
 - `cartridge_wait_buckets_discovery` - indicates if routers should wait for buckets discovery after vshard bootstrap;
 
-## configure_failover
+## Step `configure_failover`
 
 Configure application failover.
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
 - `cartridge_failover_params` - failover parameters;
 - [DEPRECATED] `cartridge_failover` - indicates if eventual failover should be enabled or disabled.
 
-## wait_members_alive
+## Step `wait_members_alive`
 
 Waits until all cluster instances become alive and come to a specified state
 (by default, it's `RolesConfigured`).
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
@@ -354,11 +352,11 @@ Input variables from config:
 - `wait_members_alive_retries` - retries to check that all instances become alive;
 - `wait_members_alive_delay` - delay to retry instances status check.
 
-## wait_cluster_has_no_issues
+## Step `wait_cluster_has_no_issues`
 
 Waits until the cluster has no issues.
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
@@ -367,15 +365,15 @@ Input variables from config:
 - `allow_warning_issues` - allow issues with `warning` level;
 - `show_issues` - log cluster issues as a warnings;
 
-## cleanup
+## Step `cleanup`
 
 Removes temporary files specified in `temporary_files` list.
 By default, `temporary_files` is an empty list. The role,
 depending on the scenario, can add the following files to this list:
 
 - path to delivered package (`delivered_package_path` variable value
-  from [deliver_package](#deliver_package) step);
-- path to repository setup script (from [update_package](#update_package) step).
+  from [deliver_package](#step-deliver_package) step);
+- path to repository setup script (from [update_package](#step-update_package) step).
 
 In addition, you can add any files to this list by specifying `temporary_files` in configuration or in any custom step.
 For example, you can make a step like this:
@@ -394,7 +392,7 @@ Input variables from config:
 
 - `cartridge_remove_temporary_files` - indicates if temporary files should be removed.
 
-## rotate_dists
+## Step `rotate_dists`
 
 Rotate application distributions.
 
@@ -414,25 +412,25 @@ Output variables:
 - `dists_dirs_to_remove` - list of distribution directories paths that
   were removed.
 
-## failover_promote
+## Step `failover_promote`
 
 [Promotes leaders](/doc/rolling_update.md#using-failover_promote-step) according to specified
 [`cartridge_failover_promote_params`](/doc/rolling_update.md#leaders-promotion).
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
 - `cartridge_failover_promote_params` - promote leaders params. More details in
   [rolling update doc](/doc/rolling_update.md#leaders-promotion).
 
-## force_leaders
+## Step `force_leaders`
 
 [Promotes leaders](/doc/rolling_update.md#using-force_leaders-step)
 to current play hosts (instances specified in limit).
 More details in [rolling update doc](/doc/rolling_update.md).
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
@@ -440,7 +438,7 @@ Input variables from config:
   In variable, only `force_inconsistency` parameter is used (leaders are got from specified play hosts).
   More details in [rolling update doc](/doc/rolling_update.md).
 
-## eval
+## Step `eval`
 
 [Eval code](/doc/eval.md) on instance.
 
@@ -454,11 +452,11 @@ Input variables from config:
 - `cartridge_eval_retries` number of eval retries;
 - `cartridge_eval_delay` - eval retries delay.
 
-## eval_on_control_instance
+## Step `eval_on_control_instance`
 
 [Eval code](/doc/eval.md) on control instance.
 
-*If `control_instance` is not defined then [set_control_instance](#set_control_instance) will run.*
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
 Input variables from config:
 
@@ -470,19 +468,19 @@ Input variables from config:
 - `cartridge_eval_retries` number of eval retries;
 - `cartridge_eval_delay` - eval retries delay.
 
-## stop_instance
+## Step `stop_instance`
 
 Stop and disable instance systemd service.
 
-## start_instance
+## Step `start_instance`
 
 Start and enable instance systemd service.
 
-## restart_instance_force
+## Step `restart_instance_force`
 
 Restart and enable instance systemd service without any conditions.
 
-## patch_instance_in_runtime
+## Step `patch_instance_in_runtime`
 
 Patch dynamic (see [parameters](https://www.tarantool.io/en/doc/latest/reference/configuration/#configuration-parameters)
 with `Dynamic: yes`) instance parameters in runtime only
@@ -497,7 +495,7 @@ Input variables from config:
 - `cartridge_runtime_params` - new instance parameters ([more details here](/doc/instances.md));
 - `expelled` - indicates if instance must be expelled from topology.
 
-## cleanup_instance_files
+## Step `cleanup_instance_files`
 
 Clean up data of stopped instance.
 If instance is running, an error will be returned.
