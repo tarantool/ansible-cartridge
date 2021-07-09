@@ -1,5 +1,10 @@
 # Ansible Role: Tarantool Cartridge
 
+[![Ansible Galaxy](https://img.shields.io/github/v/release/tarantool/ansible-cartridge?include_prereleases&labelColor=2d3532&color=27c24c)](https://galaxy.ansible.com/tarantool/cartridge)
+[![Unit tests](https://github.com/tarantool/ansible-cartridge/actions/workflows/unit-tests.yml/badge.svg)](https://github.com/tarantool/ansible-cartridge/actions/workflows/unit-tests.yml)
+[![Molecule tests](https://github.com/tarantool/ansible-cartridge/actions/workflows/molecule-tests.yml/badge.svg)](https://github.com/tarantool/ansible-cartridge/actions/workflows/molecule-tests.yml)
+[![Consistency tests](https://github.com/tarantool/ansible-cartridge/actions/workflows/consistency-tests.yml/badge.svg)](https://github.com/tarantool/ansible-cartridge/actions/workflows/consistency-tests.yml)
+
 An Ansible role to easily deploy
 [Tarantool Cartridge](https://github.com/tarantool/cartridge) applications.
 
