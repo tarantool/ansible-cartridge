@@ -540,7 +540,7 @@ Output facts:
 
 ### Step `backup_start`
 
-Start a backup process on the instance.
+Start a [backup](/doc/backup.md) process on the instance.
 
 Input facts (set by role):
 
@@ -556,7 +556,7 @@ Output facts:
 
 ### Step `backup_stop`
 
-Stop started backup on the instance.
+Stop started [backup](/doc/backup.md) on the instance.
 
 Input facts (set by role):
 

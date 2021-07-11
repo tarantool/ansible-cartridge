@@ -188,6 +188,7 @@ For more details about using scenario and available steps, see
 * [Application config](/doc/app_config.md)
 * [Rolling update](/doc/rolling_update.md)
 * [Eval Lua code on instances](/doc/eval.md)
+* [Backups](/doc/backups.md)
 
 ## Cookbook
 
