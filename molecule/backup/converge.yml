@@ -44,6 +44,14 @@
         success_msg: 'Fetching archive was not skipped'
         that: backup_archive_fetch_res.changed
 
+    - name: 'Check fetched_backup_archive_path fact'
+      assert:
+        fail_msg: 'Received bad fetched_backup_archive_path'
+        success_msg: 'Received fetched_backup_archive_path is OK'
+        that: >-
+          fetched_backup_archive_path ==
+            (playbook_dir, cartridge_fetch_backups_dir, backup_archive_path | basename) | cartridge_path_join
+
 - name: 'Check backup start and stop for joined instance and stateboard'
   hosts: instance-2-joined,my-stateboard
   become: true
@@ -51,5 +59,3 @@
   gather_facts: false
   tasks:
     - include_tasks: include/check_backup_start_stop.yml
-      vars:
-        cartridge_fetch_backups: true

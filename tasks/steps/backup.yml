@@ -27,7 +27,12 @@
 - name: Fetch backup archive
   fetch:
     src: '{{ backup_archive_path }}'
-    dest: '{{ cartridge_fetch_backups_dir }}'
+    dest: '{{ cartridge_fetch_backups_dir | cartridge_add_trailing_slash }}'
     flat: true
   when: cartridge_fetch_backups
   register: backup_archive_fetch_res
+
+- name: 'Set "fetched_backup_archive_path" fact'
+  set_fact:
+    fetched_backup_archive_path: '{{ backup_archive_fetch_res.dest }}'
+  when: cartridge_fetch_backups

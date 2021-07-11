@@ -516,7 +516,7 @@ Input variables from config:
 
 ### Step `backup`
 
-Create a backup archive for each instance and fetch it on the local machine.
+Create a [backup](/doc/backup.md) archive for each instance and fetch it on the local machine.
 
 Input facts (set by role):
 
@@ -526,15 +526,17 @@ Input facts (set by role):
 Input facts (set by config):
 
 - `cartridge_remote_backups_dir` - directory to store backups on the remote;
-- `cartridge_fetch_backups_dir` - flag indicates that backups should be fetched on the local machine;
+- `cartridge_fetch_backups` - flag indicates that backups should be fetched the local machine;
+- `cartridge_fetch_backups_dir` -  a directory on the local machine where backups should be fetched if `cartridge_fetch_backups` is `true`. This path is relative to the playbook path;
 - `cartridge_app_user` - user which will own the links;
 - `cartridge_app_group` - group which will own the links;
 - `stateboard` - indicates that the instance is a stateboard.
 
 Output facts:
 
-- `instance_backup_files` - list of instance files that should be added to backup archive;
+- `instance_backup_files` - list of instance files to back up;
 - `backup_archive_path` - path to the instance backup archive on the remote machine;
+- `fetched_backup_archive_path` - path to the fetched backup file (is set only if `cartridge_fetch_backups` is `true`).
 
 ### Step `backup_start`
 
