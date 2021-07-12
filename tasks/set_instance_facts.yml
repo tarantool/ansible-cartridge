@@ -138,8 +138,9 @@
 
       cached_facts_res: '{{ cached_facts_res }}'
       cached_facts: '{{ cached_facts }}'
-      single_instances_for_each_machine_res: '{{ single_instances_for_each_machine_res }}'
+      facts_for_each_machine_res: '{{ facts_for_each_machine_res }}'
       single_instances_for_each_machine: '{{ single_instances_for_each_machine }}'
+      play_hosts_from_same_machine: '{{ play_hosts_from_same_machine }}'
 
       # Eval params
 

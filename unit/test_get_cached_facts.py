@@ -50,7 +50,7 @@ class TestGetCachedFacts(unittest.TestCase):
                 },
                 'instance_3': {},
             },
-            'single_instances_for_each_machine': {
+            'facts_for_each_machine': {
                 'instance_1': {
                     'expelled': True,
                     'ansible_host': 'some_host',
