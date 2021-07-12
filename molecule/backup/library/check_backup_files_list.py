@@ -23,10 +23,10 @@ if __name__ == '__main__':
 
     # filter out config subdirectories
     conf_path = os.path.join(instance_info['work_dir'], 'config').strip(os.path.sep)
-    files_list = list(filter(
+    files_list = list(sorted(filter(
         lambda p: p == conf_path or not p.startswith(conf_path),
         map(lambda path: path.strip(os.path.sep), files_list),
-    ))
+    )))
 
     if not stateboard:
         exp_files_list_regexps = [
@@ -42,7 +42,7 @@ if __name__ == '__main__':
             instance_info['conf_file'],
         ]
 
-    exp_files_list_regexps = list(map(lambda r: r.strip(os.path.sep), exp_files_list_regexps))
+    exp_files_list_regexps = list(sorted(map(lambda r: r.strip(os.path.sep), exp_files_list_regexps)))
 
     files_list_is_ok = all([
         re.match(exp_files_list_regexps[i], file_path)

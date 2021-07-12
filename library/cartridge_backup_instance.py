@@ -125,10 +125,9 @@ def call_backup(params):
         })
 
     # ARCHIVE
-    if not stop_only:
-        instance_id = params['instance_id']
-        backups_dir = params['backups_dir']
-        backup_archive_path = backup_pack(instance_id, backups_dir, backup_files)
+    instance_id = params['instance_id']
+    backups_dir = params['backups_dir']
+    backup_archive_path = backup_pack(instance_id, backups_dir, backup_files)
 
     # STOP
     err = backup_stop(control_console)

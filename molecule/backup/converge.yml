@@ -28,6 +28,12 @@
         success_msg: 'Fetching archive was skipped'
         that: backup_archive_fetch_res.skipped
 
+    - name: 'Check fetched_backup_archive_path fact is empty'
+      assert:
+        fail_msg: 'Received bad fetched_backup_archive_path'
+        success_msg: 'Received fetched_backup_archive_path is OK'
+        that: fetched_backup_archive_path is none
+
 - name: 'Backup joined instance and stateboard with fetching archive'
   hosts: instance-2-joined,my-stateboard
   become: true

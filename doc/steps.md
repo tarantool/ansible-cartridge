@@ -518,11 +518,6 @@ Input variables from config:
 
 Create a [backup](/doc/backup.md) archive for each instance and fetch it on the local machine.
 
-Input facts (set by role):
-
-- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions));
-- `single_instances_for_each_machine` that allows us to run this task once per each machine.
-
 Input facts (set by config):
 
 - `cartridge_remote_backups_dir` - directory to store backups on the remote;
@@ -542,10 +537,6 @@ Output facts:
 
 Start a [backup](/doc/backup.md) process on the instance.
 
-Input facts (set by role):
-
-- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).
-
 Input facts (set by config):
 
 - `stateboard` - indicates that the instance is a stateboard.
@@ -557,7 +548,3 @@ Output facts:
 ### Step `backup_stop`
 
 Stop started [backup](/doc/backup.md) on the instance.
-
-Input facts (set by role):
-
-- `instance_info` - information for a current instance ([more details here](#role-facts-descriptions)).

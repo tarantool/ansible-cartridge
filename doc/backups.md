@@ -83,9 +83,9 @@ After running this playbook, we have such archive on local machine:
 
 ```
 
-On the remote machines, backups are placed in `/opt/backups/` directory,
+On the remote machines, backups are placed in `/opt/backups/` directory.
 
-These variables are set for each instance:
+On each instance the following variables will be set:
 
 ```json
 instance-1: {

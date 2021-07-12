@@ -6,10 +6,10 @@ def path_join(parts):
 
 
 def add_trailing_slash(path):
-    if path.endswith("/"):
+    if path.endswith(os.path.sep):
         return path
 
-    return path + "/"
+    return path + os.path.sep
 
 
 class FilterModule(object):
