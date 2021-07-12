@@ -14,7 +14,7 @@ The instance backup process contains three stages:
   * fetching an archive from the remote machine to
     [`cartridge_fetch_backups_dir`](/doc/variables.md#backups-configuration)
     if [`cartridge_fetch_backups`](/doc/variables.md#backups-configuration) is `true`;
-  * `fetched_backup_archive_path` is set (path to the fetched instance backup archive on the local machine);
+  * `fetched_backup_archive_path` is set if [`cartridge_fetch_backups`](/doc/variables.md#backups-configuration) is `true` (path to the fetched instance backup archive on the local machine);
 * Stopping backup:
   * [`box.backup.stop()`](https://www.tarantool.io/en/doc/latest/reference/reference_lua/box_backup/stop/) is called.
 
@@ -28,14 +28,14 @@ There are three steps that allows to create a backup:
 
 ## Instance files
 
-These files are added to an archive for each instance:
+These files are added to an archive for each instance (excluding the stateboard):
 
 * snapshot and vinyl files returned by [`box.backup.start()`](https://www.tarantool.io/en/doc/latest/reference/reference_lua/box_backup/start/);
 * cluster-wide config and its backup;
 * instance configuration file;
 * application configuration file.
 
-For a stateboard instance only snapshot files and configuration file will be added.
+For a stateboard instance only snapshot files and instance configuration file will be added.
 
 ## How to use backup steps?
 

@@ -175,6 +175,7 @@ needs_restart: null
 alive_not_expelled_instance: null
 instance_backup_files: null
 backup_archive_path: null
+fetched_backup_archive_path: null
 
 # Temp facts
 
