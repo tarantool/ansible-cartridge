@@ -44,7 +44,38 @@ return ret
 ''' % (helpers.FORMAT_REPLICASET_FUNC, helpers.FORMAT_SERVER_FUNC)
 
 
-def get_configured_replicasets(module_hostvars, play_hosts):
+###############################################
+# Collect information about inventory cluster #
+###############################################
+
+
+def get_instances_to_configure(module_hostvars, play_hosts):
+    instances = {}
+
+    for instance_name in play_hosts:
+        instance_vars = module_hostvars[instance_name]
+
+        if helpers.is_stateboard(instance_vars):
+            continue
+
+        instance = {}
+
+        if helpers.is_expelled(instance_vars):
+            instance['expelled'] = True
+        else:
+            if 'zone' in instance_vars:
+                instance['zone'] = instance_vars['zone']
+            if 'config' in instance_vars:
+                if 'advertise_uri' in instance_vars['config']:
+                    instance['uri'] = instance_vars['config']['advertise_uri']
+
+        if instance:
+            instances[instance_name] = instance
+
+    return instances
+
+
+def get_replicasets_to_configure(module_hostvars, play_hosts):
     replicasets = {}
 
     for instance_name in play_hosts:
@@ -74,32 +105,6 @@ def get_configured_replicasets(module_hostvars, play_hosts):
     return replicasets
 
 
-def get_instances_to_configure(module_hostvars, play_hosts):
-    instances = {}
-
-    for instance_name in play_hosts:
-        instance_vars = module_hostvars[instance_name]
-
-        if helpers.is_stateboard(instance_vars):
-            continue
-
-        instance = {}
-
-        if helpers.is_expelled(instance_vars):
-            instance['expelled'] = True
-        else:
-            if 'zone' in instance_vars:
-                instance['zone'] = instance_vars['zone']
-            if 'config' in instance_vars:
-                if 'advertise_uri' in instance_vars['config']:
-                    instance['uri'] = instance_vars['config']['advertise_uri']
-
-        if instance:
-            instances[instance_name] = instance
-
-    return instances
-
-
 def set_enabled_roles(replicasets, control_console):
     roles_by_aliases = {alias: r['roles'] for alias, r in replicasets.items()}
 
@@ -123,6 +128,11 @@ def set_enabled_roles(replicasets, control_console):
         replicasets[alias].update({
             'enabled_roles': enabled_roles,
         })
+
+
+#############################################################
+# Collect difference between real and inventory replicasets #
+#############################################################
 
 
 def add_replicaset_param_if_required(replicaset_params, replicaset, cluster_replicaset, param_name):
@@ -165,7 +175,8 @@ def check_filtered_instances(instances, filtered_instances, fmt, allow_missed_in
 
 
 def sort_instances_to_join_by_failover_priority(
-        instances_to_join, replicaset, cluster_instances, allow_missed_instances):
+    instances_to_join, replicaset, cluster_instances, allow_missed_instances
+):
     failover_priority = replicaset.get('failover_priority')
     if not failover_priority:
         return instances_to_join, None
@@ -284,7 +295,11 @@ def get_replicaset_params(replicaset, cluster_replicaset, cluster_instances, all
     return replicaset_params, None
 
 
-def get_replicasets_params(replicasets, cluster_replicasets, cluster_instances, allow_missed_instances):
+def get_replicasets_params(
+    replicasets, cluster_replicasets,
+    cluster_instances,
+    allow_missed_instances,
+):
     replicasets_params = []
 
     for _, replicaset in replicasets.items():
@@ -305,8 +320,11 @@ def get_replicasets_params(replicasets, cluster_replicasets, cluster_instances, 
     return replicasets_params, None
 
 
-def get_replicasets_params_for_changing_failover_priority(replicasets, cluster_replicasets,
-                                                          cluster_instances, allow_missed_instances):
+def get_replicasets_params_for_changing_failover_priority(
+    replicasets, cluster_replicasets,
+    cluster_instances,
+    allow_missed_instances,
+):
     replicasets_params = []
 
     for alias, cluster_replicaset in cluster_replicasets.items():
@@ -318,7 +336,7 @@ def get_replicasets_params_for_changing_failover_priority(replicasets, cluster_r
             continue
 
         if cluster_replicaset['instances'][:len(failover_priority)] == failover_priority:
-            return None, None
+            continue
 
         filtered_failover_priority = list(filter(
             lambda s: s in cluster_instances and cluster_instances[s].get('uuid'),
@@ -329,7 +347,7 @@ def get_replicasets_params_for_changing_failover_priority(replicasets, cluster_r
             failover_priority,
             filtered_failover_priority,
             "Instances %s from %s failover_priority aren't joined to cluster" % ("%s", alias),
-            allow_missed_instances
+            allow_missed_instances,
         )
 
         if err is not None:
@@ -345,6 +363,11 @@ def get_replicasets_params_for_changing_failover_priority(replicasets, cluster_r
         })
 
     return replicasets_params, None
+
+
+#########################################################
+# Collect difference between real and inventory servers #
+#########################################################
 
 
 def add_server_param_if_required(server_params, instance_params, cluster_instance, param_name):
@@ -407,51 +430,9 @@ def get_servers_params(instances, cluster_instances, allow_missed_instances):
     return servers_params, None
 
 
-def get_topology_params(replicasets, cluster_replicasets, instances, cluster_instances, allow_missed_instances):
-    topology_params = {}
-
-    replicasets_params, err = get_replicasets_params(
-        replicasets, cluster_replicasets, cluster_instances, allow_missed_instances
-    )
-    if err is not None:
-        return None, err
-
-    if replicasets_params:
-        topology_params['replicasets'] = replicasets_params
-
-    servers_params, err = get_servers_params(instances, cluster_instances, allow_missed_instances)
-    if err is not None:
-        return None, err
-
-    if servers_params:
-        topology_params['servers'] = servers_params
-
-    return topology_params, None
-
-
-def get_replicasets_failover_priority_and_instances_params(
-    replicasets, cluster_replicasets, instances, cluster_instances, allow_missed_instances
-):
-    topology_params = {}
-
-    replicasets_params, err = get_replicasets_params_for_changing_failover_priority(
-        replicasets, cluster_replicasets, cluster_instances, allow_missed_instances
-    )
-    if err is not None:
-        return None, err
-
-    if replicasets_params:
-        topology_params['replicasets'] = replicasets_params
-
-    # manage instances that were joined on previous call
-    servers_params, err = get_servers_params(instances, cluster_instances, allow_missed_instances)
-    if err is not None:
-        return None, err
-
-    if servers_params:
-        topology_params['servers'] = servers_params
-
-    return topology_params, None
+#########################
+# Edit topology helpers #
+#########################
 
 
 def wait_for_cluster_is_healthy(control_console, timeout):
@@ -489,6 +470,85 @@ def update_cluster_instances_and_replicasets(
         cluster_replicasets[alias] = res_replicaset
 
 
+#################
+# Main function #
+################
+
+
+def get_topology_params(
+    get_replicasets_params_func,
+    replicasets, cluster_replicasets,
+    instances, cluster_instances,
+    allow_missed_instances,
+):
+    topology_params = {}
+
+    replicasets_params, err = get_replicasets_params_func(
+        replicasets, cluster_replicasets, cluster_instances, allow_missed_instances
+    )
+    if err is not None:
+        return None, err
+
+    if replicasets_params:
+        topology_params['replicasets'] = replicasets_params
+
+    servers_params, err = get_servers_params(instances, cluster_instances, allow_missed_instances)
+    if err is not None:
+        return None, err
+
+    if servers_params:
+        topology_params['servers'] = servers_params
+
+    return topology_params, None
+
+
+def single_edit_topology_call(
+    control_console,
+    get_replicasets_params_func,
+    instances, cluster_instances,
+    replicasets, cluster_replicasets,
+    allow_missed_instances,
+    healthy_timeout,
+):
+    topology_params, err = get_topology_params(
+        get_replicasets_params_func,
+        replicasets, cluster_replicasets,
+        instances, cluster_instances,
+        allow_missed_instances,
+    )
+    if err is not None:
+        return None, "Failed to collect edit topology params: %s" % err
+
+    if not topology_params:
+        return False, None
+
+    res, err = control_console.eval_res_err(edit_topology_func_body, topology_params)
+    if err is not None:
+        return None, 'Failed to edit topology: %s' % err
+
+    # Without this `Peer closed` error is returned on second `edit_topology`
+    # call in some cases (e.g. when new instance is joined at first call
+    # and then it's configured on second)
+    # See https://github.com/tarantool/cartridge/issues/1320
+    # The simplest w/a is to add a little delay between this calls,
+    # and we just perform `is_healthy` call here.
+    # If everything is Ok - this call doesn't take a long time, but
+    # guarantees that next `edit_topology` call wouldn't fail.
+    # If cluster isn't healthy then it's good to show error.
+    if not wait_for_cluster_is_healthy(control_console, healthy_timeout):
+        return None, "Cluster isn't healthy after editing topology"
+
+    # Now we need to get updated instances and replicasets
+    # configuration to check if we need one more call.
+    # `edit_topology` returns summary of updated instances
+    # so let's use it to update cluster_instances and cluster_replicasets.
+    update_cluster_instances_and_replicasets(
+        res, instances, cluster_instances, cluster_replicasets
+    )
+
+    return True, None
+
+
 def edit_topology(params):
     console_sock = params['console_sock']
     module_hostvars = params['module_hostvars']
@@ -496,15 +556,19 @@ def edit_topology(params):
     healthy_timeout = params['healthy_timeout']
     allow_missed_instances = params['allow_missed_instances']
 
-    replicasets = get_configured_replicasets(module_hostvars, play_hosts)
+    # Collect information about instances and replicasets from inventory
+
     instances = get_instances_to_configure(module_hostvars, play_hosts)
+    replicasets = get_replicasets_to_configure(module_hostvars, play_hosts)
 
     if not replicasets and not instances:
         return helpers.ModuleRes(changed=False)
 
-    control_console = helpers.get_control_console(console_sock)
+    # Collect information about instances and replicasets from cluster
 
+    control_console = helpers.get_control_console(console_sock)
     helpers.set_twophase_options_from_params(control_console, params)
+
     set_enabled_roles(replicasets, control_console)
 
     cluster_instances = helpers.get_cluster_instances(control_console)
@@ -519,75 +583,34 @@ def edit_topology(params):
     # * Configure instances that are already joined.
     #   New instances aren't configured here since they don't have
     #   UUIDs before join.
-    topology_params, err = get_topology_params(
-        replicasets, cluster_replicasets, instances, cluster_instances, allow_missed_instances
+
+    first_call_changed, err = single_edit_topology_call(
+        control_console,
+        get_replicasets_params,
+        instances, cluster_instances,
+        replicasets, cluster_replicasets,
+        allow_missed_instances,
+        healthy_timeout,
     )
     if err is not None:
-        return helpers.ModuleRes(
-            failed=True,
-            msg="Failed to collect edit topology params: %s" % err
-        )
-
-    topology_changed = False
-
-    if topology_params:
-        res, err = control_console.eval_res_err(edit_topology_func_body, topology_params)
-        if err is not None:
-            return helpers.ModuleRes(failed=True, msg="Failed to edit topology: %s" % err)
-
-        topology_changed = True
-
-        # Without this `Peer closed` error is returned on second `edit_topology`
-        # call in some cases (e.g. when new instance is joined at first call
-        # and then it's configured on second)
-        # See https://github.com/tarantool/cartridge/issues/1320
-        # The simplest w/a is to add a little delay between this calls,
-        # and we just perform `is_healthy` call here.
-        # If everything is Ok - this call doesn't take a long time, but
-        # guarantees that next `edit_topology` call wouldn't fail.
-        # If cluster isn't healthy then it's good to show error.
-        if not wait_for_cluster_is_healthy(control_console, healthy_timeout):
-            return helpers.ModuleRes(
-                failed=True, msg="Cluster isn't healthy after editing topology"
-            )
-
-        # Now we need to get updated instances and replicasets
-        # configuration to check if we need one more call.
-        # `edit_topology` returns summary of updated instances
-        # so let's use it to update cluster_instances and cluster_replicasets.
-        update_cluster_instances_and_replicasets(
-            res, instances, cluster_instances, cluster_replicasets
-        )
+        return helpers.ModuleRes(failed=True, msg=err)
 
     # Configure failover_priority and instances that were joined on previous call:
     # * Edit failover_priority of replicasets if it's needed.
     # * Configure instances that weren't configured on first `edit_topology` call.
-    topology_params, err = get_replicasets_failover_priority_and_instances_params(
-        replicasets, cluster_replicasets, instances, cluster_instances, allow_missed_instances
+
+    second_call_changed, err = single_edit_topology_call(
+        control_console,
+        get_replicasets_params_for_changing_failover_priority,
+        instances, cluster_instances,
+        replicasets, cluster_replicasets,
+        allow_missed_instances,
+        healthy_timeout,
     )
     if err is not None:
-        return helpers.ModuleRes(
-            failed=True,
-            msg="Failed to collect edit topology params for changing failover_priority "
-                "and configuring new instances: %s" % err
-        )
+        return helpers.ModuleRes(failed=True, msg=err)
 
-    if topology_params:
-        res, err = control_console.eval_res_err(edit_topology_func_body, topology_params)
-        if err is not None:
-            return helpers.ModuleRes(
-                failed=True,
-                msg="Failed to edit failover priority and configure instances: %s" % err
-            )
-
-        topology_changed = True
-
-        if not wait_for_cluster_is_healthy(control_console, healthy_timeout):
-            return helpers.ModuleRes(
-                failed=True, msg="Cluster isn't healthy after editing failover priority and configuring instances"
-            )
-
-    return helpers.ModuleRes(changed=topology_changed)
+    return helpers.ModuleRes(changed=first_call_changed or second_call_changed)
 
 
 if __name__ == '__main__':

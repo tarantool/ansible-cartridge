@@ -223,7 +223,7 @@ class TestValidateConfig(unittest.TestCase):
 
             res = call_validate_config({'instance-1': params})
             self.assertTrue(res.failed)
-            self.assertIn('"{}" must be specified'.format(p), res.msg)
+            self.assertIn("'{}' must be specified".format(p), res.msg)
 
     def test_config_required_params(self):
         res = call_validate_config({
@@ -234,7 +234,7 @@ class TestValidateConfig(unittest.TestCase):
             }
         })
         self.assertTrue(res.failed)
-        self.assertIn('Missed required parameter "advertise_uri" in "instance-1" config', res.msg)
+        self.assertIn("Missed required parameter 'advertise_uri' in 'instance-1' config", res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -244,7 +244,7 @@ class TestValidateConfig(unittest.TestCase):
             }
         })
         self.assertTrue(res.failed)
-        self.assertIn('Instance advertise_uri must be specified as "<host>:<port>" ("instance-1")', res.msg)
+        self.assertIn("Instance advertise_uri must be specified as '<host>:<port>' ('instance-1')", res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -272,7 +272,7 @@ class TestValidateConfig(unittest.TestCase):
             res = call_validate_config(bad_params)
             self.assertTrue(res.failed)
             self.assertIn(
-                'Specified forbidden parameter "{}" in "instance-1" config'.format(p),
+                "Specified forbidden parameter '{}' in 'instance-1' config".format(p),
                 res.msg
             )
 
@@ -287,7 +287,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"',
+            "Cluster cookie must be specified in 'cartridge_cluster_cookie', not in 'cartridge_defaults'",
             res.msg
         )
 
@@ -342,7 +342,7 @@ class TestValidateConfig(unittest.TestCase):
                 'instance-2': instance2_params,
             })
             self.assertTrue(res.failed)
-            self.assertIn('"{}" must be the same for all hosts'.format(p), res.msg)
+            self.assertIn("'{}' must be the same for all hosts".format(p), res.msg)
 
             # passed only for one instance
             if p not in required_params:
@@ -357,7 +357,7 @@ class TestValidateConfig(unittest.TestCase):
                     'instance-2': instance2_params,
                 })
                 self.assertTrue(res.failed)
-                self.assertIn('"{}" must be the same for all hosts'.format(p), res.msg)
+                self.assertIn("'{}' must be the same for all hosts".format(p), res.msg)
 
     def test_replicaset_required_params(self):
         instance_required_params = {
@@ -377,7 +377,7 @@ class TestValidateConfig(unittest.TestCase):
 
             res = call_validate_config({'instance-1': params})
             self.assertTrue(res.failed)
-            self.assertIn('Parameter "{}" is required for all replicasets'.format(p), res.msg)
+            self.assertIn("Parameter '{}' is required for all replicasets".format(p), res.msg)
 
     def test_replicaset_common_params(self):
         params = {
@@ -424,7 +424,7 @@ class TestValidateConfig(unittest.TestCase):
                 'instance-21': replicaset2_params,
             })
             self.assertTrue(res.failed)
-            errmsg = 'Replicaset parameters must be the same for all instances within one replicaset ("replicaset-1")'
+            errmsg = "Replicaset parameters must be the same for all instances within one replicaset ('replicaset-1')"
             self.assertIn(errmsg, res.msg)
 
             # passed only for one instance
@@ -441,8 +441,8 @@ class TestValidateConfig(unittest.TestCase):
                     'instance-21': replicaset2_params,
                 })
                 self.assertTrue(res.failed)
-                errmsg = 'Replicaset parameters must be the same for all instances within one replicaset ' + \
-                         '("replicaset-1")'
+                errmsg = "Replicaset parameters must be the same for all instances within one replicaset " + \
+                         "('replicaset-1')"
                 self.assertIn(errmsg, res.msg)
 
     def test_app_config(self):
@@ -455,7 +455,7 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertTrue(res.failed)
-        self.assertIn("cartridge_app_config must be <class 'dict'>", res.msg)
+        self.assertIn('cartridge_app_config must be <class \'dict\'>', res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -477,7 +477,7 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertTrue(res.failed)
-        self.assertIn('"cartridge_app_config.section-1" must be dict', res.msg)
+        self.assertIn("'cartridge_app_config.section-1' must be dict", res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -489,7 +489,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            '"cartridge_app_config.section-1" must have "body" or "deleted" subsection',
+            "'cartridge_app_config.section-1' must have 'body' or 'deleted' subsection",
             res.msg
         )
 
@@ -505,7 +505,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            'cartridge_app_config.section-1" can contain only "body" or "deleted" subsections',
+            "cartridge_app_config.section-1' can contain only 'body' or 'deleted' subsections",
             res.msg
         )
 
@@ -521,7 +521,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            '"cartridge_app_config.section-1" can contain only "body" or "deleted" subsections',
+            "'cartridge_app_config.section-1' can contain only 'body' or 'deleted' subsections",
             res.msg
         )
 
@@ -540,7 +540,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            '"cartridge_app_config.section-1" can contain only "body" or "deleted" subsections',
+            "'cartridge_app_config.section-1' can contain only 'body' or 'deleted' subsections",
             res.msg
         )
 
@@ -558,7 +558,7 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertTrue(res.failed)
-        self.assertIn('"cartridge_app_config.section-1.deleted" must be bool', res.msg)
+        self.assertIn("'cartridge_app_config.section-1.deleted' must be bool", res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -571,7 +571,7 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertTrue(res.failed)
-        self.assertIn('"cartridge_app_config.section-1.body" is required', res.msg)
+        self.assertIn("'cartridge_app_config.section-1.body' is required", res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -655,7 +655,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            'Flags "expelled" and "restarted" cannot be set at the same time',
+            "Flags 'expelled' and 'restarted' cannot be set at the same time",
             res.msg
         )
 
@@ -674,7 +674,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            'Only one of "cartridge_failover" and "cartridge_failover_params" can be specified',
+            "Only one of 'cartridge_failover' and 'cartridge_failover_params' can be specified",
             res.msg
         )
 
@@ -721,7 +721,7 @@ class TestValidateConfig(unittest.TestCase):
             res = call_validate_config(params)
             self.assertTrue(res.failed)
             self.assertIn(
-                '"{}" failover parameter is allowed only for "stateful" mode'.format(p),
+                "'{}' failover parameter is allowed only for 'stateful' mode".format(p),
                 res.msg
             )
 
@@ -748,7 +748,7 @@ class TestValidateConfig(unittest.TestCase):
             res = call_validate_config(params)
             self.assertTrue(res.failed)
             self.assertIn(
-                '"{}" failover parameter is required for "stateful" mode'.format(p),
+                "'{}' failover parameter is required for 'stateful' mode".format(p),
                 res.msg
             )
 
@@ -785,7 +785,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            'stateboard_params" is required for "stateboard" state provider',
+            "stateboard_params' is required for 'stateboard' state provider",
             res.msg
         )
 
@@ -817,7 +817,7 @@ class TestValidateConfig(unittest.TestCase):
             res = call_validate_config(params)
             self.assertTrue(res.failed)
             self.assertIn(
-                'stateboard_params.{}" is required for "stateboard" provider'.format(p),
+                "stateboard_params.{}' is required for 'stateboard' provider".format(p),
                 res.msg
             )
 
@@ -839,7 +839,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            'Stateboard URI must be specified as "<host>:<port>"',
+            "Stateboard URI must be specified as '<host>:<port>'",
             res.msg
         )
 
@@ -901,7 +901,7 @@ class TestValidateConfig(unittest.TestCase):
         })
         self.assertTrue(res.failed)
         self.assertIn(
-            'etcd2 endpoints must be specified as "<host>:<port>"',
+            "etcd2 endpoints must be specified as '<host>:<port>'",
             res.msg
         )
 
