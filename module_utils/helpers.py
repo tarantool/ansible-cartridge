@@ -621,7 +621,7 @@ def enrich_replicasets_with_leaders(control_console, replicasets):
         return None
 
     for replicaset_name, replicaset_params in replicasets.items():
-        replicaset_params['leader'] = leaders.get(replicaset_params['uuid'])
+        replicaset_params['leader_uuid'] = leaders.get(replicaset_params['uuid'])
 
     return None
 

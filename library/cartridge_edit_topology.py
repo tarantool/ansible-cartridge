@@ -318,32 +318,29 @@ def get_replicaset_params(new_replicaset, old_replicaset, old_instances, allow_m
 
 def change_failover_priority_if_leader_not_first(replicaset_params, old_replicaset, old_instances):
     if any([
-        not replicaset_params,
-        not old_replicaset or not old_replicaset.get('leader'),
+        not (replicaset_params or {}).get('uuid'),
+        not (replicaset_params or {}).get('join_servers'),
+        not (old_replicaset or {}).get('leader_uuid'),
         not old_instances,
     ]):
         return replicaset_params
 
-    if replicaset_params.get('uuid') is not None and replicaset_params.get('join_servers'):
-        leader_uuid = old_replicaset.get('leader')
-        replicaset_instances = old_replicaset['instances']
-        first_instance_uuid = old_instances[replicaset_instances[0]].get('uuid')
+    leader_uuid = old_replicaset.get('leader_uuid')
+    replicaset_instances = old_replicaset['instances']
+    first_instance_uuid = old_instances[replicaset_instances[0]].get('uuid')
 
-        if leader_uuid != first_instance_uuid:
-            # We can't join instances if leader not first (https://github.com/tarantool/cartridge/issues/1204)
-            del replicaset_params['join_servers']
+    if leader_uuid == first_instance_uuid:
+        return replicaset_params
 
-            # Count temp failover priority
-            temp_failover_priority_names = []
-            for instance_name in replicaset_instances:
-                if old_instances[instance_name]['uuid'] != leader_uuid:
-                    temp_failover_priority_names.append(instance_name)
-                else:
-                    temp_failover_priority_names = [instance_name] + temp_failover_priority_names
+    # We can't join instances if leader not first (https://github.com/tarantool/cartridge/issues/1204)
+    del replicaset_params['join_servers']
 
-            replicaset_params['failover_priority'] = [
-                old_instances[s]['uuid'] for s in temp_failover_priority_names
-            ]
+    # Count temp failover priority
+    replicaset_params['failover_priority'] = [
+        old_instances[s]['uuid'] for s in replicaset_instances
+    ]
+    replicaset_params['failover_priority'].remove(leader_uuid)
+    replicaset_params['failover_priority'] = [leader_uuid] + replicaset_params['failover_priority']
 
     return replicaset_params
 
@@ -379,7 +376,7 @@ def get_replicasets_params(
     return replicasets_params, None
 
 
-def get_replicasets_params_for_join_instances(
+def get_replicasets_params_to_join_instances(
     new_replicasets, old_replicasets,
     old_instances,
     allow_missed_instances,
@@ -841,7 +838,7 @@ def edit_topology(params):
 
     changed_on_second_call, err = single_edit_topology_call(
         control_console,
-        get_replicasets_params_for_join_instances,
+        get_replicasets_params_to_join_instances,
         None,
         new_instances, old_instances,
         new_replicasets, old_replicasets,
