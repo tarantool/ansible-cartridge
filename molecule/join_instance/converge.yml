@@ -1,0 +1,35 @@
+---
+
+- name: 'Force leader to core-2'
+  hosts: core-2
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - force_leaders
+
+- name: 'Add core-3 to replicaset'
+  hosts: core-3
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: "Set 'replicaset_alias' fact"
+      set_fact:
+        replicaset_alias: core
+
+- name: 'Try to join instance'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - edit_topology

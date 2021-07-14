@@ -27,7 +27,7 @@ def assert_err_soft_mode(t, allow_missed_instances, res, exp_replicasets_opts, e
 
     if allow_missed_instances:
         t.assertEqual(res.failed, False)
-        t.assertEqual(res_json['warnings'], [expected_err])
+        t.assertEqual(list(set(res_json['warnings'])), [expected_err])
 
         calls = t.instance.get_calls('edit_topology')
         call = calls[0]
