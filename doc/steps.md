@@ -66,6 +66,10 @@ Some of useful variables always establishes during role preparation, so them can
   - `dirs_to_remove_on_cleanup` - dirs that will be removed on instance cleanup;
 - `single_instances_for_each_machine` - list of instances (Ansible hosts), one for each physical machine,
   for example, can be used in `delegate_to`;
+- `instances_from_same_machine` - dictionary, where key is the hostname of the instance,
+  value is the hostnames of instances from the same physical machine;
+  so, you can use `instances_from_same_machine[inventory_hostname]` to get
+  a list of instances placed on the same machine as the current one;
 - `scenario_steps` - description of scenario steps. Each step is a dictionary with fields:
   - `name` - name of step;
   - `path` - path to YAML file of step.

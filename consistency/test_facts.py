@@ -57,8 +57,9 @@ class TestFacts(unittest.TestCase):
             # Temp facts
             'cached_facts_res',
             'cached_facts',
-            'single_instances_for_each_machine_res',
+            'facts_for_machines_res',
             'single_instances_for_each_machine',
+            'instances_from_same_machine',
         ]
 
         self.assertEqual(

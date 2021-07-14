@@ -76,17 +76,24 @@
   become: false
 
 - name: 'Select one instance for each physical machine'
-  cartridge_get_single_instances_for_each_machine:
-    module_hostvars: '{{ cached_facts.single_instances_for_each_machine }}'
+  cartridge_get_facts_for_machines:
+    module_hostvars: '{{ cached_facts.facts_for_machines }}'
     play_hosts: '{{ play_hosts }}'
   run_once: true
   delegate_to: localhost
   become: false
-  register: single_instances_for_each_machine_res
+  register: facts_for_machines_res
 
 - name: 'Set "single_instances_for_each_machine" fact'
   set_fact:
-    single_instances_for_each_machine: '{{ single_instances_for_each_machine_res.fact }}'
+    single_instances_for_each_machine: '{{ facts_for_machines_res.single_instances_for_each_machine }}'
   run_once: true
   delegate_to: localhost
   become: false
+
+- name: 'Set "instances_from_same_machine" fact'
+  set_fact:
+    instances_from_same_machine: '{{ facts_for_machines_res.instances_from_same_machine }}'
+
+- debug: var=single_instances_for_each_machine
+- debug: var=instances_from_same_machine

@@ -60,8 +60,7 @@
   set_fact:
     cached_facts_res: null
     cached_facts: null
-    single_instances_for_each_machine_res: null
-    single_instances_for_each_machine: null
+    facts_for_machines_res: null
   run_once: true
   delegate_to: localhost
   become: false

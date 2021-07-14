@@ -90,7 +90,7 @@ FACTS_BY_TARGETS = {
         'cartridge_eval_retries',
         'cartridge_eval_delay',
     ],
-    'single_instances_for_each_machine': [
+    'facts_for_machines': [
         'expelled',
         'ansible_host',
         'ansible_port',
