@@ -20,38 +20,38 @@ def get_machine_id(instance_vars, instance_name):
     return machine_id
 
 
-def get_facts_for_each_machine(params):
+def get_facts_for_machines(params):
     module_hostvars = params['module_hostvars']
     play_hosts = params['play_hosts']
 
-    machines_single_instance = {}
-    machines_play_hosts = {}
-    instances_play_hosts = {}
+    single_instances_for_each_machine = {}
+    instances_by_machines = {}
+    instances_from_same_machine = {}
 
     for instance_name in sorted(play_hosts):
         instance_vars = module_hostvars[instance_name]
         machine_id = get_machine_id(instance_vars, instance_name)
 
         # Calculate play hosts for each machine
-        machines_play_hosts[machine_id] = machines_play_hosts.get(machine_id, [])
-        machines_play_hosts[machine_id].append(instance_name)
+        instances_by_machines[machine_id] = instances_by_machines.get(machine_id, [])
+        instances_by_machines[machine_id].append(instance_name)
 
         # Copy link to machine list
-        instances_play_hosts[instance_name] = machines_play_hosts[machine_id]
+        instances_from_same_machine[instance_name] = instances_by_machines[machine_id]
 
         # Calculate single not expelled instance for each machine
         if all([
             not helpers.is_expelled(instance_vars),
-            machine_id not in machines_single_instance,
+            machine_id not in single_instances_for_each_machine,
         ]):
-            machines_single_instance[machine_id] = instance_name
+            single_instances_for_each_machine[machine_id] = instance_name
 
     return helpers.ModuleRes(
         changed=False,
-        single_instances=list(machines_single_instance.values()),
-        play_hosts=instances_play_hosts,
+        single_instances_for_each_machine=list(single_instances_for_each_machine.values()),
+        instances_from_same_machine=instances_from_same_machine,
     )
 
 
 if __name__ == '__main__':
-    helpers.execute_module(argument_spec, get_facts_for_each_machine)
+    helpers.execute_module(argument_spec, get_facts_for_machines)

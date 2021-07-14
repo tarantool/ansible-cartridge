@@ -4,14 +4,14 @@ import unittest
 import module_utils.helpers as helpers
 
 sys.modules['ansible.module_utils.helpers'] = helpers
-from library.cartridge_get_facts_for_each_machine import get_facts_for_each_machine
+from library.cartridge_get_facts_for_machines import get_facts_for_machines
 
 
 def call_get_facts_for_machine(module_hostvars, play_hosts=None):
     if play_hosts is None:
         play_hosts = module_hostvars.keys()
 
-    return get_facts_for_each_machine({
+    return get_facts_for_machines({
         'module_hostvars': module_hostvars,
         'play_hosts': play_hosts,
     })
@@ -75,8 +75,8 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
             'expelled-1', 'expelled-2',
         ])
         self.assertFalse(res.failed, res.msg)
-        self.assertEqual(len(res.kwargs['single_instances']), 0)
-        self.assertEqual(res.kwargs['play_hosts'], {
+        self.assertEqual(len(res.kwargs['single_instances_for_each_machine']), 0)
+        self.assertEqual(res.kwargs['instances_from_same_machine'], {
             # host-1:22
             'expelled-1': ['expelled-1'],
             # host-2:22
@@ -88,8 +88,8 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
             'expelled-1', 'expelled-2', 'stateboard-1', 'stateboard-2',
         ])
         self.assertFalse(res.failed, res.msg)
-        self.assertEqual(res.kwargs['single_instances'], ['stateboard-1', 'stateboard-2'])
-        self.assertEqual(res.kwargs['play_hosts'], {
+        self.assertEqual(res.kwargs['single_instances_for_each_machine'], ['stateboard-1', 'stateboard-2'])
+        self.assertEqual(res.kwargs['instances_from_same_machine'], {
             # host-1:22
             'expelled-1': ['expelled-1', 'stateboard-1'],
             'stateboard-1': ['expelled-1', 'stateboard-1'],
@@ -107,12 +107,12 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
         ])
         self.assertFalse(res.failed, res.msg)
 
-        single_instances = res.kwargs['single_instances']
-        self.assertSetEqual(set(single_instances), {
+        single_instances_for_each_machine = res.kwargs['single_instances_for_each_machine']
+        self.assertSetEqual(set(single_instances_for_each_machine), {
             'instance-1-1', 'instance-1-3',
             'instance-2-1', 'instance-2-3', 'instance-2-4',
         })
-        self.assertEqual(res.kwargs['play_hosts'], {
+        self.assertEqual(res.kwargs['instances_from_same_machine'], {
             # host-1:22
             'expelled-1': ['expelled-1', 'instance-1-1', 'instance-1-2', 'stateboard-1'],
             'instance-1-1': ['expelled-1', 'instance-1-1', 'instance-1-2', 'stateboard-1'],
