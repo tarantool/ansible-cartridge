@@ -94,6 +94,3 @@
 - name: 'Set "instances_from_same_machine" fact'
   set_fact:
     instances_from_same_machine: '{{ facts_for_machines_res.instances_from_same_machine }}'
-
-- debug: var=single_instances_for_each_machine
-- debug: var=instances_from_same_machine
