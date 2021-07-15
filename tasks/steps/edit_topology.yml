@@ -7,6 +7,8 @@
       run_once: true
       when: not control_instance
 
+    - import_tasks: 'blocks/edit_topology_check.yml'
+
     - name: 'Edit topology via {{ control_instance.name }}'
       cartridge_edit_topology:
         module_hostvars: '{{ cached_facts.edit_topology }}'

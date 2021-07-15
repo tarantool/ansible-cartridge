@@ -43,6 +43,7 @@ but can be used in a custom one:
 - [backup](#step-backup)
 - [backup_start](#step-backup_start)
 - [backup_stop](#step-backup_stop)
+- [edit_topology_check](#step-edit_topology_check)
 
 ## Role Variables Descriptions
 
@@ -272,7 +273,15 @@ Input variables from config:
 - `twophase_apply_config_timeout` - time in seconds to wait config apply
   while two-phase commit (Cartridge 2.5+ is required);
 - `edit_topology_healthy_timeout` - time in seconds to wait until a cluster become healthy after editing topology;
-- [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.
+- [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`;
+- `cartridge_force_advertise_uris_change` - flag that disable check
+  for advertise uris change;
+- `cartridge_ignore_extra_cluster_instances` - flag that disable check
+  for instances from the cluster that are not in inventory;
+- `cartridge_ignore_extra_cluster_replicasets` - flag that disable check
+  for replicasets from the cluster that are not in inventory;
+- `cartridge_ignore_renamed_replicasets` - flag that disable check
+  for replicasets that was renamed in cluster, but not renamed in inventory.
 
 ## Step `cleanup_expelled`
 
@@ -513,7 +522,6 @@ Input variables from config:
   to work/memtx/vinyl/wal directory that should be kept on instance cleanup
   (it's possible to use bash patterns, e.g. `*.control`).
 
-
 ### Step `backup`
 
 Create a [backup](/doc/backup.md) archive for each instance and fetch it on the local machine.
@@ -550,3 +558,35 @@ Output facts:
 ### Step `backup_stop`
 
 Stop started [backup](/doc/backup.md) on the instance.
+
+## Step `edit_topology_check`
+
+Check for dangerous changes on edit topology
+(runs automatically before [edit_topology](#step-edit_topology) step).
+
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
+
+Input variables from config:
+
+- `expelled` - indicates if instance must be expelled from topology;
+- `stateboard` - indicates that the instance is a stateboard;
+- `replicaset_alias` - replicaset alias, will be displayed in Web UI;
+- `roles` - roles to be enabled on the replicaset;
+- `failover_priority` - failover priority order;
+- `all_rw` - indicates that that all servers in the replicaset should be read-write;
+- `weight` - vshard replicaset weight;
+- `vshard_group` - vshard group;
+- `twophase_netbox_call_timeout` - time in seconds to wait netbox call
+  while two-phase commit (Cartridge 2.5+ is required);
+- `twophase_upload_config_timeout` - time in seconds to wait config upload
+  while two-phase commit (Cartridge 2.5+ is required);
+- `twophase_apply_config_timeout` - time in seconds to wait config apply
+  while two-phase commit (Cartridge 2.5+ is required);
+- `cartridge_force_advertise_uris_change` - flag that disable check
+  for advertise uris change;
+- `cartridge_ignore_extra_cluster_instances` - flag that disable check
+  for instances from the cluster that are not in inventory;
+- `cartridge_ignore_extra_cluster_replicasets` - flag that disable check
+  for replicasets from the cluster that are not in inventory;
+- `cartridge_ignore_renamed_replicasets` - flag that disable check
+  for replicasets that was renamed in cluster, but not renamed in inventory.

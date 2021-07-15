@@ -166,6 +166,17 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `cartridge_eval_retries` number of eval retries;
 * `cartridge_eval_delay` - eval retries delay.
 
+## Flags to disable edit topology checks
+
+* `cartridge_force_advertise_uris_change` - flag that disable check
+  for advertise uris change;
+* `cartridge_ignore_extra_cluster_instances` - flag that disable check
+  for instances from the cluster that are not in inventory;
+* `cartridge_ignore_extra_cluster_replicasets` - flag that disable check
+  for replicasets from the cluster that are not in inventory;
+* `cartridge_ignore_renamed_replicasets` - flag that disable check
+  for replicasets that was renamed in cluster, but not renamed in inventory.
+
 ## Steps configuration
 
 * `cartridge_delivered_package_path` - remote path to file of delivered package

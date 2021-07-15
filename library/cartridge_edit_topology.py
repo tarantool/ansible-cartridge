@@ -13,9 +13,16 @@ argument_spec = {
     'upload_config_timeout': {'required': False, 'type': 'int'},
     'apply_config_timeout': {'required': False, 'type': 'int'},
     'allow_missed_instances': {'required': True, 'type': 'bool'},
+    'check_mode': {'required': False, 'type': 'bool', 'default': False},
+    'ignore_checks': {'required': False, 'type': 'dict', 'default': {}},
 }
 
-edit_topology_func_body = '''
+ADVERTISE_URIS_CHANGE_CHECK_NAME = 'advertise_uris_change'
+EXTRA_CLUSTER_INSTANCES_CHECK_NAME = 'extra_cluster_instances'
+EXTRA_CLUSTER_REPLICASETS_CHECK_NAME = 'extra_cluster_replicasets'
+RENAMED_REPLICASETS_CHECK_NAME = 'renamed_replicasets'
+
+EDIT_TOPOLOGY_FUNC_BODY = '''
 %s
 %s
 
@@ -49,12 +56,10 @@ return ret
 ###############################################
 
 
-def get_instances_to_configure(module_hostvars, play_hosts):
+def get_all_instances_from_inventory(module_hostvars):
     instances = {}
 
-    for instance_name in play_hosts:
-        instance_vars = module_hostvars[instance_name]
-
+    for instance_name, instance_vars in module_hostvars.items():
         if helpers.is_stateboard(instance_vars):
             continue
 
@@ -63,9 +68,9 @@ def get_instances_to_configure(module_hostvars, play_hosts):
         if helpers.is_expelled(instance_vars):
             instance['expelled'] = True
         else:
-            if 'zone' in instance_vars:
+            if instance_vars.get('zone') is not None:
                 instance['zone'] = instance_vars['zone']
-            if 'config' in instance_vars:
+            if instance_vars.get('config') is not None:
                 if 'advertise_uri' in instance_vars['config']:
                     instance['uri'] = instance_vars['config']['advertise_uri']
 
@@ -75,12 +80,19 @@ def get_instances_to_configure(module_hostvars, play_hosts):
     return instances
 
 
-def get_replicasets_to_configure(module_hostvars, play_hosts):
+def get_instances_to_configure(module_hostvars, play_hosts):
+    module_hostvars = {
+        instance_name: instance_vars
+        for instance_name, instance_vars in module_hostvars.items()
+        if instance_name in play_hosts
+    }
+    return get_all_instances_from_inventory(module_hostvars)
+
+
+def get_all_replicasets_from_inventory(module_hostvars):
     replicasets = {}
 
-    for instance_name in play_hosts:
-        instance_vars = module_hostvars[instance_name]
-
+    for instance_name, instance_vars in module_hostvars.items():
         if helpers.is_expelled(instance_vars) or helpers.is_stateboard(instance_vars):
             continue
 
@@ -103,6 +115,15 @@ def get_replicasets_to_configure(module_hostvars, play_hosts):
         replicasets[replicaset_alias]['instances'].append(instance_name)
 
     return replicasets
+
+
+def get_replicasets_to_configure(module_hostvars, play_hosts):
+    module_hostvars = {
+        instance_name: instance_vars
+        for instance_name, instance_vars in module_hostvars.items()
+        if instance_name in play_hosts
+    }
+    return get_all_replicasets_from_inventory(module_hostvars)
 
 
 def set_enabled_roles(replicasets, control_console):
@@ -415,7 +436,10 @@ def get_server_params(instance_name, instance_params, cluster_instances, allow_m
     return server_params, None
 
 
-def get_servers_params(instances, cluster_instances, allow_missed_instances):
+def get_servers_params(
+    instances, cluster_instances,
+    allow_missed_instances,
+):
     servers_params = []
     for instance_name, instance_params in instances.items():
         server_params, err = get_server_params(
@@ -428,6 +452,77 @@ def get_servers_params(instances, cluster_instances, allow_missed_instances):
             servers_params.append(server_params)
 
     return servers_params, None
+
+
+##############
+# Check mode #
+##############
+
+def check_instances_for_dangerous_changes(all_instances, instances, cluster_instances, ignore_checks):
+    errors = []
+    extra_cluster_instances = []
+    changed_advertise_uris = []
+
+    for instance_name in cluster_instances.keys():
+        if instance_name not in all_instances:
+            extra_cluster_instances.append(instance_name)
+        elif instance_name in instances:
+            uri = instances[instance_name].get('uri')
+            cluster_uri = cluster_instances[instance_name].get('uri')
+            if uri != cluster_uri:
+                changed_advertise_uris.append('%s (%s -> %s)' % (instance_name, cluster_uri, uri))
+
+    if extra_cluster_instances and not ignore_checks.get(EXTRA_CLUSTER_INSTANCES_CHECK_NAME):
+        msg = 'Some instances from cluster are missing in inventory: %s' % ', '.join(extra_cluster_instances)
+        errors.append(msg)
+
+    if changed_advertise_uris and not ignore_checks.get(ADVERTISE_URIS_CHANGE_CHECK_NAME):
+        msg = 'Advertise uris of some instances changed: %s' % ', '.join(changed_advertise_uris)
+        errors.append(msg)
+
+    return errors
+
+
+def check_replicasets_for_dangerous_changes(all_replicasets, replicasets, cluster_replicasets, ignore_checks):
+    errors = []
+    extra_cluster_replicasets = []
+    renamed_replicasets = []
+
+    for cluster_replicaset_name, cluster_replicaset_params in cluster_replicasets.items():
+        if cluster_replicaset_name not in all_replicasets:
+            renamed = False
+
+            for replicaset_name, replicaset_params in all_replicasets.items():
+                if set(replicaset_params.get('instances', [])) == set(cluster_replicaset_params.get('instances', [])):
+                    renamed = True
+                    if replicaset_name in replicasets:
+                        renamed_replicasets.append('%s -> %s' % (replicaset_name, cluster_replicaset_name))
+
+            if not renamed:
+                extra_cluster_replicasets.append(cluster_replicaset_name)
+
+    if extra_cluster_replicasets and not ignore_checks.get(EXTRA_CLUSTER_REPLICASETS_CHECK_NAME):
+        msg = 'Some replicasets from cluster are missing in inventory: %s' % ', '.join(extra_cluster_replicasets)
+        errors.append(msg)
+
+    if renamed_replicasets and not ignore_checks.get(RENAMED_REPLICASETS_CHECK_NAME):
+        msg = 'Looks like that some replicasets should be renamed in inventory: %s' % ', '.join(renamed_replicasets)
+        errors.append(msg)
+
+    return errors
+
+
+def check_for_dangerous_changes(
+    all_instances, instances, cluster_instances,
+    all_replicasets, replicasets, cluster_replicasets,
+    ignore_checks,
+):
+    errors = []
+    errors += check_instances_for_dangerous_changes(all_instances, instances, cluster_instances, ignore_checks)
+    errors += check_replicasets_for_dangerous_changes(all_replicasets, replicasets, cluster_replicasets, ignore_checks)
+    if errors:
+        return '. '.join(errors)
+    return None
 
 
 #########################
@@ -477,14 +572,16 @@ def update_cluster_instances_and_replicasets(
 
 def get_topology_params(
     get_replicasets_params_func,
-    replicasets, cluster_replicasets,
     instances, cluster_instances,
+    replicasets, cluster_replicasets,
     allow_missed_instances,
 ):
     topology_params = {}
 
     replicasets_params, err = get_replicasets_params_func(
-        replicasets, cluster_replicasets, cluster_instances, allow_missed_instances
+        replicasets, cluster_replicasets,
+        cluster_instances,
+        allow_missed_instances,
     )
     if err is not None:
         return None, err
@@ -492,7 +589,10 @@ def get_topology_params(
     if replicasets_params:
         topology_params['replicasets'] = replicasets_params
 
-    servers_params, err = get_servers_params(instances, cluster_instances, allow_missed_instances)
+    servers_params, err = get_servers_params(
+        instances, cluster_instances,
+        allow_missed_instances,
+    )
     if err is not None:
         return None, err
 
@@ -512,8 +612,8 @@ def single_edit_topology_call(
 ):
     topology_params, err = get_topology_params(
         get_replicasets_params_func,
-        replicasets, cluster_replicasets,
         instances, cluster_instances,
+        replicasets, cluster_replicasets,
         allow_missed_instances,
     )
     if err is not None:
@@ -522,7 +622,7 @@ def single_edit_topology_call(
     if not topology_params:
         return False, None
 
-    res, err = control_console.eval_res_err(edit_topology_func_body, topology_params)
+    res, err = control_console.eval_res_err(EDIT_TOPOLOGY_FUNC_BODY, topology_params)
     if err is not None:
         return None, 'Failed to edit topology: %s' % err
 
@@ -555,6 +655,8 @@ def edit_topology(params):
     play_hosts = params['play_hosts']
     healthy_timeout = params['healthy_timeout']
     allow_missed_instances = params['allow_missed_instances']
+    check_mode = params.get('check_mode', False)
+    ignore_checks = params.get('ignore_checks', {})
 
     # Collect information about instances and replicasets from inventory
 
@@ -563,6 +665,9 @@ def edit_topology(params):
 
     if not replicasets and not instances:
         return helpers.ModuleRes(changed=False)
+
+    all_instances = get_all_instances_from_inventory(module_hostvars)
+    all_replicasets = get_all_replicasets_from_inventory(module_hostvars)
 
     # Collect information about instances and replicasets from cluster
 
@@ -573,6 +678,18 @@ def edit_topology(params):
 
     cluster_instances = helpers.get_cluster_instances(control_console)
     cluster_replicasets = helpers.get_cluster_replicasets(control_console)
+
+    # Check for dangerous changes
+
+    if check_mode:
+        err = check_for_dangerous_changes(
+            all_instances, instances, cluster_instances,
+            all_replicasets, replicasets, cluster_replicasets,
+            ignore_checks,
+        )
+        if err is not None:
+            return helpers.ModuleRes(failed=True, msg=err)
+        return helpers.ModuleRes(changed=False)
 
     # Configure replicasets and instances:
     # * Create new replicasets.

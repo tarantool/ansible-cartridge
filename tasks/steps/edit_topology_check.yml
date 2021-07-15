@@ -1,0 +1,10 @@
+---
+
+- tags: cartridge-replicasets
+  block:
+    - name: 'BLOCK: Select control instance'
+      include_tasks: 'blocks/set_control_instance.yml'
+      run_once: true
+      when: not control_instance
+
+    - import_tasks: 'blocks/edit_topology_check.yml'

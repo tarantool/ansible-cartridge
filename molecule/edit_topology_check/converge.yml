@@ -1,0 +1,166 @@
+---
+
+- name: 'Set default scenario'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set cartridge_scenario'
+      set_fact:
+        cartridge_scenario:
+          - edit_topology_check
+
+- name: 'Edit topology check for all cluster'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ansible-cartridge
+
+- name: 'Edit topology check for one replicaset'
+  hosts: core_1_replicaset
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ansible-cartridge
+
+- name: 'Edit topology check for one instance'
+  hosts: core-1
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - import_role:
+        name: ansible-cartridge
+
+- name: 'Remove core-2 instance and core-rs-2 replicaset'
+  hosts: core-2,core_2_replicaset
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Remove instance specific facts'
+      set_fact:
+        config: null
+        replicaset_alias: null
+        failover_priority: null
+        roles: null
+
+- name: 'Rename core_1_replicaset replicaset'
+  hosts: core_1_replicaset
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set new alias'
+      set_fact:
+        replicaset_alias: core-rs-1-renamed
+    - debug: var=replicaset_alias
+
+- name: 'Change URI of core-1 instance'
+  hosts: core-1-replica
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set new advertise_uri'
+      set_fact:
+        config:
+          advertise_uri: 'vm1:3305'
+          http_port: 8105
+
+- name: 'Edit topology check for all cluster'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - ignore_errors: true
+      import_role:
+        name: ansible-cartridge
+
+    - name: 'Show check result'
+      debug:
+        var: edit_topology_check_res
+
+    - name: 'Check that edit topology check message is correct'
+      assert:
+        that: >-
+          edit_topology_check_res.msg == [
+            'Some instances from cluster are missing in inventory: core-2, core-2-replica',
+            'Advertise uris of some instances changed: core-1-replica (vm1:3302 -> vm1:3305)',
+            'Some replicasets from cluster are missing in inventory: core-rs-2',
+            'Looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1',
+          ] | join('. ')
+        fail_msg: 'Edit topology check message is incorrect'
+        success_msg: 'Edit topology check message is correct'
+
+- name: 'Edit topology check for one replicaset'
+  hosts: core_1_replicaset
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - ignore_errors: true
+      import_role:
+        name: ansible-cartridge
+
+    - name: 'Show check result'
+      debug:
+        var: edit_topology_check_res
+
+    - name: 'Check that edit topology check message is correct'
+      assert:
+        that: >-
+          edit_topology_check_res.msg == [
+            'Some instances from cluster are missing in inventory: core-2, core-2-replica',
+            'Advertise uris of some instances changed: core-1-replica (vm1:3302 -> vm1:3305)',
+            'Some replicasets from cluster are missing in inventory: core-rs-2',
+            'Looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1',
+          ] | join('. ')
+        fail_msg: 'Edit topology check message is incorrect'
+        success_msg: 'Edit topology check message is correct'
+
+- name: 'Edit topology check for one instance'
+  hosts: core-1
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - ignore_errors: true
+      import_role:
+        name: ansible-cartridge
+
+    - name: 'Show check result'
+      debug:
+        var: edit_topology_check_res
+
+    - name: 'Check that edit topology check message is correct'
+      assert:
+        that: >-
+          edit_topology_check_res.msg == [
+            'Some instances from cluster are missing in inventory: core-2, core-2-replica',
+            'Some replicasets from cluster are missing in inventory: core-rs-2',
+            'Looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1',
+          ] | join('. ')
+        fail_msg: 'Edit topology check message is incorrect'
+        success_msg: 'Edit topology check message is correct'
+
+- name: 'Edit topology check for all cluster with ignore flags'
+  hosts: core_1_replicaset
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - vars:
+        cartridge_force_advertise_uris_change: true
+        cartridge_ignore_extra_cluster_instances: true
+        cartridge_ignore_extra_cluster_replicasets: true
+        cartridge_ignore_renamed_replicasets: true
+      import_role:
+        name: ansible-cartridge

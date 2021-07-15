@@ -200,3 +200,10 @@ cartridge_eval_delay: 5
 cartridge_remote_backups_dir: /opt/tarantool/backups
 cartridge_fetch_backups: false
 cartridge_fetch_backups_dir: backups/
+
+# Edit topology check
+
+cartridge_force_advertise_uris_change: false
+cartridge_ignore_extra_cluster_instances: false
+cartridge_ignore_extra_cluster_replicasets: false
+cartridge_ignore_renamed_replicasets: false
