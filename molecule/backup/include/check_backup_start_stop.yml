@@ -1,0 +1,84 @@
+---
+
+# START
+
+- name: 'Call backup_start'
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_scenario:
+      - backup_start
+
+- name: 'Check that "backup_archive_path" is empty'
+  assert:
+    fail_msg: 'backup_archive_path should be empty'
+    success_msg: 'backup_archive_path is empty'
+    that: backup_archive_path is none
+
+- name: 'Check "instance_backup_files" and "backup_files_from_machine"'
+  check_backup_files_list:
+    instance_info: '{{ instance_info }}'
+    files_list: '{{ instance_backup_files }}'
+    stateboard: '{{ stateboard }}'
+    hostvars: '{{ hostvars }}'
+    backup_files_from_machine: '{{ backup_files_from_machine }}'
+    instances_from_machine: '{{ instances_from_same_machine[inventory_hostname] }}'
+
+- name: 'Try to start a new backup'
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_scenario:
+      - eval
+    cartridge_eval_body: |
+      local ok, err = pcall(box.backup.start)
+      return ok, err
+
+- name: 'Check that box.backup.start() was already called'
+  assert:
+    fail_msg: 'box.backup.start() was not called'
+    success_msg: 'box.backup.start() was called'
+    that:
+      - not eval_res[0]
+      - eval_res[1] == "Backup is already in progress"
+
+# STOP
+
+- name: 'Call backup_stop'
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_scenario:
+      - backup_stop
+
+- name: 'Check that instance_backup_files was not set'
+  assert:
+    fail_msg: 'instance_backup_files was set'
+    success_msg: 'instance_backup_files was not set'
+    that: instance_backup_files is none
+
+- name: 'Check that "backup_archive_path" is empty'
+  assert:
+    fail_msg: 'backup_archive_path should be empty'
+    success_msg: 'backup_archive_path is empty'
+    that: backup_archive_path is none
+
+- name: 'Try to start a new backup'
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_scenario:
+      - eval
+    cartridge_eval_body: |
+      local ok = pcall(function()
+          box.backup.start()
+          box.backup.stop()
+      end)
+      return ok
+
+- name: 'Check that box.backup.stop() was called'
+  assert:
+    fail_msg: 'box.backup.stop() was not called'
+    success_msg: 'box.backup.stop() was called'
+    that:
+      - eval_res[0]

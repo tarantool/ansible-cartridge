@@ -1,0 +1,45 @@
+---
+
+- name: 'Create backups dir'
+  file:
+    path: '{{ cartridge_remote_backups_dir }}'
+    owner: '{{ cartridge_app_user }}'
+    group: '{{ cartridge_app_group }}'
+    state: directory
+    mode: 0660
+  when: inventory_hostname in single_instances_for_each_machine
+
+- name: 'Create instance backup archive'
+  cartridge_backup_instance:
+    instance_id: '{{ instance_info.instance_id }}'
+    stateboard: '{{ stateboard }}'
+    backups_dir: '{{ cartridge_remote_backups_dir }}'
+    console_sock: '{{ instance_info.console_sock }}'
+    instance_conf_file: '{{ instance_info.conf_file }}'
+    app_conf_file: '{{ instance_info.app_conf_file }}'
+  register: backup_res
+
+- name: 'Set "backup_archive_path" and "instance_backup_files" facts'
+  set_fact:
+    instance_backup_files: '{{ backup_res.fact.backup_files }}'
+    backup_archive_path: '{{ backup_res.fact.backup_archive_path }}'
+
+- name: 'Set "backup_files_from_machine" fact'
+  set_fact:
+    backup_files_from_machine: '{{ backup_files_from_machine + hostvars[instance].instance_backup_files }}'
+  with_items: '{{ instances_from_same_machine[inventory_hostname] }}'
+  loop_control:
+    loop_var: instance
+
+- name: Fetch backup archive
+  fetch:
+    src: '{{ backup_archive_path }}'
+    dest: '{{ cartridge_fetch_backups_dir | cartridge_add_trailing_slash }}'
+    flat: true
+  when: cartridge_fetch_backups
+  register: backup_archive_fetch_res
+
+- name: 'Set "fetched_backup_archive_path" fact'
+  set_fact:
+    fetched_backup_archive_path: '{{ backup_archive_fetch_res.dest }}'
+  when: cartridge_fetch_backups

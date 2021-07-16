@@ -1,0 +1,7 @@
+---
+
+- name: 'Stop instance backup'
+  cartridge_backup_instance:
+    console_sock: '{{ instance_info.console_sock }}'
+    stop_only: true
+  register: backup_res

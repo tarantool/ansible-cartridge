@@ -1,0 +1,31 @@
+---
+
+- name: 'Call backup'
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_scenario:
+      - backup
+
+- name: 'Check "instance_backup_files" and "backup_files_from_machine"'
+  check_backup_files_list:
+    instance_info: '{{ instance_info }}'
+    files_list: '{{ instance_backup_files }}'
+    stateboard: '{{ stateboard }}'
+    hostvars: '{{ hostvars }}'
+    backup_files_from_machine: '{{ backup_files_from_machine }}'
+    instances_from_machine: '{{ instances_from_same_machine[inventory_hostname] }}'
+
+- name: 'Unpack instance archive'
+  unarchive:
+    list_files: true
+    src: '{{ backup_archive_path }}'
+    remote_src: true
+    dest: /tmp/
+  register: backup_archive_res
+
+- name: 'Check backup archive files list'
+  check_backup_files_list:
+    instance_info: '{{ instance_info }}'
+    files_list: '{{ backup_archive_res.files }}'
+    stateboard: '{{ stateboard }}'

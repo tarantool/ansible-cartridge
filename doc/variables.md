@@ -172,3 +172,9 @@ For more details see [scenario documentation](/doc/scenario.md).
   (use it to run `update_package` step without `deliver_package` step);
 * `cartridge_control_instance` - some instance that can be used for editing
   topology and configuring cluster (use it to skip `set_control_instance` step).
+
+## Backups configuration
+
+* `cartridge_remote_backups_dir` (`string`, default: `/opt/tarantool/backups`) - directory to store backups on the remote;
+* `cartridge_fetch_backups` (`boolean`, default: `false`) - flag indicates that backups should be fetched on the local machine;
+* `cartridge_fetch_backups_dir` (`string`, default: `backups/`) - a directory on the local machine where backups should be fetched if `cartridge_fetch_backups` is `true`. This path is relative to the playbook path.

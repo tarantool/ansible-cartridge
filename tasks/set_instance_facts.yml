@@ -133,6 +133,10 @@
       temporary_files: '{{ temporary_files }}'
       needs_restart: '{{ needs_restart }}'
       alive_not_expelled_instance: '{{ alive_not_expelled_instance }}'
+      instance_backup_files: '{{ instance_backup_files }}'
+      backup_archive_path: '{{ backup_archive_path }}'
+      fetched_backup_archive_path: '{{ fetched_backup_archive_path }}'
+      backup_files_from_machine: '{{ backup_files_from_machine }}'
 
       # Temp facts
 
@@ -150,3 +154,9 @@
       cartridge_eval_with_retries: '{{ cartridge_eval_with_retries }}'
       cartridge_eval_retries: '{{ cartridge_eval_retries }}'
       cartridge_eval_delay: '{{ cartridge_eval_delay }}'
+
+      # Backups params
+
+      cartridge_remote_backups_dir: '{{ cartridge_remote_backups_dir }}'
+      cartridge_fetch_backups: '{{ cartridge_fetch_backups }}'
+      cartridge_fetch_backups_dir: '{{ cartridge_fetch_backups_dir }}'

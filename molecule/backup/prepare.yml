@@ -1,0 +1,42 @@
+---
+
+- name: Start instances
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_cluster_cookie: secret-cookie
+
+- name: 'Create memtx and vinyl spaces on joined instances'
+  hosts: instance-2-joined
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Create vinyl space on joined instances'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: |
+          local space = box.schema.space.create('memtx_space', {
+              if_not_exists = true,
+              engine = 'memtx',
+          })
+          space:create_index('primary', {
+              parts = { {1, 'unsigned'} },
+              if_not_exists = true,
+          })
+
+          local space = box.schema.space.create('vinyl_space', {
+              if_not_exists = true,
+              engine = 'vinyl',
+          })
+          space:create_index('primary', {
+              parts = { {1, 'unsigned'} },
+              if_not_exists = true,
+          })

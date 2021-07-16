@@ -173,6 +173,10 @@ control_instance: null
 temporary_files: []
 needs_restart: null
 alive_not_expelled_instance: null
+instance_backup_files: null
+backup_archive_path: null
+fetched_backup_archive_path: null
+backup_files_from_machine: []
 
 # Temp facts
 
@@ -190,3 +194,9 @@ cartridge_eval_args: []
 cartridge_eval_with_retries: false
 cartridge_eval_retries: 3
 cartridge_eval_delay: 5
+
+# Backups params
+
+cartridge_remote_backups_dir: /opt/tarantool/backups
+cartridge_fetch_backups: false
+cartridge_fetch_backups_dir: backups/

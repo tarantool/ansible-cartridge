@@ -1,0 +1,21 @@
+---
+
+- name: 'Start instance backup'
+  cartridge_backup_instance:
+    console_sock: '{{ instance_info.console_sock }}'
+    stateboard: '{{ stateboard }}'
+    instance_conf_file: '{{ instance_info.conf_file }}'
+    app_conf_file: '{{ instance_info.app_conf_file }}'
+    start_only: true
+  register: backup_res
+
+- name: 'Set "instance_backup_files" fact'
+  set_fact:
+    instance_backup_files: '{{ backup_res.fact.backup_files }}'
+
+- name: 'Set "backup_files_from_machine" fact'
+  set_fact:
+    backup_files_from_machine: '{{ backup_files_from_machine + hostvars[instance].instance_backup_files }}'
+  with_items: '{{ instances_from_same_machine[inventory_hostname] }}'
+  loop_control:
+    loop_var: instance
