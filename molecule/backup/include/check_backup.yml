@@ -12,6 +12,9 @@
     instance_info: '{{ instance_info }}'
     files_list: '{{ instance_backup_files }}'
     stateboard: '{{ stateboard }}'
+    hostvars: '{{ hostvars }}'
+    backup_files_from_machine: '{{ backup_files_from_machine }}'
+    instances_from_machine: '{{ instances_from_same_machine[inventory_hostname] }}'
 
 - name: 'Unpack instance archive'
   unarchive:

@@ -10,13 +10,13 @@
   vars:
     cartridge_cluster_cookie: secret-cookie
 
-- name: 'Create memtx and vinyl spaces on instance-2-joined'
+- name: 'Create memtx and vinyl spaces on joined instances'
   hosts: instance-2-joined
   become: true
   become_user: root
   gather_facts: false
   tasks:
-    - name: 'Create vinyl space on instance-2-joined'
+    - name: 'Create vinyl space on joined instances'
       import_role:
         name: ansible-cartridge
       vars:

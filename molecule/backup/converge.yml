@@ -14,8 +14,8 @@
         - backup_start
         - backup_stop
 
-- name: 'Backup joined instance and stateboard without fetching archive'
-  hosts: instance-2-joined,my-stateboard
+- name: 'Backup joined instances and stateboard without fetching archive'
+  hosts: cluster:!instance-1-not-joined
   become: true
   become_user: root
   gather_facts: false
@@ -34,8 +34,8 @@
         success_msg: 'Received fetched_backup_archive_path is OK'
         that: fetched_backup_archive_path is none
 
-- name: 'Backup joined instance and stateboard with fetching archive'
-  hosts: instance-2-joined,my-stateboard
+- name: 'Backup joined instances and stateboard with fetching archive'
+  hosts: cluster:!instance-1-not-joined
   become: true
   become_user: root
   gather_facts: false
@@ -58,8 +58,8 @@
           fetched_backup_archive_path ==
             (playbook_dir, cartridge_fetch_backups_dir, backup_archive_path | basename) | cartridge_path_join
 
-- name: 'Check backup start and stop for joined instance and stateboard'
-  hosts: instance-2-joined,my-stateboard
+- name: 'Check backup start and stop for joined instances and stateboard'
+  hosts: cluster:!instance-1-not-joined
   become: true
   become_user: root
   gather_facts: false

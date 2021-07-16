@@ -7,6 +7,7 @@ The instance backup process contains three stages:
   * [`box.snapshot()`](https://www.tarantool.io/en/doc/latest/reference/reference_lua/box_snapshot/) is called;
   * [`box.backup.start()`](https://www.tarantool.io/en/doc/latest/reference/reference_lua/box_backup/start/) is called;
   * `instance_backup_files` variable is set ([list of instance files](#instance-files) to back up);
+  * `backup_files_from_machine` variable is set (list of files to back up for all instances on the same machine as a current one);
 * Creating and fetching the backup archive:
   * all backup files are packed into the TGZ archive placed in [`cartridge_remote_backups_dir`](/doc/variables.md#backups-configuration);
   * all paths inside the archive are relative to `/`;
@@ -22,9 +23,9 @@ The instance backup process contains three stages:
 
 There are three steps that allows to create a backup:
 
-* [`backup`](/doc/scenario.md#backup) - performs all three stages;
-* [`backup_start`](/doc/scenario.md#backup_start) - only starts backup;
-* [`backup_stop`](/doc/scenario.md#backup_stop) - only stops backup.
+* [`backup`](/doc/steps.md#step-backup) - performs all three stages;
+* [`backup_start`](/doc/steps.md#step-backup_start) - only starts backup;
+* [`backup_stop`](/doc/steps.md#step-backup_stop) - only stops backup.
 
 ## Instance files
 
@@ -46,7 +47,7 @@ For a stateboard instance only snapshot files and instance configuration file wi
 
 ### Using `backup` step
 
-[`backup`](/doc/scenario.md#backup) step performs all backup stages:
+[`backup`](/doc/steps.md#step-backup) step performs all backup stages:
 
 * starting backup;
 * creating and fetching the backup archive;
@@ -116,9 +117,11 @@ my-stateboard: {
 
 Let's imagine that we want to archive backup files not for each instance, but for each machine:
 
-* use [`backup_start`](/doc/scenario.md#backup_start) for backup staring;
-* collect list of backup files for each machine using `instance_backup_files` that was set for each instance;
-* use [`backup_stop`](/doc/scenario.md#backup_stop) to stop backup process.
+* use [`backup_start`](/doc/steps.md#step-backup_start) for backup staring;
+* use [`backup_files_from_machine`](/doc/steps.md#step-backup_start)
+  and [`single_instances_for_each_machine`](/doc/steps.md#role-variables-descriptions)
+  to archive files for each machine;
+* use [`backup_stop`](/doc/steps.md#step-backup_stop) to stop backup process.
 
 ```yaml
 - name: 'Archive all instances files on machine'
@@ -142,29 +145,10 @@ Let's imagine that we want to archive backup files not for each instance, but fo
         cartridge_scenario:
           - backup_start
 
-    - name: 'Collect list of files by machines'
-      set_fact:
-        backup_files_by_machines: {}
-
-    - name: 'Collect list of files by machines'
-      set_fact:
-        backup_files_by_machines: >-
-          {{
-            backup_files_by_machines | combine({
-              hostvars[instance].ansible_host:
-                backup_files_by_machines[hostvars[instance].ansible_host] | default([])
-                  + hostvars[instance].instance_backup_files
-            })
-          }}
-      with_items: '{{ play_hosts }}'
-      loop_control:
-        loop_var: instance
-      run_once: true
-
     - name: 'Create archives with backups by machines'
       archive:
         dest: /opt/backups/{{ cartridge_app_name }}.{{ ansible_host }}.tar.gz
-        path: '{{ backup_files_by_machines[ansible_host] }}'
+        path: '{{ backup_files_from_machine }}'
       when: inventory_hostname in single_instances_for_each_machine
 
     - name: 'Stop backup'

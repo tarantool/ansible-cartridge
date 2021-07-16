@@ -530,6 +530,7 @@ Input facts (set by config):
 Output facts:
 
 - `instance_backup_files` - list of instance files to back up;
+- `backup_files_from_machine` - list of files to back up for all instances on the same machine as a current one;
 - `backup_archive_path` - path to the instance backup archive on the remote machine;
 - `fetched_backup_archive_path` - path to the fetched backup file (is set only if `cartridge_fetch_backups` is `true`).
 
