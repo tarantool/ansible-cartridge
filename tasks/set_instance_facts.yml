@@ -136,6 +136,7 @@
       instance_backup_files: '{{ instance_backup_files }}'
       backup_archive_path: '{{ backup_archive_path }}'
       fetched_backup_archive_path: '{{ fetched_backup_archive_path }}'
+      backup_files_from_machine: '{{ backup_files_from_machine }}'
 
       # Temp facts
 

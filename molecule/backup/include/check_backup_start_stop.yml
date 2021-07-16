@@ -15,11 +15,14 @@
     success_msg: 'backup_archive_path is empty'
     that: backup_archive_path is none
 
-- name: 'Check instance backup files list set in "instance_backup_files"'
+- name: 'Check "instance_backup_files" and "backup_files_from_machine"'
   check_backup_files_list:
     instance_info: '{{ instance_info }}'
     files_list: '{{ instance_backup_files }}'
     stateboard: '{{ stateboard }}'
+    hostvars: '{{ hostvars }}'
+    backup_files_from_machine: '{{ backup_files_from_machine }}'
+    instances_from_machine: '{{ instances_from_same_machine[inventory_hostname] }}'
 
 - name: 'Try to start a new backup'
   import_role:

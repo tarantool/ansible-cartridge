@@ -23,9 +23,8 @@
   set_fact:
     instance_backup_files: '{{ backup_res.fact.backup_files }}'
     backup_archive_path: '{{ backup_res.fact.backup_archive_path }}'
-    backup_files_from_machine: []
 
-- name: 'Set "backup_files_from_machine" facts'
+- name: 'Set "backup_files_from_machine" fact'
   set_fact:
     backup_files_from_machine: '{{ backup_files_from_machine + hostvars[instance].instance_backup_files }}'
   with_items: '{{ instances_from_same_machine[inventory_hostname] }}'

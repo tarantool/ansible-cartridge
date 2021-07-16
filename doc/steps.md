@@ -545,6 +545,7 @@ Input facts (set by config):
 Output facts:
 
 - `instance_backup_files` - list of instance files that should be added to backup archive.
+- `backup_files_from_machine` - list of files to back up for all instances on the same machine as a current one;
 
 ### Step `backup_stop`
 

@@ -7,7 +7,7 @@
     cartridge_scenario:
       - backup
 
-- name: 'Check instance backup files list set in "instance_backup_files"'
+- name: 'Check "instance_backup_files" and "backup_files_from_machine"'
   check_backup_files_list:
     instance_info: '{{ instance_info }}'
     files_list: '{{ instance_backup_files }}'

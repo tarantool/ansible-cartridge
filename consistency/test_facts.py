@@ -57,6 +57,7 @@ class TestFacts(unittest.TestCase):
             'instance_backup_files',
             'backup_archive_path',
             'fetched_backup_archive_path',
+            'backup_files_from_machine',
             # Temp facts
             'cached_facts_res',
             'cached_facts',
