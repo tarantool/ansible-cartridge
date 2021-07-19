@@ -12,19 +12,19 @@ README.md to use the newest tag with new release
 
 ### Added
 
-- Step `cleanup_instance_files` to clean up data of stopped instance;
-- Add availability to set environment variables for instance service;
-- Add `instances_from_same_machine` variable in preparation;
-- Add `edit_topology_check` step to compare inventory and real cluster topology.
+- Step `cleanup_instance_files` to clean up data of stopped instance
+- Add availability to set environment variables for instance service
+- Add `instances_from_same_machine` variable in preparation
+- Add `check_new_topology` step to compare inventory and real cluster topology
 
 ### Changed
 
-- Hosts uniqueness considers `ansible_port`, not only `ansible_host`.
+- Hosts uniqueness considers `ansible_port`, not only `ansible_host`
 
 ### Fixed
 
-- Long facts caching when playbook has two or more role imports;
-- Now select control instance task ignores bad instances from membership.
+- Long facts caching when playbook has two or more role imports
+- Now select control instance task ignores bad instances from membership
 
 ## [1.10.0] - 2021-06-04
 

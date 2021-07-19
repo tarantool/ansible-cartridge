@@ -5,8 +5,8 @@ from parameterized import parameterized
 import module_utils.helpers as helpers
 
 sys.modules['ansible.module_utils.helpers'] = helpers
-from library.cartridge_edit_topology import get_replicasets_to_configure
-from library.cartridge_edit_topology import get_instances_to_configure
+from library.cartridge_edit_topology import get_new_replicasets
+from library.cartridge_edit_topology import get_new_instances
 from library.cartridge_edit_topology import get_replicaset_params
 from library.cartridge_edit_topology import get_server_params
 
@@ -15,7 +15,7 @@ def call_get_configured_replicasets(hostvars, play_hosts=None):
     if play_hosts is None:
         play_hosts = hostvars.keys()
 
-    return get_replicasets_to_configure(hostvars, play_hosts)
+    return get_new_replicasets(hostvars, play_hosts)
 
 
 def assert_err_soft_mode(t, allow_missed_instances, ret, err, expected_ret, expected_err):
@@ -166,7 +166,7 @@ class TestGetInstancesToConfigure(unittest.TestCase):
         # found instances to configure
         play_hosts = hostvars.keys()
 
-        instances = get_instances_to_configure(hostvars, play_hosts)
+        instances = get_new_instances(hostvars, play_hosts)
         self.assertEqual(instances, {
             'instance-expelled': {'expelled': True},
             'instance-expelled-zone': {'expelled': True},
@@ -179,7 +179,7 @@ class TestGetInstancesToConfigure(unittest.TestCase):
             'instance-1', 'instance-2', 'instance-stateboard'
         ]
 
-        instances = get_instances_to_configure(hostvars, play_hosts)
+        instances = get_new_instances(hostvars, play_hosts)
         self.assertEqual(len(instances), 0)
 
 

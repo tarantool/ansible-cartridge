@@ -1,5 +1,28 @@
 ---
 
+- name: 'Change URI of core-1 instance'
+  hosts: core-1-replica
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Set new advertise_uri'
+      set_fact:
+        config:
+          advertise_uri: 'vm1:3305'
+          http_port: 8105
+
+    - vars:
+        cartridge_force_advertise_uris_change: true
+        cartridge_scenario:
+          - configure_instance
+          - restart_instance
+          - wait_instance_started
+          - connect_to_membership
+          - edit_topology
+      import_role:
+        name: ansible-cartridge
+
 - name: 'Set default scenario'
   hosts: cluster
   become: true
@@ -9,7 +32,7 @@
     - name: 'Set cartridge_scenario'
       set_fact:
         cartridge_scenario:
-          - edit_topology_check
+          - check_new_topology
 
 - name: 'Edit topology check for all cluster'
   hosts: cluster
@@ -60,7 +83,6 @@
     - name: 'Set new alias'
       set_fact:
         replicaset_alias: core-rs-1-renamed
-    - debug: var=replicaset_alias
 
 - name: 'Change URI of core-1 instance'
   hosts: core-1-replica
@@ -71,8 +93,8 @@
     - name: 'Set new advertise_uri'
       set_fact:
         config:
-          advertise_uri: 'vm1:3305'
-          http_port: 8105
+          advertise_uri: 'vm1:3306'
+          http_port: 8106
 
 - name: 'Edit topology check for all cluster'
   hosts: cluster
@@ -91,12 +113,14 @@
     - name: 'Check that edit topology check message is correct'
       assert:
         that: >-
-          edit_topology_check_res.msg == [
-            'Some instances from cluster are missing in inventory: core-2, core-2-replica',
-            'Advertise uris of some instances changed: core-1-replica (vm1:3302 -> vm1:3305)',
-            'Some replicasets from cluster are missing in inventory: core-rs-2',
-            'Looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1',
-          ] | join('. ')
+          edit_topology_check_res.msg == (
+            "Found dangerous changes: "
+            "some instances from cluster are missing in inventory: core-2, core-2-replica; "
+            "advertise uris of some instances changed: core-1-replica (vm1:3305 -> vm1:3306); "
+            "some replicasets from cluster are missing in inventory: core-rs-2; "
+            "looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1. "
+            "You can disable these checks with the appropriate flags (see 'edit_topology' step documentation)."
+          )
         fail_msg: 'Edit topology check message is incorrect'
         success_msg: 'Edit topology check message is correct'
 
@@ -117,12 +141,14 @@
     - name: 'Check that edit topology check message is correct'
       assert:
         that: >-
-          edit_topology_check_res.msg == [
-            'Some instances from cluster are missing in inventory: core-2, core-2-replica',
-            'Advertise uris of some instances changed: core-1-replica (vm1:3302 -> vm1:3305)',
-            'Some replicasets from cluster are missing in inventory: core-rs-2',
-            'Looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1',
-          ] | join('. ')
+          edit_topology_check_res.msg == (
+            "Found dangerous changes: "
+            "some instances from cluster are missing in inventory: core-2, core-2-replica; "
+            "advertise uris of some instances changed: core-1-replica (vm1:3305 -> vm1:3306); "
+            "some replicasets from cluster are missing in inventory: core-rs-2; "
+            "looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1. "
+            "You can disable these checks with the appropriate flags (see 'edit_topology' step documentation)."
+          )
         fail_msg: 'Edit topology check message is incorrect'
         success_msg: 'Edit topology check message is correct'
 
@@ -143,11 +169,13 @@
     - name: 'Check that edit topology check message is correct'
       assert:
         that: >-
-          edit_topology_check_res.msg == [
-            'Some instances from cluster are missing in inventory: core-2, core-2-replica',
-            'Some replicasets from cluster are missing in inventory: core-rs-2',
-            'Looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1',
-          ] | join('. ')
+          edit_topology_check_res.msg == (
+            "Found dangerous changes: "
+            "some instances from cluster are missing in inventory: core-2, core-2-replica; "
+            "some replicasets from cluster are missing in inventory: core-rs-2; "
+            "looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1. "
+            "You can disable these checks with the appropriate flags (see 'edit_topology' step documentation)."
+          )
         fail_msg: 'Edit topology check message is incorrect'
         success_msg: 'Edit topology check message is correct'
 

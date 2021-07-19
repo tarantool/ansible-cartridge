@@ -7,7 +7,7 @@
       run_once: true
       when: not control_instance
 
-    - import_tasks: 'blocks/edit_topology_check.yml'
+    - import_tasks: 'blocks/check_new_topology.yml'
 
     - name: 'Edit topology via {{ control_instance.name }}'
       cartridge_edit_topology:

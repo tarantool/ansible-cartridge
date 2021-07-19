@@ -6,4 +6,4 @@
     - cartridge-replicasets
     - cartridge-config
 
-- import_tasks: 'steps/edit_topology_check.yml'
+- import_tasks: 'steps/check_new_topology.yml'
