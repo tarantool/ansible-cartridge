@@ -49,7 +49,7 @@ cartridge_failover_params:
     - `password`(`string`, required) - stateboard instance password;
 
 - `etcd2_params`(`dict`, used for `etcd2` state provider) -
-  configuration for stateboard:
+  configuration for etcd2:
     - `prefix`(`string`) - prefix used for etcd keys: `<prefix>/lock` and
       `<prefix>/leaders`;
 
