@@ -84,13 +84,10 @@
   become: false
   register: facts_for_machines_res
 
-- name: 'Set "single_instances_for_each_machine" fact'
+- name: 'Set "single_instances_for_each_machine" and "instances_from_same_machine" facts'
   set_fact:
     single_instances_for_each_machine: '{{ facts_for_machines_res.single_instances_for_each_machine }}'
+    instances_from_same_machine: '{{ facts_for_machines_res.instances_from_same_machine }}'
   run_once: true
   delegate_to: localhost
   become: false
-
-- name: 'Set "instances_from_same_machine" fact'
-  set_fact:
-    instances_from_same_machine: '{{ facts_for_machines_res.instances_from_same_machine }}'
