@@ -278,7 +278,7 @@ Input variables from config (for two-phase commit):
 - `edit_topology_healthy_timeout` - time in seconds to wait until a cluster become healthy after editing topology;
 - [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.
 
-Input variables from config (for dangerous checks):
+Input variables from config (for checks of dangerous topology changes):
 
 - `cartridge_force_advertise_uris_change` - flag that disable check
   for advertise uris change;

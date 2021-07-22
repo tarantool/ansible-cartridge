@@ -1,12 +1,12 @@
 ---
 
-- name: 'Change URI of core-1 instance'
+- name: 'Change URI of core-1 instance to make 5 instances in membership'
   hosts: core-1-replica
   become: true
   become_user: root
   gather_facts: false
   tasks:
-    - name: 'Set new advertise_uri'
+    - name: 'Set new advertise_uri in inventory'
       set_fact:
         config:
           advertise_uri: 'vm1:3305'
@@ -22,17 +22,6 @@
           - edit_topology
       import_role:
         name: ansible-cartridge
-
-- name: 'Set default scenario'
-  hosts: cluster
-  become: true
-  become_user: root
-  gather_facts: false
-  tasks:
-    - name: 'Set cartridge_scenario'
-      set_fact:
-        cartridge_scenario:
-          - check_new_topology
 
 - name: 'Edit topology check for all cluster'
   hosts: cluster
@@ -61,36 +50,36 @@
     - import_role:
         name: ansible-cartridge
 
-- name: 'Remove core-2 instance and core-rs-2 replicaset'
+- name: 'Remove core-2 instance and core-rs-2 replicaset in inventory'
   hosts: core-2,core_2_replicaset
   become: true
   become_user: root
   gather_facts: false
   tasks:
-    - name: 'Remove instance specific facts'
+    - name: 'Remove instance specific facts in inventory'
       set_fact:
         config: null
         replicaset_alias: null
         failover_priority: null
         roles: null
 
-- name: 'Rename core_1_replicaset replicaset'
+- name: 'Rename core_1_replicaset replicaset in inventory'
   hosts: core_1_replicaset
   become: true
   become_user: root
   gather_facts: false
   tasks:
-    - name: 'Set new alias'
+    - name: 'Set new alias in inventory'
       set_fact:
         replicaset_alias: core-rs-1-renamed
 
-- name: 'Change URI of core-1 instance'
+- name: 'Change URI of core-1 instance in inventory'
   hosts: core-1-replica
   become: true
   become_user: root
   gather_facts: false
   tasks:
-    - name: 'Set new advertise_uri'
+    - name: 'Set new advertise_uri in inventory'
       set_fact:
         config:
           advertise_uri: 'vm1:3306'

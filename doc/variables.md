@@ -166,7 +166,7 @@ For more details see [scenario documentation](/doc/scenario.md).
 * `cartridge_eval_retries` number of eval retries;
 * `cartridge_eval_delay` - eval retries delay.
 
-## Flags to disable edit topology checks
+## Flags to ignore errors of checks for dangerous topology changes
 
 * `cartridge_force_advertise_uris_change` - flag that disable check
   for advertise uris change;

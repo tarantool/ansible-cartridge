@@ -11,7 +11,7 @@
     apply_config_timeout: '{{ twophase_apply_config_timeout }}'
     allow_missed_instances: '{{ edit_topology_allow_missed_instances }}'
     check_mode: true
-    ignore_checks:
+    ignore_errors_of_checks:
       advertise_uris_change: '{{ cartridge_force_advertise_uris_change }}'
       extra_cluster_instances: '{{ cartridge_ignore_extra_cluster_instances }}'
       extra_cluster_replicasets: '{{ cartridge_ignore_extra_cluster_replicasets }}'

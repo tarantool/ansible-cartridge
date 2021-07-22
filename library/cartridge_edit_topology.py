@@ -14,7 +14,7 @@ argument_spec = {
     'apply_config_timeout': {'required': False, 'type': 'int'},
     'allow_missed_instances': {'required': True, 'type': 'bool'},
     'check_mode': {'required': False, 'type': 'bool', 'default': False},
-    'ignore_checks': {'required': False, 'type': 'dict', 'default': {}},
+    'ignore_errors_of_checks': {'required': False, 'type': 'dict', 'default': {}},
 }
 
 ADVERTISE_URIS_CHANGE_CHECK_NAME = 'advertise_uris_change'
@@ -51,9 +51,9 @@ return ret
 ''' % (helpers.FORMAT_REPLICASET_FUNC, helpers.FORMAT_SERVER_FUNC)
 
 
-#########################################
-# Collect information about new cluster #
-#########################################
+##########################################
+# Collect information about new topology #
+##########################################
 
 
 def get_all_new_instances(module_hostvars):
@@ -458,7 +458,10 @@ def get_servers_params(
 # Check mode #
 ##############
 
-def check_new_instances_for_dangerous_changes(all_new_instances, new_instances, old_instances, ignore_checks):
+def check_new_instances_for_dangerous_changes(
+    all_new_instances, new_instances, old_instances,
+    ignore_errors_of_checks,
+):
     errors = []
     extra_cluster_instances = []
     changed_advertise_uris = []
@@ -472,44 +475,62 @@ def check_new_instances_for_dangerous_changes(all_new_instances, new_instances, 
             if new_uri != old_uri:
                 changed_advertise_uris.append('%s (%s -> %s)' % (instance_name, old_uri, new_uri))
 
-    if extra_cluster_instances and not ignore_checks.get(EXTRA_CLUSTER_INSTANCES_CHECK_NAME):
+    if extra_cluster_instances:
         msg = 'some instances from cluster are missing in inventory: %s' % ', '.join(extra_cluster_instances)
-        errors.append(msg)
+        if ignore_errors_of_checks.get(EXTRA_CLUSTER_INSTANCES_CHECK_NAME):
+            helpers.warn(msg)
+        else:
+            errors.append(msg)
 
-    if changed_advertise_uris and not ignore_checks.get(ADVERTISE_URIS_CHANGE_CHECK_NAME):
+    if changed_advertise_uris:
         msg = 'advertise uris of some instances changed: %s' % ', '.join(changed_advertise_uris)
-        errors.append(msg)
+        if ignore_errors_of_checks.get(ADVERTISE_URIS_CHANGE_CHECK_NAME):
+            helpers.warn(msg)
+        else:
+            errors.append(msg)
 
     return errors
 
 
-def check_new_replicasets_for_dangerous_changes(all_new_replicasets, new_replicasets, old_replicasets, ignore_checks):
+def check_new_replicasets_for_dangerous_changes(
+    all_new_replicasets, new_replicasets, old_replicasets,
+    ignore_errors_of_checks,
+):
     errors = []
     extra_cluster_replicasets = []
     renamed_replicasets = []
 
     for old_replicaset_name, old_replicaset in old_replicasets.items():
-        if old_replicaset_name not in all_new_replicasets:
-            renamed = False
+        if old_replicaset_name in all_new_replicasets:
+            continue
 
-            for new_replicaset_name, new_replicaset in all_new_replicasets.items():
-                if set(new_replicaset.get('instances', [])) == set(old_replicaset.get('instances', [])):
-                    renamed = True
+        renamed = False
 
-                    # Ignore renamed replicaset if it isn't in play hosts
-                    if new_replicaset_name in new_replicasets:
-                        renamed_replicasets.append('%s -> %s' % (new_replicaset_name, old_replicaset_name))
+        for new_replicaset_name, new_replicaset in all_new_replicasets.items():
+            if set(new_replicaset.get('instances', [])) != set(old_replicaset.get('instances', [])):
+                continue
 
-            if not renamed:
-                extra_cluster_replicasets.append(old_replicaset_name)
+            renamed = True
+            # Ignore renamed replicaset if it isn't in play hosts
+            if new_replicaset_name in new_replicasets:
+                renamed_replicasets.append('%s -> %s' % (new_replicaset_name, old_replicaset_name))
 
-    if extra_cluster_replicasets and not ignore_checks.get(EXTRA_CLUSTER_REPLICASETS_CHECK_NAME):
+        if not renamed:
+            extra_cluster_replicasets.append(old_replicaset_name)
+
+    if extra_cluster_replicasets:
         msg = 'some replicasets from cluster are missing in inventory: %s' % ', '.join(extra_cluster_replicasets)
-        errors.append(msg)
+        if ignore_errors_of_checks.get(EXTRA_CLUSTER_REPLICASETS_CHECK_NAME):
+            helpers.warn(msg)
+        else:
+            errors.append(msg)
 
-    if renamed_replicasets and not ignore_checks.get(RENAMED_REPLICASETS_CHECK_NAME):
+    if renamed_replicasets:
         msg = 'looks like that some replicasets should be renamed in inventory: %s' % ', '.join(renamed_replicasets)
-        errors.append(msg)
+        if ignore_errors_of_checks.get(RENAMED_REPLICASETS_CHECK_NAME):
+            helpers.warn(msg)
+        else:
+            errors.append(msg)
 
     return errors
 
@@ -517,20 +538,20 @@ def check_new_replicasets_for_dangerous_changes(all_new_replicasets, new_replica
 def check_new_cluster_for_dangerous_changes(
     all_new_instances, new_instances, old_instances,
     all_new_replicasets, new_replicasets, old_replicasets,
-    ignore_checks,
+    ignore_errors_of_checks,
 ):
     errors = []
     errors += check_new_instances_for_dangerous_changes(
         all_new_instances,
         new_instances,
         old_instances,
-        ignore_checks,
+        ignore_errors_of_checks,
     )
     errors += check_new_replicasets_for_dangerous_changes(
         all_new_replicasets,
         new_replicasets,
         old_replicasets,
-        ignore_checks,
+        ignore_errors_of_checks,
     )
     if errors:
         error_fmt = (
@@ -672,7 +693,7 @@ def edit_topology(params):
     healthy_timeout = params['healthy_timeout']
     allow_missed_instances = params['allow_missed_instances']
     check_mode = params.get('check_mode', False)
-    ignore_checks = params.get('ignore_checks', {})
+    ignore_errors_of_checks = params.get('ignore_errors_of_checks', {})
 
     # Collect information about instances and replicasets from inventory
 
@@ -701,7 +722,7 @@ def edit_topology(params):
         err = check_new_cluster_for_dangerous_changes(
             all_new_instances, new_instances, old_instances,
             all_new_replicasets, new_replicasets, old_replicasets,
-            ignore_checks,
+            ignore_errors_of_checks,
         )
         if err is not None:
             return helpers.ModuleRes(failed=True, msg=err)
@@ -717,7 +738,7 @@ def edit_topology(params):
     #   New instances aren't configured here since they don't have
     #   UUIDs before join.
 
-    first_call_changed, err = single_edit_topology_call(
+    changed_on_first_call, err = single_edit_topology_call(
         control_console,
         get_replicasets_params,
         new_instances, old_instances,
@@ -732,7 +753,7 @@ def edit_topology(params):
     # * Edit failover_priority of replicasets if it's needed.
     # * Configure instances that weren't configured on first `edit_topology` call.
 
-    second_call_changed, err = single_edit_topology_call(
+    changed_on_second_call, err = single_edit_topology_call(
         control_console,
         get_replicasets_params_for_changing_failover_priority,
         new_instances, old_instances,
@@ -743,7 +764,7 @@ def edit_topology(params):
     if err is not None:
         return helpers.ModuleRes(failed=True, msg=err)
 
-    return helpers.ModuleRes(changed=first_call_changed or second_call_changed)
+    return helpers.ModuleRes(changed=changed_on_first_call or changed_on_second_call)
 
 
 if __name__ == '__main__':

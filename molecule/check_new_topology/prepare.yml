@@ -5,5 +5,7 @@
   become: true
   become_user: root
   gather_facts: false
+  vars:
+    cartridge_scenario_name: 'default'
   roles:
     - ansible-cartridge
