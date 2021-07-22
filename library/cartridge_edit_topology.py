@@ -475,18 +475,18 @@ def check_new_instances_for_dangerous_changes(
             if new_uri != old_uri:
                 changed_advertise_uris.append('%s (%s -> %s)' % (instance_name, old_uri, new_uri))
 
-    if extra_cluster_instances:
-        msg = 'some instances from cluster are missing in inventory, you should add it: %s'
-        msg %= ', '.join(extra_cluster_instances)
-        if ignore_errors_of_checks.get(EXTRA_CLUSTER_INSTANCES_CHECK_NAME):
+    if changed_advertise_uris:
+        msg = 'advertise uris of some instances were changed in inventory: %s'
+        msg %= ', '.join(changed_advertise_uris)
+        if ignore_errors_of_checks.get(ADVERTISE_URIS_CHANGE_CHECK_NAME):
             helpers.warn(msg)
         else:
             errors.append(msg)
 
-    if changed_advertise_uris:
-        msg = 'advertise uris of some instances will be changed, you should check it: %s'
-        msg %= ', '.join(changed_advertise_uris)
-        if ignore_errors_of_checks.get(ADVERTISE_URIS_CHANGE_CHECK_NAME):
+    if extra_cluster_instances:
+        msg = 'some instances from cluster are missing in inventory, you should add them: %s'
+        msg %= ', '.join(extra_cluster_instances)
+        if ignore_errors_of_checks.get(EXTRA_CLUSTER_INSTANCES_CHECK_NAME):
             helpers.warn(msg)
         else:
             errors.append(msg)
@@ -520,18 +520,18 @@ def check_new_replicasets_for_dangerous_changes(
         if not renamed:
             extra_cluster_replicasets.append(old_replicaset_name)
 
-    if extra_cluster_replicasets:
-        msg = 'some replicasets from cluster are missing in inventory, you should add it: %s'
-        msg %= ', '.join(extra_cluster_replicasets)
-        if ignore_errors_of_checks.get(EXTRA_CLUSTER_REPLICASETS_CHECK_NAME):
+    if renamed_replicasets:
+        msg = 'looks like that some replicasets has been renamed in UI, you should rename them in inventory: %s'
+        msg %= ', '.join(renamed_replicasets)
+        if ignore_errors_of_checks.get(RENAMED_REPLICASETS_CHECK_NAME):
             helpers.warn(msg)
         else:
             errors.append(msg)
 
-    if renamed_replicasets:
-        msg = 'looks like that some replicasets has been renamed in UI, you should rename it in inventory: %s'
-        msg %= ', '.join(renamed_replicasets)
-        if ignore_errors_of_checks.get(RENAMED_REPLICASETS_CHECK_NAME):
+    if extra_cluster_replicasets:
+        msg = 'some replicasets from cluster are missing in inventory, you should add them: %s'
+        msg %= ', '.join(extra_cluster_replicasets)
+        if ignore_errors_of_checks.get(EXTRA_CLUSTER_REPLICASETS_CHECK_NAME):
             helpers.warn(msg)
         else:
             errors.append(msg)
