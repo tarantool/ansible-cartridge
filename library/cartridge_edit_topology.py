@@ -476,14 +476,16 @@ def check_new_instances_for_dangerous_changes(
                 changed_advertise_uris.append('%s (%s -> %s)' % (instance_name, old_uri, new_uri))
 
     if extra_cluster_instances:
-        msg = 'some instances from cluster are missing in inventory: %s' % ', '.join(extra_cluster_instances)
+        msg = 'some instances from cluster are missing in inventory, you should add it: %s'
+        msg %= ', '.join(extra_cluster_instances)
         if ignore_errors_of_checks.get(EXTRA_CLUSTER_INSTANCES_CHECK_NAME):
             helpers.warn(msg)
         else:
             errors.append(msg)
 
     if changed_advertise_uris:
-        msg = 'advertise uris of some instances changed: %s' % ', '.join(changed_advertise_uris)
+        msg = 'advertise uris of some instances will be changed, you should check it: %s'
+        msg %= ', '.join(changed_advertise_uris)
         if ignore_errors_of_checks.get(ADVERTISE_URIS_CHANGE_CHECK_NAME):
             helpers.warn(msg)
         else:
@@ -519,14 +521,16 @@ def check_new_replicasets_for_dangerous_changes(
             extra_cluster_replicasets.append(old_replicaset_name)
 
     if extra_cluster_replicasets:
-        msg = 'some replicasets from cluster are missing in inventory: %s' % ', '.join(extra_cluster_replicasets)
+        msg = 'some replicasets from cluster are missing in inventory, you should add it: %s'
+        msg %= ', '.join(extra_cluster_replicasets)
         if ignore_errors_of_checks.get(EXTRA_CLUSTER_REPLICASETS_CHECK_NAME):
             helpers.warn(msg)
         else:
             errors.append(msg)
 
     if renamed_replicasets:
-        msg = 'looks like that some replicasets should be renamed in inventory: %s' % ', '.join(renamed_replicasets)
+        msg = 'looks like that some replicasets has been renamed in UI, you should rename it in inventory: %s'
+        msg %= ', '.join(renamed_replicasets)
         if ignore_errors_of_checks.get(RENAMED_REPLICASETS_CHECK_NAME):
             helpers.warn(msg)
         else:
@@ -555,8 +559,9 @@ def check_new_cluster_for_dangerous_changes(
     )
     if errors:
         error_fmt = (
-            "Found dangerous changes: %s. "
-            "You can disable these checks with the appropriate flags (see 'edit_topology' step documentation)."
+            "Found dangerous changes in topology: %s. "
+            "You can make changes in inventory or ignore this errors with the appropriate flags "
+            "(see 'edit_topology' step documentation)."
         )
         return error_fmt % '; '.join(errors)
     return None

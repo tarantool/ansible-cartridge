@@ -98,20 +98,27 @@
     - name: 'Show check result'
       debug:
         var: edit_topology_check_res
+      run_once: true
 
     - name: 'Check that edit topology check message is correct'
       assert:
         that: >-
           edit_topology_check_res.msg == (
-            "Found dangerous changes: "
-            "some instances from cluster are missing in inventory: core-2, core-2-replica; "
-            "advertise uris of some instances changed: core-1-replica (vm1:3305 -> vm1:3306); "
-            "some replicasets from cluster are missing in inventory: core-rs-2; "
-            "looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1. "
-            "You can disable these checks with the appropriate flags (see 'edit_topology' step documentation)."
+            "Found dangerous changes in topology: "
+              "some instances from cluster are missing in inventory, you should add it: "
+                "core-2, core-2-replica; "
+              "advertise uris of some instances will be changed, you should check it: "
+                "core-1-replica (vm1:3305 -> vm1:3306); "
+              "some replicasets from cluster are missing in inventory, you should add it: "
+                "core-rs-2; "
+              "looks like that some replicasets has been renamed in UI, you should rename it in inventory: "
+                "core-rs-1-renamed -> core-rs-1. "
+              "You can make changes in inventory or ignore this errors with the appropriate flags "
+                "(see 'edit_topology' step documentation)."
           )
         fail_msg: 'Edit topology check message is incorrect'
         success_msg: 'Edit topology check message is correct'
+      run_once: true
 
 - name: 'Edit topology check for one replicaset'
   hosts: core_1_replicaset
@@ -126,20 +133,27 @@
     - name: 'Show check result'
       debug:
         var: edit_topology_check_res
+      run_once: true
 
     - name: 'Check that edit topology check message is correct'
       assert:
         that: >-
           edit_topology_check_res.msg == (
-            "Found dangerous changes: "
-            "some instances from cluster are missing in inventory: core-2, core-2-replica; "
-            "advertise uris of some instances changed: core-1-replica (vm1:3305 -> vm1:3306); "
-            "some replicasets from cluster are missing in inventory: core-rs-2; "
-            "looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1. "
-            "You can disable these checks with the appropriate flags (see 'edit_topology' step documentation)."
+            "Found dangerous changes in topology: "
+              "some instances from cluster are missing in inventory, you should add it: "
+                "core-2, core-2-replica; "
+              "advertise uris of some instances will be changed, you should check it: "
+                "core-1-replica (vm1:3305 -> vm1:3306); "
+              "some replicasets from cluster are missing in inventory, you should add it: "
+                "core-rs-2; "
+              "looks like that some replicasets has been renamed in UI, you should rename it in inventory: "
+                "core-rs-1-renamed -> core-rs-1. "
+              "You can make changes in inventory or ignore this errors with the appropriate flags "
+                "(see 'edit_topology' step documentation)."
           )
         fail_msg: 'Edit topology check message is incorrect'
         success_msg: 'Edit topology check message is correct'
+      run_once: true
 
 - name: 'Edit topology check for one instance'
   hosts: core-1
@@ -154,19 +168,25 @@
     - name: 'Show check result'
       debug:
         var: edit_topology_check_res
+      run_once: true
 
     - name: 'Check that edit topology check message is correct'
       assert:
         that: >-
           edit_topology_check_res.msg == (
-            "Found dangerous changes: "
-            "some instances from cluster are missing in inventory: core-2, core-2-replica; "
-            "some replicasets from cluster are missing in inventory: core-rs-2; "
-            "looks like that some replicasets should be renamed in inventory: core-rs-1-renamed -> core-rs-1. "
-            "You can disable these checks with the appropriate flags (see 'edit_topology' step documentation)."
+            "Found dangerous changes in topology: "
+              "some instances from cluster are missing in inventory, you should add it: "
+                "core-2, core-2-replica; "
+              "some replicasets from cluster are missing in inventory, you should add it: "
+                "core-rs-2; "
+              "looks like that some replicasets has been renamed in UI, you should rename it in inventory: "
+                "core-rs-1-renamed -> core-rs-1. "
+              "You can make changes in inventory or ignore this errors with the appropriate flags "
+                "(see 'edit_topology' step documentation)."
           )
         fail_msg: 'Edit topology check message is incorrect'
         success_msg: 'Edit topology check message is correct'
+      run_once: true
 
 - name: 'Edit topology check for all cluster with ignore flags'
   hosts: core_1_replicaset
