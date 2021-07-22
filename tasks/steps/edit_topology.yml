@@ -21,3 +21,9 @@
         allow_missed_instances: '{{ edit_topology_allow_missed_instances }}'
       run_once: true
       delegate_to: '{{ control_instance.name }}'
+
+    - name: 'Update information about disabled instances in cluster'
+      set_fact:
+        cluster_disabled_instances: '{{ inventory_disabled_instances }}'
+      run_once: true
+      delegate_to: '{{ control_instance.name }}'

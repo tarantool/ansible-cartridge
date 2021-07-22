@@ -8,16 +8,28 @@
     cartridge_scenario:
       - set_control_instance
 
-- name: 'Debug disabled instances'
+- name: 'Debug cluster disabled instances'
   debug:
     msg: '{{ cluster_disabled_instances }}'
   run_once: true
 
-- name: 'Check disabled instances'
+- name: 'Debug inventory disabled instances'
+  debug:
+    msg: '{{ inventory_disabled_instances }}'
+  run_once: true
+
+- name: 'Check cluster disabled instances'
   assert:
     fail_msg: "Fact 'cluster_disabled_instances' has incorrect value"
     success_msg: "Fact 'cluster_disabled_instances' has correct value"
     that: cluster_disabled_instances == expected_cluster_disabled_instances
+  run_once: true
+
+- name: 'Check inventory disabled instances'
+  assert:
+    fail_msg: "Fact 'inventory_disabled_instances' has incorrect value"
+    success_msg: "Fact 'inventory_disabled_instances' has correct value"
+    that: inventory_disabled_instances == expected_inventory_disabled_instances
   run_once: true
 
 - name: 'Debug control instance'

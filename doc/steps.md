@@ -68,9 +68,10 @@ Some of useful variables always establishes during role preparation, so them can
   - `paths_to_remove_on_expel` - paths that will be removed on instance expel;
   - `files_to_remove_on_cleanup` - files that will be removed on instance cleanup;
   - `dirs_to_remove_on_cleanup` - dirs that will be removed on instance cleanup;
-  - `cluster_disabled_instances` - list of disabled instances from instance config;
-  - `cluster_topology_checksum` - checksum of topology section in instance config;
-- `cluster_disabled_instances` - disabled instances in cluster config;
+  - `disabled_instances` - list of disabled instances from instance config;
+  - `topology_checksum` - checksum of topology section from instance config;
+- `cluster_disabled_instances` - list of disabled instances from cluster config;
+- `inventory_disabled_instances` - list of disabled instances from inventory;
 - `single_instances_for_each_machine` - list of instances (Ansible hosts), one for each physical machine,
   for example, can be used in `delegate_to`;
 - `instances_from_same_machine` - dictionary, where key is the hostname of the instance,

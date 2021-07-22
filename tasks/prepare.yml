@@ -82,11 +82,12 @@
   run_once: true
   delegate_to: localhost
   become: false
-  register: cluster_disabled_instances_res
+  register: disabled_instances_res
 
-- name: 'Set "cluster_disabled_instances" fact'
+- name: 'Set "cluster_disabled_instances" and "inventory_disabled_instances" fact'
   set_fact:
-    cluster_disabled_instances: '{{ cluster_disabled_instances_res.fact }}'
+    cluster_disabled_instances: '{{ disabled_instances_res.cluster }}'
+    inventory_disabled_instances: '{{ disabled_instances_res.inventory }}'
   run_once: true
   delegate_to: localhost
   become: false

@@ -143,8 +143,8 @@ class TestGetInstanceInfo(unittest.TestCase):
                 'some/vinyl/dir/myapp.instance-1',
                 'some/wal/dir/myapp.instance-1',
             ],
-            'cluster_disabled_instances': None,
-            'cluster_topology_checksum': None,
+            'disabled_instances': None,
+            'topology_checksum': None,
         })
 
     def test_get_instance_info_multiversion(self):
@@ -197,8 +197,8 @@ class TestGetInstanceInfo(unittest.TestCase):
             'dirs_to_remove_on_cleanup': [
                 'some/data/dir/myapp.instance-1',
             ],
-            'cluster_disabled_instances': None,
-            'cluster_topology_checksum': None,
+            'disabled_instances': None,
+            'topology_checksum': None,
         })
 
         # cartridge_package_path isn't specified
@@ -248,8 +248,8 @@ class TestGetInstanceInfo(unittest.TestCase):
             'dirs_to_remove_on_cleanup': [
                 'some/data/dir/myapp.instance-1',
             ],
-            'cluster_disabled_instances': None,
-            'cluster_topology_checksum': None,
+            'disabled_instances': None,
+            'topology_checksum': None,
         })
 
     def test_get_stateboard_info(self):
@@ -302,8 +302,8 @@ class TestGetInstanceInfo(unittest.TestCase):
             'dirs_to_remove_on_cleanup': [
                 'some/data/dir/myapp-stateboard',
             ],
-            'cluster_disabled_instances': None,
-            'cluster_topology_checksum': None,
+            'disabled_instances': None,
+            'topology_checksum': None,
         })
 
     def test_get_stateboard_info_multiversion(self):
@@ -362,8 +362,8 @@ class TestGetInstanceInfo(unittest.TestCase):
                 'some/vinyl/dir/myapp-stateboard',
                 'some/wal/dir/myapp-stateboard',
             ],
-            'cluster_disabled_instances': None,
-            'cluster_topology_checksum': None,
+            'disabled_instances': None,
+            'topology_checksum': None,
         })
 
     def test_paths_to_keep_on_cleanup(self):

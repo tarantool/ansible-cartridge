@@ -96,6 +96,7 @@ FACTS_BY_TARGETS = {
     ],
     'count_disabled_instances': [
         'instance_info',
+        'disabled',
     ],
     'facts_for_machines': [
         'expelled',

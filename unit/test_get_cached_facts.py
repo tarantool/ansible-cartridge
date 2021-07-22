@@ -27,20 +27,21 @@ class TestGetCachedFacts(unittest.TestCase):
                 'cartridge_cluster_cookie': 'some-cookie',
                 'cartridge_run_dir': 'some-run-dir',
                 'instance_info': {
-                    'cluster_disabled_instances': [],
+                    'disabled_instances': [],
                 },
             },
             'instance_2': {
                 'stateboard': False,
                 'random_arg': {'test': 'value'},
                 'instance_info': {
-                    'cluster_disabled_instances': ['instance_2'],
+                    'disabled_instances': ['instance_2'],
                 },
             },
             'instance_3': {
+                'disabled': True,
                 'random_arg': {'test': 'value'},
                 'instance_info': {
-                    'cluster_disabled_instances': ['instance_2'],
+                    'disabled_instances': ['instance_2'],
                 },
             },
         })
@@ -57,22 +58,25 @@ class TestGetCachedFacts(unittest.TestCase):
                 'instance_2': {
                     'stateboard': False,
                 },
-                'instance_3': {},
+                'instance_3': {
+                    'disabled': True,
+                },
             },
             'count_disabled_instances': {
                 'instance_1': {
                     'instance_info': {
-                        'cluster_disabled_instances': [],
+                        'disabled_instances': [],
                     },
                 },
                 'instance_2': {
                     'instance_info': {
-                        'cluster_disabled_instances': ['instance_2'],
+                        'disabled_instances': ['instance_2'],
                     },
                 },
                 'instance_3': {
+                    'disabled': True,
                     'instance_info': {
-                        'cluster_disabled_instances': ['instance_2'],
+                        'disabled_instances': ['instance_2'],
                     },
                 },
             },
@@ -82,7 +86,9 @@ class TestGetCachedFacts(unittest.TestCase):
                     'ansible_host': 'some_host',
                 },
                 'instance_2': {},
-                'instance_3': {},
+                'instance_3': {
+                    'disabled': True,
+                },
             },
             'connect_to_membership': {
                 'instance_1': {
@@ -92,7 +98,9 @@ class TestGetCachedFacts(unittest.TestCase):
                 'instance_2': {
                     'stateboard': False,
                 },
-                'instance_3': {},
+                'instance_3': {
+                    'disabled': True,
+                },
             },
             'alive_not_expelled_instance': {
                 'instance_1': {
@@ -103,7 +111,9 @@ class TestGetCachedFacts(unittest.TestCase):
                 'instance_2': {
                     'stateboard': False,
                 },
-                'instance_3': {},
+                'instance_3': {
+                    'disabled': True,
+                },
             },
             'control_instance': {
                 'instance_1': {
@@ -114,7 +124,9 @@ class TestGetCachedFacts(unittest.TestCase):
                 'instance_2': {
                     'stateboard': False,
                 },
-                'instance_3': {},
+                'instance_3': {
+                    'disabled': True,
+                },
             },
             'edit_topology': {
                 'instance_1': {
@@ -124,12 +136,16 @@ class TestGetCachedFacts(unittest.TestCase):
                 'instance_2': {
                     'stateboard': False,
                 },
-                'instance_3': {},
+                'instance_3': {
+                    'disabled': True,
+                },
             },
             'failover_promote': {
                 'instance_1': {'expelled': True},
                 'instance_2': {'stateboard': False},
-                'instance_3': {},
+                'instance_3': {
+                    'disabled': True,
+                },
             },
         })
 

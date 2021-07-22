@@ -8,6 +8,7 @@
   tasks:
     - vars:
         expected_cluster_disabled_instances: ['core-1']
+        expected_inventory_disabled_instances: ['core-1']
         expected_control_instance: 'core-2'
       import_tasks: 'tasks/check_disabled_and_control.yml'
 
@@ -29,6 +30,7 @@
   tasks:
     - vars:
         expected_cluster_disabled_instances: ['core-1']
+        expected_inventory_disabled_instances: ['core-1', 'core-2']
         expected_control_instance: 'core-3'
       import_tasks: 'tasks/check_disabled_and_control.yml'
 
@@ -40,6 +42,7 @@
 
     - vars:
         expected_cluster_disabled_instances: ['core-1', 'core-2']
+        expected_inventory_disabled_instances: ['core-1', 'core-2']
         expected_control_instance: 'core-3'
       import_tasks: 'tasks/check_disabled_and_control.yml'
 
@@ -61,6 +64,7 @@
   tasks:
     - vars:
         expected_cluster_disabled_instances: ['core-1', 'core-2']
+        expected_inventory_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4']
         expected_control_instance: 'core-5'
       import_tasks: 'tasks/check_disabled_and_control.yml'
 
@@ -72,6 +76,7 @@
 
     - vars:
         expected_cluster_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4']
+        expected_inventory_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4']
         expected_control_instance: 'core-5'
       import_tasks: 'tasks/check_disabled_and_control.yml'
 
@@ -93,6 +98,7 @@
   tasks:
     - vars:
         expected_cluster_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4']
+        expected_inventory_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4', 'core-5']
         expected_control_instance: null
         ignore_role_errors: true
       import_tasks: 'tasks/check_disabled_and_control.yml'
@@ -131,6 +137,7 @@
   tasks:
     - vars:
         expected_cluster_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4']
+        expected_inventory_disabled_instances: ['core-2', 'core-3', 'core-4', 'core-5']
         expected_control_instance: null
         ignore_role_errors: true
       import_tasks: 'tasks/check_disabled_and_control.yml'
@@ -169,6 +176,7 @@
   tasks:
     - vars:
         expected_cluster_disabled_instances: ['core-1', 'core-2', 'core-3', 'core-4']
+        expected_inventory_disabled_instances: ['core-2', 'core-3', 'core-4']
         expected_control_instance: 'core-5'
       import_tasks: 'tasks/check_disabled_and_control.yml'
 
@@ -180,6 +188,7 @@
 
     - vars:
         expected_cluster_disabled_instances: ['core-2', 'core-3', 'core-4']
+        expected_inventory_disabled_instances: ['core-2', 'core-3', 'core-4']
         expected_control_instance: 'core-1'
       import_tasks: 'tasks/check_disabled_and_control.yml'
 
@@ -201,6 +210,7 @@
   tasks:
     - vars:
         expected_cluster_disabled_instances: ['core-2', 'core-3', 'core-4']
+        expected_inventory_disabled_instances: ['core-2', 'core-3', 'core-4', 'core-5']
         expected_control_instance: 'core-1'
       import_tasks: 'tasks/check_disabled_and_control.yml'
 
@@ -212,5 +222,6 @@
 
     - vars:
         expected_cluster_disabled_instances: ['core-2', 'core-3', 'core-4', 'core-5']
+        expected_inventory_disabled_instances: ['core-2', 'core-3', 'core-4', 'core-5']
         expected_control_instance: 'core-1'
       import_tasks: 'tasks/check_disabled_and_control.yml'
