@@ -203,5 +203,9 @@ For more details see [scenario documentation](/doc/scenario.md).
 - `cartridge_fetch_backups` (`boolean`, default: `false`): flag indicates that backups should be
   fetched on the local machine;
 - `cartridge_fetch_backups_dir` (`string`, default: `backups/`): a directory on the local machine
-  where backups should be fetched if `cartridge_fetch_backups` is `true`. This path is relative to
+  where backups should be fetched if `cartridge_fetch_backups` is `true`; this path is relative to
   the playbook path.
+- `cartridge_restore_archive_path` (`string`): path to the instance backup archive on the remote
+  machine;
+- `cartridge_force_restore` (`boolean`, default: `false`): flag indicates that conflicting files
+  should be overwritten.

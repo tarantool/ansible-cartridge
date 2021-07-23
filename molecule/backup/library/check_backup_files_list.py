@@ -36,24 +36,29 @@ if __name__ == '__main__':
 
     if not stateboard:
         exp_files_list_regexps = [
-            os.path.join(instance_info['memtx_dir'], r"\d+\.snap"),
-            os.path.join(instance_info['vinyl_dir'], r"\d+\.vylog"),
-            os.path.join(instance_info['work_dir'], "config"),
             instance_info['conf_file'],
             instance_info['app_conf_file'],
+            os.path.join(instance_info['work_dir'], "config"),
+            os.path.join(instance_info['memtx_dir'], r"\d+\.snap"),
+            os.path.join(instance_info['vinyl_dir'], r"\d+\.vylog"),
+            os.path.join(instance_info['vinyl_dir'], r"\d+", r"\d+", r"\d+\.index"),
+            os.path.join(instance_info['vinyl_dir'], r"\d+", r"\d+", r"\d+\.run"),
         ]
     else:
         exp_files_list_regexps = [
-            os.path.join(instance_info['memtx_dir'], r"\d+.snap"),
             instance_info['conf_file'],
+            os.path.join(instance_info['memtx_dir'], r"\d+.snap"),
         ]
 
-    exp_files_list_regexps = list(sorted(map(lambda r: r.strip(os.path.sep), exp_files_list_regexps)))
+    exp_files_list_regexps = list(map(lambda r: r.strip(os.path.sep), exp_files_list_regexps))
 
-    files_list_is_ok = all([
-        re.match(exp_files_list_regexps[i], file_path)
-        for i, file_path in enumerate(files_list)
-    ])
+    if len(exp_files_list_regexps) != len(files_list):
+        files_list_is_ok = False
+    else:
+        files_list_is_ok = all([
+            re.match(exp_files_list_regexps[i], file_path)
+            for i, file_path in enumerate(files_list)
+        ])
 
     if not files_list_is_ok:
         module.fail_json(msg="Received bad backup files list. Expected %s, got %s" % (

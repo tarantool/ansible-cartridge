@@ -168,6 +168,8 @@ SCHEMA = {
     'cartridge_remote_backups_dir': str,
     'cartridge_fetch_backups': bool,
     'cartridge_fetch_backups_dir': str,
+    'cartridge_restore_archive_path': str,
+    'cartridge_force_restore': bool,
     'config': {
         'advertise_uri': str,
         'memtx_memory': int,

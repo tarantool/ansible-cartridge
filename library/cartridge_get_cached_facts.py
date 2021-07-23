@@ -94,6 +94,8 @@ FACTS_BY_TARGETS = {
         'cartridge_remote_backups_dir',
         'cartridge_fetch_backups',
         'cartridge_fetch_backups_dir',
+        'cartridge_restore_archive_path',
+        'cartridge_force_restore',
     ],
     'count_disabled_instances': [
         'instance_info',

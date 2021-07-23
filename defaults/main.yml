@@ -204,6 +204,8 @@ cartridge_eval_delay: 5
 cartridge_remote_backups_dir: /opt/tarantool/backups
 cartridge_fetch_backups: false
 cartridge_fetch_backups_dir: backups/
+cartridge_restore_archive_path: null
+cartridge_force_restore: false
 
 # Edit topology check
 

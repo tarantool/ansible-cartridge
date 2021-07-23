@@ -1,6 +1,6 @@
-import time
-import tarfile
 import os
+import tarfile
+import time
 
 from ansible.module_utils.helpers import Helpers as helpers
 
@@ -95,7 +95,7 @@ def call_backup(params):
     start_only = params['start_only']
     stop_only = params['stop_only']
 
-    assert not(start_only and stop_only), "impossible to use 'start_only' with 'stop_only'"
+    assert not (start_only and stop_only), "impossible to use 'start_only' with 'stop_only'"
 
     console_sock = params['console_sock']
     control_console = helpers.get_control_console(console_sock)

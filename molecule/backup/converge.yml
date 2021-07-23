@@ -65,3 +65,25 @@
   gather_facts: false
   tasks:
     - include_tasks: include/check_backup_start_stop.yml
+
+- name: 'Insert second tuple'
+  hosts: instance-2-joined
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_eval_body: |
+      box.space.memtx_space:insert({54321})
+      box.space.vinyl_space:insert({09876})
+    cartridge_scenario:
+      - eval
+  roles:
+    - ansible-cartridge
+
+- name: 'Restore joined instances and stateboard'
+  hosts: cluster:!instance-1-not-joined
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - include_tasks: include/check_restore.yml
