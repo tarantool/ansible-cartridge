@@ -610,6 +610,22 @@ def patch_clusterwide_config(control_console, new_sections):
     return True, None
 
 
+def enrich_replicasets_with_leaders(control_console, replicasets):
+    leaders, err = control_console.eval_res_err('''
+        return require('cartridge.failover').get_active_leaders()
+    ''')
+    if err:
+        return err
+
+    if not leaders:
+        return None
+
+    for replicaset_name, replicaset_params in replicasets.items():
+        replicaset_params['leader_uuid'] = leaders.get(replicaset_params['uuid'])
+
+    return None
+
+
 class Helpers:
     DYNAMIC_BOX_CFG_PARAMS = DYNAMIC_BOX_CFG_PARAMS
     MEMORY_SIZE_BOX_CFG_PARAMS = MEMORY_SIZE_BOX_CFG_PARAMS
@@ -645,3 +661,4 @@ class Helpers:
     read_yaml_file = staticmethod(read_yaml_file)
     get_clusterwide_config = staticmethod(get_clusterwide_config)
     patch_clusterwide_config = staticmethod(patch_clusterwide_config)
+    enrich_replicasets_with_leaders = staticmethod(enrich_replicasets_with_leaders)

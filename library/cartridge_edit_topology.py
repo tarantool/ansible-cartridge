@@ -316,6 +316,35 @@ def get_replicaset_params(new_replicaset, old_replicaset, old_instances, allow_m
     return replicaset_params, None
 
 
+def change_failover_priority_if_leader_not_first(replicaset_params, old_replicaset, old_instances):
+    if any([
+        not (replicaset_params or {}).get('uuid'),
+        not (replicaset_params or {}).get('join_servers'),
+        not (old_replicaset or {}).get('leader_uuid'),
+        not old_instances,
+    ]):
+        return replicaset_params
+
+    leader_uuid = old_replicaset.get('leader_uuid')
+    replicaset_instances = old_replicaset['instances']
+    first_instance_uuid = old_instances[replicaset_instances[0]].get('uuid')
+
+    if leader_uuid == first_instance_uuid:
+        return replicaset_params
+
+    # We can't join instances if leader not first (https://github.com/tarantool/cartridge/issues/1204)
+    del replicaset_params['join_servers']
+
+    # Count temp failover priority
+    replicaset_params['failover_priority'] = [
+        old_instances[s]['uuid'] for s in replicaset_instances
+    ]
+    replicaset_params['failover_priority'].remove(leader_uuid)
+    replicaset_params['failover_priority'] = [leader_uuid] + replicaset_params['failover_priority']
+
+    return replicaset_params
+
+
 def get_replicasets_params(
     new_replicasets, old_replicasets,
     old_instances,
@@ -335,8 +364,42 @@ def get_replicasets_params(
                 new_replicaset['alias'], err
             )
 
+        replicaset_params = change_failover_priority_if_leader_not_first(
+            replicaset_params,
+            old_replicaset,
+            old_instances,
+        )
+
         if replicaset_params is not None:
             replicasets_params.append(replicaset_params)
+
+    return replicasets_params, None
+
+
+def get_replicasets_params_to_join_instances(
+    new_replicasets, old_replicasets,
+    old_instances,
+    allow_missed_instances,
+):
+    replicasets_params = []
+
+    for alias, cluster_replicaset in old_replicasets.items():
+        if alias not in new_replicasets:
+            continue
+
+        join_servers, err = get_join_servers(
+            new_replicasets[alias], cluster_replicaset,
+            old_instances,
+            allow_missed_instances,
+        )
+        if err is not None:
+            return None, err
+
+        if join_servers:
+            replicasets_params.append({
+                'uuid': cluster_replicaset['uuid'],
+                'join_servers': join_servers,
+            })
 
     return replicasets_params, None
 
@@ -614,32 +677,35 @@ def update_old_instances_and_replicasets(
 
 def get_topology_params(
     get_replicasets_params_func,
+    get_servers_params_func,
     new_instances, old_instances,
     new_replicasets, old_replicasets,
     allow_missed_instances,
 ):
     topology_params = {}
 
-    replicasets_params, err = get_replicasets_params_func(
-        new_replicasets, old_replicasets,
-        old_instances,
-        allow_missed_instances,
-    )
-    if err is not None:
-        return None, err
+    if get_replicasets_params_func:
+        replicasets_params, err = get_replicasets_params_func(
+            new_replicasets, old_replicasets,
+            old_instances,
+            allow_missed_instances,
+        )
+        if err is not None:
+            return None, err
 
-    if replicasets_params:
-        topology_params['replicasets'] = replicasets_params
+        if replicasets_params:
+            topology_params['replicasets'] = replicasets_params
 
-    servers_params, err = get_servers_params(
-        new_instances, old_instances,
-        allow_missed_instances,
-    )
-    if err is not None:
-        return None, err
+    if get_servers_params_func:
+        servers_params, err = get_servers_params_func(
+            new_instances, old_instances,
+            allow_missed_instances,
+        )
+        if err is not None:
+            return None, err
 
-    if servers_params:
-        topology_params['servers'] = servers_params
+        if servers_params:
+            topology_params['servers'] = servers_params
 
     return topology_params, None
 
@@ -647,6 +713,7 @@ def get_topology_params(
 def single_edit_topology_call(
     control_console,
     get_replicasets_params_func,
+    get_servers_params_func,
     new_instances, old_instances,
     new_replicasets, old_replicasets,
     allow_missed_instances,
@@ -654,6 +721,7 @@ def single_edit_topology_call(
 ):
     topology_params, err = get_topology_params(
         get_replicasets_params_func,
+        get_servers_params_func,
         new_instances, old_instances,
         new_replicasets, old_replicasets,
         allow_missed_instances,
@@ -688,6 +756,10 @@ def single_edit_topology_call(
         res, new_instances, old_instances, old_replicasets
     )
 
+    err = helpers.enrich_replicasets_with_leaders(control_console, old_replicasets)
+    if err is not None:
+        return None, err
+
     return True, None
 
 
@@ -721,6 +793,10 @@ def edit_topology(params):
     old_instances = helpers.get_cluster_instances(control_console)
     old_replicasets = helpers.get_cluster_replicasets(control_console)
 
+    err = helpers.enrich_replicasets_with_leaders(control_console, old_replicasets)
+    if err is not None:
+        return helpers.ModuleRes(failed=True, msg=err)
+
     # Check for dangerous changes
 
     if check_mode:
@@ -735,9 +811,9 @@ def edit_topology(params):
 
     # Configure replicasets and instances:
     # * Create new replicasets.
-    # * Edit existent replicasets and join new instances to them.
-    #   In this case failover_priority isn't changed since
-    #   new instances hasn't UUIDs before join.
+    # * Edit existent replicasets.
+    #   Temporary change failover_priority for replicasets with not first leader
+    #   (https://github.com/tarantool/cartridge/issues/1204)
     # * Expel instances.
     # * Configure instances that are already joined.
     #   New instances aren't configured here since they don't have
@@ -746,6 +822,24 @@ def edit_topology(params):
     changed_on_first_call, err = single_edit_topology_call(
         control_console,
         get_replicasets_params,
+        get_servers_params,
+        new_instances, old_instances,
+        new_replicasets, old_replicasets,
+        allow_missed_instances,
+        healthy_timeout,
+    )
+    if err is not None:
+        return helpers.ModuleRes(failed=True, msg=err)
+
+    # Configure replicasets:
+    # * Join new instances to existent replicasets.
+    #   In this case failover_priority isn't changed since
+    #   new instances hasn't UUIDs before join.
+
+    changed_on_second_call, err = single_edit_topology_call(
+        control_console,
+        get_replicasets_params_to_join_instances,
+        None,
         new_instances, old_instances,
         new_replicasets, old_replicasets,
         allow_missed_instances,
@@ -758,9 +852,10 @@ def edit_topology(params):
     # * Edit failover_priority of replicasets if it's needed.
     # * Configure instances that weren't configured on first `edit_topology` call.
 
-    changed_on_second_call, err = single_edit_topology_call(
+    changed_on_third_call, err = single_edit_topology_call(
         control_console,
         get_replicasets_params_for_changing_failover_priority,
+        get_servers_params,
         new_instances, old_instances,
         new_replicasets, old_replicasets,
         allow_missed_instances,
@@ -769,7 +864,11 @@ def edit_topology(params):
     if err is not None:
         return helpers.ModuleRes(failed=True, msg=err)
 
-    return helpers.ModuleRes(changed=changed_on_first_call or changed_on_second_call)
+    return helpers.ModuleRes(changed=any([
+        changed_on_first_call,
+        changed_on_second_call,
+        changed_on_third_call,
+    ]))
 
 
 if __name__ == '__main__':
