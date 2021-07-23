@@ -150,7 +150,7 @@ def get_control_instance_name(module_hostvars, play_hosts, control_console):
 
         instance_vars = module_hostvars.get(alias)
         if instance_vars is None and status != 'left':
-            return None, "Membership contains instance %s that isn't described in inventory" % alias
+            return None, "Membership contains instance '%s' that isn't described in inventory" % alias
 
         names_by_uris[uri] = alias
 

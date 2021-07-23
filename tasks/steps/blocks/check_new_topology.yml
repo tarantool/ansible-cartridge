@@ -1,0 +1,21 @@
+---
+
+- name: 'Check for dangerous changes in topology via {{ control_instance.name }}'
+  cartridge_edit_topology:
+    module_hostvars: '{{ cached_facts.edit_topology }}'
+    play_hosts: '{{ play_hosts }}'
+    console_sock: '{{ control_instance.console_sock }}'
+    healthy_timeout: '{{ edit_topology_timeout or edit_topology_healthy_timeout }}'
+    netbox_call_timeout: '{{ twophase_netbox_call_timeout }}'
+    upload_config_timeout: '{{ twophase_upload_config_timeout }}'
+    apply_config_timeout: '{{ twophase_apply_config_timeout }}'
+    allow_missed_instances: '{{ edit_topology_allow_missed_instances }}'
+    check_mode: true
+    ignore_errors_of_checks:
+      advertise_uris_change: '{{ cartridge_force_advertise_uris_change }}'
+      extra_cluster_instances: '{{ cartridge_ignore_extra_cluster_instances }}'
+      extra_cluster_replicasets: '{{ cartridge_ignore_extra_cluster_replicasets }}'
+      renamed_replicasets: '{{ cartridge_ignore_renamed_replicasets }}'
+  run_once: true
+  delegate_to: '{{ control_instance.name }}'
+  register: edit_topology_check_res

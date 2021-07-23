@@ -309,7 +309,7 @@ class TestGetControlInstance(unittest.TestCase):
 
         res = call_get_control_instance('myapp', self.console_sock, hostvars)
         self.assertTrue(res.failed, res.fact)
-        self.assertIn("Membership contains instance instance-3 that isn't described in inventor", res.msg)
+        self.assertIn("Membership contains instance 'instance-3' that isn't described in inventor", res.msg)
 
     def test_twophase_commit_versions(self):
         hostvars = {}

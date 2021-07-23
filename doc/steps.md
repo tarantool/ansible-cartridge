@@ -43,6 +43,7 @@ but can be used in a custom one:
 - [backup](#step-backup)
 - [backup_start](#step-backup_start)
 - [backup_stop](#step-backup_stop)
+- [check_new_topology](#step-check_new_topology)
 
 ## Role Variables Descriptions
 
@@ -255,7 +256,7 @@ Edit topology of replicasets.
 
 *If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
 
-Input variables from config:
+Input variables from config (basic):
 
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
@@ -264,7 +265,10 @@ Input variables from config:
 - `failover_priority` - failover priority order;
 - `all_rw` - indicates that that all servers in the replicaset should be read-write;
 - `weight` - vshard replicaset weight;
-- `vshard_group` - vshard group;
+- `vshard_group` - vshard group.
+
+Input variables from config (for two-phase commit):
+
 - `twophase_netbox_call_timeout` - time in seconds to wait netbox call
   while two-phase commit (Cartridge 2.5+ is required);
 - `twophase_upload_config_timeout` - time in seconds to wait config upload
@@ -273,6 +277,17 @@ Input variables from config:
   while two-phase commit (Cartridge 2.5+ is required);
 - `edit_topology_healthy_timeout` - time in seconds to wait until a cluster become healthy after editing topology;
 - [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.
+
+Input variables from config (for checks of dangerous topology changes):
+
+- `cartridge_force_advertise_uris_change` - flag that disable check
+  for advertise uris change;
+- `cartridge_ignore_extra_cluster_instances` - flag that disable check
+  for instances from the cluster that are not in inventory;
+- `cartridge_ignore_extra_cluster_replicasets` - flag that disable check
+  for replicasets from the cluster that are not in inventory;
+- `cartridge_ignore_renamed_replicasets` - flag that disable check
+  for replicasets that was renamed in cluster, but not renamed in inventory.
 
 ## Step `cleanup_expelled`
 
@@ -513,12 +528,11 @@ Input variables from config:
   to work/memtx/vinyl/wal directory that should be kept on instance cleanup
   (it's possible to use bash patterns, e.g. `*.control`).
 
-
 ### Step `backup`
 
 Create a [backup](/doc/backup.md) archive for each instance and fetch it on the local machine.
 
-Input facts (set by config):
+Input variables from config:
 
 - `cartridge_remote_backups_dir` - directory to store backups on the remote;
 - `cartridge_fetch_backups` - flag indicates that backups should be fetched the local machine;
@@ -538,7 +552,7 @@ Output facts:
 
 Start a [backup](/doc/backup.md) process on the instance.
 
-Input facts (set by config):
+Input variables from config:
 
 - `stateboard` - indicates that the instance is a stateboard.
 
@@ -550,3 +564,14 @@ Output facts:
 ### Step `backup_stop`
 
 Stop started [backup](/doc/backup.md) on the instance.
+
+## Step `check_new_topology`
+
+Check for dangerous changes on edit topology
+(runs automatically before [edit_topology step](#step-edit_topology)).
+
+*If `control_instance` is not defined then [set_control_instance](#step-set_control_instance) will run.*
+
+Input variables from config:
+
+- the same as in [edit_topology step](#step-edit_topology).

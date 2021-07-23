@@ -160,3 +160,10 @@
       cartridge_remote_backups_dir: '{{ cartridge_remote_backups_dir }}'
       cartridge_fetch_backups: '{{ cartridge_fetch_backups }}'
       cartridge_fetch_backups_dir: '{{ cartridge_fetch_backups_dir }}'
+
+      # Edit topology check
+
+      cartridge_force_advertise_uris_change: '{{ cartridge_force_advertise_uris_change }}'
+      cartridge_ignore_extra_cluster_instances: '{{ cartridge_ignore_extra_cluster_instances }}'
+      cartridge_ignore_extra_cluster_replicasets: '{{ cartridge_ignore_extra_cluster_replicasets }}'
+      cartridge_ignore_renamed_replicasets: '{{ cartridge_ignore_renamed_replicasets }}'

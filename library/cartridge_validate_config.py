@@ -262,13 +262,13 @@ def check_cluster_cookie_symbols(cluster_cookie):
         return None
 
     if len(cluster_cookie) > CLUSTER_COOKIE_MAX_LEN:
-        errmsg = 'Cluster cookie cannot be longer than {}'.format(CLUSTER_COOKIE_MAX_LEN)
+        errmsg = "Cluster cookie cannot be longer than {}".format(CLUSTER_COOKIE_MAX_LEN)
         return errmsg
 
     m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, cluster_cookie)
     if m is not None:
-        errmsg = 'Cluster cookie cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
-                 '("{}" found)'.format(m.group())
+        errmsg = "Cluster cookie cannot contain symbols other than [a-zA-Z0-9_.~-] " + \
+                 "('{}' found)".format(m.group())
         return errmsg
 
     return None
@@ -277,7 +277,7 @@ def check_cluster_cookie_symbols(cluster_cookie):
 def check_required_params(instance_vars, host):
     for p in INSTANCE_REQUIRED_PARAMS:
         if instance_vars.get(p) is None:
-            errmsg = '"{}" must be specified (missed for "{}")'.format(p, host)
+            errmsg = "'{}' must be specified (missed for '{}')".format(p, host)
             return errmsg
 
     return None
@@ -287,18 +287,18 @@ def check_instance_config(config, host):
     # Check if all required params are specified
     for p in CONFIG_REQUIRED_PARAMS:
         if config.get(p) is None:
-            errmsg = 'Missed required parameter "{}" in "{}" config'.format(p, host)
+            errmsg = "Missed required parameter '{}' in '{}' config".format(p, host)
             return errmsg
 
     # Check if no forbidden params specified
     for p in CONFIG_FORBIDDEN_PARAMS:
         if config.get(p) is not None:
-            errmsg = 'Specified forbidden parameter "{}" in "{}" config'.format(p, host)
+            errmsg = "Specified forbidden parameter '{}' in '{}' config".format(p, host)
             return errmsg
 
     if 'advertise_uri' in config:
         if not is_valid_advertise_uri(config['advertise_uri']):
-            errmsg = 'Instance advertise_uri must be specified as "<host>:<port>" ("{}")'.format(host)
+            errmsg = "Instance advertise_uri must be specified as '<host>:<port>' ('{}')".format(host)
             return errmsg
 
     return None
@@ -308,7 +308,7 @@ def check_params_the_same_for_all_hosts(instance_vars, found_common_params):
     for p in PARAMS_THE_SAME_FOR_ALL_HOSTS:
         if found_common_params.get(p) is not None:
             if instance_vars.get(p) != found_common_params.get(p):
-                errmsg = '"{}" must be the same for all hosts'.format(p)
+                errmsg = "'{}' must be the same for all hosts".format(p)
                 return errmsg
         elif instance_vars.get(p) is not None:
             found_common_params[p] = instance_vars.get(p)
@@ -327,7 +327,7 @@ def check_replicaset(instance_vars, found_replicasets):
     if replicaset_alias not in found_replicasets:
         for p in REPLICASET_REQUIRED_PARAMS:
             if p not in instance_vars:
-                errmsg = 'Parameter "{}" is required for all replicasets (missed for "{}")'.format(
+                errmsg = "Parameter '{}' is required for all replicasets (missed for '{}')".format(
                     p, replicaset_alias
                 )
                 return errmsg
@@ -335,8 +335,8 @@ def check_replicaset(instance_vars, found_replicasets):
         found_replicasets[replicaset_alias] = replicaset
     else:
         if replicaset != found_replicasets[replicaset_alias]:
-            errmsg = 'Replicaset parameters must be the same for all instances' + \
-                     ' within one replicaset ("{}")'.format(replicaset_alias)
+            errmsg = "Replicaset parameters must be the same for all instances" + \
+                     " within one replicaset ('{}')".format(replicaset_alias)
             return errmsg
 
     return None
@@ -349,33 +349,33 @@ def check_app_config(found_common_params):
 
     for section_name, section in app_config.items():
         if not isinstance(section, dict):
-            errmsg = '"cartridge_app_config.{}" must be dict, found {}'.format(
+            errmsg = "'cartridge_app_config.{}' must be dict, found {}".format(
                 section_name, type(section)
             )
             return errmsg
 
         if not section:
-            errmsg = '"cartridge_app_config.{}" must have "body" or "deleted" subsection'.format(section_name)
+            errmsg = "'cartridge_app_config.{}' must have 'body' or 'deleted' subsection".format(section_name)
             return errmsg
 
         allowed_keys = ['body', 'deleted']
         for key in section:
             if key not in allowed_keys:
-                errmsg = '"cartridge_app_config.{}" can contain only "body" or "deleted" subsections'.format(
+                errmsg = "'cartridge_app_config.{}' can contain only 'body' or 'deleted' subsections".format(
                     section_name
                 )
                 return errmsg
 
         if 'deleted' in section:
             if not isinstance(section['deleted'], bool):
-                errmsg = '"cartridge_app_config.{}.deleted" must be bool, found {}'.format(
+                errmsg = "'cartridge_app_config.{}.deleted' must be bool, found {}".format(
                     section_name, type(section['deleted'])
                 )
                 return errmsg
 
             if section['deleted'] is False:
                 if 'body' not in section:
-                    errmsg = '"cartridge_app_config.{}.body" is required'.format(section_name)
+                    errmsg = "'cartridge_app_config.{}.body' is required".format(section_name)
                     return errmsg
 
     return None
@@ -390,7 +390,7 @@ def check_auth(found_common_params):
         if 'users' in cartridge_auth:
             for user in cartridge_auth['users']:
                 if 'username' not in user:
-                    errmsg = 'Field "username" is required for "cartridge_auth.users"'
+                    errmsg = "Field 'username' is required for 'cartridge_auth.users'"
                     return errmsg
 
     return None
@@ -398,40 +398,40 @@ def check_auth(found_common_params):
 
 def check_stateboard(stateboard_vars):
     if stateboard_vars.get('expelled') is True:
-        return '"expelled" flag can\'t be used for stateboard instance'
+        return "'expelled' flag can't be used for stateboard instance"
 
     for p in REPLICASET_PARAMS:
         if stateboard_vars.get(p) is not None:
-            return '"{}" flag can\'t be used for stateboard instance'.format(p)
+            return "'{}' flag can't be used for stateboard instance".format(p)
 
     if stateboard_vars.get('config') is None:
-        return '"config" parameter is required for stateboard instance'
+        return "'config' parameter is required for stateboard instance"
 
     if stateboard_vars.get('cartridge_app_name') is None:
-        return '"cartridge_app_name" parameter is required for stateboard instance'
+        return "'cartridge_app_name' parameter is required for stateboard instance"
 
     # Check if all required params are specified
     stateboard_config = stateboard_vars['config']
     for p in STATEBOARD_CONFIG_REQUIRED_PARAMS:
         if stateboard_config.get(p) is None:
-            return 'Missed required parameter "{}" in stateboard config'.format(p)
+            return "Missed required parameter '{}' in stateboard config".format(p)
 
     # Check if no forbidden params specified
     for p in CONFIG_FORBIDDEN_PARAMS:
         if stateboard_config.get(p) is not None:
-            return 'Specified forbidden parameter "{}" in stateboard config'.format(p)
+            return "Specified forbidden parameter '{}' in stateboard config".format(p)
 
     # Check stateboard URI
     stateboard_uri = stateboard_config['listen']
     if not is_valid_advertise_uri(stateboard_uri):
-        return 'Stateboard listen URI must be specified as "<host>:<port>"'
+        return "Stateboard listen URI must be specified as '<host>:<port>'"
 
     # Check stateboard password
     stateboard_password = stateboard_config['password']
     m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, stateboard_password)
     if m is not None:
-        errmsg = 'Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
-                 '("{}" found)'.format(m.group())
+        errmsg = "Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-] " + \
+                 "('{}' found)".format(m.group())
         return errmsg
 
     return None
@@ -442,15 +442,15 @@ def check_failover(found_common_params):
     cartridge_failover_params = found_common_params.get('cartridge_failover_params')
 
     if cartridge_failover is not None and cartridge_failover_params is not None:
-        return 'Only one of "cartridge_failover" and "cartridge_failover_params" can be specified'
+        return "Only one of 'cartridge_failover' and 'cartridge_failover_params' can be specified"
 
     if cartridge_failover_params is not None:
         if cartridge_failover_params.get('mode') is None:
-            return '"mode" is required in "cartridge_failover_params"'
+            return "'mode' is required in 'cartridge_failover_params'"
 
         mode = cartridge_failover_params['mode']
         if mode not in FALOVER_MODES:
-            return 'Failover Failover mode should be one of {}'.format(FALOVER_MODES)
+            return "Failover Failover mode should be one of {}".format(FALOVER_MODES)
 
         if mode == 'disabled':  # don't check other parameters
             return None
@@ -458,12 +458,12 @@ def check_failover(found_common_params):
         if mode == 'eventual':
             for p in STATEFUL_FAILOVER_PARAMS:
                 if p in cartridge_failover_params:
-                    return '"{}" failover parameter is allowed only for "stateful" mode'.format(p)
+                    return "'{}' failover parameter is allowed only for 'stateful' mode".format(p)
 
         if mode == 'stateful':
             for p in STATEFUL_FAILOVER_REQUIRED_PARAMS:
                 if p not in cartridge_failover_params:
-                    return '"{}" failover parameter is required for "stateful" mode'.format(p)
+                    return "'{}' failover parameter is required for 'stateful' mode".format(p)
 
             if cartridge_failover_params['state_provider'] not in STATEFUL_FAILOVER_STATE_PROVIDERS:
                 return "Stateful failover state provider should be one of {}".format(
@@ -472,22 +472,22 @@ def check_failover(found_common_params):
 
             if cartridge_failover_params['state_provider'] == 'stateboard':
                 if cartridge_failover_params.get('stateboard_params') is None:
-                    return '"stateboard_params" is required for "stateboard" state provider'
+                    return "'stateboard_params' is required for 'stateboard' state provider"
 
                 for p in STATEBOARD_PROVIDER_REQUIRED_PARAMS:
                     if p not in cartridge_failover_params['stateboard_params']:
-                        return '"stateboard_params.{}" is required for "stateboard" provider'.format(p)
+                        return "'stateboard_params.{}' is required for 'stateboard' provider".format(p)
 
                 state_provider_uri = cartridge_failover_params['stateboard_params']['uri']
                 if not is_valid_advertise_uri(state_provider_uri):
-                    return 'Stateboard URI must be specified as "<host>:<port>"'
+                    return "Stateboard URI must be specified as '<host>:<port>'"
 
                 state_provider_password = cartridge_failover_params['stateboard_params']['password']
 
                 m = re.search(CLUSTER_COOKIE_FORBIDDEN_SYMBOLS_RGX, state_provider_password)
                 if m is not None:
-                    errmsg = 'Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-] ' + \
-                             '("{}" found)'.format(m.group())
+                    errmsg = "Stateboard password cannot contain symbols other than [a-zA-Z0-9_.~-] " + \
+                             "('{}' found)".format(m.group())
                     return errmsg
 
             elif cartridge_failover_params['state_provider'] == 'etcd2':
@@ -495,7 +495,7 @@ def check_failover(found_common_params):
                 if etcd2_params is not None and etcd2_params.get('endpoints') is not None:
                     for endpoint in etcd2_params['endpoints']:
                         if not is_valid_advertise_uri(endpoint):
-                            return 'etcd2 endpoints must be specified as "<host>:<port>"'
+                            return "etcd2 endpoints must be specified as '<host>:<port>'"
 
     return None
 
@@ -604,12 +604,12 @@ def validate_config(params):
         # Cartridge defaults
         if 'cartridge_defaults' in instance_vars:
             if 'cluster_cookie' in instance_vars['cartridge_defaults']:
-                errmsg = 'Cluster cookie must be specified in "cartridge_cluster_cookie", not in "cartridge_defaults"'
+                errmsg = "Cluster cookie must be specified in 'cartridge_cluster_cookie', not in 'cartridge_defaults'"
                 return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Instance state
         if instance_vars.get('expelled') is True and instance_vars.get('restarted') is True:
-            errmsg = 'Flags "expelled" and "restarted" cannot be set at the same time'
+            errmsg = "Flags 'expelled' and 'restarted' cannot be set at the same time"
             return helpers.ModuleRes(failed=True, msg=errmsg)
 
         # Replicasets
@@ -621,7 +621,7 @@ def validate_config(params):
         if 'cartridge_keep_num_latest_dists' in instance_vars:
             keep_num_latest_dists = instance_vars['cartridge_keep_num_latest_dists']
             if keep_num_latest_dists <= 0:
-                errmsg = '"cartridge_keep_num_latest_dists" should be greater than 0'
+                errmsg = "'cartridge_keep_num_latest_dists' should be greater than 0"
                 return helpers.ModuleRes(failed=True, msg=errmsg)
             if keep_num_latest_dists == 1:
                 warnings.append(

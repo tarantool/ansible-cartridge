@@ -113,7 +113,7 @@ class TestEditTopology(unittest.TestCase):
             allow_missed_instances=allow_missed_instances,
         )
         self.assertTrue(res.failed, msg=res.msg)
-        self.assertEqual(res.msg, "Failed to edit failover priority and configure instances: cartridge err")
+        self.assertEqual(res.msg, "Failed to edit topology: cartridge err")
 
         calls = self.instance.get_calls('edit_topology')
         self.assertEqual(len(calls), 1)
