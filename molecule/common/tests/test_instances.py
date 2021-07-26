@@ -1,14 +1,14 @@
 import os
+
 from yaml import CLoader as Loader
 
-from importlib.machinery import SourceFileLoader
-utils = SourceFileLoader("utils", "./molecule/common/tests/utils.py").load_module()
-
+import utils
 
 testinfra_hosts = utils.get_testinfra_hosts()
 
 
 def check_conf_file(conf_file, instance_id, conf):
+    assert conf_file is not None, 'Config file should exists'
     assert conf_file.exists
     assert conf_file.user == 'tarantool'
     assert conf_file.group == 'tarantool'
@@ -115,6 +115,7 @@ def test_configs(host):
     if not not_save_cookie_in_app_config:
         default_conf.update(cluster_cookie=utils.get_cluster_cookie())
 
+    default_conf_file = None
     for instance in machine_instances:
         instance_vars = utils.get_instance_vars(instance)
         instance_id = utils.get_instance_id(app_name, instance_vars)

@@ -1,7 +1,19 @@
-tenacity~=6.3.1
-parameterized~=0.8.1
-ansible~=2.10.6
-pytest-testinfra~=6.1.0
-flake8~=3.8.4
+# Base
+ansible~=4.3.0
+
+# Linters
 yamllint~=1.26.0
-molecule[docker,ansible]~=3.2.3
+flake8~=3.9.2
+
+# Unit tests
+parameterized~=0.8.1
+tenacity~=8.0.1
+
+# Molecule tests
+molecule~=3.3.4
+molecule-docker~=0.2.4
+
+# Molecule verification tests
+requests~=2.26.0
+PyYAML~=5.4.1
+pytest-testinfra~=6.4.0

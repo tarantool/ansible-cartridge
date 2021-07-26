@@ -49,7 +49,7 @@ jobs:
       - name: Install molecule requirements
         run: |
           pip3 install --upgrade -r requirements.txt
-          pip3 uninstall -y ansible ansible-base
+          pip3 uninstall -y ansible ansible-base ansible-core
           pip3 install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache test packages
@@ -103,7 +103,7 @@ jobs:
       - name: Install molecule requirements
         run: |
           pip3 install --upgrade -r requirements.txt
-          pip3 uninstall -y ansible ansible-base
+          pip3 uninstall -y ansible ansible-base ansible-core
           pip3 install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache test packages
@@ -155,7 +155,7 @@ jobs:
       - name: Install molecule requirements
         run: |
           pip3 install --upgrade -r requirements.txt
-          pip3 uninstall -y ansible ansible-base
+          pip3 uninstall -y ansible ansible-base ansible-core
           pip3 install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache TDG test packages

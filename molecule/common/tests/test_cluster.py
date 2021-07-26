@@ -1,11 +1,9 @@
-from yaml import CLoader as Loader
-
-import requests
 import functools
 
-from importlib.machinery import SourceFileLoader
-utils = SourceFileLoader("utils", "./molecule/common/tests/utils.py").load_module()
+import requests
+from yaml import CLoader as Loader
 
+import utils
 
 testinfra_hosts = utils.get_testinfra_hosts()
 
@@ -185,14 +183,14 @@ def test_failover():
 
     failover_params = data['cluster']['failover_params']
 
-    FAILOVER_PARAMS = [
+    failover_params_names = [
         'failover_timeout',
         'fencing_enabled',
         'fencing_timeout',
         'fencing_pause',
     ]
 
-    for param_name in FAILOVER_PARAMS:
+    for param_name in failover_params_names:
         if param_name in configured_failover_params:
             assert failover_params[param_name] == configured_failover_params[param_name]
 
