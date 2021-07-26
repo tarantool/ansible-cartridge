@@ -1,6 +1,4 @@
-from importlib.machinery import SourceFileLoader
-utils = SourceFileLoader("utils", "./molecule/common/tests/utils.py").load_module()
-
+import utils
 
 testinfra_hosts = utils.get_testinfra_hosts()
 

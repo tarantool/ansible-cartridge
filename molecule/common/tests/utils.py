@@ -1,10 +1,10 @@
 import os
-import requests
 
+import requests
 import testinfra.utils.ansible_runner
 from ansible.inventory.manager import InventoryManager
-from ansible.vars.manager import VariableManager
 from ansible.parsing.dataloader import DataLoader
+from ansible.vars.manager import VariableManager
 
 scenario_name = os.environ['MOLECULE_SCENARIO_NAME']
 
@@ -29,8 +29,8 @@ def get_testinfra_hosts():
 def get_inventory():
     global __inventory
     if __inventory is None:
-        HOSTS_PATH = os.path.join('molecule', scenario_name, 'hosts.yml')
-        __inventory = InventoryManager(loader=DataLoader(), sources=HOSTS_PATH)
+        hosts_path = os.path.join('molecule', scenario_name, 'hosts.yml')
+        __inventory = InventoryManager(loader=DataLoader(), sources=hosts_path)
 
     return __inventory
 
