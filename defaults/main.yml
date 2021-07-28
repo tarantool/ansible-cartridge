@@ -8,6 +8,7 @@ cartridge_not_save_cookie_in_app_config: false
 cartridge_remove_temporary_files: false
 cartridge_ignore_split_brain: false
 cartridge_paths_to_keep_on_cleanup: []
+cartridge_paths_to_keep_on_restore: []
 
 # Role scenario configuration
 
@@ -204,8 +205,9 @@ cartridge_eval_delay: 5
 cartridge_remote_backups_dir: /opt/tarantool/backups
 cartridge_fetch_backups: false
 cartridge_fetch_backups_dir: backups/
-cartridge_restore_archive_path: null
+cartridge_restore_backup_path: null
 cartridge_force_restore: false
+cartridge_ignore_alien_backup: false
 
 # Edit topology check
 

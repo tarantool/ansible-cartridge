@@ -20,7 +20,7 @@
   become_user: root
   gather_facts: false
   tasks:
-    - include_tasks: include/check_backup.yml
+    - import_tasks: include/check_backup.yml
 
     - name: Check that fetching archive was skipped
       assert:
@@ -40,7 +40,7 @@
   become_user: root
   gather_facts: false
   tasks:
-    - include_tasks: include/check_backup.yml
+    - import_tasks: include/check_backup.yml
       vars:
         cartridge_fetch_backups: true
 
@@ -64,9 +64,9 @@
   become_user: root
   gather_facts: false
   tasks:
-    - include_tasks: include/check_backup_start_stop.yml
+    - import_tasks: include/check_backup_start_stop.yml
 
-- name: 'Insert second tuple'
+- name: 'Insert second tuple and change clusterwide config'
   hosts: instance-2-joined
   become: true
   become_user: root
@@ -75,6 +75,16 @@
     cartridge_eval_body: |
       box.space.memtx_space:insert({54321})
       box.space.vinyl_space:insert({09876})
+
+      require('cartridge').config_patch_clusterwide({test='value'})
+
+      local tuples = box.space.memtx_space:select()
+      assert(#tuples == 2, "Space 'memtx_space' should contain two test tuples")
+
+      local tuples = box.space.vinyl_space:select()
+      assert(#tuples == 2, "Space 'vinyl_space' should contain two test tuples")
+
+      assert(require('cartridge').config_get_readonly().test ~= nil, "Section 'test' should exists")
     cartridge_scenario:
       - eval
   roles:
@@ -86,4 +96,89 @@
   become_user: root
   gather_facts: false
   tasks:
-    - include_tasks: include/check_restore.yml
+    - import_tasks: include/check_restore.yml
+
+- name: 'Change application config and cluster cookie file'
+  hosts: instance-2-joined,instance-3-joined
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Change application config'
+      copy:
+        content: "{{ {cartridge_app_name: {'test': 'value'}} | to_nice_yaml }}"
+        dest: '{{ instance_info.app_conf_file }}'
+        owner: 'tarantool'
+        group: 'tarantool'
+        mode: '644'
+
+    - name: 'Change cluster cookie file'
+      copy:
+        content: "my_new_cookie"
+        dest: "{{ (instance_info.work_dir, '.tarantool.cookie') | cartridge_path_join }}"
+        owner: 'tarantool'
+        group: 'tarantool'
+        mode: '644'
+
+- name: 'Restore joined instances with different application config and cluster cookie file'
+  hosts: instance-2-joined,instance-3-joined
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Call restore from last TGZ'
+      vars:
+        cartridge_force_restore: false
+        cartridge_scenario:
+          - stop_instance
+          - restore
+      import_role:
+        name: ansible-cartridge
+      ignore_errors: true
+
+    - name: 'Check restore error'
+      assert:
+        fail_msg: 'Restore error is incorrect'
+        success_msg: 'Restore error is correct'
+        that:
+          - cartridge_restore_instance_res is failed
+          - '"Some files already exist and have a different md5 sum" in cartridge_restore_instance_res.msg'
+          - '".tarantool.cookie" in cartridge_restore_instance_res.msg'
+          - '"myapp.yml" in cartridge_restore_instance_res.msg'
+
+    - name: 'Call restore from last TGZ'
+      vars:
+        cartridge_force_restore: true
+        cartridge_eval_args: '{{ check_restore_eval_args }}'
+        cartridge_eval_body: '{{ check_restore_eval_body }}'
+        cartridge_scenario:
+          - restore
+          - start_instance
+          - wait_instance_started
+          - eval
+      import_role:
+        name: ansible-cartridge
+
+- name: 'Restore instance with backup of another instance'
+  hosts: instance-3-joined
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Call restore from last TGZ'
+      vars:
+        cartridge_restore_backup_path: '/tmp/myapp-stateboard/'
+        cartridge_scenario:
+          - stop_instance
+          - restore
+      import_role:
+        name: ansible-cartridge
+      ignore_errors: true
+
+    - name: 'Check restore error'
+      assert:
+        fail_msg: 'Restore error is incorrect'
+        success_msg: 'Restore error is correct'
+        that:
+          - cartridge_restore_instance_res is failed
+          - '"Seems that selected backup of another instance" in cartridge_restore_instance_res.msg'

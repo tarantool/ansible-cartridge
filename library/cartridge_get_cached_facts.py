@@ -47,6 +47,7 @@ FACTS_BY_TARGETS = {
         'cartridge_remove_temporary_files',
         'cartridge_ignore_split_brain',
         'cartridge_paths_to_keep_on_cleanup',
+        'cartridge_paths_to_keep_on_restore',
         'cartridge_run_dir',
         'cartridge_scenario',
         'cartridge_scenario_name',
@@ -94,8 +95,9 @@ FACTS_BY_TARGETS = {
         'cartridge_remote_backups_dir',
         'cartridge_fetch_backups',
         'cartridge_fetch_backups_dir',
-        'cartridge_restore_archive_path',
+        'cartridge_restore_backup_path',
         'cartridge_force_restore',
+        'cartridge_ignore_alien_backup',
     ],
     'count_disabled_instances': [
         'instance_info',

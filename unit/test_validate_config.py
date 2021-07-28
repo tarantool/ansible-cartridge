@@ -68,7 +68,7 @@ class TestValidateConfig(unittest.TestCase):
                 'allowed_members_states[0]',
                 'cartridge_remote_backups_dir',
                 'cartridge_fetch_backups_dir',
-                'cartridge_restore_archive_path',
+                'cartridge_restore_backup_path',
             },
             bool: {
                 'cartridge_bootstrap_vshard',
@@ -94,6 +94,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_not_save_cookie_in_app_config',
                 'cartridge_fetch_backups',
                 'cartridge_force_restore',
+                'cartridge_ignore_alien_backup',
             },
             dict: {
                 'cartridge_defaults',
@@ -147,6 +148,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_custom_steps',
                 'cartridge_eval_args',
                 'cartridge_paths_to_keep_on_cleanup',
+                'cartridge_paths_to_keep_on_restore',
             }
         }
 

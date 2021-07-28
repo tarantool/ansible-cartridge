@@ -535,7 +535,8 @@ Input variables from config:
 
 - `cartridge_paths_to_keep_on_cleanup` - list of full paths or relative paths
   to work/memtx/vinyl/wal directory that should be kept on instance cleanup
-  (it's possible to use bash patterns, e.g. `*.control`).
+  (`config` and `.tarantool.cookie` will be kept independently of this variable);
+  it's possible to use bash patterns, e.g. `*.control`.
 
 ### Step `backup`
 
@@ -580,9 +581,14 @@ Restore each instance from a [backup](#step-backup) archive.
 
 Input variables from config:
 
-- `cartridge_restore_archive_path` - path to the instance backup archive on the remote machine;
+- `cartridge_paths_to_keep_on_restore` - list of full paths or relative paths
+  to work/memtx/vinyl/wal directory that should be kept on instance restore
+  (`.tarantool.cookie` will be kept independently of this variable);
+  it's possible to use bash patterns, e.g. `*.control`.
+- `cartridge_restore_backup_path` - path to the instance backup archive on the remote machine;
 - `cartridge_remote_backups_dir` - directory with backups on the remote;
-- `cartridge_force_restore` -  flag indicates that conflicting files should be overwritten.
+- `cartridge_force_restore` - flag indicates that conflicting files should be overwritten;
+- `cartridge_ignore_alien_backup` - flag indicates that backup of instance with another name can be used.
 
 ## Step `check_new_topology`
 

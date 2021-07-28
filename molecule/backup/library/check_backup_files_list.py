@@ -1,10 +1,8 @@
 #!/usr/bin/env python
-
+import fnmatch
 import os
-import re
 
 from ansible.module_utils.basic import AnsibleModule
-
 
 argument_spec = {
     'instance_info': {'required': True, 'type': 'dict'},
@@ -14,6 +12,17 @@ argument_spec = {
     'backup_files_from_machine': {'required': False, 'type': 'list'},
     'instances_from_machine': {'required': False, 'type': 'list'},
 }
+
+
+def glob_list_match(path, glob_list):
+    for pattern in glob_list:
+        norm_path = os.path.normpath(path)
+        base_name = os.path.basename(path)
+
+        if fnmatch.fnmatch(norm_path, pattern) or fnmatch.fnmatch(base_name, pattern):
+            return True
+
+    return False
 
 
 if __name__ == '__main__':
@@ -29,40 +38,41 @@ if __name__ == '__main__':
 
     # filter out config subdirectories
     conf_path = os.path.join(instance_info['work_dir'], 'config').strip(os.path.sep)
-    files_list = list(sorted(filter(
+    files_list = list(filter(
         lambda p: p == conf_path or not p.startswith(conf_path),
         map(lambda path: path.strip(os.path.sep), files_list),
-    )))
+    ))
 
     if not stateboard:
-        exp_files_list_regexps = [
+        exp_files_glob_list = [
             instance_info['conf_file'],
             instance_info['app_conf_file'],
+            os.path.join(instance_info['work_dir'], ".tarantool.cookie"),
             os.path.join(instance_info['work_dir'], "config"),
-            os.path.join(instance_info['memtx_dir'], r"\d+\.snap"),
-            os.path.join(instance_info['vinyl_dir'], r"\d+\.vylog"),
-            os.path.join(instance_info['vinyl_dir'], r"\d+", r"\d+", r"\d+\.index"),
-            os.path.join(instance_info['vinyl_dir'], r"\d+", r"\d+", r"\d+\.run"),
+            os.path.join(instance_info['memtx_dir'] or instance_info['work_dir'], "*.snap"),
+            os.path.join(instance_info['vinyl_dir'] or instance_info['work_dir'], "*.vylog"),
+            os.path.join(instance_info['vinyl_dir'] or instance_info['work_dir'], "*", "*", "*.index"),
+            os.path.join(instance_info['vinyl_dir'] or instance_info['work_dir'], "*", "*", "*.run"),
         ]
     else:
-        exp_files_list_regexps = [
+        exp_files_glob_list = [
             instance_info['conf_file'],
-            os.path.join(instance_info['memtx_dir'], r"\d+.snap"),
+            os.path.join(instance_info['memtx_dir'], "*.snap"),
         ]
 
-    exp_files_list_regexps = list(map(lambda r: r.strip(os.path.sep), exp_files_list_regexps))
+    exp_files_glob_list = list(map(lambda r: r.strip(os.path.sep), exp_files_glob_list))
 
-    if len(exp_files_list_regexps) != len(files_list):
+    if len(exp_files_glob_list) != len(files_list):
         files_list_is_ok = False
     else:
         files_list_is_ok = all([
-            re.match(exp_files_list_regexps[i], file_path)
-            for i, file_path in enumerate(files_list)
+            glob_list_match(file_path, exp_files_glob_list)
+            for file_path in files_list
         ])
 
     if not files_list_is_ok:
         module.fail_json(msg="Received bad backup files list. Expected %s, got %s" % (
-            exp_files_list_regexps, files_list
+            exp_files_glob_list, files_list
         ))
 
     if backup_files_from_machine is None:

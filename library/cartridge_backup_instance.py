@@ -44,11 +44,17 @@ def backup_start(control_console, params):
 
         if not is_stateboard then
             local work_dir = confapplier.get_workdir()
-            local config_names = {'config', 'config.backup', 'config.yml', 'config.backup.yml'}
-            for _, config_name in ipairs(config_names) do
-                local config_path = fio.pathjoin(work_dir, config_name)
-                if fio.path.exists(config_path) then
-                    table.insert(paths, config_path)
+            local work_dir_files = {
+                'config',
+                'config.backup',
+                'config.yml',
+                'config.backup.yml',
+                '.tarantool.cookie',
+            }
+            for _, work_dir_file in ipairs(work_dir_files) do
+                local work_dir_file_path = fio.pathjoin(work_dir, work_dir_file)
+                if fio.path.exists(work_dir_file_path) then
+                    table.insert(paths, work_dir_file_path)
                 end
             end
         end
@@ -102,9 +108,6 @@ def call_backup(params):
 
     if not helpers.box_cfg_was_called(control_console):
         return helpers.ModuleRes(failed=True, msg="box.cfg wasn't called yet")
-
-    backup_files = None
-    backup_archive_path = None
 
     # STOP ONLY
     if stop_only:

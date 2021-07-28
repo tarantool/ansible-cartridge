@@ -15,8 +15,13 @@ failover.
 - `cartridge_ignore_split_brain` (`boolean`, default: `false`): flag indicates that detected split
   brain should be ignored on preparation stage;
 - `cartridge_paths_to_keep_on_cleanup` (`list-of-strings`, default: `[]`): list of full paths or
-  relative paths to work/memtx/vinyl/wal directory that should be kept on instance cleanup (it's
-  possible to use bash patterns, e.g. `*.control`).
+  relative paths to work/memtx/vinyl/wal directory that should be kept on instance cleanup (`config`
+  and` .tarantool.cookie` will be kept independently of this variable); it's possible to use bash
+  patterns, e.g. `*.control`;
+- `cartridge_paths_to_keep_on_restore` (`list-of-strings`, default: `[]`): list of full paths or
+  relative paths to work/memtx/vinyl/wal directory that should be kept on instance
+  restore (`.tarantool.cookie` will be kept independently of this variable); it's possible to use
+  bash patterns, e.g. `*.control`.
 
 ## Role scenario configuration
 
@@ -208,4 +213,6 @@ For more details see [scenario documentation](/doc/scenario.md).
 - `cartridge_restore_archive_path` (`string`): path to the instance backup archive on the remote
   machine;
 - `cartridge_force_restore` (`boolean`, default: `false`): flag indicates that conflicting files
-  should be overwritten.
+  should be overwritten;
+- `cartridge_ignore_alien_backup` (`boolean`, default: `false`): flag indicates that backup of
+  instance with another name can be used.

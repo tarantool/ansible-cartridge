@@ -1,90 +1,38 @@
 ---
 
-- name: 'Cleanup instance'
-  vars:
-    cartridge_eval_args:
-      - '{{ stateboard }}'
-    cartridge_eval_body: |
-      local is_stateboard = ...
-      if is_stateboard then
-        assert(box.space.leader ~= nil, 'Space "leader" should exists')
-      else
-        assert(box.space.memtx_space ~= nil, 'Space "memtx_space" should exists')
-        local tuples = box.space.memtx_space:select()
-        assert(#tuples == 2, 'Space "memtx_space" should contain two tuples')
-
-        assert(box.space.vinyl_space ~= nil, 'Space "vinyl_space" should exists')
-        local tuples = box.space.vinyl_space:select()
-        assert(#tuples == 2, 'Space "memtx_space" should contain two tuples')
-      end
-    cartridge_scenario:
-      - eval
-      - stop_instance
-      - cleanup_instance_files
-  import_role:
-    name: ansible-cartridge
-
-- name: 'Remove memtx directory to test directories restoring'
+- name: 'Remove vinyl directory to test directories restoring'
   file:
-    path: '{{ cartridge_memtx_dir_parent }}'
+    path: '{{ cartridge_vinyl_dir_parent }}'
     state: 'absent'
   register: backup_archive_res
 
 - name: 'Call restore from last TGZ'
   vars:
-    cartridge_eval_args:
-      - '{{ stateboard }}'
-    cartridge_eval_body: |
-      local is_stateboard = ...
-      if is_stateboard then
-        assert(box.space.leader ~= nil, 'Space "leader" should exists')
-      else
-        assert(box.space.memtx_space ~= nil, 'Space "memtx_space" should exists')
-        local tuples = box.space.memtx_space:select()
-        assert(#tuples == 1 and tuples[1][1] == 12345, 'Space "memtx_space" should contain test tuple')
-
-        assert(box.space.vinyl_space ~= nil, 'Space "vinyl_space" should exists')
-        local tuples = box.space.vinyl_space:select()
-        assert(#tuples == 1 and tuples[1][1] == 67890, 'Space "memtx_space" should contain test tuple')
-      end
+    cartridge_restore_backup_path: null
+    cartridge_eval_args: '{{ check_restore_eval_args }}'
+    cartridge_eval_body: '{{ check_restore_eval_body }}'
     cartridge_scenario:
+      - stop_instance
       - restore
       - start_instance
       - wait_instance_started
       - eval
-      - stop_instance
-      - cleanup_instance_files
   import_role:
     name: ansible-cartridge
 
-- name: 'Remove memtx directory to test directories restoring'
+- name: 'Remove vinyl directory to test directories restoring'
   file:
-    path: '{{ cartridge_memtx_dir_parent }}'
+    path: '{{ cartridge_vinyl_dir_parent }}'
     state: 'absent'
   register: backup_archive_res
 
-- name: 'Set restore archive path to folder'
-  set_fact:
-    cartridge_restore_archive_path: '/tmp/{{ instance_info.instance_id }}/'
-
 - name: 'Call restore from folder'
   vars:
-    cartridge_eval_args:
-      - '{{ stateboard }}'
-    cartridge_eval_body: |
-      local is_stateboard = ...
-      if is_stateboard then
-        assert(box.space.leader ~= nil, 'Space "leader" should exists')
-      else
-        assert(box.space.memtx_space ~= nil, 'Space "memtx_space" should exists')
-        local tuples = box.space.memtx_space:select()
-        assert(#tuples == 1 and tuples[1][1] == 12345, 'Space "memtx_space" should contain test tuple')
-
-        assert(box.space.vinyl_space ~= nil, 'Space "vinyl_space" should exists')
-        local tuples = box.space.vinyl_space:select()
-        assert(#tuples == 1 and tuples[1][1] == 67890, 'Space "memtx_space" should contain test tuple')
-      end
+    cartridge_restore_backup_path: '/tmp/{{ instance_info.instance_id }}/'
+    cartridge_eval_args: '{{ check_restore_eval_args }}'
+    cartridge_eval_body: '{{ check_restore_eval_body }}'
     cartridge_scenario:
+      - stop_instance
       - restore
       - start_instance
       - wait_instance_started
