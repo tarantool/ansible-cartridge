@@ -45,6 +45,7 @@ FACTS_BY_TARGETS = {
         'cartridge_multiversion',
         'cartridge_package_path',
         'cartridge_remove_temporary_files',
+        'cartridge_ignore_split_brain',
         'cartridge_paths_to_keep_on_cleanup',
         'cartridge_run_dir',
         'cartridge_scenario',

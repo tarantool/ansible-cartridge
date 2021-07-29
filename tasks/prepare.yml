@@ -79,6 +79,7 @@
   cartridge_get_disabled_instances:
     module_hostvars: '{{ cached_facts.count_disabled_instances }}'
     play_hosts: '{{ play_hosts }}'
+    ignore_split_brain: '{{ cartridge_ignore_split_brain }}'
   run_once: true
   delegate_to: localhost
   become: false

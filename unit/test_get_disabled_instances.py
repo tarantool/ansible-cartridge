@@ -10,6 +10,7 @@ from library.cartridge_get_disabled_instances import count_disabled_instances
 def call_count_disabled_instances(
     instances_info,
     play_hosts=None,
+    ignore_split_brain=False,
 ):
     module_hostvars = {
         instance_name: {
@@ -28,6 +29,7 @@ def call_count_disabled_instances(
     return count_disabled_instances({
         'module_hostvars': module_hostvars,
         'play_hosts': play_hosts,
+        'ignore_split_brain': ignore_split_brain,
     })
 
 
@@ -73,27 +75,39 @@ class TestCountDisabledInstances(unittest.TestCase):
 
         # Split brain
 
+        res = call_count_disabled_instances({
+            'instance-1': {'disabled_instances': ['instance-2', 'instance-3'], 'disabled': True},
+            'instance-2': {'disabled_instances': []},
+            'instance-3': {'disabled_instances': []},
+        }, ignore_split_brain=False)
+        self.assertTrue(res.failed)
+        self.assertEqual(
+            res.msg,
+            "It seems that you have split brain in your cluster. "
+            "Set 'cartridge_ignore_split_brain' flag to ignore this error."
+        )
+
         helpers.WARNINGS = []
         res = call_count_disabled_instances({
             'instance-1': {'disabled_instances': ['instance-2', 'instance-3'], 'disabled': True},
             'instance-2': {'disabled_instances': []},
             'instance-3': {'disabled_instances': []},
-        })
+        }, ignore_split_brain=True)
         self.assertFalse(res.failed)
         self.assertEqual(res.kwargs['cluster'], [])
         self.assertEqual(res.kwargs['inventory'], ['instance-1'])
-        self.assertEqual(helpers.WARNINGS, ["It seems that you have split brain in your cluster"])
+        self.assertEqual(helpers.WARNINGS, ["It seems that you have split brain in your cluster."])
 
         helpers.WARNINGS = []
         res = call_count_disabled_instances({
             'instance-1': {'disabled_instances': ['instance-2', 'instance-3'], 'disabled': True},
             'instance-2': {'disabled_instances': ['instance-1']},
             'instance-3': {'disabled_instances': ['instance-1']},
-        })
+        }, ignore_split_brain=True)
         self.assertFalse(res.failed)
         self.assertEqual(res.kwargs['cluster'], ['instance-1'])
         self.assertEqual(res.kwargs['inventory'], ['instance-1'])
-        self.assertEqual(helpers.WARNINGS, ["It seems that you have split brain in your cluster"])
+        self.assertEqual(helpers.WARNINGS, ["It seems that you have split brain in your cluster."])
 
         helpers.WARNINGS = []
         res = call_count_disabled_instances({
@@ -101,11 +115,11 @@ class TestCountDisabledInstances(unittest.TestCase):
             'instance-2': {'disabled_instances': ['instance-3', 'instance-4']},
             'instance-3': {'disabled_instances': ['instance-1', 'instance-2']},
             'instance-4': {'disabled_instances': ['instance-1', 'instance-2']},
-        })
+        }, ignore_split_brain=True)
         self.assertFalse(res.failed)
         self.assertEqual(res.kwargs['cluster'], ['instance-1', 'instance-2', 'instance-3', 'instance-4'])
         self.assertEqual(res.kwargs['inventory'], [])
-        self.assertEqual(helpers.WARNINGS, ["It seems that you have split brain in your cluster"])
+        self.assertEqual(helpers.WARNINGS, ["It seems that you have split brain in your cluster."])
 
         # No correct topology config
 

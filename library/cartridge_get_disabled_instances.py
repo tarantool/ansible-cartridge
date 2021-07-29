@@ -5,6 +5,7 @@ from ansible.module_utils.helpers import Helpers as helpers
 argument_spec = {
     'module_hostvars': {'required': True, 'type': 'dict'},
     'play_hosts': {'required': True, 'type': 'list'},
+    'ignore_split_brain': {'required': False, 'type': 'bool', 'default': False},
 }
 
 
@@ -27,7 +28,7 @@ def config_mismatched(module_hostvars, instance_name, other_hosts):
     return False
 
 
-def count_cluster_disabled_instances(module_hostvars, play_hosts):
+def count_cluster_disabled_instances(module_hostvars, play_hosts, ignore_split_brain=False):
     config_mismatch_count = 0
     healthy_count = 0
     votes_to_disable = {}
@@ -66,7 +67,12 @@ def count_cluster_disabled_instances(module_hostvars, play_hosts):
             split_brain_suspected = True
 
     if split_brain_suspected:
-        helpers.warn("It seems that you have split brain in your cluster")
+        msg = "It seems that you have split brain in your cluster."
+        if ignore_split_brain:
+            helpers.warn(msg)
+        else:
+            msg += " Set 'cartridge_ignore_split_brain' flag to ignore this error."
+            return None, msg
 
     return sorted(final_disabled_instances), None
 
@@ -81,10 +87,11 @@ def count_inventory_disabled_instances(module_hostvars, play_hosts):
 def count_disabled_instances(params):
     module_hostvars = params['module_hostvars']
     play_hosts = params['play_hosts']
+    ignore_split_brain = params['ignore_split_brain']
 
     inventory_disabled_instances = count_inventory_disabled_instances(module_hostvars, play_hosts)
 
-    cluster_disabled_instances, err = count_cluster_disabled_instances(module_hostvars, play_hosts)
+    cluster_disabled_instances, err = count_cluster_disabled_instances(module_hostvars, play_hosts, ignore_split_brain)
     if err:
         return helpers.ModuleRes(failed=True, msg=err)
 
