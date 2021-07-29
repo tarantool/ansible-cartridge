@@ -17,11 +17,7 @@ failover.
 - `cartridge_paths_to_keep_on_cleanup` (`list-of-strings`, default: `[]`): list of full paths or
   relative paths to work/memtx/vinyl/wal directory that should be kept on instance cleanup (`config`
   and` .tarantool.cookie` will be kept independently of this variable); it's possible to use bash
-  patterns, e.g. `*.control`;
-- `cartridge_paths_to_keep_on_restore` (`list-of-strings`, default: `[]`): list of full paths or
-  relative paths to work/memtx/vinyl/wal directory that should be kept on instance
-  restore (`.tarantool.cookie` will be kept independently of this variable); it's possible to use
-  bash patterns, e.g. `*.control`.
+  patterns, e.g. `*.control`.
 
 ## Role scenario configuration
 
@@ -210,9 +206,13 @@ For more details see [scenario documentation](/doc/scenario.md).
 - `cartridge_fetch_backups_dir` (`string`, default: `backups/`): a directory on the local machine
   where backups should be fetched if `cartridge_fetch_backups` is `true`; this path is relative to
   the playbook path.
-- `cartridge_restore_archive_path` (`string`): path to the instance backup archive on the remote
+- `cartridge_restore_backup_path` (`string`): path to the instance backup archive on the remote
   machine;
 - `cartridge_force_restore` (`boolean`, default: `false`): flag indicates that conflicting files
   should be overwritten;
 - `cartridge_ignore_alien_backup` (`boolean`, default: `false`): flag indicates that backup of
-  instance with another name can be used.
+  instance with another name can be used;
+- `cartridge_paths_to_keep_on_restore` (`list-of-strings`, default: `[]`): list of full paths or
+  relative paths to work/memtx/vinyl/wal directory that should be kept on instance
+  restore (`.tarantool.cookie` will be kept independently of this variable); it's possible to use
+  bash patterns, e.g. `*.control`.
