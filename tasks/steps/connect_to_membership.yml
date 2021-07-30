@@ -7,6 +7,7 @@
   cartridge_connect_to_membership:
     console_sock: '{{ alive_not_expelled_instance.console_sock }}'
     module_hostvars: '{{ cached_facts.connect_to_membership }}'
+    cluster_disabled_instances: '{{ cluster_disabled_instances }}'
     play_hosts: '{{ play_hosts }}'
   register: probe
   until: not probe.failed

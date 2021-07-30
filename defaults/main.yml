@@ -6,6 +6,7 @@ cartridge_app_name: null
 cartridge_cluster_cookie: null
 cartridge_not_save_cookie_in_app_config: false
 cartridge_remove_temporary_files: false
+cartridge_ignore_split_brain: false
 cartridge_paths_to_keep_on_cleanup: []
 
 # Role scenario configuration
@@ -102,7 +103,8 @@ zone: null
 cartridge_extra_env: null
 
 restarted: null
-expelled: false
+expelled: null
+disabled: null
 stateboard: false
 
 instance_start_timeout: null  # DEPRECATED
@@ -172,6 +174,8 @@ delivered_package_path: null
 control_instance: null
 temporary_files: []
 needs_restart: null
+cluster_disabled_instances: {}
+inventory_disabled_instances: {}
 alive_not_expelled_instance: null
 instance_backup_files: null
 backup_archive_path: null

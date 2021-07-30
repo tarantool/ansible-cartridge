@@ -1,0 +1,46 @@
+---
+
+- name: 'Get control instance'
+  ignore_errors: '{{ ignore_role_errors }}'
+  import_role:
+    name: ansible-cartridge
+  vars:
+    cartridge_scenario:
+      - set_control_instance
+
+- name: 'Debug cluster disabled instances'
+  debug:
+    msg: '{{ cluster_disabled_instances }}'
+  run_once: true
+
+- name: 'Debug inventory disabled instances'
+  debug:
+    msg: '{{ inventory_disabled_instances }}'
+  run_once: true
+
+- name: 'Check cluster disabled instances'
+  assert:
+    fail_msg: "Fact 'cluster_disabled_instances' has incorrect value"
+    success_msg: "Fact 'cluster_disabled_instances' has correct value"
+    that: cluster_disabled_instances == expected_cluster_disabled_instances
+  run_once: true
+
+- name: 'Check inventory disabled instances'
+  assert:
+    fail_msg: "Fact 'inventory_disabled_instances' has incorrect value"
+    success_msg: "Fact 'inventory_disabled_instances' has correct value"
+    that: inventory_disabled_instances == expected_inventory_disabled_instances
+  run_once: true
+
+- name: 'Debug control instance'
+  debug:
+    msg: "{{ control_instance }}"
+  run_once: true
+
+- name: 'Check control instance name'
+  assert:
+    fail_msg: "Fact 'control_instance' has incorrect value"
+    success_msg: "Fact 'control_instance' has correct value"
+    that: >-
+      (control_instance or {'name': None}).name == expected_control_instance
+  run_once: true

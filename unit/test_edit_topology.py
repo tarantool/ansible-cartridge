@@ -1,5 +1,6 @@
 import sys
 import unittest
+
 from parameterized import parameterized
 
 import module_utils.helpers as helpers
@@ -185,7 +186,7 @@ class TestEditTopology(unittest.TestCase):
             }
         ]
 
-        # now we don't don't add r2-replica
+        # now we don't add r2-replica
 
         # create replicasets with instances not known by cluster (r2-replica)
         self.instance.clear_calls('edit_topology')

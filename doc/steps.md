@@ -68,6 +68,10 @@ Some of useful variables always establishes during role preparation, so them can
   - `paths_to_remove_on_expel` - paths that will be removed on instance expel;
   - `files_to_remove_on_cleanup` - files that will be removed on instance cleanup;
   - `dirs_to_remove_on_cleanup` - dirs that will be removed on instance cleanup;
+  - `disabled_instances` - list of disabled instances from instance config;
+  - `topology_checksum` - checksum of topology section from instance config;
+- `cluster_disabled_instances` - list of disabled instances from cluster config;
+- `inventory_disabled_instances` - list of disabled instances from inventory;
 - `single_instances_for_each_machine` - list of instances (Ansible hosts), one for each physical machine,
   for example, can be used in `delegate_to`;
 - `instances_from_same_machine` - dictionary, where key is the hostname of the instance,
@@ -139,8 +143,10 @@ Input variables from config:
 
 - `cartridge_package_path` - should be specified to compute app distribution directory
   (otherwise, `update_instance` is skipped);
-- `expelled` - indicates if instance must be expelled from topology;
-- `restarted` - if instance should be restarted or not (user forced decision);
+- `expelled` - indicates if instance must be expelled from topology
+  (to determine if it's should be checked if instance should be restarted);
+- `restarted` - if instance should be restarted or not (user forced decision)
+  (to determine if it's should be checked if instance should be restarted);
 - `cartridge_multiversion` - indicates that
   [multiversion approach](/doc/multiversion.md) is enabled;
 - `cartridge_app_user` - user which will own the links;
@@ -259,6 +265,7 @@ Edit topology of replicasets.
 Input variables from config (basic):
 
 - `expelled` - indicates if instance must be expelled from topology;
+- `disabled` - indicates if instance should be disabled;
 - `stateboard` - indicates that the instance is a stateboard;
 - `replicaset_alias` - replicaset alias, will be displayed in Web UI;
 - `roles` - roles to be enabled on the replicaset;
@@ -341,6 +348,7 @@ Bootstrap VShard in cluster.
 Input variables from config:
 
 - `expelled` - indicates if instance must be expelled from topology;
+- `disabled` - indicates if instance should be disabled;
 - `stateboard` - indicates that the instance is a stateboard;
 - `cartridge_bootstrap_vshard` - indicates if vshard should be bootstrapped;
 - `bootstrap_vshard_retries` - retries to bootstrap vshard;

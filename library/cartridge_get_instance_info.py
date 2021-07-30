@@ -192,6 +192,20 @@ def get_instance_info(params):
         paths_to_keep_on_cleanup,
     )))
 
+    instance_info['disabled_instances'], err = helpers.get_disabled_instances(
+        instance_info['console_sock'],
+        instance_vars['stateboard'],
+    )
+    if err is not None:
+        return helpers.ModuleRes(failed=True, msg=err)
+
+    instance_info['topology_checksum'], err = helpers.get_topology_checksum(
+        instance_info['console_sock'],
+        instance_vars['stateboard'],
+    )
+    if err is not None:
+        return helpers.ModuleRes(failed=True, msg=err)
+
     return helpers.ModuleRes(changed=False, fact=instance_info)
 
 

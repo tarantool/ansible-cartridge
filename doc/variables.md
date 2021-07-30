@@ -8,11 +8,14 @@ vshard bootstrapping, and failover.
 * `cartridge_app_name` (`string`): application name, required;
 * `cartridge_cluster_cookie` (`string`): cluster cookie for all
   cluster instances;
-* `cartridge_not_save_cookie_in_app_config` (`boolean`, default: `false`) - flag indicates that cluster cookie shouldn't be persisted in application configuration file;
-* `cartridge_remove_temporary_files` (`boolean`, optional, default: `false`):
+* `cartridge_not_save_cookie_in_app_config` (`boolean`, default: `false`): flag
+  indicates that cluster cookie shouldn't be persisted in application configuration file;
+* `cartridge_remove_temporary_files` (`boolean`, optional, default: `false`): flag
   indicates if temporary files should be removed
   (more details in description of [`cleanup` step API](/doc/steps.md#step-cleanup));
-* `cartridge_paths_to_keep_on_cleanup` (`list-of-strings`, optional, default: `[]`) -
+* `cartridge_ignore_split_brain` (`boolean`, optional, default: `false`): flag
+  indicates that detected split brain should be ignored on preparation stage;
+* `cartridge_paths_to_keep_on_cleanup` (`list-of-strings`, optional, default: `[]`):
   list of full paths or relative paths to work/memtx/vinyl/wal
   directory that should be kept on instance cleanup
   (it's possible to use bash patterns, e.g. `*.control`).
@@ -95,6 +98,7 @@ For more details see [scenario documentation](/doc/scenario.md).
   restarted or not (if this flag isn't specified, instance will be restarted if
   it's needed to apply configuration changes);
 * `expelled` (`boolean`, default: `false`): a boolean flag that indicates if instance must be expelled from topology;
+* `disabled` (`boolean`, default: `false`): a boolean flag that indicates if instance should be disabled;
 * `stateboard` (`boolean`, default: `false`): a boolean flag that indicates
    that the instance is a [stateboard](/doc/stateboard.md);
 * `instance_start_retries` (`number`, default: 10) retries to check that all instances become started;

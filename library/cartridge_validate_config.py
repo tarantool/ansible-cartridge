@@ -114,6 +114,7 @@ SCHEMA = {
     'cartridge_custom_scenarios': dict,
     'restarted': bool,
     'expelled': bool,
+    'disabled': bool,
     'stateboard': bool,
     'cartridge_multiversion': bool,
     'instance_start_timeout': int,
@@ -154,6 +155,7 @@ SCHEMA = {
     'cartridge_install_tarantool_for_tgz': bool,
     'cartridge_keep_num_latest_dists': int,
     'cartridge_remove_temporary_files': bool,
+    'cartridge_ignore_split_brain': bool,
     'cartridge_paths_to_keep_on_cleanup': list,
     'zone': str,
     'cartridge_extra_env': dict,
@@ -397,8 +399,9 @@ def check_auth(found_common_params):
 
 
 def check_stateboard(stateboard_vars):
-    if stateboard_vars.get('expelled') is True:
-        return "'expelled' flag can't be used for stateboard instance"
+    for flag_name in ['expelled', 'disabled']:
+        if stateboard_vars.get(flag_name) is True:
+            return "'%s' flag can't be used for stateboard instance" % flag_name
 
     for p in REPLICASET_PARAMS:
         if stateboard_vars.get(p) is not None:

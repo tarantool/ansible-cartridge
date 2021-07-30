@@ -16,6 +16,7 @@ README.md to use the newest tag with new release
 - Add availability to set environment variables for instance service
 - Add `instances_from_same_machine` variable in preparation
 - Add `check_new_topology` step to compare inventory and real cluster topology
+- Availability to disable instances via `disabled` flag
 
 ### Changed
 

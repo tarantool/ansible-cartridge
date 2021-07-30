@@ -10,6 +10,7 @@
       cartridge_cluster_cookie: '{{ cartridge_cluster_cookie }}'
       cartridge_not_save_cookie_in_app_config: '{{ cartridge_not_save_cookie_in_app_config }}'
       cartridge_remove_temporary_files: '{{ cartridge_remove_temporary_files }}'
+      cartridge_ignore_split_brain: '{{ cartridge_ignore_split_brain }}'
       cartridge_paths_to_keep_on_cleanup: '{{ cartridge_paths_to_keep_on_cleanup }}'
 
       # Role scenario configuration
@@ -64,6 +65,7 @@
 
       restarted: '{{ restarted }}'
       expelled: '{{ expelled }}'
+      disabled: '{{ disabled }}'
       stateboard: '{{ stateboard }}'
 
       instance_start_timeout: '{{ instance_start_timeout }}'
@@ -132,6 +134,8 @@
       control_instance: '{{ control_instance }}'
       temporary_files: '{{ temporary_files }}'
       needs_restart: '{{ needs_restart }}'
+      cluster_disabled_instances: '{{ cluster_disabled_instances }}'
+      inventory_disabled_instances: '{{ inventory_disabled_instances }}'
       alive_not_expelled_instance: '{{ alive_not_expelled_instance }}'
       instance_backup_files: '{{ instance_backup_files }}'
       backup_archive_path: '{{ backup_archive_path }}'

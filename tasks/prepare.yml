@@ -75,9 +75,28 @@
   delegate_to: localhost
   become: false
 
+- name: 'Count information about disabled instances in cluster'
+  cartridge_get_disabled_instances:
+    module_hostvars: '{{ cached_facts.count_disabled_instances }}'
+    play_hosts: '{{ play_hosts }}'
+    ignore_split_brain: '{{ cartridge_ignore_split_brain }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+  register: disabled_instances_res
+
+- name: 'Set "cluster_disabled_instances" and "inventory_disabled_instances" fact'
+  set_fact:
+    cluster_disabled_instances: '{{ disabled_instances_res.cluster }}'
+    inventory_disabled_instances: '{{ disabled_instances_res.inventory }}'
+  run_once: true
+  delegate_to: localhost
+  become: false
+
 - name: 'Select one instance for each physical machine'
   cartridge_get_facts_for_machines:
     module_hostvars: '{{ cached_facts.facts_for_machines }}'
+    cluster_disabled_instances: '{{ cluster_disabled_instances }}'
     play_hosts: '{{ play_hosts }}'
   run_once: true
   delegate_to: localhost

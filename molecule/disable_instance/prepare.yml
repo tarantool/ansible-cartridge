@@ -1,0 +1,9 @@
+---
+
+- name: 'Deploy cluster'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  roles:
+    - ansible-cartridge
