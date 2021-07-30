@@ -58,15 +58,15 @@ def count_cluster_disabled_instances(module_hostvars, play_hosts, ignore_split_b
         return None, 'All instances in cluster has different topology configs'
 
     final_disabled_instances = []
-    split_brain_suspected = False
+    split_brain_detected = False
 
     for name, score in votes_to_disable.items():
         if score >= healthy_count / 2:
             final_disabled_instances.append(name)
         if score != healthy_count:
-            split_brain_suspected = True
+            split_brain_detected = True
 
-    if split_brain_suspected:
+    if split_brain_detected:
         msg = "It seems that you have split brain in your cluster."
         if ignore_split_brain:
             helpers.warn(msg)
