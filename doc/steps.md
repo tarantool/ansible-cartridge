@@ -533,8 +533,8 @@ If instance is running, an error will be returned.
 
 Input variables from config:
 
-- `cartridge_paths_to_keep_on_cleanup` - list of full paths or relative paths
-  to work/memtx/vinyl/wal directory that should be kept on instance cleanup
+- `cartridge_paths_to_keep_on_cleanup` - list of paths that are absolute or relative
+  to `work/memtx/vinyl/wal` directory that should be kept on instance cleanup
   (`config` and `.tarantool.cookie` will be kept independently of this variable);
   it's possible to use bash patterns, e.g. `*.control`.
 
@@ -581,8 +581,8 @@ Stop started [backup](/doc/backups.md) on the instance.
 
 Input variables from config:
 
-- `cartridge_paths_to_keep_before_restore` - list of full paths or relative paths
-  to work/memtx/vinyl/wal directory that should be kept on instance restore
+- `cartridge_paths_to_keep_before_restore` - list of paths that are absolute or relative
+  to `work/memtx/vinyl/wal` directory that shouldn't be removed before instance restore
   (`.tarantool.cookie` will be kept independently of this variable);
   it's possible to use bash patterns, e.g. `*.control`.
 - `cartridge_restore_backup_path` - path to the instance backup archive on the remote machine;

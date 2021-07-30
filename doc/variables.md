@@ -14,10 +14,10 @@ failover.
   of [`cleanup` step API](/doc/steps.md#step-cleanup));
 - `cartridge_ignore_split_brain` (`boolean`, default: `false`): flag indicates that detected split
   brain should be ignored on preparation stage;
-- `cartridge_paths_to_keep_on_cleanup` (`list-of-strings`, default: `[]`): list of full paths or
-  relative paths to work/memtx/vinyl/wal directory that should be kept on instance cleanup (`config`
-  and` .tarantool.cookie` will be kept independently of this variable); it's possible to use bash
-  patterns, e.g. `*.control`.
+- `cartridge_paths_to_keep_on_cleanup` (`list-of-strings`, default: `[]`): list of paths that are
+  absolute or relative to `work/memtx/vinyl/wal` directory that should be kept on instance
+  cleanup (`config` and` .tarantool.cookie` will be kept independently of this variable); it's
+  possible to use bash patterns, e.g. `*.control`.
 
 ## Role scenario configuration
 
@@ -214,7 +214,7 @@ For more details see [scenario documentation](/doc/scenario.md).
   instance with another name can be used;
 - `cartridge_skip_cleanup_on_restore` (`boolean`, default: `false`): flag indicates that cleanup
   before restoring should be skipped;
-- `cartridge_paths_to_keep_before_restore` (`list-of-strings`, default: `[]`): list of full paths or
-  relative paths to work/memtx/vinyl/wal directory that should be kept on instance
-  restore (`.tarantool.cookie` will be kept independently of this variable); it's possible to use
-  bash patterns, e.g. `*.control`.
+- `cartridge_paths_to_keep_before_restore` (`list-of-strings`, default: `[]`): list of paths that
+  are absolute or relative to `work/memtx/vinyl/wal` directory that shouldn't be removed before
+  instance restore (`.tarantool.cookie` will be kept independently of this variable); it's possible
+  to use bash patterns, e.g. `*.control`.

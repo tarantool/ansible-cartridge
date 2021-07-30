@@ -64,8 +64,8 @@ Examples of restoring from backup, you can see [below](#using-restore-step).
 2. If `cartridge_restore_backup_path` variable is omitted, the role
    will look in the `cartridge_remote_backups_dir` directory
    (by default `/opt/tarantool/backups`) for the backup
-   whose name contains the instance ID and is the latest alphabetically (with the biggest date).
-3. If no file or directory is selected, an error will occur.
+   whose name contains the instance ID and is the latest alphabetically (with the latest date).
+3. If not found any file or directory backup that belongs to given instance, an error will occur.
 
 You can see examples of using the described variables [below](#using-restore-step).
 
