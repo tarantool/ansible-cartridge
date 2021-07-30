@@ -7,6 +7,10 @@
     cartridge_scenario:
       - backup
 
+- name: "Show 'instance_backup_files' fact"
+  debug:
+    var: instance_backup_files
+
 - name: 'Check "instance_backup_files" and "backup_files_from_machine"'
   check_backup_files_list:
     instance_info: '{{ instance_info }}'
@@ -16,12 +20,22 @@
     backup_files_from_machine: '{{ backup_files_from_machine }}'
     instances_from_machine: '{{ instances_from_same_machine[inventory_hostname] }}'
 
-- name: 'Unpack instance archive'
+- name: 'Remove directory with old backup'
+  file:
+    path: '/tmp/{{ instance_info.instance_id }}'
+    state: absent
+
+- name: 'Create directory to unpack new backup'
+  file:
+    path: '/tmp/{{ instance_info.instance_id }}'
+    state: directory
+
+- name: 'Unpack instance backup'
   unarchive:
     list_files: true
     src: '{{ backup_archive_path }}'
     remote_src: true
-    dest: /tmp/
+    dest: '/tmp/{{ instance_info.instance_id }}'
   register: backup_archive_res
 
 - name: 'Check backup archive files list'

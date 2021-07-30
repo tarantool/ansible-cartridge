@@ -31,6 +31,7 @@
               parts = { {1, 'unsigned'} },
               if_not_exists = true,
           })
+          space:insert({12345})
 
           local space = box.schema.space.create('vinyl_space', {
               if_not_exists = true,
@@ -40,3 +41,4 @@
               parts = { {1, 'unsigned'} },
               if_not_exists = true,
           })
+          space:insert({67890})

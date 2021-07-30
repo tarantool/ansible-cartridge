@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 
-import fnmatch
 import os
 
 from ansible.module_utils.helpers import Helpers as helpers
@@ -56,19 +55,10 @@ def get_multiversion_dist_dir(install_dir, package_path):
     return os.path.join(install_dir, package_name_version)
 
 
-def filter_paths_by_glob_list(paths_list, regex_list):
+def filter_paths_by_glob_list(paths_list, glob_list):
     new_list = []
     for path in paths_list:
-        should_kept = False
-        for path_to_keep in regex_list:
-            norm_path = os.path.normpath(path)
-            base_name = os.path.basename(path)
-
-            if fnmatch.fnmatch(norm_path, path_to_keep) or fnmatch.fnmatch(base_name, path_to_keep):
-                should_kept = True
-                break
-
-        if not should_kept:
+        if not helpers.glob_list_match(path, glob_list):
             new_list.append(path)
 
     return new_list

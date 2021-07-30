@@ -157,6 +157,7 @@ SCHEMA = {
     'cartridge_remove_temporary_files': bool,
     'cartridge_ignore_split_brain': bool,
     'cartridge_paths_to_keep_on_cleanup': list,
+    'cartridge_paths_to_keep_before_restore': list,
     'zone': str,
     'cartridge_extra_env': dict,
     'cartridge_eval_body': str,
@@ -168,6 +169,10 @@ SCHEMA = {
     'cartridge_remote_backups_dir': str,
     'cartridge_fetch_backups': bool,
     'cartridge_fetch_backups_dir': str,
+    'cartridge_restore_backup_path': str,
+    'cartridge_force_restore': bool,
+    'cartridge_allow_alien_backup': bool,
+    'cartridge_skip_cleanup_on_restore': bool,
     'config': {
         'advertise_uri': str,
         'memtx_memory': int,

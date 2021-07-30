@@ -1,0 +1,41 @@
+---
+
+- name: 'Remove vinyl directory to test directories restoring'
+  file:
+    path: '{{ cartridge_vinyl_dir_parent }}'
+    state: 'absent'
+  register: backup_archive_res
+
+- name: 'Call restore from last TGZ'
+  vars:
+    cartridge_restore_backup_path: null
+    cartridge_eval_args: '{{ check_restore_eval_args }}'
+    cartridge_eval_body: '{{ check_restore_eval_body }}'
+    cartridge_scenario:
+      - stop_instance
+      - restore
+      - start_instance
+      - wait_instance_started
+      - eval
+  import_role:
+    name: ansible-cartridge
+
+- name: 'Remove vinyl directory to test directories restoring'
+  file:
+    path: '{{ cartridge_vinyl_dir_parent }}'
+    state: 'absent'
+  register: backup_archive_res
+
+- name: 'Call restore from folder'
+  vars:
+    cartridge_restore_backup_path: '/tmp/{{ instance_info.instance_id }}/'
+    cartridge_eval_args: '{{ check_restore_eval_args }}'
+    cartridge_eval_body: '{{ check_restore_eval_body }}'
+    cartridge_scenario:
+      - stop_instance
+      - restore
+      - start_instance
+      - wait_instance_started
+      - eval
+  import_role:
+    name: ansible-cartridge

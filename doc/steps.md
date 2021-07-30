@@ -43,6 +43,7 @@ but can be used in a custom one:
 - [backup](#step-backup)
 - [backup_start](#step-backup_start)
 - [backup_stop](#step-backup_stop)
+- [restore](#step-restore)
 - [check_new_topology](#step-check_new_topology)
 
 ## Role Variables Descriptions
@@ -532,13 +533,14 @@ If instance is running, an error will be returned.
 
 Input variables from config:
 
-- `cartridge_paths_to_keep_on_cleanup` - list of full paths or relative paths
-  to work/memtx/vinyl/wal directory that should be kept on instance cleanup
-  (it's possible to use bash patterns, e.g. `*.control`).
+- `cartridge_paths_to_keep_on_cleanup` - list of paths that are absolute or relative
+  to `work/memtx/vinyl/wal` directory that should be kept on instance cleanup
+  (`config` and `.tarantool.cookie` will be kept independently of this variable);
+  it's possible to use bash patterns, e.g. `*.control`.
 
 ### Step `backup`
 
-Create a [backup](/doc/backup.md) archive for each instance and fetch it on the local machine.
+Create a [backup](/doc/backups.md) archive for each instance and fetch it on the local machine.
 
 Input variables from config:
 
@@ -558,7 +560,7 @@ Output facts:
 
 ### Step `backup_start`
 
-Start a [backup](/doc/backup.md) process on the instance.
+Start a [backup](/doc/backups.md) process on the instance.
 
 Input variables from config:
 
@@ -571,7 +573,23 @@ Output facts:
 
 ### Step `backup_stop`
 
-Stop started [backup](/doc/backup.md) on the instance.
+Stop started [backup](/doc/backups.md) on the instance.
+
+### Step `restore`
+
+[Restore](/doc/backups.md#how-to-restore-from-saved-backup) each instance from a [backup](#step-backup) archive.
+
+Input variables from config:
+
+- `cartridge_paths_to_keep_before_restore` - list of paths that are absolute or relative
+  to `work/memtx/vinyl/wal` directory that shouldn't be removed before instance restore
+  (`.tarantool.cookie` will be kept independently of this variable);
+  it's possible to use bash patterns, e.g. `*.control`.
+- `cartridge_restore_backup_path` - path to the instance backup archive on the remote machine;
+- `cartridge_remote_backups_dir` - directory with backups on the remote;
+- `cartridge_force_restore` - flag indicates that conflicting files should be overwritten;
+- `cartridge_allow_alien_backup` - flag indicates that backup of instance with another name can be used;
+- `cartridge_skip_cleanup_on_restore` - flag indicates that cleanup before restoring should be skipped.
 
 ## Step `check_new_topology`
 

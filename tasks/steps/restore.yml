@@ -1,0 +1,14 @@
+---
+
+- name: 'Restore instance from archive'
+  cartridge_restore_instance:
+    instance_info: '{{ instance_info }}'
+    app_user: '{{ cartridge_app_user }}'
+    app_group: '{{ cartridge_app_group }}'
+    paths_to_keep_before_restore: '{{ cartridge_paths_to_keep_before_restore }}'
+    restore_backup_path: '{{ cartridge_restore_backup_path }}'
+    remote_backups_dir: '{{ cartridge_remote_backups_dir }}'
+    force_restore: '{{ cartridge_force_restore }}'
+    allow_alien_backups: '{{ cartridge_allow_alien_backup }}'
+    skip_cleanup_on_restore: '{{ cartridge_skip_cleanup_on_restore }}'
+  register: cartridge_restore_instance_res

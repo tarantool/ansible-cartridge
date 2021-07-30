@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-
+import fnmatch
 import json
 import os
 import random
@@ -677,6 +677,17 @@ def get_topology_checksum(console_sock, stateboard):
     ''')
 
 
+def glob_list_match(path, glob_list):
+    for pattern in glob_list:
+        norm_path = os.path.normpath(path)
+        base_name = os.path.basename(path)
+
+        if fnmatch.fnmatch(norm_path, pattern) or fnmatch.fnmatch(base_name, pattern):
+            return True
+
+    return False
+
+
 class Helpers:
     DYNAMIC_BOX_CFG_PARAMS = DYNAMIC_BOX_CFG_PARAMS
     MEMORY_SIZE_BOX_CFG_PARAMS = MEMORY_SIZE_BOX_CFG_PARAMS
@@ -717,3 +728,4 @@ class Helpers:
     enrich_replicasets_with_leaders = staticmethod(enrich_replicasets_with_leaders)
     get_disabled_instances = staticmethod(get_disabled_instances)
     get_topology_checksum = staticmethod(get_topology_checksum)
+    glob_list_match = staticmethod(glob_list_match)
