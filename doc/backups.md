@@ -51,7 +51,7 @@ For a stateboard instance only snapshot files and instance configuration file wi
 
 To restore you can use the `restore` step. It contains three stages:
 
-* find TGZ backup or folder with backup ([details here](#find-backup));
+* find TGZ backup or directory with backup ([details here](#find-backup));
 * check for conflicting files ([details here](#check-for-conflicting-files));
 * replace current files with files from backup ([details here](#replace-current-files-with-files-from-backup)).
 
@@ -59,13 +59,13 @@ Examples of restoring from backup, you can see [below](#using-restore-step).
 
 ### Find backup
 
-1. You can pass path of backup by `cartridge_restore_backup_path` variable.
-   Just set the value of this variable to full path of TGZ or folder backup.
+1. You can pass path to backup by `cartridge_restore_backup_path` variable.
+   Path to a TGZ archive or a directory with backup can be specified.
 2. If `cartridge_restore_backup_path` variable is omitted, the role
-   will look in the `cartridge_remote_backups_dir` folder
+   will look in the `cartridge_remote_backups_dir` directory
    (by default `/opt/tarantool/backups`) for the backup
-   whose name is the most recent alphabetically and contains the instance ID.
-3. If no file or folder is selected, an error will occur.
+   whose name contains the instance ID and is the latest alphabetically (with the biggest date).
+3. If no file or directory is selected, an error will occur.
 
 You can see examples of using the described variables [below](#using-restore-step).
 
@@ -77,16 +77,17 @@ After selecting a backup, `restore` step checks the following:
   (in order to overwrite such files, set the `cartridge_force_restore` flag);
 - probably the selected backup belongs to the instance that is currently being
   restored (in order to allow recovery from such backup, set the
-  `cartridge_ignore_alien_backup` flag).
+  `cartridge_allow_alien_backup` flag).
 
 You can see examples of using the described variables [below](#using-restore-step).
 
 ### Replace current files with files from backup
 
-After all checks have been passed, step deletes the instance files
-that are in the system (except for `.tarantool.cookie` and files that
-match the templates from `cartridge_paths_to_keep_on_restore` list),
-and unpack files from selected backup.
+After all checks have been passed, step make two actions:
+1. If `cartridge_skip_cleanup_on_restore` is not set, step deletes the instance
+   files that are in the system (except for `.tarantool.cookie` and files that
+   match the templates from `cartridge_paths_to_keep_before_restore` list);
+2. Step unpacks files from selected backup.
 
 You can see examples of using the described variables [below](#using-restore-step).
 
@@ -271,7 +272,7 @@ You can select backup manually by `cartridge_restore_backup_path` variable:
 ```
 
 By default, only `.tarantool.cookie` will be kept in working directory.
-If you want to keep some more files, you can put in `cartridge_paths_to_keep_on_restore`
+If you want to keep some more files, you can put in `cartridge_paths_to_keep_before_restore`
 variable some bash patterns:
 
 ```yaml
@@ -285,7 +286,7 @@ variable some bash patterns:
       import_role:
         name: tarantool.cartridge
       vars:
-        cartridge_paths_to_keep_on_restore:
+        cartridge_paths_to_keep_before_restore:
           - 'config'
           - '*.log'
         cartridge_scenario:

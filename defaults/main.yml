@@ -8,7 +8,6 @@ cartridge_not_save_cookie_in_app_config: false
 cartridge_remove_temporary_files: false
 cartridge_ignore_split_brain: false
 cartridge_paths_to_keep_on_cleanup: []
-cartridge_paths_to_keep_on_restore: []
 
 # Role scenario configuration
 
@@ -207,7 +206,9 @@ cartridge_fetch_backups: false
 cartridge_fetch_backups_dir: backups/
 cartridge_restore_backup_path: null
 cartridge_force_restore: false
-cartridge_ignore_alien_backup: false
+cartridge_allow_alien_backup: false
+cartridge_skip_cleanup_on_restore: false
+cartridge_paths_to_keep_before_restore: []
 
 # Edit topology check
 

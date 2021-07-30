@@ -210,9 +210,11 @@ For more details see [scenario documentation](/doc/scenario.md).
   machine;
 - `cartridge_force_restore` (`boolean`, default: `false`): flag indicates that conflicting files
   should be overwritten;
-- `cartridge_ignore_alien_backup` (`boolean`, default: `false`): flag indicates that backup of
+- `cartridge_allow_alien_backup` (`boolean`, default: `false`): flag indicates that backup of
   instance with another name can be used;
-- `cartridge_paths_to_keep_on_restore` (`list-of-strings`, default: `[]`): list of full paths or
+- `cartridge_skip_cleanup_on_restore` (`boolean`, default: `false`): flag indicates that cleanup
+  before restoring should be skipped;
+- `cartridge_paths_to_keep_before_restore` (`list-of-strings`, default: `[]`): list of full paths or
   relative paths to work/memtx/vinyl/wal directory that should be kept on instance
   restore (`.tarantool.cookie` will be kept independently of this variable); it's possible to use
   bash patterns, e.g. `*.control`.

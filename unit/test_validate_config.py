@@ -94,7 +94,8 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_not_save_cookie_in_app_config',
                 'cartridge_fetch_backups',
                 'cartridge_force_restore',
-                'cartridge_ignore_alien_backup',
+                'cartridge_allow_alien_backup',
+                'cartridge_skip_cleanup_on_restore',
             },
             dict: {
                 'cartridge_defaults',
@@ -148,7 +149,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_custom_steps',
                 'cartridge_eval_args',
                 'cartridge_paths_to_keep_on_cleanup',
-                'cartridge_paths_to_keep_on_restore',
+                'cartridge_paths_to_keep_before_restore',
             }
         }
 

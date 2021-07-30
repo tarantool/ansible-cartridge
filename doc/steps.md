@@ -577,18 +577,19 @@ Stop started [backup](/doc/backups.md) on the instance.
 
 ### Step `restore`
 
-Restore each instance from a [backup](#step-backup) archive.
+[Restore](/doc/backups.md#how-to-restore-from-saved-backup) each instance from a [backup](#step-backup) archive.
 
 Input variables from config:
 
-- `cartridge_paths_to_keep_on_restore` - list of full paths or relative paths
+- `cartridge_paths_to_keep_before_restore` - list of full paths or relative paths
   to work/memtx/vinyl/wal directory that should be kept on instance restore
   (`.tarantool.cookie` will be kept independently of this variable);
   it's possible to use bash patterns, e.g. `*.control`.
 - `cartridge_restore_backup_path` - path to the instance backup archive on the remote machine;
 - `cartridge_remote_backups_dir` - directory with backups on the remote;
 - `cartridge_force_restore` - flag indicates that conflicting files should be overwritten;
-- `cartridge_ignore_alien_backup` - flag indicates that backup of instance with another name can be used.
+- `cartridge_allow_alien_backup` - flag indicates that backup of instance with another name can be used;
+- `cartridge_skip_cleanup_on_restore` - flag indicates that cleanup before restoring should be skipped.
 
 ## Step `check_new_topology`
 
