@@ -668,6 +668,10 @@ def validate_config(params):
             "Use 'cartridge_failover_params' instead."
         )
 
+    warnings.append(
+        "Since 2.0.0 all variables without prefix will be prefixed with 'tc_', "
+        "prefix 'cartridge_' will be replaced by 'tc_'."
+    )
     return helpers.ModuleRes(changed=False, warnings=warnings)
 
 

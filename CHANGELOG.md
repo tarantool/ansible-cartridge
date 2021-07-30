@@ -10,6 +10,8 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+## [1.11.0] - 2021-07-30
+
 ### Added
 
 - Step `cleanup_instance_files` to clean up data of stopped instance
@@ -17,6 +19,7 @@ README.md to use the newest tag with new release
 - Add `instances_from_same_machine` variable in preparation
 - Add `check_new_topology` step to compare inventory and real cluster topology
 - Availability to disable instances via `disabled` flag
+- Add `backup`, `backup_start`, `backup_stop` and `restore` steps to back up and restore instances
 
 ### Changed
 
@@ -26,6 +29,7 @@ README.md to use the newest tag with new release
 
 - Long facts caching when playbook has two or more role imports
 - Now select control instance task ignores bad instances from membership
+- Fix instance joining when leader is not first
 
 ## [1.10.0] - 2021-06-04
 
