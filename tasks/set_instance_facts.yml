@@ -21,7 +21,6 @@
 
       cartridge_scenario_name: '{{ cartridge_scenario_name }}'
       cartridge_custom_scenarios: '{{ cartridge_custom_scenarios }}'
-      cartridge_role_scenarios: '{{ cartridge_role_scenarios }}'
 
       # Application package configuration
 
@@ -127,28 +126,6 @@
 
       cartridge_delivered_package_path: '{{ cartridge_delivered_package_path }}'
       cartridge_control_instance: '{{ cartridge_control_instance }}'
-
-      # Cross-step facts (for correct 'tasks_from' option usage)
-
-      delivered_package_path: '{{ delivered_package_path }}'
-      control_instance: '{{ control_instance }}'
-      temporary_files: '{{ temporary_files }}'
-      needs_restart: '{{ needs_restart }}'
-      cluster_disabled_instances: '{{ cluster_disabled_instances }}'
-      inventory_disabled_instances: '{{ inventory_disabled_instances }}'
-      alive_not_expelled_instance: '{{ alive_not_expelled_instance }}'
-      instance_backup_files: '{{ instance_backup_files }}'
-      backup_archive_path: '{{ backup_archive_path }}'
-      fetched_backup_archive_path: '{{ fetched_backup_archive_path }}'
-      backup_files_from_machine: '{{ backup_files_from_machine }}'
-
-      # Temp facts
-
-      cached_facts_res: '{{ cached_facts_res }}'
-      cached_facts: '{{ cached_facts }}'
-      facts_for_machines_res: '{{ facts_for_machines_res }}'
-      single_instances_for_each_machine: '{{ single_instances_for_each_machine }}'
-      instances_from_same_machine: '{{ instances_from_same_machine }}'
 
       # Eval params
 

@@ -32,20 +32,7 @@ class TestFacts(unittest.TestCase):
             text = f.read()
             self.doc_facts = re.findall(r'\n[*-][^`]*`([^`]+)`', text)
 
-    # If someone added a variable to defaults, but forgot to set it in 'set_instance_facts' step
-    def test_set_instance_facts(self):
-        default_names = list(self.defaults.keys())
-        set_instance_facts_name = list(self.set_instance_facts[0]['set_fact']['role_facts'].keys())
-
-        self.assertEqual(
-            default_names, set_instance_facts_name,
-            'List of facts in defaults and in "set_instance_fact" step is different',
-        )
-
-    # If someone added a variable to defaults, but forgot to add it to doc
-    def test_doc_facts(self):
-        default_names = list(self.defaults.keys())
-        undocumented_facts = [
+        self.not_user_facts = [
             # Role defaults
             'cartridge_role_scenarios',
             # Cross-step facts
@@ -68,7 +55,21 @@ class TestFacts(unittest.TestCase):
             'instances_from_same_machine',
         ]
 
+    # If someone added a variable to defaults, but forgot to set it in 'set_instance_facts' step
+    def test_set_instance_facts(self):
+        default_names = list(self.defaults.keys())
+        set_instance_facts_name = list(self.set_instance_facts[0]['set_fact']['role_facts'].keys())
+
         self.assertEqual(
-            sorted(default_names), sorted(self.doc_facts + undocumented_facts),
+            sorted(default_names), sorted(set_instance_facts_name + self.not_user_facts),
+            'List of facts in defaults and in "set_instance_fact" step is different',
+        )
+
+    # If someone added a variable to defaults, but forgot to add it to doc
+    def test_doc_facts(self):
+        default_names = list(self.defaults.keys())
+
+        self.assertEqual(
+            sorted(default_names), sorted(self.doc_facts + self.not_user_facts),
             'List of facts in defaults and in documentation is different',
         )
