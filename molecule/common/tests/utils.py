@@ -29,7 +29,7 @@ def get_testinfra_hosts():
 def get_inventory():
     global __inventory
     if __inventory is None:
-        hosts_path = os.path.join('molecule', scenario_name, 'hosts.yml')
+        hosts_path = os.path.join(os.environ['MOLECULE_SCENARIO_DIRECTORY'], 'hosts.yml')
         __inventory = InventoryManager(loader=DataLoader(), sources=hosts_path)
 
     return __inventory

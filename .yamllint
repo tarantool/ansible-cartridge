@@ -5,6 +5,7 @@ ignore: |
   .gitlab-ci.yml
   .github
   venv
+  packages
 
 rules:
   line-length: {max: 120}

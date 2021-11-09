@@ -170,7 +170,7 @@ if [ -z "${skip_cartridge}" ]; then
     cartridge create --name ${app_name}
 
     version=1 # myapp X version uses Cartridge 2.X.0 version
-    for cartridge_version in '2.1.2' '2.2.0' '2.3.0' '2.4.0' '2.5.0'; do
+    for cartridge_version in '2.1.2' '2.2.0' '2.3.0' '2.5.0' '2.6.0'; do
         awk -v cartridge_dep_str="cartridge == ${cartridge_version}-1" \
             '{gsub(/cartridge == [0-9.-]+/, cartridge_dep_str);}1' \
             ${app_name}/${app_name}-scm-1.rockspec >${app_name}/temp.rockspec
@@ -197,12 +197,17 @@ if [ -z "${skip_tdg}" ]; then
         if [ -n "${DOWNLOAD_TNT_TOKEN}" ]; then
             printf "Downloading TDG %s package from 'download.tarantool.io'... " "${tdg_version}"
             curl -L -s -o "tdg.tar.gz" \
-                "https://tarantool:${DOWNLOAD_TNT_TOKEN}@download.tarantool.io/tdg/tdg-${tdg_version}.tar.gz" >/dev/null
+                "https://tarantool:${DOWNLOAD_TNT_TOKEN}@download.tarantool.io/tdg/tdg-${tdg_version}.tar.gz" &>/dev/null
             echo 'OK'
         elif (command -v aws &>/dev/null) && [ -n "${AWS_ACCESS_KEY_ID}" ] && [ -n "${AWS_SECRET_ACCESS_KEY}" ]; then
             printf "Downloading TDG %s package from MCS... " "${tdg_version}"
-            aws --endpoint-url https://hb.bizmrg.com s3 cp \
-                "s3://packages/tdg/tdg-${tdg_version}.tar.gz" "tdg.tar.gz" >/dev/null
+            aws --region eu-central-1 --endpoint-url https://hb.bizmrg.com s3 cp \
+                "s3://packages/tdg/tdg-${tdg_version}.tar.gz" "tdg.tar.gz" &>/dev/null &&
+                tdg_exists="true" || tdg_exists="false"
+            if [ "${tdg_exists}" = "false" ]; then
+                aws --region eu-central-1 --endpoint-url https://hb.bizmrg.com s3 cp \
+                    "s3://sdk-backup-25.08.21/tdg/tdg-${tdg_version}.tar.gz" "tdg.tar.gz" >/dev/null
+            fi
             echo 'OK'
         else
             echo "[WARNING] Impossible to download TDG. It's necessary to run TDG tests. You can:"

@@ -6,6 +6,13 @@ FROM {{ item.registry.url }}/{{ item.image }}
 FROM {{ item.image }}
 {% endif %}
 
+{% if 'centos' in item.image %}
+RUN yum install -y openssl
+RUN trust dump --filter "pkcs11:id=%c4%a7%b1%a4%7b%2c%71%fa%db%e1%4b%90%75%ff%c4%15%60%85%89%10" | \
+    openssl x509 | tee /etc/pki/ca-trust/source/blacklist/DST-Root-CA-X3.pem \
+    && update-ca-trust extract
+{% endif %}
+
 {% if item.env is defined %}
 {% for var, value in item.env.items() %}
 {% if value %}

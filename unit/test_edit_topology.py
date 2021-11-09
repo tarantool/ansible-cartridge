@@ -190,6 +190,7 @@ class TestEditTopology(unittest.TestCase):
 
         # create replicasets with instances not known by cluster (r2-replica)
         self.instance.clear_calls('edit_topology')
+        helpers.WARNINGS = []
         res = call_edit_topology(
             self.console_sock,
             hostvars,
@@ -708,7 +709,7 @@ class TestEditTopology(unittest.TestCase):
 
         self.assertEqual(replicasets_opts, exp_replicasets_opts)
 
-        servers_opts = call['servers']
+        servers_opts = sorted(call['servers'], key=lambda s: s['uuid'])
 
         exp_servers_opts = [
             {

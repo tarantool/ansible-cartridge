@@ -22,23 +22,24 @@ NOT_DEFAULT_MOLECULE_COMMANDS = [
 
 DEFAULT_ANSIBLE_VERSION = '2.8.0'
 NOT_DEFAULT_ANSIBLE_VERSIONS = [
-    '2.9.0',
-    '2.10.0',
-    '4.1.0',
+    '2.9.27',
+    '4.8.0',
 ]
 
-DEFAULT_TARANTOOL_VERSION = '2.6'
+DEFAULT_PYTHON_VERSION = '2.7'
+
+DEFAULT_TARANTOOL_VERSION = '2.8'
 NOT_DEFAULT_TNT_VERSIONS = [
     '1.10'
 ]
 
-DEFAULT_SDK_VERSION = '2.6.2-124-g2c3b91439-r391'
+DEFAULT_SDK_VERSION = '2.8.2-0-gfc96d10f5-r429'
 NOT_DEFAULT_SDK_VERSIONS = []
 
 TDG_SCENARIOS = [
     'config_upload_tdg'
 ]
-DEFAULT_TDG_VERSION = '1.7.7-0-g76c31fca'
+DEFAULT_TDG_VERSION = '1.7.14-0-g2fcf1fc7'
 TDG_VERSIONS = {
     'config_upload_tdg': [
         # auth-token header; no common.app_version; no admin.upload_config_api;
@@ -58,39 +59,63 @@ TDG_VERSIONS = {
 ######################
 
 
-def get_matrix_base(molecule_scenario=None, ansible_version=None):
+def get_version_list(version):
+    return list(map(lambda x: int(x), version.split('.')))
+
+
+def compare_versions(version_1, version_2):
+    v1_list = get_version_list(version_1)
+    v2_list = get_version_list(version_2)
+    if v1_list > v2_list:
+        return 1
+    elif v1_list == v2_list:
+        return 0
+    else:
+        return -1
+
+
+def get_matrix_base(molecule_scenario=None, ansible_version=None, python_version=None):
     return {
         'molecule_scenario': molecule_scenario or DEFAULT_SCENARIO,
         'ansible_version': ansible_version or DEFAULT_ANSIBLE_VERSION,
+        'python_version': python_version or DEFAULT_PYTHON_VERSION,
     }
 
 
-def get_molecule_command(molecule_command=None):
-    return molecule_command or DEFAULT_MOLECULE_COMMAND
+def get_ce_params(
+    molecule_scenario=None, ansible_version=None, python_version=None,
+    tarantool_version=None, molecule_command=None,
+):
+    matrix = get_matrix_base(molecule_scenario, ansible_version, python_version)
+    matrix.update(
+        tarantool_version=tarantool_version or DEFAULT_TARANTOOL_VERSION,
+        molecule_command=molecule_command or DEFAULT_MOLECULE_COMMAND,
+    )
+    return matrix
 
 
-def get_ce_params(molecule_scenario=None, ansible_version=None, tarantool_version=None, molecule_command=None):
-    return {
-        **get_matrix_base(molecule_scenario, ansible_version),
-        'tarantool_version': tarantool_version or DEFAULT_TARANTOOL_VERSION,
-        'molecule_command': get_molecule_command(molecule_command),
-    }
+def get_ee_params(
+    molecule_scenario=None, ansible_version=None, python_version=None,
+    sdk_version=None, molecule_command=None,
+):
+    matrix = get_matrix_base(molecule_scenario, ansible_version, python_version)
+    matrix.update(
+        sdk_version=sdk_version or DEFAULT_SDK_VERSION,
+        molecule_command=molecule_command or DEFAULT_MOLECULE_COMMAND,
+    )
+    return matrix
 
 
-def get_ee_params(molecule_scenario=None, ansible_version=None, sdk_version=None, molecule_command=None):
-    return {
-        **get_matrix_base(molecule_scenario, ansible_version),
-        'sdk_version': sdk_version or DEFAULT_SDK_VERSION,
-        'molecule_command': get_molecule_command(molecule_command),
-    }
-
-
-def get_tdg_params(molecule_scenario=None, ansible_version=None, tdg_version=None, molecule_command=None):
-    return {
-        **get_matrix_base(molecule_scenario, ansible_version),
-        'tdg_version': tdg_version or DEFAULT_TDG_VERSION,
-        'molecule_command': get_molecule_command(molecule_command),
-    }
+def get_tdg_params(
+    molecule_scenario=None, ansible_version=None, python_version=None,
+    tdg_version=None, molecule_command=None,
+):
+    matrix = get_matrix_base(molecule_scenario, ansible_version, python_version)
+    matrix.update(
+        tdg_version=tdg_version or DEFAULT_TDG_VERSION,
+        molecule_command=molecule_command or DEFAULT_MOLECULE_COMMAND,
+    )
+    return matrix
 
 
 def main(event_name, repo_owner, review_state, ref):
@@ -113,7 +138,10 @@ def main(event_name, repo_owner, review_state, ref):
             ce_matrix.append(get_ce_params(molecule_command=command))
 
         for version in NOT_DEFAULT_ANSIBLE_VERSIONS:
-            ce_matrix.append(get_ce_params(ansible_version=version))
+            python_version = None
+            if compare_versions(version, '2.10.0') >= 0:
+                python_version = '3.9'
+            ce_matrix.append(get_ce_params(ansible_version=version, python_version=python_version))
 
         for version in NOT_DEFAULT_TNT_VERSIONS:
             ce_matrix.append(get_ce_params(tarantool_version=version))
@@ -125,13 +153,13 @@ def main(event_name, repo_owner, review_state, ref):
             for version in TDG_VERSIONS.get(name, [None]):
                 tdg_matrix.append(get_tdg_params(molecule_scenario=name, tdg_version=version))
 
-    print(f'::set-output name=ce-tests-found::{"true" if len(ce_matrix) > 0 else "false"}')
-    print(f'::set-output name=ee-tests-found::{"true" if len(ee_matrix) > 0 else "false"}')
-    print(f'::set-output name=tdg-tests-found::{"true" if len(tdg_matrix) > 0 else "false"}')
+    print('::set-output name=ce-tests-found::' + "true" if len(ce_matrix) > 0 else "false")
+    print('::set-output name=ee-tests-found::' + "true" if len(ee_matrix) > 0 else "false")
+    print('::set-output name=tdg-tests-found::' + "true" if len(tdg_matrix) > 0 else "false")
 
-    print(f'::set-output name=ce-matrix::{json.dumps({"include": ce_matrix})}')
-    print(f'::set-output name=ee-matrix::{json.dumps({"include": ee_matrix})}')
-    print(f'::set-output name=tdg-matrix::{json.dumps({"include": tdg_matrix})}')
+    print('::set-output name=ce-matrix::' + json.dumps({"include": ce_matrix}))
+    print('::set-output name=ee-matrix::' + json.dumps({"include": ee_matrix}))
+    print('::set-output name=tdg-matrix::' + json.dumps({"include": tdg_matrix}))
 
     print('Computed matrices:')
     print(json.dumps({

@@ -2,8 +2,8 @@ import json
 import os
 import re
 import socket
-import textwrap
 import sys
+import textwrap
 from subprocess import Popen
 
 import tenacity
@@ -172,6 +172,7 @@ class Instance:
         if self.process is not None:
             self.process.kill()
             self.process.communicate()
+            self.process = None
 
     def write_file(self, path, content=''):
         os.path.exists.set_exists(path)
