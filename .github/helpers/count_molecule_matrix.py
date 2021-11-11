@@ -137,21 +137,21 @@ def main(event_name, repo_owner, review_state, ref):
         for command in NOT_DEFAULT_MOLECULE_COMMANDS:
             ce_matrix.append(get_ce_params(molecule_command=command))
 
-        for version in NOT_DEFAULT_ANSIBLE_VERSIONS:
+        for ansible_version in NOT_DEFAULT_ANSIBLE_VERSIONS:
             python_version = None
-            if compare_versions(version, '2.10.0') >= 0:
+            if compare_versions(ansible_version, '2.10.0') >= 0:
                 python_version = '3.9'
-            ce_matrix.append(get_ce_params(ansible_version=version, python_version=python_version))
+            ce_matrix.append(get_ce_params(ansible_version=ansible_version, python_version=python_version))
 
-        for version in NOT_DEFAULT_TNT_VERSIONS:
-            ce_matrix.append(get_ce_params(tarantool_version=version))
+        for tnt_version in NOT_DEFAULT_TNT_VERSIONS:
+            ce_matrix.append(get_ce_params(tarantool_version=tnt_version))
 
-        for version in NOT_DEFAULT_SDK_VERSIONS:
-            ee_matrix.append(get_ee_params(sdk_version=version))
+        for sdk_version in NOT_DEFAULT_SDK_VERSIONS:
+            ee_matrix.append(get_ee_params(sdk_version=sdk_version))
 
         for name in TDG_SCENARIOS:
-            for version in TDG_VERSIONS.get(name, [None]):
-                tdg_matrix.append(get_tdg_params(molecule_scenario=name, tdg_version=version))
+            for tdg_version in TDG_VERSIONS.get(name, [None]):
+                tdg_matrix.append(get_tdg_params(molecule_scenario=name, tdg_version=tdg_version))
 
     print('::set-output name=ce-tests-found::' + "true" if len(ce_matrix) > 0 else "false")
     print('::set-output name=ee-tests-found::' + "true" if len(ee_matrix) > 0 else "false")
