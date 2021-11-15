@@ -2,15 +2,21 @@
 
 - name: 'Initialize cross-step facts'
   set_fact:
+    # Cross-step facts
     delivered_package_path: null
     control_instance: null
     temporary_files: []
     needs_restart: null
+    cluster_disabled_instances: []
+    inventory_disabled_instances: []
     alive_not_expelled_instance: null
     instance_backup_files: null
     backup_archive_path: null
     fetched_backup_archive_path: null
     backup_files_from_machine: []
+    # Temp facts that user can use after role import
+    single_instances_for_each_machine: null
+    instances_from_same_machine: null
   run_once: true
   delegate_to: localhost
   become: false

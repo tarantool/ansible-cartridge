@@ -174,8 +174,8 @@ delivered_package_path: null
 control_instance: null
 temporary_files: []
 needs_restart: null
-cluster_disabled_instances: {}
-inventory_disabled_instances: {}
+cluster_disabled_instances: []
+inventory_disabled_instances: []
 alive_not_expelled_instance: null
 instance_backup_files: null
 backup_archive_path: null
