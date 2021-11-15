@@ -11,7 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        tarantool-version: ["1.10"]
+        python_version: ["2.7", "3.9"]
+        tarantool_version: ["1.10"]
       fail-fast: false
     steps:
       - uses: actions/checkout@v2
@@ -19,30 +20,47 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: '${{ matrix.python_version }}'
 
       - name: Install Tarantool
         uses: tarantool/setup-tarantool@v1
         with:
-          tarantool-version: '${{ matrix.tarantool-version }}'
+          tarantool-version: '${{ matrix.tarantool_version }}'
+
+      - name: Cache python dependencies
+        id: python-dependencies
+        uses: actions/cache@v2
+        with:
+          path: 'venv'
+          key: venv-${{ matrix.python_version }}-${{ hashFiles('./requirements.txt') }}
 
       - name: Install Python requirements
-        run: pip3 install --upgrade -r requirements.txt
+        if: steps.python-dependencies.outputs.cache-hit != 'true'
+        run: |
+          python -V
+          if [ "${{ matrix.python_version }}" = "2.7" ]; then
+              pip install virtualenv
+              virtualenv venv
+          else
+              python -m venv venv
+          fi
+          venv/bin/pip install --upgrade -r requirements.txt
 
       - name: Cache unit tests requirements
         id: cache-packages
         uses: actions/cache@v2
         with:
           path: 'unit/mock/.rocks'
-          key: ce-${{ matrix.tarantool-version }}-${{ hashFiles('./deps.sh') }}
+          key: ce-${{ matrix.tarantool_version }}-${{ hashFiles('./deps.sh') }}
 
       - name: Install unit tests requirements
+        if: steps.cache-packages.outputs.cache-hit != 'true'
         run: ./deps.sh
 
       - name: Run linter
         run: |
-          python3 -m flake8 library unit
+          venv/bin/python -m flake8 library unit
           ./unit/mock/.rocks/bin/luacheck unit/mock
 
       - name: Run unit tests
-        run: python3 -m unittest discover -v unit
+        run: venv/bin/python -m unittest discover -v unit

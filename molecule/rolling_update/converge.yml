@@ -13,7 +13,7 @@
     cartridge_scenario:
       - deliver_package
       - update_package
-    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.6.0.tar.gz
 
 # UPDATE STATEBOARD
 
@@ -26,7 +26,7 @@
   gather_facts: false
   vars:
     cartridge_scenario_name: update_and_restart_instance
-    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.6.0.tar.gz
 
 - name: 'Check Cartridge version'
   hosts: cluster
@@ -46,16 +46,16 @@
 
     - name: 'Check updated instances'
       assert:
-        msg: 'Should use Cartridge 2.5.0'
-        success_msg: 'Uses Cartridge 2.5.0'
-        that: eval_res[0] == '2.5.0'
+        msg: 'Should use Cartridge 2.6.0'
+        success_msg: 'Uses Cartridge 2.6.0'
+        that: eval_res[0] == '2.6.0'
       when: inventory_hostname in updated_hosts
 
     - name: 'Check not updated instances'
       assert:
-        msg: 'Should use Cartridge 2.4.0'
-        success_msg: 'Uses Cartridge 2.4.0'
-        that: eval_res[0] == '2.4.0'
+        msg: 'Should use Cartridge 2.5.0'
+        success_msg: 'Uses Cartridge 2.5.0'
+        that: eval_res[0] == '2.5.0'
       when: inventory_hostname not in updated_hosts
 
 # UPDATE REPLICAS
@@ -69,7 +69,7 @@
   gather_facts: false
   vars:
     cartridge_scenario_name: update_and_restart_instance
-    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.6.0.tar.gz
 
 - name: 'Check Cartridge version'
   hosts: cluster
@@ -93,16 +93,16 @@
 
     - name: 'Check updated instances'
       assert:
-        msg: 'Should use Cartridge 2.5.0'
-        success_msg: 'Uses Cartridge 2.5.0'
-        that: eval_res[0] == '2.5.0'
+        msg: 'Should use Cartridge 2.6.0'
+        success_msg: 'Uses Cartridge 2.6.0'
+        that: eval_res[0] == '2.6.0'
       when: inventory_hostname in updated_hosts
 
     - name: 'Check not updated instances'
       assert:
-        msg: 'Should use Cartridge 2.4.0'
-        success_msg: 'Uses Cartridge 2.4.0'
-        that: eval_res[0] == '2.4.0'
+        msg: 'Should use Cartridge 2.5.0'
+        success_msg: 'Uses Cartridge 2.5.0'
+        that: eval_res[0] == '2.5.0'
       when: inventory_hostname not in updated_hosts
 
 # PROMOTE LEADERS TO REPLICAS
@@ -159,7 +159,7 @@
   gather_facts: false
   vars:
     cartridge_scenario_name: update_and_restart_instance
-    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.6.0.tar.gz
 
 - name: 'Check Cartridge version'
   hosts: cluster
@@ -185,16 +185,16 @@
 
     - name: 'Check updated instances'
       assert:
-        msg: 'Should use Cartridge 2.5.0'
-        success_msg: 'Uses Cartridge 2.5.0'
-        that: eval_res[0] == '2.5.0'
+        msg: 'Should use Cartridge 2.6.0'
+        success_msg: 'Uses Cartridge 2.6.0'
+        that: eval_res[0] == '2.6.0'
       when: inventory_hostname in updated_hosts
 
     - name: 'Check not updated instances'
       assert:
-        msg: 'Should use Cartridge 2.4.0'
-        success_msg: 'Uses Cartridge 2.4.0'
-        that: eval_res[0] == '2.4.0'
+        msg: 'Should use Cartridge 2.5.0'
+        success_msg: 'Uses Cartridge 2.5.0'
+        that: eval_res[0] == '2.5.0'
       when: inventory_hostname not in updated_hosts
 
 # UPDATE ROUTERS
@@ -208,7 +208,7 @@
   gather_facts: false
   vars:
     cartridge_scenario_name: update_and_restart_instance
-    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.6.0.tar.gz
 
 - name: 'Check Cartridge version'
   hosts: cluster
@@ -226,9 +226,9 @@
 
     - name: 'Check that all instances were updated'
       assert:
-        msg: 'Should use Cartridge 2.5.0'
-        success_msg: 'Uses Cartridge 2.5.0'
-        that: eval_res[0] == '2.5.0'
+        msg: 'Should use Cartridge 2.6.0'
+        success_msg: 'Uses Cartridge 2.6.0'
+        that: eval_res[0] == '2.6.0'
 
 # PROMOTE LEADERS BACK
 

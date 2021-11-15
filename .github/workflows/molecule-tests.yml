@@ -4,7 +4,7 @@ name: Molecule tests
 on: [push, pull_request, pull_request_review, workflow_dispatch]
 
 env:
-  CARTRIDGE_CLI_VERSION: '2.9.0'
+  CARTRIDGE_CLI_VERSION: '2.10.0'
 
 jobs:
   setup-molecule-test-matrix:
@@ -14,11 +14,12 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '2.7'
+          python-version: '3.9'
       - name: Setup matrix for Molecule tests
         id: setup-matrix
         run: |
-          python3 .github/helpers/count_molecule_matrix.py \
+          python -V
+          python .github/helpers/count_molecule_matrix.py \
             --event_name "${{ github.event_name }}" \
             --repo_owner "${{ github.event.pull_request.head.repo.owner.login }}" \
             --review_state "${{ github.event.review.state }}" \
@@ -44,13 +45,28 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '2.7'
+          python-version: '${{ matrix.python_version }}'
+
+      - name: Cache python dependencies
+        id: python-dependencies
+        uses: actions/cache@v2
+        with:
+          path: 'venv'
+          key: venv-${{ matrix.python_version }}-${{ hashFiles('./requirements.txt') }}-${{ matrix.ansible_version }}
 
       - name: Install molecule requirements
+        if: steps.python-dependencies.outputs.cache-hit != 'true'
         run: |
-          pip3 install --upgrade -r requirements.txt
-          pip3 uninstall -y ansible ansible-base ansible-core
-          pip3 install ansible~=${{ matrix.ansible_version }}
+          python -V
+          if [ "${{ matrix.python_version }}" = "2.7" ]; then
+              pip install virtualenv
+              virtualenv venv
+          else
+              python -m venv venv
+          fi
+          venv/bin/pip install --upgrade -r requirements.txt
+          venv/bin/pip uninstall -y ansible ansible-base ansible-core
+          venv/bin/pip install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache test packages
         id: cache-packages
@@ -83,7 +99,10 @@ jobs:
           ./create-packages.sh --skip-tdg
 
       - name: Molecule test
-        run: molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
+        run: |
+          source venv/bin/activate
+          molecule --version
+          molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
 
   molecule-tests-ee:
     needs: setup-molecule-test-matrix
@@ -98,13 +117,28 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '2.7'
+          python-version: '${{ matrix.python_version }}'
+
+      - name: Cache python dependencies
+        id: python-dependencies
+        uses: actions/cache@v2
+        with:
+          path: 'venv'
+          key: venv-${{ matrix.python_version }}-${{ hashFiles('./requirements.txt') }}-${{ matrix.ansible_version }}
 
       - name: Install molecule requirements
+        if: steps.python-dependencies.outputs.cache-hit != 'true'
         run: |
-          pip3 install --upgrade -r requirements.txt
-          pip3 uninstall -y ansible ansible-base ansible-core
-          pip3 install ansible~=${{ matrix.ansible_version }}
+          python -V
+          if [ "${{ matrix.python_version }}" = "2.7" ]; then
+              pip install virtualenv
+              virtualenv venv
+          else
+              python -m venv venv
+          fi
+          venv/bin/pip install --upgrade -r requirements.txt
+          venv/bin/pip uninstall -y ansible ansible-base ansible-core
+          venv/bin/pip install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache test packages
         id: cache-packages
@@ -135,7 +169,10 @@ jobs:
           ./create-packages.sh --skip-tdg
 
       - name: Molecule test
-        run: molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
+        run: |
+          source venv/bin/activate
+          molecule --version
+          molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
 
   molecule-tests-tdg:
     needs: setup-molecule-test-matrix
@@ -150,13 +187,28 @@ jobs:
       - name: Setup python
         uses: actions/setup-python@v2
         with:
-          python-version: '2.7'
+          python-version: '${{ matrix.python_version }}'
+
+      - name: Cache python dependencies
+        id: python-dependencies
+        uses: actions/cache@v2
+        with:
+          path: 'venv'
+          key: venv-${{ matrix.python_version }}-${{ hashFiles('./requirements.txt') }}-${{ matrix.ansible_version }}
 
       - name: Install molecule requirements
+        if: steps.python-dependencies.outputs.cache-hit != 'true'
         run: |
-          pip3 install --upgrade -r requirements.txt
-          pip3 uninstall -y ansible ansible-base ansible-core
-          pip3 install ansible~=${{ matrix.ansible_version }}
+          python -V
+          if [ "${{ matrix.python_version }}" = "2.7" ]; then
+              pip install virtualenv
+              virtualenv venv
+          else
+              python -m venv venv
+          fi
+          venv/bin/pip install --upgrade -r requirements.txt
+          venv/bin/pip uninstall -y ansible ansible-base ansible-core
+          venv/bin/pip install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache TDG test packages
         id: cache-packages
@@ -168,8 +220,13 @@ jobs:
       - name: Create test packages
         if: steps.cache-packages.outputs.cache-hit != 'true'
         run: |
-          export DOWNLOAD_TNT_TOKEN=${{ secrets.DOWNLOAD_TNT_TOKEN }}
+          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
+          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws --version
           ./create-packages.sh --skip-cartridge --tdg-version ${{ matrix.tdg_version }}
 
       - name: Molecule test
-        run: molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
+        run: |
+          source venv/bin/activate
+          molecule --version
+          molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'

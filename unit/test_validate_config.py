@@ -1,4 +1,5 @@
 import copy
+import re
 import sys
 import unittest
 
@@ -464,7 +465,10 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertTrue(res.failed)
-        self.assertIn('cartridge_app_config must be <class \'dict\'>', res.msg)
+        self.assertTrue(re.match(
+            r"\.cartridge_app_config must be <(type|class) 'dict'>",
+            res.msg,
+        ), res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -961,10 +965,10 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertTrue(res.failed)
-        self.assertIn(
-            "Incorrect type of task name '['list']'. String expected, got: <class 'list'>",
-            res.msg
-        )
+        self.assertTrue(re.match(
+            r"Incorrect type of task name '\['list']'. String expected, got: <(type|class) 'list'>",
+            res.msg,
+        ), res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -993,10 +997,10 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertTrue(res.failed)
-        self.assertIn(
-            "Incorrect type of custom task 'test'. Dictionary expected, got: <class 'str'>",
-            res.msg
-        )
+        self.assertTrue(re.match(
+            r"Incorrect type of custom task 'test'. Dictionary expected, got: <(type|class) 'str'>",
+            res.msg,
+        ), res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -1010,10 +1014,10 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertTrue(res.failed)
-        self.assertIn(
-            "Incorrect type of name from task '{'name': ['qwerty']}'. String expected, got: <class 'list'>",
-            res.msg
-        )
+        self.assertTrue(re.match(
+            r"Incorrect type of name from task '{'name': \['qwerty']}'. String expected, got: <(type|class) 'list'>",
+            res.msg,
+        ), res.msg)
 
         res = call_validate_config({
             'instance-1': {
@@ -1044,11 +1048,11 @@ class TestValidateConfig(unittest.TestCase):
             },
         })
         self.assertTrue(res.failed)
-        self.assertIn(
-            "Incorrect type of file path from task '{'name': 'task', 'file': ['qwerty']}'. "
-            "String expected, got: <class 'list'>",
-            res.msg
-        )
+        self.assertTrue(re.match(
+            r"Incorrect type of file path from task '{'name': 'task', 'file': \['qwerty']}'. "
+            r"String expected, got: <(type|class) 'list'>",
+            res.msg,
+        ))
 
         res = call_validate_config({
             'instance-1': {

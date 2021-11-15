@@ -35,17 +35,6 @@
     cartridge_scenario_name: update_tgz
     cartridge_package_path: ./packages/myapp-3.0.0-0-with-c-2.3.0.tar.gz
 
-- name: Update storage-with-c-2.4.0 to Cartridge 2.4.0
-  hosts: storage-with-c-2.4.0
-  roles:
-    - ansible-cartridge
-  become: true
-  become_user: root
-  gather_facts: false
-  vars:
-    cartridge_scenario_name: update_tgz
-    cartridge_package_path: ./packages/myapp-4.0.0-0-with-c-2.4.0.tar.gz
-
 - name: Update storage-with-c-2.5.0 to Cartridge 2.5.0
   hosts: storage-with-c-2.5.0
   roles:
@@ -55,7 +44,18 @@
   gather_facts: false
   vars:
     cartridge_scenario_name: update_tgz
-    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+    cartridge_package_path: ./packages/myapp-4.0.0-0-with-c-2.5.0.tar.gz
+
+- name: Update storage-with-c-2.6.0 to Cartridge 2.6.0
+  hosts: storage-with-c-2.6.0
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_scenario_name: update_tgz
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.6.0.tar.gz
 
 # This play affects two-phase commmit
 # We need to be sure that role selects such control instance
@@ -79,7 +79,7 @@
       enabled: true
       cookie_max_age: 1000
 
-- name: Update all instances to Cartridge 2.5.0
+- name: Update all instances to Cartridge 2.6.0
   hosts: cluster
   roles:
     - ansible-cartridge
@@ -87,5 +87,5 @@
   become_user: root
   gather_facts: false
   vars:
-    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.5.0.tar.gz
+    cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.6.0.tar.gz
     cartridge_scenario_name: update_tgz
