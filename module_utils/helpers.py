@@ -5,6 +5,7 @@ import os
 import random
 import re
 import socket
+import time
 
 from ansible.module_utils.basic import AnsibleModule
 
@@ -386,7 +387,7 @@ class Console:
         self.close()
 
 
-def debug(value, key=None):
+def debug(value, *args, **kwargs):
     # To print any string or object using warnings, you just need to call this function:
     # debug('my_str')
     # debug({'my_dict': ['str', 2]})
@@ -413,8 +414,16 @@ def debug(value, key=None):
 
     global DEBUG_MESSAGES
 
+    key = None
+    if 'key' in kwargs:
+        key = kwargs['key']
+        del kwargs['key']
+
     if type(value) != str:
         value = json.dumps(value, indent=2)
+    else:
+        value = value.format(*args, **kwargs)
+
     value = value.split('\n')
     if key:
         value = map(lambda v: '[%s]: %s' % (key, v), value)
@@ -433,11 +442,17 @@ def warn(*messages):
 
 
 def execute_module(argument_spec, function):
+    start = time.time()
     module = AnsibleModule(argument_spec=argument_spec)
+    debug('{:.03f}s', time.time() - start, key='module_creation_time')
+
+    start = time.time()
     try:
         res = function(module.params)
     except Exception as e:
         res = ModuleRes(exception=e)
+    debug('{:.03f}s', time.time() - start, key='execution_time')
+
     res.exit(module)
 
 
