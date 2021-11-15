@@ -1,25 +1,32 @@
+import os
 import sys
 import unittest
+
+import yaml
 
 import module_utils.helpers as helpers
 
 sys.modules['ansible.module_utils.helpers'] = helpers
-from library.cartridge_get_cached_facts import get_cached_facts, FACTS_BY_TARGETS
+from filter_plugins.filters import get_cached_facts
 from library.cartridge_validate_config import SCHEMA
-
-
-def call_get_cached_facts(hostvars):
-    return get_cached_facts({
-        'hostvars': hostvars,
-    })
 
 
 class TestGetCachedFacts(unittest.TestCase):
     def setUp(self):
         self.maxDiff = None
 
+        role_dir = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')
+
+        self.defaults_file = os.path.join(role_dir, 'defaults', 'main.yml')
+        with open(self.defaults_file, 'r') as f:
+            try:
+                self.defaults = yaml.safe_load(f)
+                self.cached_fact_names_by_target = self.defaults['cartridge_cached_fact_names_by_target']
+            except yaml.YAMLError as e:
+                self.fail("Impossible to parse 'defaults/main.yml': %s" % e)
+
     def test_get_cached_facts(self):
-        res = call_get_cached_facts({
+        res = get_cached_facts({
             'instance_1': {
                 'expelled': True,
                 'config': {'advertise_uri': '10.0.0.1:3001'},
@@ -44,10 +51,8 @@ class TestGetCachedFacts(unittest.TestCase):
                     'disabled_instances': ['instance_2'],
                 },
             },
-        })
-        self.assertFalse(res.failed, res.msg)
-        self.assertTrue('facts' in res.kwargs, 'No facts in result!')
-        self.assertEqual(res.kwargs['facts'], {
+        }, self.cached_fact_names_by_target)
+        self.assertEqual(res, {
             'validate_config': {
                 'instance_1': {
                     'expelled': True,
@@ -150,4 +155,4 @@ class TestGetCachedFacts(unittest.TestCase):
         })
 
     def test_validate_config_cached_facts(self):
-        self.assertEqual(sorted(SCHEMA.keys()), sorted(FACTS_BY_TARGETS['validate_config']))
+        self.assertEqual(sorted(SCHEMA.keys()), sorted(self.cached_fact_names_by_target['validate_config']))
