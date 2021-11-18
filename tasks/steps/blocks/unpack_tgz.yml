@@ -38,6 +38,7 @@
       cartridge_memtx_dir_parent,
       cartridge_vinyl_dir_parent,
       cartridge_wal_dir_parent,
+      cartridge_log_dir_parent,
       cartridge_conf_dir,
       cartridge_app_install_dir,
       cartridge_app_instances_dir,

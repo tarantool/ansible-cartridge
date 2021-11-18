@@ -509,6 +509,11 @@ def get_instance_dir(data_dir, app_name, instance_name=None, stateboard=False):
     return os.path.join(data_dir, instance_id)
 
 
+def get_instance_file(data_dir, app_name, instance_name=None, stateboard=False, extension=''):
+    instance_id = get_instance_id(app_name, instance_name, stateboard)
+    return os.path.join(data_dir, instance_id + extension)
+
+
 def get_multiversion_instance_code_dir(instances_dir, app_name, instance_name=None, stateboard=False):
     instance_id = get_instance_id(app_name, instance_name, stateboard)
     return os.path.join(instances_dir, instance_id)
@@ -713,6 +718,7 @@ class Helpers:
     get_instance_console_sock = staticmethod(get_instance_console_sock)
     get_instance_pid_file = staticmethod(get_instance_pid_file)
     get_instance_dir = staticmethod(get_instance_dir)
+    get_instance_file = staticmethod(get_instance_file)
     get_multiversion_instance_code_dir = staticmethod(get_multiversion_instance_code_dir)
     box_cfg_was_called = staticmethod(box_cfg_was_called)
     get_box_cfg = staticmethod(get_box_cfg)

@@ -60,6 +60,7 @@ Some of useful variables always establishes during role preparation, so them can
   - `memtx_dir` - path to memtx directory of instance;
   - `vinyl_dir` - path to vinyl directory of instance;
   - `wal_dir` - path to wal directory of instance;
+  - `log_file` - path to log file of instance;
   - `systemd_service` - name to systemd service;
   - `systemd_service_dir` - path to directory of systemd service extensions;
   - `systemd_service_env_file` - path to file of systemd service environment extensions;
@@ -123,9 +124,10 @@ Input variables from config:
 - `cartridge_app_group` - group which will own the links;
 - `cartridge_run_dir` - path to directory of instances sockets;
 - `cartridge_data_dir` - path to directory of instance data;
-- `cartridge_memtx_dir` - path to memtx directory of instance;
-- `cartridge_vinyl_dir` - path to vinyl directory of instance;
-- `cartridge_wal_dir` - path to wal directory of instance;
+- `cartridge_memtx_dir_parent` - path to memtx directory of instances;
+- `cartridge_vinyl_dir_parent` - path to vinyl directory of instances;
+- `cartridge_wal_dir_parent` - path to wal directory of instances;
+- `cartridge_log_dir_parent` - path to log directory of instances;
 - `cartridge_conf_dir` - path to directory of instances application configs;
 - `cartridge_app_install_dir` - path to directory with application distributions;
 - `cartridge_app_instances_dir` - path to directory with instances links to

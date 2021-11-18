@@ -40,6 +40,7 @@ To configure them use
 * `cartridge_memtx_dir_parent` - directory where instances memtx directories are placed;
 * `cartridge_vinyl_dir_parent` - directory where instances vinyl directories are placed;
 * `cartridge_wal_dir_parent` - directory where instances WAL directories are placed;
+* `cartridge_log_dir_parent` - directory where instances logs are placed;
 * `cartridge_run_dir` - directory where PID and socket files are stored;
 * `cartridge_conf_dir` - path to instances configuration;
 * `cartridge_app_install_dir` - directory where application distributions are placed;

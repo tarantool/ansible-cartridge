@@ -32,6 +32,11 @@ Environment=TARANTOOL_VINYL_DIR={{ systemd_units_info.stateboard_vinyl_dir }}
 ExecStartPre=/bin/sh -c 'mkdir -p {{ systemd_units_info.stateboard_wal_dir }}'
 Environment=TARANTOOL_WAL_DIR={{ systemd_units_info.stateboard_wal_dir }}
 {% endif %}
+{% if systemd_units_info.stateboard_log_file %}
+
+ExecStartPre=/bin/sh -c 'mkdir -p $(dirname {{ systemd_units_info.stateboard_log_file }})'
+Environment=TARANTOOL_LOG={{ systemd_units_info.stateboard_log_file }}
+{% endif %}
 
 # Unlimited cores size
 LimitCORE=infinity

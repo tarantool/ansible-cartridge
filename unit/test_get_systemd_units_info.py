@@ -29,6 +29,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_memtx_dir_parent': 'some/memtx/dir',
             'cartridge_vinyl_dir_parent': 'some/vinyl/dir',
             'cartridge_wal_dir_parent': 'some/wal/dir',
+            'cartridge_log_dir_parent': 'some/log/dir',
             'dist_dir': '/some/dist/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
         }
@@ -52,6 +53,9 @@ class TestGetInstanceInfo(unittest.TestCase):
 
             'instance_wal_dir': 'some/wal/dir/myapp.%i',
             'stateboard_wal_dir': 'some/wal/dir/myapp-stateboard',
+
+            'instance_log_file': 'some/log/dir/myapp.%i.log',
+            'stateboard_log_file': 'some/log/dir/myapp-stateboard.log',
 
             'instance_pid_file': 'some/run/dir/myapp.%i.pid',
             'stateboard_pid_file': 'some/run/dir/myapp-stateboard.pid',
@@ -75,6 +79,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_memtx_dir_parent': None,
             'cartridge_vinyl_dir_parent': None,
             'cartridge_wal_dir_parent': None,
+            'cartridge_log_dir_parent': None,
             'dist_dir': '/some/dist/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
         }
@@ -99,6 +104,9 @@ class TestGetInstanceInfo(unittest.TestCase):
             'instance_wal_dir': None,
             'stateboard_wal_dir': None,
 
+            'instance_log_file': None,
+            'stateboard_log_file': None,
+
             'instance_pid_file': 'some/run/dir/myapp.%i.pid',
             'stateboard_pid_file': 'some/run/dir/myapp-stateboard.pid',
             'instance_console_sock': 'some/run/dir/myapp.%i.control',
@@ -121,6 +129,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_memtx_dir_parent': 'some/memtx/dir',
             'cartridge_vinyl_dir_parent': 'some/vinyl/dir',
             'cartridge_wal_dir_parent': 'some/wal/dir',
+            'cartridge_log_dir_parent': 'some/log/dir',
             'dist_dir': 'some/dist/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
         }
@@ -145,6 +154,9 @@ class TestGetInstanceInfo(unittest.TestCase):
             'instance_wal_dir': 'some/wal/dir/myapp.%i',
             'stateboard_wal_dir': 'some/wal/dir/myapp-stateboard',
 
+            'instance_log_file': 'some/log/dir/myapp.%i.log',
+            'stateboard_log_file': 'some/log/dir/myapp-stateboard.log',
+
             'instance_pid_file': 'some/run/dir/myapp.%i.pid',
             'stateboard_pid_file': 'some/run/dir/myapp-stateboard.pid',
             'instance_console_sock': 'some/run/dir/myapp.%i.control',
@@ -167,6 +179,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_memtx_dir_parent': None,
             'cartridge_vinyl_dir_parent': None,
             'cartridge_wal_dir_parent': None,
+            'cartridge_log_dir_parent': None,
             'dist_dir': 'some/dist/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
         }
@@ -190,6 +203,9 @@ class TestGetInstanceInfo(unittest.TestCase):
 
             'instance_wal_dir': None,
             'stateboard_wal_dir': None,
+
+            'instance_log_file': None,
+            'stateboard_log_file': None,
 
             'instance_pid_file': 'some/run/dir/myapp.%i.pid',
             'stateboard_pid_file': 'some/run/dir/myapp-stateboard.pid',
