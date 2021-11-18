@@ -10,6 +10,11 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+### Fixed
+
+- Optimize `Set instance facts` step
+- Optimize facts caching
+
 ## [1.11.0] - 2021-07-30
 
 ### Added
