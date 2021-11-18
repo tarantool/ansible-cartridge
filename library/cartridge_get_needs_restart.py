@@ -23,10 +23,10 @@ def check_needs_restart_to_update_package(params):
     console_sock = instance_info['console_sock']
     instance_dist_dir = instance_info['instance_dist_dir']
 
-    last_restart_time = os.path.getmtime(console_sock)
+    last_restart_time = os.lstat(console_sock).st_mtime
 
     # check if application code was updated
-    package_update_time = os.path.getmtime(instance_dist_dir)
+    package_update_time = os.lstat(instance_dist_dir).st_mtime
     if last_restart_time < package_update_time:
         return True, None
 

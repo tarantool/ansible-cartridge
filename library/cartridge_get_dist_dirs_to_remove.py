@@ -35,7 +35,7 @@ def get_dist_dirs_to_remove(params):
 
     dists = sorted(
         dists,
-        key=lambda filename: os.path.getmtime(os.path.join(app_install_dir, filename)),
+        key=lambda filename: os.lstat(os.path.join(app_install_dir, filename)).st_mtime,
         reverse=True,
     )
 

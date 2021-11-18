@@ -8,7 +8,7 @@ from subprocess import Popen
 
 import tenacity
 
-from unit.os_mock import OsPathExistsMock, OsPathGetMTimeMock
+from unit.os_mock import OsPathExistsMock, OsLstatMock
 
 instance_app_dir = os.path.realpath(
     os.path.join(
@@ -41,16 +41,16 @@ class Instance:
         self.sock = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
 
         self.__original_exists = os.path.exists
-        self.__original_getmtime = os.path.getmtime
+        self.__original_lstat = os.lstat
 
         os.path.exists = OsPathExistsMock()
-        os.path.getmtime = OsPathGetMTimeMock()
+        os.lstat = OsLstatMock()
 
     def __del__(self):
         self.stop()
 
         os.path.exists = self.__original_exists
-        os.path.getmtime = self.__original_getmtime
+        os.lstat = self.__original_lstat
 
         if os.path.exists(self.console_sock):
             os.remove(self.console_sock)
@@ -234,7 +234,7 @@ class Instance:
 
     @staticmethod
     def set_path_m_time(path, m_time):
-        os.path.getmtime.set_m_time(path, m_time)
+        os.lstat.set_m_time(path, m_time)
 
     def set_box_cfg_function(self, value=True):
         self.eval_res_err('''
