@@ -148,6 +148,7 @@ SCHEMA = {
     'cartridge_memtx_dir_parent': str,
     'cartridge_vinyl_dir_parent': str,
     'cartridge_wal_dir_parent': str,
+    'cartridge_log_dir_parent': str,
     'cartridge_configure_systemd_unit_files': bool,
     'cartridge_systemd_dir': str,
     'cartridge_configure_tmpfiles': bool,

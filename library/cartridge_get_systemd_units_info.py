@@ -63,6 +63,16 @@ def get_systemd_units_info(params):
             instance_vars['cartridge_wal_dir_parent'], app_name, stateboard=True
         )
 
+    systemd_units_info['instance_log_file'] = None
+    systemd_units_info['stateboard_log_file'] = None
+    if instance_vars['cartridge_log_dir_parent']:
+        systemd_units_info['instance_log_file'] = helpers.get_instance_file(
+            instance_vars['cartridge_log_dir_parent'], app_name, instance_name="%i", extension='.log',
+        )
+        systemd_units_info['stateboard_log_file'] = helpers.get_instance_file(
+            instance_vars['cartridge_log_dir_parent'], app_name, stateboard=True, extension='.log',
+        )
+
     systemd_units_info['instance_pid_file'] = helpers.get_instance_pid_file(
         instance_vars['cartridge_run_dir'], app_name, instance_name="%i"
     )

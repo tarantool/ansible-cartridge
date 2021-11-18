@@ -37,6 +37,7 @@ cartridge_data_dir: /var/lib/tarantool
 cartridge_memtx_dir_parent: null
 cartridge_vinyl_dir_parent: null
 cartridge_wal_dir_parent: null
+cartridge_log_dir_parent: null
 cartridge_run_dir: /var/run/tarantool
 cartridge_conf_dir: /etc/tarantool/conf.d
 cartridge_app_install_dir: /usr/share/tarantool
@@ -269,6 +270,7 @@ cartridge_cached_fact_names_by_target:
     - cartridge_vinyl_dir_parent
     - cartridge_wait_buckets_discovery
     - cartridge_wal_dir_parent
+    - cartridge_log_dir_parent
     - config
     - twophase_netbox_call_timeout
     - twophase_upload_config_timeout

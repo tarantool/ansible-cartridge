@@ -99,6 +99,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_memtx_dir_parent': 'some/memtx/dir',
             'cartridge_vinyl_dir_parent': 'some/vinyl/dir',
             'cartridge_wal_dir_parent': 'some/wal/dir',
+            'cartridge_log_dir_parent': 'some/log/dir',
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
@@ -118,6 +119,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'memtx_dir': 'some/memtx/dir/myapp.instance-1',
             'vinyl_dir': 'some/vinyl/dir/myapp.instance-1',
             'wal_dir': 'some/wal/dir/myapp.instance-1',
+            'log_file': 'some/log/dir/myapp.instance-1.log',
             'systemd_service': 'myapp@instance-1',
             'systemd_service_dir': 'some/systemd/dir/myapp@instance-1.service.d',
             'systemd_service_env_file': 'some/systemd/dir/myapp@instance-1.service.d/env.conf',
@@ -127,6 +129,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'paths_to_remove_on_expel': [
                 'some/conf/dir/myapp.instance-1.yml',
                 'some/data/dir/myapp.instance-1',
+                'some/log/dir/myapp.instance-1.log',
                 'some/memtx/dir/myapp.instance-1',
                 'some/run/dir/myapp.instance-1.control',
                 'some/run/dir/myapp.instance-1.pid',
@@ -134,6 +137,7 @@ class TestGetInstanceInfo(unittest.TestCase):
                 'some/wal/dir/myapp.instance-1',
             ],
             'files_to_remove_on_cleanup': [
+                'some/log/dir/myapp.instance-1.log',
                 'some/run/dir/myapp.instance-1.control',
                 'some/run/dir/myapp.instance-1.pid',
             ],
@@ -159,6 +163,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_memtx_dir_parent': None,
             'cartridge_vinyl_dir_parent': None,
             'cartridge_wal_dir_parent': None,
+            'cartridge_log_dir_parent': None,
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
@@ -178,6 +183,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'memtx_dir': None,
             'vinyl_dir': None,
             'wal_dir': None,
+            'log_file': None,
             'systemd_service': 'myapp@instance-1',
             'systemd_service_dir': 'some/systemd/dir/myapp@instance-1.service.d',
             'systemd_service_env_file': 'some/systemd/dir/myapp@instance-1.service.d/env.conf',
@@ -210,6 +216,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_memtx_dir_parent': None,
             'cartridge_vinyl_dir_parent': None,
             'cartridge_wal_dir_parent': None,
+            'cartridge_log_dir_parent': None,
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
@@ -229,6 +236,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'memtx_dir': None,
             'vinyl_dir': None,
             'wal_dir': None,
+            'log_file': None,
             'systemd_service': 'myapp@instance-1',
             'systemd_service_dir': 'some/systemd/dir/myapp@instance-1.service.d',
             'systemd_service_env_file': 'some/systemd/dir/myapp@instance-1.service.d/env.conf',
@@ -264,6 +272,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_memtx_dir_parent': None,
             'cartridge_vinyl_dir_parent': None,
             'cartridge_wal_dir_parent': None,
+            'cartridge_log_dir_parent': None,
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
@@ -283,6 +292,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'memtx_dir': None,
             'vinyl_dir': None,
             'wal_dir': None,
+            'log_file': None,
             'systemd_service': 'myapp-stateboard',
             'systemd_service_dir': 'some/systemd/dir/myapp-stateboard.service.d',
             'systemd_service_env_file': 'some/systemd/dir/myapp-stateboard.service.d/env.conf',
@@ -318,6 +328,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_memtx_dir_parent': 'some/memtx/dir',
             'cartridge_vinyl_dir_parent': 'some/vinyl/dir',
             'cartridge_wal_dir_parent': 'some/wal/dir',
+            'cartridge_log_dir_parent': 'some/log/dir',
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
@@ -337,6 +348,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'memtx_dir': 'some/memtx/dir/myapp-stateboard',
             'vinyl_dir': 'some/vinyl/dir/myapp-stateboard',
             'wal_dir': 'some/wal/dir/myapp-stateboard',
+            'log_file': 'some/log/dir/myapp-stateboard.log',
             'systemd_service': 'myapp-stateboard',
             'systemd_service_dir': 'some/systemd/dir/myapp-stateboard.service.d',
             'systemd_service_env_file': 'some/systemd/dir/myapp-stateboard.service.d/env.conf',
@@ -346,6 +358,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'paths_to_remove_on_expel': [
                 'some/conf/dir/myapp-stateboard.yml',
                 'some/data/dir/myapp-stateboard',
+                'some/log/dir/myapp-stateboard.log',
                 'some/memtx/dir/myapp-stateboard',
                 'some/run/dir/myapp-stateboard.control',
                 'some/run/dir/myapp-stateboard.pid',
@@ -353,6 +366,7 @@ class TestGetInstanceInfo(unittest.TestCase):
                 'some/wal/dir/myapp-stateboard',
             ],
             'files_to_remove_on_cleanup': [
+                'some/log/dir/myapp-stateboard.log',
                 'some/run/dir/myapp-stateboard.control',
                 'some/run/dir/myapp-stateboard.pid',
             ],
@@ -378,6 +392,7 @@ class TestGetInstanceInfo(unittest.TestCase):
             'cartridge_memtx_dir_parent': 'some/memtx/dir',
             'cartridge_vinyl_dir_parent': 'some/vinyl/dir',
             'cartridge_wal_dir_parent': 'some/wal/dir',
+            'cartridge_log_dir_parent': 'some/log/dir',
             'cartridge_app_install_dir': 'some/install/dir',
             'cartridge_app_instances_dir': 'some/instances/dir',
             'cartridge_tmpfiles_dir': '/some/tmpfiles/dir',
@@ -387,6 +402,7 @@ class TestGetInstanceInfo(unittest.TestCase):
 
         res = call_get_instance_info(app_name, instance_name, instance_vars)
         self.assertEqual(res.fact['files_to_remove_on_cleanup'], [
+            'some/log/dir/myapp.instance-1.log',
             'some/run/dir/myapp.instance-1.control',
             'some/run/dir/myapp.instance-1.pid',
         ])
@@ -404,7 +420,9 @@ class TestGetInstanceInfo(unittest.TestCase):
             r'*/vinyl/dir/*',
         ])
         self.assertFalse(res.failed)
-        self.assertEqual(res.fact['files_to_remove_on_cleanup'], [])
+        self.assertEqual(res.fact['files_to_remove_on_cleanup'], [
+            'some/log/dir/myapp.instance-1.log',
+        ])
         self.assertEqual(res.fact['dirs_to_remove_on_cleanup'], [
             'some/memtx/dir/myapp.instance-1',
             'some/wal/dir/myapp.instance-1',
@@ -418,6 +436,7 @@ class TestGetInstanceInfo(unittest.TestCase):
         ])
         self.assertFalse(res.failed)
         self.assertEqual(res.fact['files_to_remove_on_cleanup'], [
+            'some/log/dir/myapp.instance-1.log',
             'some/run/dir/myapp.instance-1.control',
             'some/run/dir/myapp.instance-1.pid',
         ])

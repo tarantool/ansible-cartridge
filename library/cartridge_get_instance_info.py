@@ -139,6 +139,16 @@ def get_instance_info(params):
         instance_info['paths_to_remove_on_expel'].add(instance_info['wal_dir'])
         instance_info['dirs_to_remove_on_cleanup'].add(instance_info['wal_dir'])
 
+    # instance log dir
+    instance_info['log_file'] = None
+    if instance_vars['cartridge_log_dir_parent']:
+        instance_info['log_file'] = helpers.get_instance_file(
+            instance_vars['cartridge_log_dir_parent'], app_name, instance_name,
+            instance_vars['stateboard'], extension='.log',
+        )
+        instance_info['paths_to_remove_on_expel'].add(instance_info['log_file'])
+        instance_info['files_to_remove_on_cleanup'].add(instance_info['log_file'])
+
     # systemd service name
     instance_info['systemd_service'] = get_instance_systemd_service(
         app_name, instance_name, instance_vars['stateboard']

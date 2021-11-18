@@ -57,6 +57,7 @@ For more details see [scenario documentation](/doc/scenario.md).
 - `cartridge_memtx_dir_parent` (`string`): directory where instances memtx directories are placed;
 - `cartridge_vinyl_dir_parent` (`string`): directory where instances vinyl directories are placed;
 - `cartridge_wal_dir_parent` (`string`): directory where instances WAL directories are placed;
+- `cartridge_log_dir_parent` (`string`): directory where instances logs are placed;
 - `cartridge_run_dir`(`string`, default: `/var/run/tarantool`): directory where PID and socket files
   are stored;
 - `cartridge_conf_dir` (`string`, default: `/etc/tarantool/conf.d`): path to instances
