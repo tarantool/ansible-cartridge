@@ -35,6 +35,7 @@ class TestFacts(unittest.TestCase):
         self.not_user_facts = [
             # Role defaults
             'cartridge_role_scenarios',
+            'cartridge_cached_fact_names_by_target',
             # Cross-step facts
             'delivered_package_path',
             'control_instance',
@@ -48,7 +49,6 @@ class TestFacts(unittest.TestCase):
             'fetched_backup_archive_path',
             'backup_files_from_machine',
             # Temp facts
-            'cached_facts_res',
             'cached_facts',
             'facts_for_machines_res',
             'single_instances_for_each_machine',

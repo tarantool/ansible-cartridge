@@ -52,17 +52,9 @@
   set_fact:
     instance_info: '{{ instance_info_res.fact }}'
 
-- name: 'Cache facts for different targets'
-  cartridge_get_cached_facts:
-    hostvars: '{{ hostvars }}'
-  run_once: true
-  delegate_to: localhost
-  become: false
-  register: cached_facts_res
-
 - name: 'Set "cached_facts" fact'
   set_fact:
-    cached_facts: '{{ cached_facts_res.facts }}'
+    cached_facts: '{{ hostvars | get_cached_facts(cartridge_cached_fact_names_by_target) }}'
   run_once: true
   delegate_to: localhost
   become: false
