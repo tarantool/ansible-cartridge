@@ -42,8 +42,10 @@ def get_warnings(res):
     return res_json.get('warnings')
 
 
-class TestInstanceStarted(unittest.TestCase):
+class TestCheckClusterIssues(unittest.TestCase):
     def setUp(self):
+        self.maxDiff = None
+
         self.instance = Instance()
         self.console_sock = self.instance.console_sock
         self.cookie = self.instance.cluster_cookie
@@ -59,6 +61,7 @@ class TestInstanceStarted(unittest.TestCase):
         [False],
     ])
     def test_issues(self, show_issues):
+        helpers.WARNINGS = []
         set_issues(self.instance, [
             {'level': 'critical', 'message': 'Some critical issue 1'},
             {'level': 'warning', 'message': 'Some warning issue 2'},
@@ -88,6 +91,7 @@ class TestInstanceStarted(unittest.TestCase):
             ])
 
         # only critical
+        helpers.WARNINGS = []
         set_issues(self.instance, [
             {'level': 'critical', 'message': 'Some critical issue 1'},
             {'level': 'critical', 'message': 'Some critical issue 3'},
@@ -109,6 +113,7 @@ class TestInstanceStarted(unittest.TestCase):
             ])
 
         # only warnings
+        helpers.WARNINGS = []
         set_issues(self.instance, [
             {'level': 'warning', 'message': 'Some warning issue 2'},
             {'level': 'warning', 'message': 'Some warning issue 5'},
@@ -128,6 +133,7 @@ class TestInstanceStarted(unittest.TestCase):
             ])
 
         # only unknown
+        helpers.WARNINGS = []
         set_issues(self.instance, [
             {'level': 'other-level', 'message': 'Some other-level issue 4'},
         ])
@@ -149,6 +155,7 @@ class TestInstanceStarted(unittest.TestCase):
         [False],
     ])
     def test_warnings(self, show_issues):
+        helpers.WARNINGS = []
         set_issues(self.instance, [
             {'level': 'critical', 'message': 'Some critical issue 1'},
             {'level': 'warning', 'message': 'Some warning issue 2'},
@@ -178,6 +185,7 @@ class TestInstanceStarted(unittest.TestCase):
             ])
 
         # only warnings
+        helpers.WARNINGS = []
         set_issues(self.instance, [
             {'level': 'warning', 'message': 'Some warning issue 2'},
             {'level': 'warning', 'message': 'Some warning issue 5'},
@@ -196,6 +204,7 @@ class TestInstanceStarted(unittest.TestCase):
             ])
 
         # only critical
+        helpers.WARNINGS = []
         set_issues(self.instance, [
             {'level': 'critical', 'message': 'Some critical issue 1'},
             {'level': 'critical', 'message': 'Some critical issue 3'},
@@ -217,6 +226,7 @@ class TestInstanceStarted(unittest.TestCase):
             ])
 
         # only unknown
+        helpers.WARNINGS = []
         set_issues(self.instance, [
             {'level': 'other-level', 'message': 'Some other-level issue 4'},
         ])
@@ -238,6 +248,7 @@ class TestInstanceStarted(unittest.TestCase):
         [False],
     ])
     def test_list_on_cluster_returns_error(self, show_issues):
+        helpers.WARNINGS = []
         set_issues(self.instance, [
             {'level': 'critical', 'message': 'Some critical issue 1'},
             {'level': 'warning', 'message': 'Some warning issue 2'},
