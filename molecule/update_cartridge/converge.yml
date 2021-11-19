@@ -1,5 +1,6 @@
 ---
-- name: Bootstrap cluster with Cartridge 2.1.2 on all instances
+
+- name: 'Bootstrap cluster with Cartridge 2.1.2 on all instances'
   hosts: cluster
   roles:
     - ansible-cartridge
@@ -13,7 +14,7 @@
     cartridge_install_tarantool_for_tgz: true
     cartridge_package_path: ./packages/myapp-1.0.0-0-with-c-2.1.2.tar.gz
 
-- name: Update storage-with-c-2.2.0 to Cartridge 2.2.0
+- name: 'Update storage-with-c-2.2.0 to Cartridge 2.2.0'
   hosts: storage-with-c-2.2.0
   roles:
     - ansible-cartridge
@@ -24,7 +25,7 @@
     cartridge_scenario_name: update_tgz
     cartridge_package_path: ./packages/myapp-2.0.0-0-with-c-2.2.0.tar.gz
 
-- name: Update storage-with-c-2.3.0 to Cartridge 2.3.0
+- name: 'Update storage-with-c-2.3.0 to Cartridge 2.3.0'
   hosts: storage-with-c-2.3.0
   roles:
     - ansible-cartridge
@@ -35,7 +36,7 @@
     cartridge_scenario_name: update_tgz
     cartridge_package_path: ./packages/myapp-3.0.0-0-with-c-2.3.0.tar.gz
 
-- name: Update storage-with-c-2.5.0 to Cartridge 2.5.0
+- name: 'Update storage-with-c-2.5.0 to Cartridge 2.5.0'
   hosts: storage-with-c-2.5.0
   roles:
     - ansible-cartridge
@@ -46,7 +47,7 @@
     cartridge_scenario_name: update_tgz
     cartridge_package_path: ./packages/myapp-4.0.0-0-with-c-2.5.0.tar.gz
 
-- name: Update storage-with-c-2.6.0 to Cartridge 2.6.0
+- name: 'Update storage-with-c-2.6.0 to Cartridge 2.6.0'
   hosts: storage-with-c-2.6.0
   roles:
     - ansible-cartridge
@@ -60,7 +61,7 @@
 # This play affects two-phase commmit
 # We need to be sure that role selects such control instance
 # that two-phase commit doesn't fail for that
-- name: Configure application
+- name: 'Configure application'
   hosts: cluster
   roles:
     - ansible-cartridge
@@ -79,7 +80,7 @@
       enabled: true
       cookie_max_age: 1000
 
-- name: Update all instances to Cartridge 2.6.0
+- name: 'Update all instances to Cartridge 2.6.0'
   hosts: cluster
   roles:
     - ansible-cartridge
@@ -89,3 +90,54 @@
   vars:
     cartridge_package_path: ./packages/myapp-5.0.0-0-with-c-2.6.0.tar.gz
     cartridge_scenario_name: update_tgz
+
+- name: 'Check Cartridge version'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Get Cartridge version'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: return require('cartridge').VERSION
+
+    - name: 'Check that all instances were rolled back'
+      assert:
+        fail_msg: 'Should use Cartridge 2.6.0, not {{ eval_res[0] }}'
+        success_msg: 'Uses Cartridge 2.6.0'
+        that: eval_res[0] == '2.6.0'
+
+- name: 'Roll back all instances to Cartridge 2.5.0'
+  hosts: cluster
+  roles:
+    - ansible-cartridge
+  become: true
+  become_user: root
+  gather_facts: false
+  vars:
+    cartridge_package_path: ./packages/myapp-4.0.0-0-with-c-2.5.0.tar.gz
+    cartridge_scenario_name: update_tgz
+
+- name: 'Check Cartridge version'
+  hosts: cluster
+  become: true
+  become_user: root
+  gather_facts: false
+  tasks:
+    - name: 'Get Cartridge version'
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_scenario:
+          - eval
+        cartridge_eval_body: return require('cartridge').VERSION
+
+    - name: 'Check that all instances were rolled back'
+      assert:
+        fail_msg: 'Should use Cartridge 2.5.0, not {{ eval_res[0] }}'
+        success_msg: 'Uses Cartridge 2.5.0'
+        that: eval_res[0] == '2.5.0'
