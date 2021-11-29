@@ -6,7 +6,7 @@
     owner: '{{ cartridge_app_user }}'
     group: '{{ cartridge_app_group }}'
     state: directory
-    mode: 0660
+    mode: 0750
   when: inventory_hostname in single_instances_for_each_machine
 
 - name: 'Create instance backup archive'

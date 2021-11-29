@@ -19,6 +19,7 @@ README.md to use the newest tag with new release
 - Optimize `Set instance facts` step
 - Optimize facts caching
 - Fixed the ability to roll back to the previous TGZ package
+- Fixed backup folder permissions
 
 ## [1.11.0] - 2021-07-30
 
