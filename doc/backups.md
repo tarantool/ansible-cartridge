@@ -188,7 +188,7 @@ Let's imagine that we want to archive backup files not for each instance, but fo
         owner: '{{ cartridge_app_user }}'
         group: '{{ cartridge_app_group }}'
         state: directory
-        mode: 0660
+        mode: 0750
 
     - name: 'Start backup'
       import_role:
