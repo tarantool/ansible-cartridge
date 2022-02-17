@@ -7,8 +7,8 @@ Type=simple
 ExecStart=/usr/bin/env {{ systemd_units_info.stateboard_tarantool_binary }} {{ systemd_units_info.stateboard_entrypoint }}
 Restart=on-failure
 RestartSec=2
-User=tarantool
-Group=tarantool
+User={{ cartridge_app_user }}
+Group={{ cartridge_app_group }}
 
 Environment=TARANTOOL_APP_NAME={{ systemd_units_info.stateboard_name }}
 Environment=TARANTOOL_CFG={{ cartridge_conf_dir }}
