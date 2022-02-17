@@ -66,8 +66,12 @@ SYSTEM_CONFIG_SECTIONS = {
 FORMAT_REPLICASET_FUNC = '''
 local cartridge_roles = require('cartridge.roles')
 local function format_replicaset(r)
+    if r == nil then
+        return nil
+    end
+
     local instances = {}
-    for _, s in ipairs(r.servers) do
+    for _, s in ipairs(r.servers or {}) do
         if s.alias ~= nil then
             table.insert(instances, s.alias)
         end
@@ -87,6 +91,10 @@ end
 
 FORMAT_SERVER_FUNC = '''
 local function format_server(s)
+    if s == nil then
+        return nil
+    end
+
     local replicaset_uuid
     if s.replicaset ~= nil then
         replicaset_uuid = s.replicaset.uuid
@@ -105,6 +113,10 @@ end
 
 FORMAT_SERVER_WITH_REPLICASET_INFO_FUNC = '''
 local function format_server_with_replicaset_info(s)
+    if s == nil then
+        return nil
+    end
+
     local replicaset_uuid
     local replicaset_alias
     if s.replicaset ~= nil then
@@ -129,7 +141,7 @@ GET_REPLICASETS_FUNC_BODY = '''
 local replicasets = require('cartridge').admin_get_replicasets()
 local ret = {}
 
-for _, r in ipairs(replicasets) do
+for _, r in ipairs(replicasets or {}) do
     if r.alias ~= nil then
         ret[r.alias] = format_replicaset(r)
     end
@@ -144,7 +156,7 @@ GET_INSTANCES_FUNC_BODY = '''
 local servers = require('cartridge').admin_get_servers()
 local ret = {}
 
-for _, s in ipairs(servers) do
+for _, s in ipairs(servers or {}) do
     if s.alias ~= nil then
         ret[s.alias] = format_server(s)
     end
@@ -159,7 +171,7 @@ GET_INSTANCES_WITH_REPLICASETS_INFO_FUNC_BODY = '''
 local servers = require('cartridge').admin_get_servers()
 local ret = {}
 
-for _, s in ipairs(servers) do
+for _, s in ipairs(servers or {}) do
     if s.alias ~= nil then
         ret[s.alias] = format_server_with_replicaset_info(s)
     end
@@ -172,7 +184,7 @@ SET_TWOPHASE_OPTIONS_FUNC_BODY = '''
 local vars = require('cartridge.vars').new('cartridge.twophase')
 if vars.options ~= nil then
     local options = ...
-    for name, value in pairs(options) do
+    for name, value in pairs(options or {}) do
         vars.options[name] = value
     end
 end
@@ -542,11 +554,17 @@ def filter_none_values(d):
 def get_cluster_instances(control_console):
     instances, _ = control_console.eval_res_err(GET_INSTANCES_FUNC_BODY)
 
+    if not instances:
+        instances = dict()
+
     return instances
 
 
 def get_cluster_instances_with_replicasets_info(control_console):
     instances, _ = control_console.eval_res_err(GET_INSTANCES_WITH_REPLICASETS_INFO_FUNC_BODY)
+
+    if not instances:
+        instances = dict()
 
     return instances
 
