@@ -6,13 +6,6 @@ FROM {{ item.registry.url }}/{{ item.image }}
 FROM {{ item.image }}
 {% endif %}
 
-{% if 'centos' in item.image %}
-RUN yum install -y openssl
-RUN trust dump --filter "pkcs11:id=%c4%a7%b1%a4%7b%2c%71%fa%db%e1%4b%90%75%ff%c4%15%60%85%89%10" | \
-    openssl x509 | tee /etc/pki/ca-trust/source/blacklist/DST-Root-CA-X3.pem \
-    && update-ca-trust extract
-{% endif %}
-
 {% if item.env is defined %}
 {% for var, value in item.env.items() %}
 {% if value %}
@@ -21,9 +14,17 @@ ENV {{ var }} {{ value }}
 {% endfor %}
 {% endif %}
 
-RUN if [ $(command -v apt-get) ]; then apt-get update && apt-get install -y python sudo bash ca-certificates iproute2 && apt-get clean; \
-    elif [ $(command -v dnf) ]; then dnf makecache && dnf --assumeyes install python sudo python-devel python*-dnf bash iproute && dnf clean all; \
-    elif [ $(command -v yum) ]; then yum makecache fast && yum install -y python sudo yum-plugin-ovl bash iproute && sed -i 's/plugins=0/plugins=1/g' /etc/yum.conf && yum clean all; \
-    elif [ $(command -v zypper) ]; then zypper refresh && zypper install -y python sudo bash python-xml iproute2 && zypper clean -a; \
-    elif [ $(command -v apk) ]; then apk update && apk add --no-cache python sudo bash ca-certificates; \
-    elif [ $(command -v xbps-install) ]; then xbps-install -Syu && xbps-install -y python sudo bash ca-certificates iproute2 && xbps-remove -O; fi
+RUN if [ $(command -v apt-get) ]; then \
+        apt-get update && apt-get install -y python sudo bash ca-certificates iproute2 && \
+        update-ca-certificates && apt-get clean; \
+    elif [ $(command -v yum) ]; then \
+        yum makecache fast && yum install -y python sudo yum-plugin-ovl bash iproute ca-certificates && \
+        sed -i 's/plugins=0/plugins=1/g' /etc/yum.conf && update-ca-trust && yum clean all; \
+    elif [ $(command -v dnf) ]; then \
+        dnf makecache && dnf --assumeyes install python sudo python-devel python*-dnf bash iproute && dnf clean all; \
+    elif [ $(command -v zypper) ]; then \
+        zypper refresh && zypper install -y python sudo bash python-xml iproute2 && zypper clean -a; \
+    elif [ $(command -v apk) ]; then \
+        apk update && apk add --no-cache python sudo bash ca-certificates; \
+    elif [ $(command -v xbps-install) ]; then \
+        xbps-install -Syu && xbps-install -y python sudo bash ca-certificates iproute2 && xbps-remove -O; fi
