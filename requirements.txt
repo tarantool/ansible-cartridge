@@ -1,7 +1,7 @@
 # Base
 cryptography==2.9.2;python_version<"3"
 ansible==2.9.27;python_version<"3"
-ansible==4.8.0;python_version>="3"
+ansible==5.3.0;python_version>="3"
 
 # Linters
 yamllint==1.25.0;python_version<"3"
@@ -17,10 +17,10 @@ tenacity==8.0.1;python_version>="3"
 
 # Molecule tests
 molecule[docker]==3.0.2.1;python_version<"3"
-molecule[docker]==3.5.2;python_version>="3"
+molecule[docker]==3.6.1;python_version>="3"
 
 # Molecule verification tests
 requests==2.26.0;python_version<"3"
-requests==2.26.0;python_version>="3"
+requests==2.27.1;python_version>="3"
 testinfra==3.3.0;python_version<"3"
-pytest-testinfra==6.4.0;python_version>="3"
+pytest-testinfra==6.6.0;python_version>="3"
