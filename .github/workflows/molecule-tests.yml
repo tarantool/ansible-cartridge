@@ -40,14 +40,33 @@ jobs:
       matrix: ${{ fromJson(needs.setup-molecule-test-matrix.outputs.ce-matrix) }}
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2
+      - name: Prepare to cache results
+        id: cache
+        run: |
+          rm -f ${{ runner.temp }}/prev_result || true
+          echo "::set-output name=key::${{ matrix.molecule_scenario }}-${{ matrix.ansible_version }}-${{ matrix.python_version }}-${{ matrix.tarantool_version }}-${{ matrix.molecule_command }}"
+          echo "::set-output name=time::$(/bin/date -u "+%Y%m%d%H%M%S")"
+      - name: Restore the previous run result
+        uses: actions/cache@v2
+        with:
+          path: ${{ runner.temp }}/prev_result
+          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.cache.outputs.key }}-${{ steps.cache.outputs.time }}
+          restore-keys: ${{ github.run_id }}-${{ github.job }}-${{ steps.cache.outputs.key }}-
+      - name: Parse previous result
+        id: prev_result
+        run: cat ${{ runner.temp }}/prev_result 2>/dev/null || echo "no previous result"
+
+      - if: steps.prev_result.outputs.status != 'success'
+        uses: actions/checkout@v2
 
       - name: Setup python
+        if: steps.prev_result.outputs.status != 'success'
         uses: actions/setup-python@v2
         with:
           python-version: '${{ matrix.python_version }}'
 
       - name: Cache python dependencies
+        if: steps.prev_result.outputs.status != 'success'
         id: python-dependencies
         uses: actions/cache@v2
         with:
@@ -55,7 +74,7 @@ jobs:
           key: venv-${{ matrix.python_version }}-${{ hashFiles('./requirements.txt') }}-${{ matrix.ansible_version }}
 
       - name: Install molecule requirements
-        if: steps.python-dependencies.outputs.cache-hit != 'true'
+        if: steps.python-dependencies.outputs.cache-hit != 'true' && steps.prev_result.outputs.status != 'success'
         run: |
           python -V
           if [ "${{ matrix.python_version }}" = "2.7" ]; then
@@ -69,6 +88,7 @@ jobs:
           venv/bin/pip install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache test packages
+        if: steps.prev_result.outputs.status != 'success'
         id: cache-packages
         uses: actions/cache@v2
         with:
@@ -76,13 +96,13 @@ jobs:
           key: ce-${{ matrix.tarantool_version }}-${{ env.CARTRIDGE_CLI_VERSION }}-${{ hashFiles('./create-packages.sh') }}
 
       - name: Install Tarantool
-        if: steps.cache-packages.outputs.cache-hit != 'true'
+        if: steps.cache-packages.outputs.cache-hit != 'true' && steps.prev_result.outputs.status != 'success'
         uses: tarantool/setup-tarantool@v1
         with:
           tarantool-version: '${{ matrix.tarantool_version }}'
 
       - name: Create test packages
-        if: steps.cache-packages.outputs.cache-hit != 'true'
+        if: steps.cache-packages.outputs.cache-hit != 'true' && steps.prev_result.outputs.status != 'success'
         run: |
           sudo apt-get update
 
@@ -91,7 +111,7 @@ jobs:
             && git config --global user.name "Tar Antool"
 
           curl -L https://tarantool.io/release/${{ matrix.tarantool_version }}/installer.sh | sudo -E bash -s
-          sudo apt-get install -y cartridge-cli ${{ env.CARTRIDGE_CLI_VERSION }}
+          sudo apt-get install -y cartridge-cli=${{ env.CARTRIDGE_CLI_VERSION }}
 
           tarantool --version
           cartridge version
@@ -99,10 +119,14 @@ jobs:
           ./create-packages.sh --skip-tdg
 
       - name: Molecule test
+        if: steps.prev_result.outputs.status != 'success'
         run: |
           source venv/bin/activate
           molecule --version
           molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
+
+      - name: Remember result
+        run: echo "::set-output name=status::${{ job.status }}" > ${{ runner.temp }}/prev_result
 
   molecule-tests-ee:
     needs: setup-molecule-test-matrix
@@ -112,14 +136,33 @@ jobs:
       matrix: ${{ fromJson(needs.setup-molecule-test-matrix.outputs.ee-matrix) }}
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2
+      - name: Prepare to cache results
+        id: cache
+        run: |
+          rm -f ${{ runner.temp }}/prev_result || true
+          echo "::set-output name=key::${{ matrix.molecule_scenario }}-${{ matrix.ansible_version }}-${{ matrix.python_version }}-${{ matrix.sdk_version }}-${{ matrix.molecule_command }}"
+          echo "::set-output name=time::$(/bin/date -u "+%Y%m%d%H%M%S")"
+      - name: Restore the previous run result
+        uses: actions/cache@v2
+        with:
+          path: ${{ runner.temp }}/prev_result
+          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.cache.outputs.key }}-${{ steps.cache.outputs.time }}
+          restore-keys: ${{ github.run_id }}-${{ github.job }}-${{ steps.cache.outputs.key }}-
+      - name: Parse previous result
+        id: prev_result
+        run: cat ${{ runner.temp }}/prev_result 2>/dev/null || echo "no previous result"
+
+      - if: steps.prev_result.outputs.status != 'success'
+        uses: actions/checkout@v2
 
       - name: Setup python
+        if: steps.prev_result.outputs.status != 'success'
         uses: actions/setup-python@v2
         with:
           python-version: '${{ matrix.python_version }}'
 
       - name: Cache python dependencies
+        if: steps.prev_result.outputs.status != 'success'
         id: python-dependencies
         uses: actions/cache@v2
         with:
@@ -127,7 +170,7 @@ jobs:
           key: venv-${{ matrix.python_version }}-${{ hashFiles('./requirements.txt') }}-${{ matrix.ansible_version }}
 
       - name: Install molecule requirements
-        if: steps.python-dependencies.outputs.cache-hit != 'true'
+        if: steps.python-dependencies.outputs.cache-hit != 'true' && steps.prev_result.outputs.status != 'success'
         run: |
           python -V
           if [ "${{ matrix.python_version }}" = "2.7" ]; then
@@ -141,6 +184,7 @@ jobs:
           venv/bin/pip install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache test packages
+        if: steps.prev_result.outputs.status != 'success'
         id: cache-packages
         uses: actions/cache@v2
         with:
@@ -148,7 +192,7 @@ jobs:
           key: sdk-${{ matrix.sdk_version }}-${{ hashFiles('./create-packages.sh') }}
 
       - name: Create test packages
-        if: steps.cache-packages.outputs.cache-hit != 'true'
+        if: steps.cache-packages.outputs.cache-hit != 'true' && steps.prev_result.outputs.status != 'success'
         run: |
           sudo apt-get update
 
@@ -169,10 +213,14 @@ jobs:
           ./create-packages.sh --skip-tdg
 
       - name: Molecule test
+        if: steps.prev_result.outputs.status != 'success'
         run: |
           source venv/bin/activate
           molecule --version
           molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
+
+      - name: Remember result
+        run: echo "::set-output name=status::${{ job.status }}" > ${{ runner.temp }}/prev_result
 
   molecule-tests-tdg:
     needs: setup-molecule-test-matrix
@@ -182,14 +230,33 @@ jobs:
       matrix: ${{ fromJson(needs.setup-molecule-test-matrix.outputs.tdg-matrix) }}
       fail-fast: false
     steps:
-      - uses: actions/checkout@v2
+      - name: Prepare to cache results
+        id: cache
+        run: |
+          rm -f ${{ runner.temp }}/prev_result || true
+          echo "::set-output name=key::${{ matrix.molecule_scenario }}-${{ matrix.ansible_version }}-${{ matrix.python_version }}-${{ matrix.tdg_version }}-${{ matrix.molecule_command }}"
+          echo "::set-output name=time::$(/bin/date -u "+%Y%m%d%H%M%S")"
+      - name: Restore the previous run result
+        uses: actions/cache@v2
+        with:
+          path: ${{ runner.temp }}/prev_result
+          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.cache.outputs.key }}-${{ steps.cache.outputs.time }}
+          restore-keys: ${{ github.run_id }}-${{ github.job }}-${{ steps.cache.outputs.key }}-
+      - name: Parse previous result
+        id: prev_result
+        run: cat ${{ runner.temp }}/prev_result 2>/dev/null || echo "no previous result"
+
+      - if: steps.prev_result.outputs.status != 'success'
+        uses: actions/checkout@v2
 
       - name: Setup python
+        if: steps.prev_result.outputs.status != 'success'
         uses: actions/setup-python@v2
         with:
           python-version: '${{ matrix.python_version }}'
 
       - name: Cache python dependencies
+        if: steps.prev_result.outputs.status != 'success'
         id: python-dependencies
         uses: actions/cache@v2
         with:
@@ -197,7 +264,7 @@ jobs:
           key: venv-${{ matrix.python_version }}-${{ hashFiles('./requirements.txt') }}-${{ matrix.ansible_version }}
 
       - name: Install molecule requirements
-        if: steps.python-dependencies.outputs.cache-hit != 'true'
+        if: steps.python-dependencies.outputs.cache-hit != 'true' && steps.prev_result.outputs.status != 'success'
         run: |
           python -V
           if [ "${{ matrix.python_version }}" = "2.7" ]; then
@@ -211,6 +278,7 @@ jobs:
           venv/bin/pip install ansible~=${{ matrix.ansible_version }}
 
       - name: Cache TDG test packages
+        if: steps.prev_result.outputs.status != 'success'
         id: cache-packages
         uses: actions/cache@v2
         with:
@@ -218,7 +286,7 @@ jobs:
           key: tdg-${{ matrix.tdg_version }}-${{ hashFiles('./create-packages.sh') }}
 
       - name: Create test packages
-        if: steps.cache-packages.outputs.cache-hit != 'true'
+        if: steps.cache-packages.outputs.cache-hit != 'true' && steps.prev_result.outputs.status != 'success'
         run: |
           export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
           export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
@@ -226,7 +294,11 @@ jobs:
           ./create-packages.sh --skip-cartridge --tdg-version ${{ matrix.tdg_version }}
 
       - name: Molecule test
+        if: steps.prev_result.outputs.status != 'success'
         run: |
           source venv/bin/activate
           molecule --version
           molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
+
+      - name: Remember result
+        run: echo "::set-output name=status::${{ job.status }}" > ${{ runner.temp }}/prev_result

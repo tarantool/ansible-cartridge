@@ -23,7 +23,7 @@ NOT_DEFAULT_MOLECULE_COMMANDS = [
 DEFAULT_ANSIBLE_VERSION = '2.8.0'
 NOT_DEFAULT_ANSIBLE_VERSIONS = [
     '2.9.27',
-    '4.8.0',
+    '5.3.0',
 ]
 
 DEFAULT_PYTHON_VERSION = '2.7'
@@ -33,13 +33,13 @@ NOT_DEFAULT_TNT_VERSIONS = [
     '1.10'
 ]
 
-DEFAULT_SDK_VERSION = '2.8.2-0-gfc96d10f5-r429'
+DEFAULT_SDK_VERSION = '2.8.3-0-g01023dbc2-r449'
 NOT_DEFAULT_SDK_VERSIONS = []
 
 TDG_SCENARIOS = [
     'config_upload_tdg'
 ]
-DEFAULT_TDG_VERSION = '1.7.14-0-g2fcf1fc7'
+DEFAULT_TDG_VERSION = '1.7.17-0-g2a5b4bd18'
 TDG_VERSIONS = {
     'config_upload_tdg': [
         # auth-token header; no common.app_version; no admin.upload_config_api;
