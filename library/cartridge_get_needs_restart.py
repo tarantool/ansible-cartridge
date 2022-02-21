@@ -47,13 +47,13 @@ def read_yaml_file_section(control_console, file_path, section):
 def check_conf_updated(new_conf, old_conf, ignore_keys):
     # check new conf keys
     for key, value in new_conf.items():
-        if key not in ignore_keys or []:
+        if key not in (ignore_keys or set()):
             if key not in old_conf or old_conf[key] != value:
                 return True
 
     # check old conf keys
     for key, value in old_conf.items():
-        if key not in ignore_keys or []:
+        if key not in (ignore_keys or set()):
             if key not in new_conf or new_conf[key] != value:
                 return True
 
