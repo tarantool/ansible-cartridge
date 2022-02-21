@@ -21,6 +21,7 @@ README.md to use the newest tag with new release
 - Fixed the ability to roll back to the previous TGZ package
 - Fixed backup folder permissions
 - Handle empty values in `helpers.py`
+- Fixed templates of systemd units for TGZ packages
 
 ## [1.11.0] - 2021-07-30
 
