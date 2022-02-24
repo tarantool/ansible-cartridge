@@ -8,6 +8,7 @@ argument_spec = {
     'play_hosts': {'required': True, 'type': 'list'},
     'console_sock': {'required': True, 'type': 'str'},
     'app_name': {'required': True, 'type': 'str'},
+    'leader_only': {'required': False, 'type': 'bool', 'default': False},
 }
 
 GET_TWOPHASE_COMMIT_VERSION_TIMEOUT = 60
@@ -94,10 +95,21 @@ def candidate_is_ok(uri, names_by_uris, module_hostvars, cluster_disabled_instan
     return helpers.is_enabled(instance_vars)
 
 
-def get_control_instance_name(module_hostvars, cluster_disabled_instances, play_hosts, control_console):
+def get_control_instance_name(
+    module_hostvars,
+    cluster_disabled_instances,
+    play_hosts,
+    control_console,
+    leader_only=False,
+):
     members, err = get_membership_members(control_console)
     if err is not None:
         return None, err
+    leaders, err = helpers.get_active_leaders(control_console)
+    if err is not None:
+        return None, err
+
+    leaders_uuid = set(leaders.values())
 
     alien_members_uris = []
     members_without_uuid = []
@@ -122,6 +134,9 @@ def get_control_instance_name(module_hostvars, cluster_disabled_instances, play_
         member_uuid = member_payload.get('uuid')
         if not member_uuid:
             members_without_uuid.append(member)
+            continue
+
+        if leader_only and member_uuid not in leaders_uuid:
             continue
 
         existing_member = members_by_uuid.get(member_uuid)
@@ -220,11 +235,12 @@ def get_control_instance(params):
     play_hosts = params['play_hosts']
     console_sock = params['console_sock']
     app_name = params['app_name']
+    leader_only = params.get('leader_only', False)
 
     control_console = helpers.get_control_console(console_sock)
 
     control_instance_name, err = get_control_instance_name(
-        module_hostvars, cluster_disabled_instances, play_hosts, control_console
+        module_hostvars, cluster_disabled_instances, play_hosts, control_console, leader_only
     )
     if err is not None:
         return helpers.ModuleRes(failed=True, msg=err)

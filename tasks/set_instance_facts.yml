@@ -150,6 +150,7 @@
 
       # Edit topology check
 
+      cartridge_only_leader_controls: '{{ cartridge_only_leader_controls }}'
       cartridge_force_advertise_uris_change: '{{ cartridge_force_advertise_uris_change }}'
       cartridge_ignore_extra_cluster_instances: '{{ cartridge_ignore_extra_cluster_instances }}'
       cartridge_ignore_extra_cluster_replicasets: '{{ cartridge_ignore_extra_cluster_replicasets }}'

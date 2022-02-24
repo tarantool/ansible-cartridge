@@ -28,6 +28,7 @@ def call_get_control_instance(
     module_hostvars=None,
     play_hosts=None,
     cluster_disabled_instances='default',
+    leader_only=False,
 ):
     if module_hostvars is None:
         module_hostvars = {}
@@ -41,6 +42,7 @@ def call_get_control_instance(
         'play_hosts': play_hosts,
         'console_sock': console_sock,
         'app_name': app_name,
+        'leader_only': leader_only,
     })
 
 
@@ -457,6 +459,49 @@ class TestGetControlInstance(unittest.TestCase):
             'console_sock': '/var/run/tarantool/myapp.not-joined-3.control',
             'http_port': 8083,
         })
+
+    def test_leaders_only(self):
+        self.instance.add_replicaset(alias='r1', instances=['instance-1', 'instance-2'])
+        self.instance.add_replicaset(alias='r2', instances=['instance-3', 'instance-4'])
+
+        self.instance.set_failover_params(mode='stateful', state_provider='stateboard')
+        self.instance.set_variable('active_leaders', {
+            'r1-uuid': 'instance-2-uuid',
+            'r2-uuid': 'instance-4-uuid',
+        })
+
+        hostvars = {}
+        hostvars.update(get_instance_hostvars('instance-1', run_dir='run-dir-1', http_port=8081))
+        hostvars.update(get_instance_hostvars('instance-2', run_dir='run-dir-2', http_port=8082))
+        hostvars.update(get_instance_hostvars('instance-3', run_dir='run-dir-3', http_port=8083))
+        hostvars.update(get_instance_hostvars('instance-4', run_dir='run-dir-4', http_port=8084))
+
+        # instance-2 is selected since it's URI is
+        # first lexicographically
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=True),
+            utils.get_member('instance-2', with_uuid=True),
+            utils.get_member('instance-3', with_uuid=True),
+            utils.get_member('instance-4', with_uuid=True),
+        ])
+        res = call_get_control_instance('myapp', self.console_sock, hostvars, leader_only=True)
+        self.assertFalse(res.failed, msg=res.msg)
+        self.assertEqual(res.fact, {
+            'name': 'instance-2',
+            'console_sock': 'run-dir-2/myapp.instance-2.control',
+            'http_port': 8082,
+        })
+
+        # both leaders without UUID and dead
+        self.instance.set_membership_members([
+            utils.get_member('instance-1', with_uuid=True),
+            utils.get_member('instance-2', with_uuid=False, status='dead'),
+            utils.get_member('instance-3', with_uuid=True),
+            utils.get_member('instance-4', with_uuid=False, status='dead'),
+        ])
+        res = call_get_control_instance('myapp', self.console_sock, hostvars, leader_only=True)
+        self.assertTrue(res.failed)
+        self.assertIn("There is no alive instances in the cluster", res.msg)
 
     def tearDown(self):
         self.instance.stop()
