@@ -39,7 +39,7 @@ NOT_DEFAULT_SDK_VERSIONS = []
 TDG_SCENARIOS = [
     'config_upload_tdg'
 ]
-DEFAULT_TDG_VERSION = '1.7.17-0-g2a5b4bd18'
+DEFAULT_TDG_VERSION = '1.7.17-0-g2a5b4bd1'
 TDG_VERSIONS = {
     'config_upload_tdg': [
         # auth-token header; no common.app_version; no admin.upload_config_api;

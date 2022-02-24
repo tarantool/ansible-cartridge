@@ -16,7 +16,7 @@ packages_dirname="packages"
 keep_old_packages=""
 skip_cartridge=""
 skip_tdg=""
-tdg_version="1.7.17-0-g2a5b4bd18"
+tdg_version="1.7.17-0-g2a5b4bd1"
 
 usage() {
     echo "Usage: ./create-packages.sh [options]"
