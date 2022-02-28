@@ -8,7 +8,7 @@ cartridge_not_save_cookie_in_app_config: false
 cartridge_remove_temporary_files: false
 cartridge_ignore_split_brain: false
 cartridge_paths_to_keep_on_cleanup: []
-cartridge_only_leader_controls: false
+cartridge_force_leader_control_instance: false
 
 # Role scenario configuration
 

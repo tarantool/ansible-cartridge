@@ -501,7 +501,7 @@ class TestGetControlInstance(unittest.TestCase):
         ])
         res = call_get_control_instance('myapp', self.console_sock, hostvars, leader_only=True)
         self.assertTrue(res.failed)
-        self.assertIn("There is no alive instances in the cluster", res.msg)
+        self.assertIn("Not found any leader instance between the candidates: instance-1-uri, instance-3-uri", res.msg)
 
     def tearDown(self):
         self.instance.stop()

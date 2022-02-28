@@ -18,7 +18,7 @@ failover.
   absolute or relative to `work/memtx/vinyl/wal` directory that should be kept on instance
   cleanup (`config` and` .tarantool.cookie` will be kept independently of this variable); it's
   possible to use bash patterns, e.g. `*.control`;
-- `cartridge_only_leader_controls` (`boolean`, default: `false`): flag indicates that only a leader
+- `cartridge_force_leader_control_instance` (`boolean`, default: `false`): flag indicates that only a leader
   can be selected as a control instance.
 
 ## Role scenario configuration

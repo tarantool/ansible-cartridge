@@ -237,7 +237,7 @@ This is instance that is:
 * control instance should have minimal Cartridge version across all suitable
   instances (because Cartridge two-phase commit should be called by instance
   that has lowest version);
-* control instance should be a leader if `cartridge_only_leader_controls` is set.
+* control instance is a leader if `cartridge_force_leader_control_instance` is set.
 
 Steps that require control instance (such as [`edit_topology`](#step-edit_topology))
 call `set_control_instance` implicitly if `control_instance` variable isn't set.
@@ -252,7 +252,7 @@ Input variables from config:
 - `expelled` - indicates if instance must be expelled from topology;
 - `stateboard` - indicates that the instance is a stateboard;
 - `replicaset_alias` - replicaset alias, will be displayed in Web UI;
-- `cartridge_only_leader_controls` - indicates that only a leader can be selected as a control instance.
+- `cartridge_force_leader_control_instance` - indicates that only a leader can be selected as a control instance.
 
 Output variables:
 

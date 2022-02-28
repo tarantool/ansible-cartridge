@@ -114,6 +114,7 @@ def get_control_instance_name(
     alien_members_uris = []
     members_without_uuid = []
     members_by_uuid = {}
+    leaders_uris = []
 
     for uri, member in sorted(members.items()):
         if not member:
@@ -136,15 +137,14 @@ def get_control_instance_name(
             members_without_uuid.append(member)
             continue
 
-        if leader_only and member_uuid not in leaders_uuid:
-            continue
-
         existing_member = members_by_uuid.get(member_uuid)
         if existing_member and existing_member['incarnation'] > member_incarnation:
             # ignore it, because it's old
             continue
 
         members_by_uuid[member_uuid] = member
+        if member_uuid in leaders_uuid:
+            leaders_uris.append(uri)
 
     if alien_members_uris:
         helpers.warn('Incorrect members with the following URIs ignored: %s' % ', '.join(alien_members_uris))
@@ -221,9 +221,17 @@ def get_control_instance_name(
     if err is not None:
         return None, "Failed to check instances two-phase commit version: %s" % err
 
-    idx = twophase_commit_versions.index(min(twophase_commit_versions))
-    control_instance_uri = candidates_uris[idx]
+    min_version = min(twophase_commit_versions)
+    min_version_candidates = filter(lambda c: twophase_commit_versions[c[0]] == min_version, enumerate(candidates_uris))
+    candidates_uris = list(map(lambda c: c[1], min_version_candidates))
 
+    if leader_only:
+        leader_candidates_uris = list(filter(lambda uri: uri in leaders_uris, candidates_uris))
+        if len(leader_candidates_uris) == 0:
+            return None, "Not found any leader instance between the candidates: %s" % ', '.join(candidates_uris)
+        candidates_uris = leader_candidates_uris
+
+    control_instance_uri = candidates_uris[0]
     control_instance_name = names_by_uris[control_instance_uri]
 
     return control_instance_name, None
