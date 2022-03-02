@@ -15,6 +15,8 @@ README.md to use the newest tag with new release
 - Add `cartridge_log_dir_parent` to configure directory of logs
 - Add `cartridge_force_leader_control_instance` variable to choose a control
   instance among the leaders
+- Add `cartridge_app_config_upload_http_timeout` variable to configure timeout to
+  wait config upload in HTTP mode.
 
 ### Fixed
 
@@ -24,7 +26,7 @@ README.md to use the newest tag with new release
 - Fixed backup folder permissions
 - Handle empty values in `helpers.py`
 - Fixed templates of systemd units for TGZ packages
-- The `upload_config_timeout` variable is used in the `upload_app_config` step
+- The twophase timeouts is used in the `upload_app_config` step
 
 ## [1.11.0] - 2021-07-30
 
