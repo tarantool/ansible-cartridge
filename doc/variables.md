@@ -158,6 +158,7 @@ For more details see [scenario documentation](/doc/scenario.md).
 - `cartridge_app_config_upload_mode` (`string`): mode of config uploading (`lua`, `http` or `tdg`);
 - `cartridge_app_config_upload_url` (`string`): url of instance to upload
   config (`http://127.0.0.1:{control_instance.http_port}/admin/config` by default);
+- `cartridge_app_config_upload_http_timeout` (`number`, default: `30`): time in seconds to wait config upload in HTTP mode;
 - `cartridge_tdg_token` (`string`): token to upload config by HTTP in TDG;
 - `cartridge_auth`: (`dict`): [authorization configuration](/doc/auth.md);
 - `cartridge_failover_params` (`dict`): [failover](/doc/failover.md) parameters;

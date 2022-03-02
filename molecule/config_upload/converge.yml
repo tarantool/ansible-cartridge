@@ -27,6 +27,7 @@
         cartridge_app_config_path: './configs/config.yml'
         cartridge_app_config_upload_mode: null
         cartridge_app_config_upload_url: 'http://vm1:3301/admin/config'
+        cartridge_app_config_upload_http_timeout: 30
         expected_test_section: {config-file-key: yml}
 
     - name: 'Upload YAML config by Lua'
@@ -36,6 +37,7 @@
         cartridge_app_config_path: './configs/config.yaml'
         cartridge_app_config_upload_mode: null
         cartridge_app_config_upload_url: 'http://vm1:3302/admin/config'
+        cartridge_app_config_upload_http_timeout: 30
         expected_test_section: {config-file-key: yaml}
 
     # File config to Cartridge by HTTP
@@ -47,6 +49,7 @@
         cartridge_app_config_path: './configs/config.yml'
         cartridge_app_config_upload_mode: 'http'
         cartridge_app_config_upload_url: null
+        cartridge_app_config_upload_http_timeout: 30
         expected_test_section: {config-file-key: yml}
 
     - name: 'Upload YAML config by HTTP'
@@ -56,6 +59,7 @@
         cartridge_app_config_path: './configs/config.yaml'
         cartridge_app_config_upload_mode: 'http'
         cartridge_app_config_upload_url: null
+        cartridge_app_config_upload_http_timeout: 30
         expected_test_section: {config-file-key: yaml}
 
     ###############
@@ -72,6 +76,7 @@
         cartridge_app_config_path: './configs/config-yaml'
         cartridge_app_config_upload_mode: 'lua'
         cartridge_app_config_upload_url: null
+        cartridge_app_config_upload_http_timeout: 30
     - name: 'Check upload config failed'
       assert:
         fail_msg: 'Upload folder config by Lua should fail'
@@ -91,6 +96,7 @@
         cartridge_app_config_path: './configs/config-yml-json'
         cartridge_app_config_upload_mode: null
         cartridge_app_config_upload_url: null
+        cartridge_app_config_upload_http_timeout: 30
     - name: 'Check upload config failed'
       assert:
         fail_msg: 'Upload folder config by HTTP to Cartridge should fail'
@@ -110,6 +116,7 @@
         cartridge_app_config_path: './configs/config.yml'
         cartridge_app_config_upload_mode: 'tdg'
         cartridge_app_config_upload_url: null
+        cartridge_app_config_upload_http_timeout: 30
     - name: 'Check upload config failed'
       assert:
         fail_msg: 'Upload file config to Cartridge by TDG mode should fail'
@@ -129,9 +136,30 @@
         cartridge_app_config_path: './configs/config.zip'
         cartridge_app_config_upload_mode: 'tdg'
         cartridge_app_config_upload_url: null
+        cartridge_app_config_upload_http_timeout: 30
     - name: 'Check upload config failed'
       assert:
         fail_msg: 'Upload ZIP config to Cartridge by TDG mode should fail'
         success_msg: 'Upload ZIP config to Cartridge by TDG mode failed'
         that: apply_app_config_res.failed  # Here will be error from Cartridge
+      run_once: true
+
+    # HTTP timeout for upload
+
+    - name: 'Upload YML config by HTTP'
+      ignore_errors: true
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_app_config_path: './configs/config.yml'
+        cartridge_app_config_upload_mode: 'http'
+        cartridge_app_config_upload_url: 'http://vm1:3301/admin/config'
+        cartridge_app_config_upload_http_timeout: 0
+    - name: 'Check upload config failed'
+      assert:
+        fail_msg: 'urlopen should raise error'
+        success_msg: 'urlopen raises error'
+        that:
+          - apply_app_config_res.failed
+          - '"urlopen error" in apply_app_config_res.msg'
       run_once: true

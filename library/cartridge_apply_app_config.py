@@ -16,6 +16,11 @@ argument_spec = {
     'upload_url': {'required': False, 'type': 'str'},
     'cluster_cookie': {'required': False, 'type': 'str'},
     'tdg_token': {'required': False, 'type': 'str'},
+    'http_timeout': {'required': False, 'type': 'int'},
+
+    'netbox_call_timeout': {'required': False, 'type': 'int'},
+    'upload_config_timeout': {'required': False, 'type': 'int'},
+    'apply_config_timeout': {'required': False, 'type': 'int'},
 }
 
 LUA_MODE = 'lua'
@@ -50,14 +55,14 @@ def patch_file_clusterwide(control_console, file_path):
     return changed
 
 
-def send_on_http(upload_url, headers, config_path):
+def send_on_http(upload_url, headers, config_path, http_timeout):
     headers.update({
         'Content-Length': os.stat(config_path).st_size
     })
 
     with open(config_path, 'rb') as data:
         try:
-            resp = open_url(upload_url, method='PUT', headers=headers, data=data)
+            resp = open_url(upload_url, method='PUT', headers=headers, data=data, timeout=http_timeout)
         except Exception as e:
             assert hasattr(e, 'code'), str(e)
             resp = e
@@ -77,8 +82,7 @@ def send_on_http(upload_url, headers, config_path):
     return True
 
 
-def apply_tdg_config(console_sock, path):
-    control_console = helpers.get_control_console(console_sock)
+def apply_tdg_config(control_console, path):
     _, err = control_console.eval_res_err('''
         return admin.upload_config_api(...)
     ''', path)
@@ -147,11 +151,7 @@ def prepare_config(config_path, output_format, upload_mode):
 ####################
 
 
-def get_tdg_upload_mode(console_sock):
-    if console_sock is None:
-        return 'http'
-
-    control_console = helpers.get_control_console(console_sock)
+def get_tdg_upload_mode(control_console):
     return control_console.eval_res_err('''
         if rawget(_G, 'admin') ~= nil and rawget(_G.admin, 'upload_config_api') ~= nil then
             return 'lua'
@@ -160,12 +160,9 @@ def get_tdg_upload_mode(console_sock):
     ''')[0]
 
 
-def get_tdg_http_headers(console_sock, tdg_token):
+def get_tdg_http_headers(control_console, tdg_token):
     if tdg_token is None:
         return {}
-
-    assert console_sock is not None, "Console socket is required for TDG mode"
-    control_console = helpers.get_control_console(console_sock)
 
     tdg_version = control_console.eval_res_err('''
         local ok, app_version = pcall(require, 'common.app_version')
@@ -208,54 +205,51 @@ def prepare_upload_mode(upload_mode, remote_config_path):
     return upload_mode
 
 
-def get_output_format_and_apply_config_func_for_lua(console_sock):
-    assert console_sock is not None, "Console socket is required for Lua mode"
-
-    control_console = helpers.get_control_console(console_sock)
-
+def get_output_format_and_apply_config_func_for_lua(control_console):
     return FILE_OUTPUT_FORMAT, lambda path: patch_file_clusterwide(control_console, path)
 
 
-def get_output_format_and_apply_config_func_for_http(upload_url, cluster_cookie):
+def get_output_format_and_apply_config_func_for_http(upload_url, cluster_cookie, http_timeout):
     assert cluster_cookie is not None, 'Cluster cookie is required for HTTP mode'
     assert upload_url is not None, 'Upload URL is required for HTTP mode'
 
     headers = {'Authorization': basic_auth_header('admin', cluster_cookie)}
 
-    return FILE_OUTPUT_FORMAT, lambda path: send_on_http(upload_url, headers, path)
+    return FILE_OUTPUT_FORMAT, lambda path: send_on_http(upload_url, headers, path, http_timeout)
 
 
-def get_output_format_and_apply_config_func_for_tdg(console_sock, upload_url, tdg_token):
-    tdg_upload_mode = get_tdg_upload_mode(console_sock)
+def get_output_format_and_apply_config_func_for_tdg(control_console, upload_url, tdg_token, http_timeout):
+    tdg_upload_mode = get_tdg_upload_mode(control_console)
 
     if tdg_upload_mode == 'http':
         assert upload_url is not None, 'Upload URL is required for TDG mode'
 
-        headers = get_tdg_http_headers(console_sock, tdg_token)
+        headers = get_tdg_http_headers(control_console, tdg_token)
 
-        return ZIP_OUTPUT_FORMAT, lambda path: send_on_http(upload_url, headers, path)
+        return ZIP_OUTPUT_FORMAT, lambda path: send_on_http(upload_url, headers, path, http_timeout)
 
     elif tdg_upload_mode == 'lua':
-        return DIR_OUTPUT_FORMAT, lambda path: apply_tdg_config(console_sock, path)
+        return DIR_OUTPUT_FORMAT, lambda path: apply_tdg_config(control_console, path)
 
     raise AssertionError("Unknown TDG upload mode '%s'" % tdg_upload_mode)
 
 
 def get_output_format_and_apply_config_func(
     upload_mode,
-    console_sock=None,
+    control_console=None,
     upload_url=None,
     cluster_cookie=None,
     tdg_token=None,
+    http_timeout=None,
 ):
     if upload_mode == LUA_MODE:
-        return get_output_format_and_apply_config_func_for_lua(console_sock)
+        return get_output_format_and_apply_config_func_for_lua(control_console)
 
     elif upload_mode == HTTP_MODE:
-        return get_output_format_and_apply_config_func_for_http(upload_url, cluster_cookie)
+        return get_output_format_and_apply_config_func_for_http(upload_url, cluster_cookie, http_timeout)
 
     elif upload_mode == TDG_MODE:
-        return get_output_format_and_apply_config_func_for_tdg(console_sock, upload_url, tdg_token)
+        return get_output_format_and_apply_config_func_for_tdg(control_console, upload_url, tdg_token, http_timeout)
 
     raise AssertionError("Unknown upload mode '%s'" % upload_mode)
 
@@ -266,6 +260,10 @@ def get_output_format_and_apply_config_func(
 
 
 def apply_app_config(params):
+    console_sock = params['console_sock']
+    control_console = helpers.get_control_console(console_sock)
+    helpers.set_twophase_options_from_params(control_console, params)
+
     # We cannot use the fact 'dest' from the copy task,
     # because in the case of transferring a folder with one file,
     # 'dest' will contain the path to the file, not the path to the folder.
@@ -279,10 +277,11 @@ def apply_app_config(params):
 
     output_format, apply_config_func = get_output_format_and_apply_config_func(
         upload_mode,
-        console_sock=params['console_sock'],
+        control_console=control_console,
         upload_url=params['upload_url'],
         cluster_cookie=params['cluster_cookie'],
         tdg_token=params['tdg_token'],
+        http_timeout=params.get('http_timeout'),
     )
 
     temp_paths = [remote_config_path]

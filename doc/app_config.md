@@ -121,6 +121,9 @@ which is on the same machine as the control instance:
 cartridge_app_config_upload_url: 'http://10.0.0.102:8083/admin/config'
 ```
 
+If you have a large configuration or slow connection, you can increase
+the upload timeout with `cartridge_app_config_upload_http_timeout` variable.
+
 **Note** that directory uploading by HTTP mode is not yet supported.
 
 ### TDG mode

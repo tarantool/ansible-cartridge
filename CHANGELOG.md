@@ -24,6 +24,7 @@ README.md to use the newest tag with new release
 - Fixed backup folder permissions
 - Handle empty values in `helpers.py`
 - Fixed templates of systemd units for TGZ packages
+- The `upload_config_timeout` variable is used in the `upload_app_config` step
 
 ## [1.11.0] - 2021-07-30
 

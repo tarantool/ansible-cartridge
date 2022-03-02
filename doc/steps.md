@@ -332,6 +332,7 @@ Input variables from config:
 - `cartridge_app_config_upload_url` - url of instance to upload config
   (`http://127.0.0.1:{control_instance.http_port}/admin/config` by default);
 - `cartridge_cluster_cookie` - cluster cookie for all cluster instances;
+- `cartridge_app_config_upload_http_timeout` - time in seconds to wait config upload in HTTP mode;
 - `cartridge_tdg_token` - token to upload config by HTTP in TDG.
 
 ## Step `configure_app_config`
