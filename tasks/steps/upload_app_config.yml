@@ -28,6 +28,10 @@
         }}'
         cluster_cookie: '{{ cartridge_cluster_cookie }}'
         tdg_token: '{{ cartridge_tdg_token }}'
+        http_timeout: '{{ cartridge_app_config_upload_http_timeout }}'
+        netbox_call_timeout: '{{ twophase_netbox_call_timeout }}'
+        upload_config_timeout: '{{ twophase_upload_config_timeout }}'
+        apply_config_timeout: '{{ twophase_apply_config_timeout }}'
       register: apply_app_config_res
 
     - name: 'Add uploaded config to "temporary_files" fact'

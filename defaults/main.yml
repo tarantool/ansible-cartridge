@@ -102,6 +102,7 @@ cartridge_app_config: null
 cartridge_app_config_path: null
 cartridge_app_config_upload_mode: null
 cartridge_app_config_upload_url: null
+cartridge_app_config_upload_http_timeout: 30
 cartridge_tdg_token: null
 
 cartridge_auth: null
