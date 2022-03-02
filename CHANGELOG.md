@@ -13,6 +13,8 @@ README.md to use the newest tag with new release
 ### Added
 
 - Add `cartridge_log_dir_parent` to configure directory of logs
+- Add `cartridge_force_leader_control_instance` variable to choose a control
+  instance among the leaders
 
 ### Fixed
 

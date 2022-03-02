@@ -647,10 +647,17 @@ def patch_clusterwide_config(control_console, new_sections):
     return True, None
 
 
-def enrich_replicasets_with_leaders(control_console, replicasets):
+def get_active_leaders(control_console):
     leaders, err = control_console.eval_res_err('''
         return require('cartridge.failover').get_active_leaders()
     ''')
+    if err is None and not leaders:
+        leaders = {}
+    return leaders, err
+
+
+def enrich_replicasets_with_leaders(control_console, replicasets):
+    leaders, err = get_active_leaders(control_console)
     if err:
         return err
 
@@ -754,6 +761,7 @@ class Helpers:
     read_yaml_file = staticmethod(read_yaml_file)
     get_clusterwide_config = staticmethod(get_clusterwide_config)
     patch_clusterwide_config = staticmethod(patch_clusterwide_config)
+    get_active_leaders = staticmethod(get_active_leaders)
     enrich_replicasets_with_leaders = staticmethod(enrich_replicasets_with_leaders)
     get_disabled_instances = staticmethod(get_disabled_instances)
     get_topology_checksum = staticmethod(get_topology_checksum)

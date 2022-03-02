@@ -34,14 +34,6 @@ def check_leaders_promotion_is_possible(control_console):
     return None
 
 
-def get_active_leaders(control_console):
-    active_leaders, _ = control_console.eval_res_err('''
-        return require('cartridge.failover').get_active_leaders()
-    ''')
-
-    return active_leaders
-
-
 def call_failover_promote(control_console, replicaset_leaders, force_inconsistency):
     opts = {
         'force_inconsistency': force_inconsistency,
@@ -184,7 +176,7 @@ def failover_promote(params):
     # set two-phase commit opts
     helpers.set_twophase_options_from_params(control_console, params)
 
-    active_leaders = get_active_leaders(control_console)
+    active_leaders, _ = helpers.get_active_leaders(control_console)
 
     _, err = call_failover_promote(control_console, replicaset_leaders, force_inconsistency)
     if err is not None:
@@ -194,7 +186,7 @@ def failover_promote(params):
             warnings=critical_warnings,
         )
 
-    new_active_leaders = get_active_leaders(control_console)
+    new_active_leaders, _ = helpers.get_active_leaders(control_console)
 
     if critical_warnings:
         return helpers.ModuleRes(
