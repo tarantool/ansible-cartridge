@@ -10,6 +10,8 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+## [1.12.0] - 2022-03-03
+
 ### Added
 
 - Add `cartridge_log_dir_parent` to configure directory of logs
