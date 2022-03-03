@@ -316,6 +316,17 @@ cartridge_cached_fact_names_by_target:
     - cartridge_force_restore
     - cartridge_allow_alien_backup
     - cartridge_skip_cleanup_on_restore
+    - cartridge_app_config_path
+    - cartridge_app_config_upload_http_timeout
+    - cartridge_app_config_upload_mode
+    - cartridge_app_config_upload_url
+    - cartridge_create_user_group_for_tgz
+    - cartridge_force_advertise_uris_change
+    - cartridge_force_leader_control_instance
+    - cartridge_ignore_extra_cluster_instances
+    - cartridge_ignore_extra_cluster_replicasets
+    - cartridge_ignore_renamed_replicasets
+    - cartridge_tdg_token
   count_disabled_instances:
     - instance_info
     - disabled
