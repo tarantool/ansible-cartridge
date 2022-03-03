@@ -34,6 +34,17 @@ PARAMS_THE_SAME_FOR_ALL_HOSTS = [
     'edit_topology_timeout',
     'edit_topology_healthy_timeout',
     'edit_topology_allow_missed_instances',
+    'cartridge_app_config_path',
+    'cartridge_app_config_upload_http_timeout',
+    'cartridge_app_config_upload_mode',
+    'cartridge_app_config_upload_url',
+    'cartridge_create_user_group_for_tgz',
+    'cartridge_force_advertise_uris_change',
+    'cartridge_force_leader_control_instance',
+    'cartridge_ignore_extra_cluster_instances',
+    'cartridge_ignore_extra_cluster_replicasets',
+    'cartridge_ignore_renamed_replicasets',
+    'cartridge_tdg_token',
 ]
 
 CONFIG_REQUIRED_PARAMS = ['advertise_uri']
@@ -223,6 +234,17 @@ SCHEMA = {
     'show_issues': bool,
     'wait_cluster_has_no_issues_retries': int,
     'wait_cluster_has_no_issues_delay': int,
+    'cartridge_app_config_path': str,
+    'cartridge_app_config_upload_http_timeout': int,
+    'cartridge_app_config_upload_mode': str,
+    'cartridge_app_config_upload_url': str,
+    'cartridge_create_user_group_for_tgz': bool,
+    'cartridge_force_advertise_uris_change': bool,
+    'cartridge_force_leader_control_instance': bool,
+    'cartridge_ignore_extra_cluster_instances': bool,
+    'cartridge_ignore_extra_cluster_replicasets': bool,
+    'cartridge_ignore_renamed_replicasets': bool,
+    'cartridge_tdg_token': str,
 }
 
 
