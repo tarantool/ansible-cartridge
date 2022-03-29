@@ -10,7 +10,7 @@ from ansible.module_utils.urls import open_url, basic_auth_header
 
 argument_spec = {
     'local_config_path': {'required': True, 'type': 'str'},
-    'remote_dir': {'required': False, 'type': 'str', 'default': '/tmp/'},
+    'remote_dir': {'required': False, 'type': 'str', 'default': '/tmp/tarantool.cartridge.configs/'},
     'upload_mode': {'required': False, 'type': 'str'},
     'console_sock': {'required': False, 'type': 'str'},
     'upload_url': {'required': False, 'type': 'str'},
