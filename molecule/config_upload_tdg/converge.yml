@@ -1,5 +1,7 @@
 ---
 
+# We have configs in subfolders with the same names "config" to check the replacement of temporary folders
+
 - name: 'Test file config'
   hosts: cluster
   become: true
@@ -34,7 +36,7 @@
       import_role:
         name: ansible-cartridge
       vars:
-        cartridge_app_config_path: './configs/config-yml'
+        cartridge_app_config_path: './configs/config-yml/config'
         expected_test_section: {config-dir-key: yml}
 
     # Folder config
@@ -43,12 +45,29 @@
       import_role:
         name: ansible-cartridge
       vars:
-        cartridge_app_config_path: './configs/config-yml-avsc'
+        cartridge_app_config_path: './configs/config-yml-avsc/config'
         expected_test_section: {config-dir-key: yml-avsc}
 
     ###############
     # ERROR CASES #
     ###############
+
+    # Folder config with "model.avsc" to test incorrect folder configs with the same names
+
+    - name: 'Upload folder config with "model.avsc" only'
+      ignore_errors: true
+      import_role:
+        name: ansible-cartridge
+      vars:
+        cartridge_app_config_path: './configs/config-avsc/config'
+    - name: 'Check upload config failed'
+      assert:
+        fail_msg: 'Upload config without config.yml should fail, but config.yml was not removed from previous upload'
+        success_msg: 'Upload config without config.yml to TDG failed'
+        that:
+          - apply_app_config_res.failed
+          - "'No such file or directory' in apply_app_config_res.msg"
+      run_once: true
 
     # YAML file config
 

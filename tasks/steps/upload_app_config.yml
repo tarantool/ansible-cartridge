@@ -10,16 +10,21 @@
   when: cartridge_app_config_path is not none
   tags: cartridge-config
   block:
+    - name: 'Remove previously configs'
+      ansible.builtin.file:
+        path: '/tmp/tarantool.cartridge.configs/'
+        state: absent
+
     - name: 'Copy application config on remote host'
       any_errors_fatal: true
       copy:
         src: '{{ cartridge_app_config_path }}'
-        dest: '/tmp/'
+        dest: '/tmp/tarantool.cartridge.configs/'
 
     - name: 'Apply application config'
       cartridge_apply_app_config:
         local_config_path: '{{ cartridge_app_config_path }}'
-        remote_dir: '/tmp/'
+        remote_dir: '/tmp/tarantool.cartridge.configs/'
         upload_mode: '{{ cartridge_app_config_upload_mode }}'
         console_sock: '{{ control_instance.console_sock }}'
         upload_url: '{{
