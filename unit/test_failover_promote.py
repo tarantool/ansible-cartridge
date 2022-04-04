@@ -241,7 +241,7 @@ class TestFailoverPromote(unittest.TestCase):
             },
         }
         if force_inconsistency:
-            params.update({'force_inconsistency': True})
+            params.update({'force_inconsistency': True, 'skip_error_on_change': True})
 
         res = call_failover_promote(
             self.console_sock,
@@ -260,6 +260,7 @@ class TestFailoverPromote(unittest.TestCase):
 
         exp_opts = {
             'force_inconsistency': True if force_inconsistency is True else None,
+            'skip_error_on_change': True if force_inconsistency is True else None,
         }
         self.assertEqual(calls[0], [exp_replicaset_leaders_params, exp_opts])
 

@@ -29,6 +29,7 @@ should be used. It's a dictionary with fields:
 and leaders aliases;
 * `force_inconsistency` (`bool`): make promotion forcefully, don't wait for the
 consistent switchover.
+* `skip_error_on_change` (`bool`): skip etcd error in specific cases.
 
 This playbook says: **Promote leaders directly to these instances**:
 
@@ -45,6 +46,7 @@ This playbook says: **Promote leaders directly to these instances**:
       - failover_promote
     cartridge_failover_promote_params:
       force_inconsistency: true
+      skip_error_on_change: false
       replicaset_leaders:
         storage-1: storage-1-replica
         storage-2: storage-2-replica
@@ -58,6 +60,7 @@ parameters:
 
 * `force_inconsistency` (`bool`): make promotion forcefully, don't wait for the
 consistent switchover.
+* `skip_error_on_change` (`bool`): skip etcd error in specific cases.
 
 For example, you want to switch all leaders to data center 1.
 You have group `DC1` in your inventory that describes which instances belong to
@@ -91,6 +94,7 @@ This playbook says: **Promote leaders to instances from "DC1" group**:
     # can be additionally specified:
     cartridge_failover_promote_params:
       force_inconsistency: true
+      skip_error_on_change: true
 ```
 
 ## Rolling update: Plan

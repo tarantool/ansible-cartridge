@@ -1096,6 +1096,7 @@ class TestValidateConfig(unittest.TestCase):
                 'cartridge_failover_promote_params': {
                     'replicaset_leaders': {'rpl-1': 'instance-2'},
                     'force_inconsistency': False,
+                    'skip_error_on_change': False,
                 },
             },
         })

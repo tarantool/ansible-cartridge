@@ -226,6 +226,7 @@ SCHEMA = {
     'cartridge_failover_promote_params': {
         'replicaset_leaders': dict,
         'force_inconsistency': bool,
+        'skip_error_on_change': bool,
     },
     'allowed_members_states': [str],
     'wait_members_alive_retries': int,

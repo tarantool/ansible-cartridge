@@ -471,7 +471,7 @@ More details in [rolling update doc](/doc/rolling_update.md).
 Input variables from config:
 
 - `cartridge_failover_promote_params` - promote leaders params.
-  In variable, only `force_inconsistency` parameter is used (leaders are got from specified play hosts).
+  Only `force_inconsistency` and `skip_error_on_change` parameters are used (leaders are retrieved from specified play hosts).
   More details in [rolling update doc](/doc/rolling_update.md).
 
 ## Step `eval`
