@@ -43,6 +43,7 @@ but can be used in a custom one:
 - [backup](#step-backup)
 - [backup_start](#step-backup_start)
 - [backup_stop](#step-backup_stop)
+- [backup_files](#step-backup_files)
 - [restore](#step-restore)
 - [check_new_topology](#step-check_new_topology)
 
@@ -591,10 +592,31 @@ Input variables from config:
   (`.tarantool.cookie` will be kept independently of this variable);
   it's possible to use bash patterns, e.g. `*.control`.
 - `cartridge_restore_backup_path` - path to the instance backup archive on the remote machine;
+- `cartridge_restore_backup_path_local` - path to the instance backup archive on the local machine;
 - `cartridge_remote_backups_dir` - directory with backups on the remote;
 - `cartridge_force_restore` - flag indicates that conflicting files should be overwritten;
 - `cartridge_allow_alien_backup` - flag indicates that backup of instance with another name can be used;
 - `cartridge_skip_cleanup_on_restore` - flag indicates that cleanup before restoring should be skipped.
+
+### Step `backup_files`
+
+Create a [backup](/doc/backups.md) archive for each **stopped** instance and fetch it on the local machine.
+
+Input variables from config:
+
+- `cartridge_remote_backups_dir` - directory to store backups on the remote;
+- `cartridge_fetch_backups` - flag indicates that backups should be fetched the local machine;
+- `cartridge_fetch_backups_dir` -  a directory on the local machine where backups should be fetched if `cartridge_fetch_backups` is `true`. This path is relative to the playbook path;
+- `cartridge_app_user` - user which will own the links;
+- `cartridge_app_group` - group which will own the links;
+- `stateboard` - indicates that the instance is a stateboard.
+
+Output facts:
+
+- `instance_backup_files` - list of instance files to back up;
+- `backup_files_from_machine` - list of files to back up for all instances on the same machine as a current one;
+- `backup_archive_path` - path to the instance backup archive on the remote machine;
+- `fetched_backup_archive_path` - path to the fetched backup file (is set only if `cartridge_fetch_backups` is `true`).
 
 ## Step `check_new_topology`
 

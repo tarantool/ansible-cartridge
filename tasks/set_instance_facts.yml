@@ -144,6 +144,7 @@
       cartridge_fetch_backups: '{{ cartridge_fetch_backups }}'
       cartridge_fetch_backups_dir: '{{ cartridge_fetch_backups_dir }}'
       cartridge_restore_backup_path: '{{ cartridge_restore_backup_path }}'
+      cartridge_restore_backup_path_local: '{{ cartridge_restore_backup_path_local }}'
       cartridge_force_restore: '{{ cartridge_force_restore }}'
       cartridge_allow_alien_backup: '{{ cartridge_allow_alien_backup }}'
       cartridge_skip_cleanup_on_restore: '{{ cartridge_skip_cleanup_on_restore }}'

@@ -10,6 +10,11 @@ Please update `ansible-galaxy install` command in
 README.md to use the newest tag with new release
 -->
 
+### Added
+
+- Add `backup_files` step to archive files of stopped instance
+- Add `cartridge_restore_backup_path_local` to restore instance from local backup
+
 ### Fixed
 
 - Remove old app configurations before uploading a new one

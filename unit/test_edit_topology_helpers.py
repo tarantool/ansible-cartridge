@@ -255,6 +255,7 @@ class TestGetReplicasetParams(unittest.TestCase):
             'failover_priority': ['i1', 'i2', 'i3'],
         }
 
+        helpers.WARNINGS = []
         params, err = get_replicaset_params(
             replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
         )
@@ -276,6 +277,7 @@ class TestGetReplicasetParams(unittest.TestCase):
             'failover_priority': ['i1', 'unknown-2', 'i2', 'i3', 'unknown-1'],
         }
 
+        helpers.WARNINGS = []
         params, err = get_replicaset_params(
             replicaset, cluster_replicaset, cluster_instances, allow_missed_instances
         )
@@ -560,6 +562,7 @@ class TestGetServerParams(unittest.TestCase):
         self.assertIsNone(params)
 
         # server is not in cluster, try to set zone
+        helpers.WARNINGS = []
         instance_params = {
             'zone': 'some-zone',
         }
