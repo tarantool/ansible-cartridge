@@ -723,6 +723,11 @@ def glob_list_match(path, glob_list):
     return False
 
 
+def get_required_param(params, name):
+    assert params.get(name) is not None, 'Parameter "%s" is required' % name
+    return params[name]
+
+
 class Helpers:
     DYNAMIC_BOX_CFG_PARAMS = DYNAMIC_BOX_CFG_PARAMS
     MEMORY_SIZE_BOX_CFG_PARAMS = MEMORY_SIZE_BOX_CFG_PARAMS
@@ -766,3 +771,4 @@ class Helpers:
     get_disabled_instances = staticmethod(get_disabled_instances)
     get_topology_checksum = staticmethod(get_topology_checksum)
     glob_list_match = staticmethod(glob_list_match)
+    get_required_param = staticmethod(get_required_param)

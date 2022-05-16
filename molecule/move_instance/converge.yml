@@ -10,7 +10,7 @@
   tasks:
     # Backup files without fetching archive
 
-    - name: 'Call backup files'
+    - name: 'Stop instance and call backup'
       import_role:
         name: ansible-cartridge
       vars:

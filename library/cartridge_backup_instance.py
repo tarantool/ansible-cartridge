@@ -102,14 +102,11 @@ def backup_stop(control_console):
 
 
 def custom_backup(params):
-    custom_backup_files = params.get('custom_backup_files')
-    assert custom_backup_files is not None, 'Parameter "custom_backup_files" is required'
+    custom_backup_files = helpers.get_required_param(params, 'custom_backup_files')
 
     # ARCHIVE
-    instance_id = params.get('instance_id')
-    assert instance_id is not None, 'Parameter "instance_id" is required'
-    backups_dir = params.get('backups_dir')
-    assert backups_dir is not None, 'Parameter "backups_dir" is required'
+    instance_id = helpers.get_required_param(params, 'instance_id')
+    backups_dir = helpers.get_required_param(params, 'backups_dir')
     backup_archive_path = backup_pack(instance_id, backups_dir, custom_backup_files)
 
     return helpers.ModuleRes(changed=True, fact={
@@ -124,8 +121,7 @@ def tnt_backup(params):
 
     assert not (start_only and stop_only), "impossible to use 'start_only' with 'stop_only'"
 
-    console_sock = params.get('console_sock')
-    assert console_sock is not None, 'Parameter "console_sock" is required'
+    console_sock = helpers.get_required_param(params, 'console_sock')
     control_console = helpers.get_control_console(console_sock)
 
     if not helpers.box_cfg_was_called(control_console):
@@ -150,10 +146,8 @@ def tnt_backup(params):
         })
 
     # ARCHIVE
-    instance_id = params.get('instance_id')
-    assert instance_id is not None, 'Parameter "instance_id" is required'
-    backups_dir = params.get('backups_dir')
-    assert backups_dir is not None, 'Parameter "backups_dir" is required'
+    instance_id = helpers.get_required_param(params, 'instance_id')
+    backups_dir = helpers.get_required_param(params, 'backups_dir')
     backup_archive_path = backup_pack(instance_id, backups_dir, backup_files)
 
     # STOP
