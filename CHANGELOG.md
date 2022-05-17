@@ -18,6 +18,7 @@ README.md to use the newest tag with new release
 ### Fixed
 
 - Remove old app configurations before uploading a new one
+- Allow to downgrade RPMs and DEBs
 
 ## [1.12.0] - 2022-03-03
 

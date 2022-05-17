@@ -5,6 +5,7 @@
   yum:
     name: '{{ delivered_package_path }}'
     state: present
+    allow_downgrade: true
     update_cache: true
   register: install_rpm
   failed_when:
@@ -16,6 +17,8 @@
   any_errors_fatal: true
   apt:
     deb: '{{ delivered_package_path }}'
+    state: present
+    force: true  # `allow_downgrade` is supported in Ansible 2.12+ only
     update_cache: true
   when: package_info.type == 'deb'
 
