@@ -5,22 +5,25 @@ import time
 from ansible.module_utils.helpers import Helpers as helpers
 
 argument_spec = {
-    'console_sock': {'required': True, 'type': 'str'},
+    'console_sock': {'required': False, 'type': 'str'},
     'instance_id': {'required': False, 'type': 'str'},
     'stateboard': {'required': False, 'type': 'bool'},
     'backups_dir': {'required': False, 'type': 'str'},
     'instance_conf_file': {'required': False, 'type': 'str'},
     'app_conf_file': {'required': False, 'type': 'str'},
-
     'start_only': {'required': False, 'type': 'bool', 'default': False},
     'stop_only': {'required': False, 'type': 'bool', 'default': False},
+    'custom_backup_files': {'required': False, 'type': 'list'},
 }
 
 
 def backup_start(control_console, params):
-    stateboard = params['stateboard']
-    instance_conf_file = params['instance_conf_file']
-    app_conf_file = params['app_conf_file']
+    stateboard = params.get('stateboard')
+    assert stateboard is not None, 'Parameter "stateboard" is required'
+    instance_conf_file = params.get('instance_conf_file')
+    assert instance_conf_file is not None, 'Parameter "instance_conf_file" is required'
+    app_conf_file = params.get('app_conf_file')
+    assert app_conf_file is not None, 'Parameter "app_conf_file" is required'
 
     # create snapshot and start a backup
     backup_files, err = control_console.eval_res_err('''
@@ -81,7 +84,8 @@ def backup_pack(instance_id, backups_dir, backup_files):
 
     with tarfile.open(archive_path, "w:gz") as tar:
         for path in backup_files:
-            tar.add(path)
+            if os.path.exists(path):
+                tar.add(path)
 
     return archive_path
 
@@ -97,13 +101,27 @@ def backup_stop(control_console):
     return None
 
 
-def call_backup(params):
-    start_only = params['start_only']
-    stop_only = params['stop_only']
+def custom_backup(params):
+    custom_backup_files = helpers.get_required_param(params, 'custom_backup_files')
+
+    # ARCHIVE
+    instance_id = helpers.get_required_param(params, 'instance_id')
+    backups_dir = helpers.get_required_param(params, 'backups_dir')
+    backup_archive_path = backup_pack(instance_id, backups_dir, custom_backup_files)
+
+    return helpers.ModuleRes(changed=True, fact={
+        'backup_archive_path': backup_archive_path,
+        'backup_files': custom_backup_files,
+    })
+
+
+def tnt_backup(params):
+    start_only = params.get('start_only', False)
+    stop_only = params.get('stop_only', False)
 
     assert not (start_only and stop_only), "impossible to use 'start_only' with 'stop_only'"
 
-    console_sock = params['console_sock']
+    console_sock = helpers.get_required_param(params, 'console_sock')
     control_console = helpers.get_control_console(console_sock)
 
     if not helpers.box_cfg_was_called(control_console):
@@ -128,8 +146,8 @@ def call_backup(params):
         })
 
     # ARCHIVE
-    instance_id = params['instance_id']
-    backups_dir = params['backups_dir']
+    instance_id = helpers.get_required_param(params, 'instance_id')
+    backups_dir = helpers.get_required_param(params, 'backups_dir')
     backup_archive_path = backup_pack(instance_id, backups_dir, backup_files)
 
     # STOP
@@ -141,6 +159,13 @@ def call_backup(params):
         'backup_archive_path': backup_archive_path,
         'backup_files': backup_files,
     })
+
+
+def call_backup(params):
+    if params.get('custom_backup_files'):
+        return custom_backup(params)
+    else:
+        return tnt_backup(params)
 
 
 if __name__ == '__main__':

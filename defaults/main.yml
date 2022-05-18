@@ -163,6 +163,7 @@ cartridge_remote_backups_dir: /opt/tarantool/backups
 cartridge_fetch_backups: false
 cartridge_fetch_backups_dir: backups/
 cartridge_restore_backup_path: null
+cartridge_restore_backup_path_local: null
 cartridge_force_restore: false
 cartridge_allow_alien_backup: false
 cartridge_skip_cleanup_on_restore: false
@@ -313,6 +314,7 @@ cartridge_cached_fact_names_by_target:
     - cartridge_fetch_backups
     - cartridge_fetch_backups_dir
     - cartridge_restore_backup_path
+    - cartridge_restore_backup_path_local
     - cartridge_force_restore
     - cartridge_allow_alien_backup
     - cartridge_skip_cleanup_on_restore

@@ -182,6 +182,7 @@ SCHEMA = {
     'cartridge_fetch_backups': bool,
     'cartridge_fetch_backups_dir': str,
     'cartridge_restore_backup_path': str,
+    'cartridge_restore_backup_path_local': str,
     'cartridge_force_restore': bool,
     'cartridge_allow_alien_backup': bool,
     'cartridge_skip_cleanup_on_restore': bool,

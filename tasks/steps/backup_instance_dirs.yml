@@ -1,5 +1,16 @@
 ---
 
+- name: 'Get info about instance systemd service'
+  systemd:
+    name: '{{ instance_info.systemd_service }}'
+  register: systemd_status
+
+- name: 'Check that instance is stopped and disabled'
+  assert:
+    fail_msg: 'Stop and disable instance before files backup!'
+    success_msg: 'Instance is stopped and disabled'
+    that: systemd_status.status.ActiveState == "inactive"
+
 - name: 'Create backups dir'
   file:
     path: '{{ cartridge_remote_backups_dir }}'
@@ -11,12 +22,10 @@
 
 - name: 'Create instance backup archive'
   cartridge_backup_instance:
-    instance_id: '{{ instance_info.instance_id }}'
     stateboard: '{{ stateboard }}'
+    instance_id: '{{ instance_info.instance_id }}'
     backups_dir: '{{ cartridge_remote_backups_dir }}'
-    console_sock: '{{ instance_info.console_sock }}'
-    instance_conf_file: '{{ instance_info.conf_file }}'
-    app_conf_file: '{{ instance_info.app_conf_file }}'
+    custom_backup_files: '{{ instance_info.paths_to_backup_files }}'
   register: backup_res
 
 - name: 'Set "backup_archive_path" and "instance_backup_files" facts'

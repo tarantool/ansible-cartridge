@@ -212,6 +212,8 @@ For more details see [scenario documentation](/doc/scenario.md).
   the playbook path.
 - `cartridge_restore_backup_path` (`string`): path to the instance backup archive on the remote
   machine;
+- `cartridge_restore_backup_path_local` (`string`): path to the instance backup archive on the local
+  machine;
 - `cartridge_force_restore` (`boolean`, default: `false`): flag indicates that conflicting files
   should be overwritten;
 - `cartridge_allow_alien_backup` (`boolean`, default: `false`): flag indicates that backup of

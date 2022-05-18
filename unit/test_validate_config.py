@@ -52,6 +52,7 @@ PARAMS_BY_TYPES = {
         'cartridge_remote_backups_dir',
         'cartridge_fetch_backups_dir',
         'cartridge_restore_backup_path',
+        'cartridge_restore_backup_path_local',
         'cartridge_app_config_path',
         'cartridge_app_config_upload_mode',
         'cartridge_app_config_upload_url',

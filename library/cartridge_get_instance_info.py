@@ -31,6 +31,12 @@ def get_instance_systemd_service(app_name, instance_name, stateboard=False):
     return '%s@%s' % (app_name, instance_name)
 
 
+def get_instance_systemd_service_template(app_name, stateboard=False):
+    if stateboard:
+        return '%s-stateboard.service' % app_name
+    return '%s@.service' % app_name
+
+
 def get_instance_systemd_service_dir(systemd_dir, service_name):
     if not service_name.endswith('.service'):
         service_name += '.service'
@@ -74,18 +80,21 @@ def get_instance_info(params):
         'paths_to_remove_on_expel': set(),
         'files_to_remove_on_cleanup': set(),
         'dirs_to_remove_on_cleanup': set(),
+        'paths_to_backup_files': set(),
     }
 
     # app conf file
     instance_info['app_conf_file'] = get_app_conf_file(
         instance_vars['cartridge_conf_dir'], app_name
     )
+    instance_info['paths_to_backup_files'].add(instance_info['app_conf_file'])
 
     # instance conf file
     instance_info['conf_file'] = get_instance_conf_file(
         instance_vars['cartridge_conf_dir'], app_name, instance_name, instance_vars['stateboard'],
     )
     instance_info['paths_to_remove_on_expel'].add(instance_info['conf_file'])
+    instance_info['paths_to_backup_files'].add(instance_info['conf_file'])
 
     # instance id (e.g. used for conf section name)
     instance_info['instance_id'] = get_instance_conf_section(
@@ -111,6 +120,7 @@ def get_instance_info(params):
     )
     instance_info['paths_to_remove_on_expel'].add(instance_info['work_dir'])
     instance_info['dirs_to_remove_on_cleanup'].add(instance_info['work_dir'])
+    instance_info['paths_to_backup_files'].add(instance_info['work_dir'])
 
     # instance memtx dir
     instance_info['memtx_dir'] = None
@@ -120,6 +130,7 @@ def get_instance_info(params):
         )
         instance_info['paths_to_remove_on_expel'].add(instance_info['memtx_dir'])
         instance_info['dirs_to_remove_on_cleanup'].add(instance_info['memtx_dir'])
+        instance_info['paths_to_backup_files'].add(instance_info['memtx_dir'])
 
     # instance vinyl dir
     instance_info['vinyl_dir'] = None
@@ -129,6 +140,7 @@ def get_instance_info(params):
         )
         instance_info['paths_to_remove_on_expel'].add(instance_info['vinyl_dir'])
         instance_info['dirs_to_remove_on_cleanup'].add(instance_info['vinyl_dir'])
+        instance_info['paths_to_backup_files'].add(instance_info['vinyl_dir'])
 
     # instance wal dir
     instance_info['wal_dir'] = None
@@ -138,6 +150,7 @@ def get_instance_info(params):
         )
         instance_info['paths_to_remove_on_expel'].add(instance_info['wal_dir'])
         instance_info['dirs_to_remove_on_cleanup'].add(instance_info['wal_dir'])
+        instance_info['paths_to_backup_files'].add(instance_info['wal_dir'])
 
     # instance log dir
     instance_info['log_file'] = None
@@ -153,16 +166,22 @@ def get_instance_info(params):
     instance_info['systemd_service'] = get_instance_systemd_service(
         app_name, instance_name, instance_vars['stateboard']
     )
+    instance_info['paths_to_backup_files'].add(get_instance_systemd_service_template(
+        app_name, instance_vars['stateboard']
+    ))
+
     instance_info['systemd_service_dir'] = get_instance_systemd_service_dir(
         instance_vars['cartridge_systemd_dir'],
         instance_info['systemd_service'],
     )
     instance_info['systemd_service_env_file'] = get_systemd_service_env_file(instance_info['systemd_service_dir'])
+    instance_info['paths_to_backup_files'].add(instance_info['systemd_service_env_file'])
 
     # tmpfiles conf
     instance_info['tmpfiles_conf'] = os.path.join(
         instance_vars['cartridge_tmpfiles_dir'], '%s.conf' % app_name
     )
+    instance_info['paths_to_backup_files'].add(instance_info['tmpfiles_conf'])
 
     # code dirs
     if not instance_vars['cartridge_multiversion']:
@@ -182,6 +201,7 @@ def get_instance_info(params):
         )
 
     instance_info['paths_to_remove_on_expel'] = list(sorted(instance_info['paths_to_remove_on_expel']))
+    instance_info['paths_to_backup_files'] = list(sorted(instance_info['paths_to_backup_files']))
 
     instance_info['files_to_remove_on_cleanup'] = list(sorted(filter_paths_by_glob_list(
         instance_info['files_to_remove_on_cleanup'],
