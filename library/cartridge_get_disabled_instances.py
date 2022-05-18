@@ -38,6 +38,7 @@ def count_cluster_disabled_instances(module_hostvars, play_hosts, ignore_split_b
         lambda name: all([
             get_disabled_instances_from_instance_config(module_hostvars[name]) is not None,
             get_topology_checksum_from_instance_config(module_hostvars[name]) is not None,
+            not helpers.is_expelled(module_hostvars[name]),
         ]),
         play_hosts,
     ))
