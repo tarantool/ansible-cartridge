@@ -123,10 +123,15 @@ def main(event_name, repo_owner, review_state, ref):
     ee_matrix = []
     tdg_matrix = []
 
-    if event_name == 'push' or event_name == 'pull_request' and repo_owner != 'tarantool':
+    if any([
+        event_name == 'push',
+        event_name == 'pull_request' and repo_owner != 'tarantool',
+        event_name == 'workflow_dispatch',
+        # review_state == 'approved',
+        # ref == 'refs/heads/master',
+    ]):
         ce_matrix.append(get_ce_params())
 
-    if event_name == 'workflow_dispatch' or review_state == 'approved' or ref == 'refs/heads/master':
         ee_matrix.append(get_ee_params())
 
         all_scenarios = sorted(os.listdir(MOLECULE_SCENARIOS_PATH))
