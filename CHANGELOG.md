@@ -12,7 +12,7 @@ README.md to use the newest tag with new release
 
 ### Added
 
-- Add `backup_files` step to archive files of stopped instance
+- Add `backup_instance_dirs` step to archive files of stopped instance
 - Add `cartridge_restore_backup_path_local` to restore instance from local backup
 
 ### Fixed

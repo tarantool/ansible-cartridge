@@ -43,7 +43,7 @@ but can be used in a custom one:
 - [backup](#step-backup)
 - [backup_start](#step-backup_start)
 - [backup_stop](#step-backup_stop)
-- [backup_files](#step-backup_files)
+- [backup_instance_dirs](#step-backup_instance_dirs)
 - [restore](#step-restore)
 - [check_new_topology](#step-check_new_topology)
 
@@ -598,7 +598,7 @@ Input variables from config:
 - `cartridge_allow_alien_backup` - flag indicates that backup of instance with another name can be used;
 - `cartridge_skip_cleanup_on_restore` - flag indicates that cleanup before restoring should be skipped.
 
-### Step `backup_files`
+### Step `backup_instance_dirs`
 
 Create a [backup](/doc/backups.md) archive for each **stopped** instance and fetch it on the local machine.
 

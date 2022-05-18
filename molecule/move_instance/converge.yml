@@ -17,7 +17,7 @@
         cartridge_fetch_backups: false
         cartridge_scenario:
           - stop_instance
-          - backup_files
+          - backup_instance_dirs
 
     - name: 'Check that fetching archive was skipped'
       assert:
@@ -40,7 +40,7 @@
         cartridge_fetch_backups: true
         cartridge_scenario:
           - stop_instance
-          - backup_files
+          - backup_instance_dirs
 
     - name: "Check that fetching archive wasn't skipped"
       assert:

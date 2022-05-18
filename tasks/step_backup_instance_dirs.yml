@@ -6,4 +6,4 @@
     - cartridge-replicasets
     - cartridge-config
 
-- import_tasks: 'steps/backup_files.yml'
+- import_tasks: 'steps/backup_instance_dirs.yml'
