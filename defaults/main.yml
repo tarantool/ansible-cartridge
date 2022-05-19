@@ -332,6 +332,7 @@ cartridge_cached_fact_names_by_target:
   count_disabled_instances:
     - instance_info
     - disabled
+    - expelled
   facts_for_machines:
     - expelled
     - disabled

@@ -69,6 +69,7 @@ class TestGetCachedFacts(unittest.TestCase):
             },
             'count_disabled_instances': {
                 'instance_1': {
+                    'expelled': True,
                     'instance_info': {
                         'disabled_instances': [],
                     },
