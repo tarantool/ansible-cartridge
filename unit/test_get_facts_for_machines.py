@@ -33,6 +33,7 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
             },
             'instance-1-1': {
                 'ansible_host': 'host-1',
+                'disabled': True,
             },
             'instance-1-2': {
                 'ansible_host': 'host-1',
@@ -68,6 +69,10 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
             'instance-2-4': {
                 'ansible_host': 'host-2',
                 'ansible_port': 44,  # one more different port
+            },
+            'instance-3-1': {
+                'ansible_host': 'host-3',
+                'disabled': True,
             },
         }
 
@@ -105,13 +110,18 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
             'stateboard-1', 'stateboard-2',
             'instance-1-1', 'instance-1-2', 'instance-1-3', 'instance-1-4',
             'instance-2-1', 'instance-2-2', 'instance-2-3', 'instance-2-4',
+            'instance-3-1',
         ])
         self.assertFalse(res.failed, res.msg)
 
         single_instances_for_each_machine = res.kwargs['single_instances_for_each_machine']
         self.assertSetEqual(set(single_instances_for_each_machine), {
-            'instance-1-1', 'instance-1-3',
-            'instance-2-1', 'instance-2-3', 'instance-2-4',
+            'instance-1-2',  # host-1:22
+            'instance-1-3',  # host-1:33
+            'instance-2-1',  # host-2:22
+            'instance-2-3',  # host-2:33
+            'instance-2-4',  # host-2:44
+            'instance-3-1',  # host-3:22
         })
         self.assertEqual(res.kwargs['instances_from_same_machine'], {
             # host-1:22
@@ -131,4 +141,6 @@ class TestGetOneInstanceForMachine(unittest.TestCase):
             'instance-2-3': ['instance-2-3'],
             # host-2:44
             'instance-2-4': ['instance-2-4'],
+            # host-3:22
+            'instance-3-1': ['instance-3-1'],
         })
