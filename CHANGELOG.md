@@ -20,6 +20,7 @@ README.md to use the newest tag with new release
 - Remove old app configurations before uploading a new one
 - Allow downgrading RPM and DEB packages
 - Ignore disabled instances when counting disabled instances
+- Add disabled instances to `single_instances_for_each_machine` variable
 
 ## [1.12.0] - 2022-03-03
 
