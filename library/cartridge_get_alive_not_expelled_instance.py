@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import socket
+import ssl
 
 from ansible.module_utils.helpers import Helpers as helpers
 
@@ -19,6 +20,9 @@ def get_alive_not_expelled_instance(params):
     cluster_disabled_instances = params['cluster_disabled_instances']
     play_hosts = params['play_hosts']
     app_name = params['app_name']
+
+    warnings = []
+    is_ssl = False
 
     canditates_by_uris = {}
 
@@ -39,13 +43,35 @@ def get_alive_not_expelled_instance(params):
 
     alive_not_expelled_instance_name = None
     for uri, instance_name in sorted(canditates_by_uris.items()):
+        # check defaults for box.cfg parameters
+        instance_vars = module_hostvars[instance_name]
+        defaults = instance_vars.get('cartridge_defaults')
+        if 'transport' in defaults:
+            is_ssl = defaults['transport'] == 'ssl'
+
+        # set host:port according to advertise uri
         host, port = uri.rsplit(':', 1)
 
         try:
-            conn = socket.create_connection((host, port), timeout=CONNECTION_TIMEOUT)
-            conn.settimeout(CONNECTION_TIMEOUT)
-            conn.recv(1024)
-        except socket.error:
+            if is_ssl:
+                warnings.append("%s: connecting to iproto with SSL" % instance_name)
+                context = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+                context.check_hostname = False
+                context.load_verify_locations(cafile=defaults['ssl_client_ca_file'])
+                context.load_cert_chain(defaults['ssl_client_cert_file'], defaults['ssl_client_key_file'])
+
+                with socket.create_connection((host, port), timeout=CONNECTION_TIMEOUT) as sock:
+                    with context.wrap_socket(sock) as ssock:
+                        warnings.append("%s: %s" % (instance_name, ssock.version()))
+                        ssock.settimeout(CONNECTION_TIMEOUT)
+                        ssock.recv(1024)
+            else:
+                warnings.append("%s: connecting to iproto without SSL" % instance_name)
+                conn = socket.create_connection((host, port), timeout=CONNECTION_TIMEOUT)
+                conn.settimeout(CONNECTION_TIMEOUT)
+                conn.recv(1024)
+        except (socket.error, ssl.SSLError) as err:
+            warnings.append("%s: error -- %s" % (instance_name, str(err)))
             continue
 
         alive_not_expelled_instance_name = instance_name
@@ -53,7 +79,7 @@ def get_alive_not_expelled_instance(params):
 
     if alive_not_expelled_instance_name is None:
         errmsg = "Not found any alive instance that is not expelled, not disabled and not a stateboard"
-        return helpers.ModuleRes(failed=True, msg=errmsg)
+        return helpers.ModuleRes(failed=True, msg=errmsg, warnings=warnings)
 
     instance_vars = module_hostvars[alive_not_expelled_instance_name]
     run_dir = instance_vars.get('cartridge_run_dir')
@@ -64,7 +90,7 @@ def get_alive_not_expelled_instance(params):
     return helpers.ModuleRes(changed=False, fact={
         'name': alive_not_expelled_instance_name,
         'console_sock': console_sock,
-    })
+    }, warnings=warnings)
 
 
 if __name__ == '__main__':

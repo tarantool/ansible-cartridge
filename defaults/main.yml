@@ -349,6 +349,7 @@ cartridge_cached_fact_names_by_target:
     - stateboard
     - config
     - cartridge_run_dir
+    - cartridge_defaults
   control_instance:
     - expelled
     - disabled
