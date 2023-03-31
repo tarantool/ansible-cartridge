@@ -30,12 +30,18 @@ def backup_start(control_console, params):
         local fun = require('fun')
         local fio = require('fio')
         local confapplier = require('cartridge.confapplier')
+        local fiber = require('fiber')
 
         local is_stateboard = ...
 
-        local ok, err = pcall(box.snapshot)
-        if not ok then
-            return nil, string.format("Failed to create data snapshot: %s", err)
+        local ok, paths = pcall(box.snapshot)
+        while not ok do
+            if string.find(tostring(paths), "Snapshot is already in progress") then
+                fiber.sleep(5)
+                ok, paths = pcall(box.snapshot)
+            else
+                return nil, paths
+            end
         end
 
         local ok, paths = pcall(box.backup.start)
