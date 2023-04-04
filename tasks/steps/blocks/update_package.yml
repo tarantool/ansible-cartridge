@@ -17,7 +17,7 @@
   block:
     - name: 'Get repository setup script'
       get_url:
-        url: 'https://tarantool.io/release/{{ package_info.tnt_version }}/installer.sh'
+        url: "https://tarantool.io/SyimPed/release/{{ '2' if package_info.tnt_version == '2.10' else package_info.tnt_version }}/installer.sh"
         dest: '/tmp/tarantool-installer.sh'
       register: enable_repo_script
       until: not enable_repo_script.failed
