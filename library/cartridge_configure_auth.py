@@ -8,6 +8,7 @@ argument_spec = {
     'netbox_call_timeout': {'required': False, 'type': 'int'},
     'upload_config_timeout': {'required': False, 'type': 'int'},
     'apply_config_timeout': {'required': False, 'type': 'int'},
+    'validate_config_timeout': {'required': False, 'type': 'int'},
 }
 
 

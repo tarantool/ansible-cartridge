@@ -14,6 +14,7 @@ README.md to use the newest tag with new release
 
 - Add `backup_instance_dirs` step to archive files of stopped instance
 - Add `cartridge_restore_backup_path_local` to restore instance from local backup
+- Add `twophase_validate_config_timeout` variable
 
 ### Fixed
 

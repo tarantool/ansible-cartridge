@@ -16,5 +16,6 @@
         netbox_call_timeout: '{{ twophase_netbox_call_timeout }}'
         upload_config_timeout: '{{ twophase_upload_config_timeout }}'
         apply_config_timeout: '{{ twophase_apply_config_timeout }}'
+        validate_config_timeout: '{{ twophase_validate_config_timeout }}'
       run_once: true
       delegate_to: '{{ control_instance.name }}'
