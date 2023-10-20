@@ -20,20 +20,16 @@ NOT_DEFAULT_MOLECULE_COMMANDS = [
     # 'check'
 ]
 
-DEFAULT_ANSIBLE_VERSION = '2.8.0'
+DEFAULT_ANSIBLE_VERSION = '5.3.0'
 NOT_DEFAULT_ANSIBLE_VERSIONS = [
-    '2.9.27',
-    '5.3.0',
+    '6.5.0',
 ]
 
-DEFAULT_PYTHON_VERSION = '2.7'
+DEFAULT_PYTHON_VERSION = '3.6'
 
-DEFAULT_TARANTOOL_VERSION = '2.8'
-NOT_DEFAULT_TNT_VERSIONS = [
-    '1.10'
-]
+DEFAULT_TARANTOOL_VERSION = '2.11'
 
-DEFAULT_SDK_VERSION = '2.8.3-0-g01023dbc2-r449'
+DEFAULT_SDK_VERSION = '2.8.4-0-r553'
 NOT_DEFAULT_SDK_VERSIONS = []
 
 TDG_SCENARIOS = [
@@ -144,12 +140,9 @@ def main(event_name, repo_owner, review_state, ref):
 
         for ansible_version in NOT_DEFAULT_ANSIBLE_VERSIONS:
             python_version = None
-            if compare_versions(ansible_version, '2.10.0') >= 0:
-                python_version = '3.9'
+            if compare_versions(ansible_version, '5.0.0') >= 0:
+                python_version = '3.11'
             ce_matrix.append(get_ce_params(ansible_version=ansible_version, python_version=python_version))
-
-        for tnt_version in NOT_DEFAULT_TNT_VERSIONS:
-            ce_matrix.append(get_ce_params(tarantool_version=tnt_version))
 
         for sdk_version in NOT_DEFAULT_SDK_VERSIONS:
             ee_matrix.append(get_ee_params(sdk_version=sdk_version))

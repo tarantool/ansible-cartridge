@@ -10,9 +10,9 @@ jobs:
   setup-molecule-test-matrix:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '3.9'
       - name: Setup matrix for Molecule tests
@@ -57,11 +57,11 @@ jobs:
         run: cat ${{ runner.temp }}/prev_result 2>/dev/null || echo "no previous result"
 
       - if: steps.prev_result.outputs.status != 'success'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup python
         if: steps.prev_result.outputs.status != 'success'
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '${{ matrix.python_version }}'
 
@@ -97,7 +97,7 @@ jobs:
 
       - name: Install Tarantool
         if: steps.cache-packages.outputs.cache-hit != 'true' && steps.prev_result.outputs.status != 'success'
-        uses: tarantool/setup-tarantool@v1
+        uses: tarantool/setup-tarantool@v2
         with:
           tarantool-version: '${{ matrix.tarantool_version }}'
 
@@ -153,11 +153,11 @@ jobs:
         run: cat ${{ runner.temp }}/prev_result 2>/dev/null || echo "no previous result"
 
       - if: steps.prev_result.outputs.status != 'success'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup python
         if: steps.prev_result.outputs.status != 'success'
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '${{ matrix.python_version }}'
 
@@ -200,9 +200,9 @@ jobs:
           git config --global user.email "test@tarantool.io" \
             && git config --global user.name "Tar Antool"
 
-          ARCHIVE_NAME=tarantool-enterprise-bundle-${{ matrix.sdk_version }}.tar.gz
+          ARCHIVE_NAME=tarantool-enterprise-sdk-${{ matrix.sdk_version }}.tar.gz
           curl -O -L \
-            https://tarantool:${{ secrets.DOWNLOAD_TNT_TOKEN }}@download.tarantool.io/enterprise/${ARCHIVE_NAME}
+            https://tarantool:${{ secrets.DOWNLOAD_TNT_TOKEN }}@download.tarantool.io/enterprise/release/linux/x86_64/2.8/${ARCHIVE_NAME}
           tar -xzf ${ARCHIVE_NAME}
           rm -f ${ARCHIVE_NAME}
           source tarantool-enterprise/env.sh
@@ -247,11 +247,11 @@ jobs:
         run: cat ${{ runner.temp }}/prev_result 2>/dev/null || echo "no previous result"
 
       - if: steps.prev_result.outputs.status != 'success'
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
 
       - name: Setup python
         if: steps.prev_result.outputs.status != 'success'
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: '${{ matrix.python_version }}'
 
