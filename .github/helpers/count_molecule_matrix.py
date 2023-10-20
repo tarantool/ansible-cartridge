@@ -32,24 +32,6 @@ DEFAULT_TARANTOOL_VERSION = '2.11'
 DEFAULT_SDK_VERSION = '2.8.4-0-r553'
 NOT_DEFAULT_SDK_VERSIONS = []
 
-TDG_SCENARIOS = [
-    'config_upload_tdg'
-]
-DEFAULT_TDG_VERSION = '1.7.17-0-g2a5b4bd1'
-TDG_VERSIONS = {
-    'config_upload_tdg': [
-        # auth-token header; no common.app_version; no admin.upload_config_api;
-        '1.6.10-4-g06ea889e',
-        # authorization header; no common.app_version; no admin.upload_config_api;
-        '1.7.1-0-g92920bea',
-        # auth-token header; common.app_version; admin.upload_config_api;
-        '1.6.16-0-g7e140c94',
-        # authorization header; common.app_version; admin.upload_config_api;
-        '1.7.7-0-g76c31fca',
-    ],
-}
-
-
 ######################
 # MATRIX CALCULATION #
 ######################
@@ -102,22 +84,9 @@ def get_ee_params(
     return matrix
 
 
-def get_tdg_params(
-    molecule_scenario=None, ansible_version=None, python_version=None,
-    tdg_version=None, molecule_command=None,
-):
-    matrix = get_matrix_base(molecule_scenario, ansible_version, python_version)
-    matrix.update(
-        tdg_version=tdg_version or DEFAULT_TDG_VERSION,
-        molecule_command=molecule_command or DEFAULT_MOLECULE_COMMAND,
-    )
-    return matrix
-
-
 def main(event_name, repo_owner, review_state, ref):
     ce_matrix = []
     ee_matrix = []
-    tdg_matrix = []
 
     if any([
         event_name == 'push',
@@ -131,7 +100,7 @@ def main(event_name, repo_owner, review_state, ref):
         ee_matrix.append(get_ee_params())
 
         all_scenarios = sorted(os.listdir(MOLECULE_SCENARIOS_PATH))
-        scenarios_to_skip = [DEFAULT_SCENARIO] + IGNORED_PATHS + TDG_SCENARIOS
+        scenarios_to_skip = [DEFAULT_SCENARIO] + IGNORED_PATHS
         for name in filter(lambda scenario: scenario not in scenarios_to_skip, all_scenarios):
             ce_matrix.append(get_ce_params(molecule_scenario=name))
 
@@ -147,23 +116,16 @@ def main(event_name, repo_owner, review_state, ref):
         for sdk_version in NOT_DEFAULT_SDK_VERSIONS:
             ee_matrix.append(get_ee_params(sdk_version=sdk_version))
 
-        for name in TDG_SCENARIOS:
-            for tdg_version in TDG_VERSIONS.get(name, [None]):
-                tdg_matrix.append(get_tdg_params(molecule_scenario=name, tdg_version=tdg_version))
-
     print('::set-output name=ce-tests-found::' + "true" if len(ce_matrix) > 0 else "false")
     print('::set-output name=ee-tests-found::' + "true" if len(ee_matrix) > 0 else "false")
-    print('::set-output name=tdg-tests-found::' + "true" if len(tdg_matrix) > 0 else "false")
 
     print('::set-output name=ce-matrix::' + json.dumps({"include": ce_matrix}))
     print('::set-output name=ee-matrix::' + json.dumps({"include": ee_matrix}))
-    print('::set-output name=tdg-matrix::' + json.dumps({"include": tdg_matrix}))
 
     print('Computed matrices:')
     print(json.dumps({
         'ce-matrix': ce_matrix,
         'ee-matrix': ee_matrix,
-        'tdg-matrix': tdg_matrix,
     }, indent=4))
 
 

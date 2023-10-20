@@ -29,8 +29,6 @@ jobs:
       ce-tests-found: ${{ steps.setup-matrix.outputs.ce-tests-found }}
       ee-matrix: ${{ steps.setup-matrix.outputs.ee-matrix }}
       ee-tests-found: ${{ steps.setup-matrix.outputs.ee-tests-found }}
-      tdg-matrix: ${{ steps.setup-matrix.outputs.tdg-matrix }}
-      tdg-tests-found: ${{ steps.setup-matrix.outputs.tdg-tests-found }}
 
   molecule-tests-ce:
     needs: setup-molecule-test-matrix
@@ -211,87 +209,6 @@ jobs:
           cartridge version
 
           ./create-packages.sh --skip-tdg
-
-      - name: Molecule test
-        if: steps.prev_result.outputs.status != 'success'
-        run: |
-          source venv/bin/activate
-          molecule --version
-          molecule ${{ matrix.molecule_command }} -s '${{ matrix.molecule_scenario }}'
-
-      - name: Remember result
-        run: echo "::set-output name=status::${{ job.status }}" > ${{ runner.temp }}/prev_result
-
-  molecule-tests-tdg:
-    needs: setup-molecule-test-matrix
-    runs-on: ubuntu-latest
-    if: needs.setup-molecule-test-matrix.outputs.tdg-tests-found == 'true'
-    strategy:
-      matrix: ${{ fromJson(needs.setup-molecule-test-matrix.outputs.tdg-matrix) }}
-      fail-fast: false
-    steps:
-      - name: Prepare to cache results
-        id: cache
-        run: |
-          rm -f ${{ runner.temp }}/prev_result || true
-          echo "::set-output name=key::${{ matrix.molecule_scenario }}-${{ matrix.ansible_version }}-${{ matrix.python_version }}-${{ matrix.tdg_version }}-${{ matrix.molecule_command }}"
-          echo "::set-output name=time::$(/bin/date -u "+%Y%m%d%H%M%S")"
-      - name: Restore the previous run result
-        uses: actions/cache@v2
-        with:
-          path: ${{ runner.temp }}/prev_result
-          key: ${{ github.run_id }}-${{ github.job }}-${{ steps.cache.outputs.key }}-${{ steps.cache.outputs.time }}
-          restore-keys: ${{ github.run_id }}-${{ github.job }}-${{ steps.cache.outputs.key }}-
-      - name: Parse previous result
-        id: prev_result
-        run: cat ${{ runner.temp }}/prev_result 2>/dev/null || echo "no previous result"
-
-      - if: steps.prev_result.outputs.status != 'success'
-        uses: actions/checkout@v3
-
-      - name: Setup python
-        if: steps.prev_result.outputs.status != 'success'
-        uses: actions/setup-python@v4
-        with:
-          python-version: '${{ matrix.python_version }}'
-
-      - name: Cache python dependencies
-        if: steps.prev_result.outputs.status != 'success'
-        id: python-dependencies
-        uses: actions/cache@v2
-        with:
-          path: 'venv'
-          key: venv-${{ matrix.python_version }}-${{ hashFiles('./requirements.txt') }}-${{ matrix.ansible_version }}
-
-      - name: Install molecule requirements
-        if: steps.python-dependencies.outputs.cache-hit != 'true' && steps.prev_result.outputs.status != 'success'
-        run: |
-          python -V
-          if [ "${{ matrix.python_version }}" = "2.7" ]; then
-              pip install virtualenv
-              virtualenv venv
-          else
-              python -m venv venv
-          fi
-          venv/bin/pip install --upgrade -r requirements.txt
-          venv/bin/pip uninstall -y ansible ansible-base ansible-core
-          venv/bin/pip install ansible~=${{ matrix.ansible_version }}
-
-      - name: Cache TDG test packages
-        if: steps.prev_result.outputs.status != 'success'
-        id: cache-packages
-        uses: actions/cache@v2
-        with:
-          path: 'packages'
-          key: tdg-${{ matrix.tdg_version }}-${{ hashFiles('./create-packages.sh') }}
-
-      - name: Create test packages
-        if: steps.cache-packages.outputs.cache-hit != 'true' && steps.prev_result.outputs.status != 'success'
-        run: |
-          export AWS_ACCESS_KEY_ID=${{ secrets.AWS_ACCESS_KEY_ID }}
-          export AWS_SECRET_ACCESS_KEY=${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws --version
-          ./create-packages.sh --skip-cartridge --tdg-version ${{ matrix.tdg_version }}
 
       - name: Molecule test
         if: steps.prev_result.outputs.status != 'success'

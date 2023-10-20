@@ -1,7 +1,0 @@
----
-
-types:
-  __file: model.avsc
-
-test-section:
-  config-dir-key: yml-avsc
