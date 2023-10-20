@@ -4,7 +4,7 @@ name: Molecule tests
 on: [push, pull_request, pull_request_review, workflow_dispatch]
 
 env:
-  CARTRIDGE_CLI_VERSION: '2.10.0'
+  CARTRIDGE_CLI_VERSION: '2.12.7'
 
 jobs:
   setup-molecule-test-matrix:
