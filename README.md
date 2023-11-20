@@ -1,3 +1,5 @@
+> **DEPRECATION NOTICE:** This role will be deprecated by January 1, 2024. All open issues and pull requests will be closed shortly. ansible-cartridge will remain in public archive as Tarantool moves on with version 3.0. Please follow official community channels in Telegram — @tarantool (en), @tarantoolru (ru). Feel free to ask ansible related questions there.
+
 # Ansible Role: Tarantool Cartridge
 
 [![Ansible Galaxy](https://img.shields.io/badge/tarantool.cartridge-blue?label=Ansible%20Galaxy&labelColor=2d3532)](https://galaxy.ansible.com/tarantool/cartridge)
