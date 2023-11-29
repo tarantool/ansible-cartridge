@@ -9,7 +9,7 @@ import socket
 from ansible.module_utils.basic import AnsibleModule
 
 DEFAULT_RUN_DIR = '/var/run/tarantool'
-TWOPHASE_OPTION_NAMES = ['netbox_call_timeout', 'upload_config_timeout', 'apply_config_timeout']
+TWOPHASE_OPTION_NAMES = ['netbox_call_timeout', 'upload_config_timeout', 'validate_config_timeout', 'apply_config_timeout']
 
 # parameters of instance configuration that can be changed dynamically
 DYNAMIC_BOX_CFG_PARAMS = {

@@ -17,6 +17,7 @@
         netbox_call_timeout: '{{ twophase_netbox_call_timeout }}'
         upload_config_timeout: '{{ twophase_upload_config_timeout }}'
         apply_config_timeout: '{{ twophase_apply_config_timeout }}'
+        validate_config_timeout: '{{ twophase_validate_config_timeout }}'
       register: bootstrap_vshard
       until: not bootstrap_vshard.failed
       retries: '{{ bootstrap_vshard_retries }}'

@@ -137,6 +137,8 @@ For more details see [scenario documentation](/doc/scenario.md).
   commit (Cartridge 2.5+ is required);
 - `twophase_apply_config_timeout` (`number`): time in seconds to wait config apply while two-phase
   commit (Cartridge 2.5+ is required);
+- `twophase_validate_config_timeout` (`number`): time in seconds to wait config validate while two-phase
+  commit (Cartridge 2.5+ is required);
 - `edit_topology_healthy_timeout` (`number`, default: `60`): time in seconds to wait until a cluster
   become healthy after editing topology;
 - [DEPRECATED] `edit_topology_timeout` (`number`): the same timeout

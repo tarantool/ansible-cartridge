@@ -12,6 +12,7 @@ argument_spec = {
     'netbox_call_timeout': {'required': False, 'type': 'int'},
     'upload_config_timeout': {'required': False, 'type': 'int'},
     'apply_config_timeout': {'required': False, 'type': 'int'},
+    'validate_config_timeout': {'required': False, 'type': 'int'},
     'allow_missed_instances': {'required': True, 'type': 'bool'},
     'check_mode': {'required': False, 'type': 'bool', 'default': False},
     'ignore_errors_of_checks': {'required': False, 'type': 'dict', 'default': {}},

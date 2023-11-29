@@ -128,6 +128,7 @@ PARAMS_BY_TYPES = {
         'twophase_netbox_call_timeout',
         'twophase_upload_config_timeout',
         'twophase_apply_config_timeout',
+        'twophase_validate_config_timeout',
         'edit_topology_timeout',
         'edit_topology_healthy_timeout',
         'wait_members_alive_retries',

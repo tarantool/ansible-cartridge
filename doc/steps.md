@@ -288,6 +288,8 @@ Input variables from config (for two-phase commit):
   while two-phase commit (Cartridge 2.5+ is required);
 - `twophase_apply_config_timeout` - time in seconds to wait config apply
   while two-phase commit (Cartridge 2.5+ is required);
+- `twophase_validate_config_timeout` - time in seconds to wait config validate
+  while two-phase commit (Cartridge 2.5+ is required);
 - `edit_topology_healthy_timeout` - time in seconds to wait until a cluster become healthy after editing topology;
 - [DEPRECATED] `edit_topology_timeout` - the same timeout as `edit_topology_healthy_timeout`.
 
